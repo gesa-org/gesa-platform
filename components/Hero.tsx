@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, HeartHandshake, ShieldCheck, Users } from 'lucide-react';
+import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle } from 'lucide-react';
 
 export default function Hero() {
   return (
@@ -13,23 +13,23 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12 items-center">
           {/* Text Content */}
           <div className="max-w-2xl">
-            <span className="inline-block text-[12px] tracking-[0.14em] text-clay font-bold uppercase mb-4">
-              Global Emotional Support Alliance
+            <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
+              <Sparkle size={13} /> A global volunteer support alliance
             </span>
             <h1 className="font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
-              Compassionate Care, <br />
-              <span className="text-primary">When You Need It Most.</span>
+              The path to emotional recovery begins here
             </h1>
             <p className="text-[20px] text-muted-fg leading-[1.55] mb-8 max-w-[34rem]">
-              Connect with verified volunteer therapists worldwide for free, culturally sensitive mental health support.
+              GESA (Global Emotional Support Alliance) connects you with a verified volunteer
+              therapist for free, culturally sensitive emotional support.
             </p>
-            
+
             <div className="flex flex-wrap gap-4 mt-6">
               <Link href="/intake" className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
-                Find a Therapist <ArrowRight size={18} />
+                Find your therapist <ArrowRight size={18} />
               </Link>
               <Link href="/support-groups" className="inline-flex items-center justify-center gap-2 bg-white text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
-                Join a Support Group
+                Explore support groups
               </Link>
             </div>
 
