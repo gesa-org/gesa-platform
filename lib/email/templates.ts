@@ -50,6 +50,38 @@ export function contactNotificationEmail(name: string, email: string, subject: s
   `);
 }
 
+export function bookingConfirmationEmail(name: string, therapistName: string) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're matched, ${name || "friend"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      We've matched you with <strong>${therapistName}</strong>, one of our verified volunteer therapists.
+      They (or our team) will reach out to you at this email address shortly to set up your first
+      free session.
+    </p>
+    <p style="color:#33352d;line-height:1.6;">
+      In the meantime, if anything feels urgent, use the crisis resources on our site any time — you
+      don't need to wait for a reply.
+    </p>
+  `);
+}
+
+export function bookingTeamNotificationEmail(
+  entryRouteLabel: string,
+  name: string,
+  email: string,
+  therapistName: string
+) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New booking request: ${entryRouteLabel}</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>From:</strong> ${name} (${email})</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Matched with:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin-top:10px;">
+      Please help connect them — this therapist doesn't have a linked login yet, so the match needs a
+      human follow-up for now.
+    </p>
+  `);
+}
+
 export function groupRegistrationEmail(name: string, groupTitle: string, schedule: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're registered, ${name}</h1>

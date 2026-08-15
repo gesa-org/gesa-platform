@@ -160,11 +160,35 @@ export type TherapistRow = {
   years_experience: number | null;
 }
 
+export type BookingRequestRow = {
+  created_at: string;
+  email: string;
+  entry_route: string;
+  id: string;
+  matched_therapist_id: string | null;
+  name: string;
+  status: string;
+}
+
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.15" };
   public: {
     Tables: {
       blog_posts: { Row: BlogPostRow; Insert: Partial<BlogPostRow> & Pick<BlogPostRow, "slug" | "title">; Update: Partial<BlogPostRow>; Relationships: [] };
+      booking_requests: {
+        Row: BookingRequestRow;
+        Insert: Partial<BookingRequestRow> & Pick<BookingRequestRow, "entry_route" | "name" | "email">;
+        Update: Partial<BookingRequestRow>;
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_matched_therapist_id_fkey";
+            columns: ["matched_therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chat_messages: { Row: ChatMessageRow; Insert: Partial<ChatMessageRow> & Pick<ChatMessageRow, "body" | "sender_id" | "thread_id">; Update: Partial<ChatMessageRow>; Relationships: [] };
       chat_threads: {
         Row: ChatThreadRow;

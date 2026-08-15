@@ -73,3 +73,20 @@ export async function getSiteContent<T = unknown>(key: string): Promise<T | null
   if (error) throw error;
   return (data?.value as T) ?? null;
 }
+
+export async function getCrisisResources(): Promise<Tables<"crisis_resources">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("crisis_resources").select("*").order("region");
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Picks one active, verified therapist at random. This is a simple MVP match
+// — real specialty/track data isn't rich enough yet to filter meaningfully by
+// entry route (see EXECUTION_PLAN.md Phase 7 notes), so every non-crisis path
+// draws from the same pool of verified therapists for now.
+export async function getRandomMatchedTherapist(): Promise<Tables<"therapists"> | null> {
+  const therapists = await getActiveTherapists();
+  if (therapists.length === 0) return null;
+  return therapists[Math.floor(Math.random() * therapists.length)];
+}
