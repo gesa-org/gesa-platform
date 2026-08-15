@@ -238,6 +238,22 @@ Vercel will auto-deploy once pushed. Also worth a quick local `npm install` to c
 
 **Not built yet, deferred per your direction:** therapist onboarding + document verification flow, secure chat history review (existing chat already meets the bar, just not re-verified against this new brief), profile-view alerts, analytics dashboard, and the CRM framework groundwork. Say the word when you want to pick any of these up.
 
+**Update — visual identity applied to the live site:** pulled the actual GESA Branding Discussion doc (Roy shared the link) and found real specifics beyond what I'd guessed: warm/premium palette direction (smokey blue, sage green, gold — noted for a follow-up pass since the current implementation still uses the sage/clay/amber set), a "G"-shaped logo concept (not yet built — implemented a simpler two-circles wordmark mark as an interim), crisis route gets an initial packet of free sessions vs. veteran route getting unlimited access (now reflected in the homepage copy). Applied this session:
+- [x] New `components/Logo.tsx` (two overlapping circles — sage + clay) replacing the placeholder leaf icon in the header and footer
+- [x] Per-route accent colors on the three homepage path cards: crisis = terracotta/destructive, veteran/family = deep sage, seeking help = warm sage
+- [x] Copy updates: crisis vs. veteran session-access language, "reach out now" instead of generic "book a session," "a therapist who understands" instead of "matched provider" (tone-of-voice guide)
+- [x] `npx tsc --noEmit` clean
+
+**Still open:** the true "G"-shaped logo mark (doc calls for it specifically, I used a placeholder), and the smokey-blue/gold palette shift — holding off on a full palette swap until Roy confirms he wants to move off the sage/clay/amber set already live everywhere else. Also still waiting on the doc's "Next steps" action-item list (my fetch got cut off there) in case it names specific landing-page layout changes.
+
+**Action needed from Roy:** same as before — this only exists in the project folder:
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 7: brand identity applied to landing page"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

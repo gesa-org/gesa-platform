@@ -8,18 +8,20 @@ const PRIMARY_PATHS = [
     icon: LifeBuoy,
     title: "In crisis right now",
     description:
-      "For anyone shaken by war, terror, or disaster. Fast, gentle help when you can't wait.",
+      "For anyone shaken by war, terror, or disaster. Fast, gentle help when you can't wait — an initial set of free sessions to start.",
     ctaLink: "/intake?path=crisis",
-    ctaLabel: "Book a session",
+    ctaLabel: "Reach out now",
+    badgeClass: "bg-destructive text-white",
   },
   {
     id: "veteran",
     icon: Shield,
     title: "Veterans, reservists & families",
     description:
-      "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families.",
+      "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited access, for as long as you need it.",
     ctaLink: "/intake?path=veteran",
-    ctaLabel: "Book a session",
+    ctaLabel: "Reach out now",
+    badgeClass: "bg-primary-600 text-white",
   },
   {
     id: "general",
@@ -28,7 +30,8 @@ const PRIMARY_PATHS = [
     description:
       "For anyone carrying anxiety, ongoing stress, or the weight of antisemitism. Start here — more is coming.",
     ctaLink: "/intake?path=general",
-    ctaLabel: "Book a session",
+    ctaLabel: "Reach out now",
+    badgeClass: "bg-accent text-white",
   },
 ];
 
@@ -50,7 +53,7 @@ export default function Paths() {
           Two clicks to support
         </h2>
         <p className="mx-auto max-w-[620px] text-muted-fg">
-          Choose your path and confirm — you&apos;ll be matched with a verified volunteer therapist
+          Choose your path and confirm — you&apos;ll be matched with a therapist who understands,
           for a free, confidential session. No forms, no accounts, no questions upfront.
         </p>
       </div>
@@ -58,7 +61,7 @@ export default function Paths() {
       <div className="mt-10 grid gap-[22px] md:grid-cols-3">
         {PRIMARY_PATHS.map((p) => (
           <Card key={p.id} className="flex flex-col">
-            <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-accent-soft text-primary">
+            <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-[14px] ${p.badgeClass}`}>
               <p.icon size={24} />
             </div>
             <h3 className="mt-3.5 mb-2 text-[19px]">{p.title}</h3>

@@ -1,15 +1,14 @@
 import Link from 'next/link';
-import { Leaf, Globe, Heart } from 'lucide-react';
+import { Globe, Heart } from 'lucide-react';
 import AuthStatus from '@/components/AuthStatus';
+import Logo from '@/components/Logo';
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-40 bg-[#faf8f3d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
       <div className="max-w-[1160px] mx-auto px-6 flex items-center h-[74px] gap-5">
-        <Link href="/" className="flex items-center gap-3 font-serif text-[22px] font-bold text-primary">
-          <span className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-primary to-accent rounded-xl text-white">
-            <Leaf size={20} />
-          </span>
+        <Link href="/" className="flex items-center gap-2.5 font-serif text-[22px] font-bold text-primary">
+          <Logo size={34} />
           GESA
         </Link>
         <nav className="hidden md:flex gap-2 ml-2">

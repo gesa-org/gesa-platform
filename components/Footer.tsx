@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Leaf } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -8,10 +8,8 @@ export default function Footer() {
       <div className="max-w-[1160px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="flex items-center gap-3 font-serif text-[22px] font-bold text-white">
-              <span className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-accent to-[#8fb894] rounded-xl text-white">
-                <Leaf size={20} />
-              </span>
+            <Link href="/" className="flex items-center gap-2.5 font-serif text-[22px] font-bold text-white">
+              <Logo size={34} />
               GESA
             </Link>
             <p className="text-[#9fb6ba] max-w-[260px] text-sm mt-3 leading-relaxed">
