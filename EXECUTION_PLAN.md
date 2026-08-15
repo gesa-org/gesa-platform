@@ -254,6 +254,8 @@ git commit -m "Phase 7: brand identity applied to landing page"
 git push
 ```
 
+**Root-cause layout fix, same session:** Roy flagged the About page as too wide/hard to read. Root cause: five layout classes (`wrap`, `hero`, `section`, `eyebrow`, `sub`, `narrow`) are used across About, Therapists, Support Groups, Blog, FAQ, Contact, legal pages, Messages, **and the homepage itself** (Paths/Testimonials/Donate sections all use them too) — but none of them were ever actually defined in the CSS. They'd been silent no-ops since whenever they were first written, well before this session: no centering, no side padding, no max-width, so text ran edge-to-edge on wide screens. Defined all five properly in `app/globals.css` under `@layer components`, which fixes every page listed above from one change — Tailwind's own utilities (like the `max-w-[760px]` some pages add alongside `wrap`) still load after and correctly narrow the column further where intended. `npx tsc --noEmit` clean.
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

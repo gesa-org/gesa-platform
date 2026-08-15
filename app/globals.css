@@ -29,6 +29,62 @@
   }
 }
 
+@layer components {
+  /* Shared page-layout classes used across About, Therapists, Support Groups,
+     Blog, FAQ, Contact, legal pages, and Messages. These were referenced in
+     JSX across the site but never actually defined, so every page using them
+     rendered with no centering, no side padding, and no max-width — text ran
+     edge-to-edge on wide screens. Defined here, under @layer components, so
+     Tailwind's own utilities (e.g. max-w-[760px] added alongside "wrap" on
+     specific pages) still load after this and correctly override the default
+     width where a narrower column is wanted. */
+  .wrap {
+    max-width: 1160px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .narrow {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .section {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+  .hero {
+    padding-top: 88px;
+    padding-bottom: 72px;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--clay);
+    margin-bottom: 12px;
+  }
+  .sub {
+    margin-top: 12px;
+    max-width: 640px;
+  }
+  @media (max-width: 640px) {
+    .section {
+      padding-top: 44px;
+      padding-bottom: 44px;
+    }
+    .hero {
+      padding-top: 56px;
+      padding-bottom: 48px;
+    }
+  }
+}
+
 @layer base {
   * {
     box-sizing: border-box;
