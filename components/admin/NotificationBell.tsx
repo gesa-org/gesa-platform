@@ -66,17 +66,20 @@ export default function NotificationBell() {
         ]);
 
         const normalized: NotificationItem[] = [
-          ...(matches.data ?? []).map((m) => ({
-            id: `match-${m.id}`,
-            kind: "match" as const,
-            title: `New match request — ${m.name}`,
-            subtitle: `${FORMAT_LABEL[m.session_format] ?? m.session_format}${
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (m as any).selected_therapist?.full_name ? ` · ${(m as any).selected_therapist.full_name}` : ""
-            }`,
-            createdAt: m.created_at,
-            detail: m as unknown as Record<string, unknown>,
-          })),
+          ...(matches.data ?? []).map((m) => {
+            const matchTherapistName = (m as { selected_therapist?: { full_name?: string | null } | null })
+              .selected_therapist?.full_name;
+            return {
+              id: `match-${m.id}`,
+              kind: "match" as const,
+              title: `New match request — ${m.name}`,
+              subtitle: `${FORMAT_LABEL[m.session_format] ?? m.session_format}${
+                matchTherapistName ? ` · ${matchTherapistName}` : ""
+              }`,
+              createdAt: m.created_at,
+              detail: m as unknown as Record<string, unknown>,
+            };
+          }),
           ...(bookings.data ?? []).map((b) => ({
             id: `booking-${b.id}`,
             kind: "booking" as const,
@@ -192,10 +195,8 @@ export default function NotificationBell() {
 
 function NotificationDetailModal({ item, onClose }: { item: NotificationItem; onClose: () => void }) {
   const d = item.detail as Record<string, unknown> & {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    selected_therapist?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    matched_therapist?: any;
+    selected_therapist?: { full_name?: string | null } | null;
+    matched_therapist?: { full_name?: string | null } | null;
   };
 
   return (
