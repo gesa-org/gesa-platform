@@ -101,6 +101,65 @@ export function therapistNewMatchEmail(
   `);
 }
 
+const FORMAT_LABEL: Record<string, string> = {
+  online: "Online (video)",
+  call: "Call",
+  in_person: "In-Person",
+};
+
+export function matchConfirmationEmail(
+  name: string,
+  therapistName: string,
+  sessionFormat: string,
+  preferredDate: string | null,
+  preferredTime: string | null
+) {
+  const when =
+    preferredDate || preferredTime
+      ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Requested time:</strong> ${
+          preferredDate ?? ""
+        } ${preferredTime ?? ""}</p>`
+      : "";
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're all set, ${name || "friend"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      We've sent your session request to <strong>${therapistName}</strong> for a
+      <strong>${FORMAT_LABEL[sessionFormat] ?? sessionFormat}</strong> session.
+    </p>
+    ${when}
+    <p style="color:#33352d;line-height:1.6;">
+      This is a request, not a confirmed slot — our team or your therapist will follow up shortly to confirm the
+      exact time and share any session details you'll need.
+    </p>
+  `);
+}
+
+export function matchTeamNotificationEmail(
+  name: string,
+  email: string,
+  therapistName: string,
+  sessionFormat: string,
+  symptoms: string[],
+  treatmentType: string | null,
+  preferredDate: string | null,
+  preferredTime: string | null
+) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New AI-matched session request</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>From:</strong> ${name} (${email})</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Matched with:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Format:</strong> ${FORMAT_LABEL[sessionFormat] ?? sessionFormat}</p>
+    ${treatmentType ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Preferred treatment:</strong> ${treatmentType}</p>` : ""}
+    ${symptoms.length ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Shared:</strong> ${symptoms.join(", ")}</p>` : ""}
+    ${
+      preferredDate || preferredTime
+        ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Requested time:</strong> ${preferredDate ?? ""} ${preferredTime ?? ""}</p>`
+        : ""
+    }
+    <p style="color:#33352d;line-height:1.6;margin-top:10px;">Please help confirm this session.</p>
+  `);
+}
+
 export function groupRegistrationEmail(name: string, groupTitle: string, schedule: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're registered, ${name}</h1>

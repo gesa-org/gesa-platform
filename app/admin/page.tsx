@@ -4,28 +4,37 @@ import {
   getAllBookingRequests,
   getAllGroupRegistrations,
   getAllInquiries,
+  getAllMatchRequests,
   getAllProfiles,
 } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  const [inquiries, bookings, registrations, profiles] = await Promise.all([
+  const [inquiries, bookings, registrations, profiles, matchRequests] = await Promise.all([
     getAllInquiries(),
     getAllBookingRequests(),
     getAllGroupRegistrations(),
     getAllProfiles(),
+    getAllMatchRequests(),
   ]);
 
   const newBookings = bookings.filter((b) => b.status === "new").length;
+  const newMatchRequests = matchRequests.filter((m) => m.status === "new").length;
   const roleCounts = profiles.reduce<Record<string, number>>((acc, p) => {
     acc[p.role] = (acc[p.role] ?? 0) + 1;
     return acc;
   }, {});
 
   const tiles = [
-    { label: "Contact inquiries", value: inquiries.length, href: "/admin/inquiries" },
+    {
+      label: "Find Your Therapist",
+      value: matchRequests.length,
+      sub: `${newMatchRequests} new`,
+      href: "/admin/match-requests",
+    },
     { label: "Booking requests", value: bookings.length, sub: `${newBookings} new`, href: "/admin/bookings" },
+    { label: "Contact inquiries", value: inquiries.length, href: "/admin/inquiries" },
     { label: "Group registrations", value: registrations.length, href: "/admin/registrations" },
     { label: "Registered users", value: profiles.length, href: "/admin/users" },
   ];

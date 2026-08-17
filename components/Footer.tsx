@@ -29,7 +29,7 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">Support</h4>
             <ul className="flex flex-col gap-2 text-sm text-[#b7c2ab]">
-              <li><Link href="/intake" className="hover:text-white transition-colors">Find a Therapist</Link></li>
+              <li><Link href="/find-your-therapist" className="hover:text-white transition-colors">Find a Therapist</Link></li>
               <li><Link href="/support-groups" className="hover:text-white transition-colors">Join a Group</Link></li>
               <li><Link href="/contact?subject=Donation" className="hover:text-white transition-colors">Donate</Link></li>
               <li><Link href="/contact?subject=Volunteer" className="hover:text-white transition-colors">Volunteer</Link></li>

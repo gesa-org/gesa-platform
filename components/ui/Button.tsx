@@ -30,6 +30,7 @@ interface ButtonProps {
   block?: boolean;
   onClick?: () => void;
   type?: "button" | "submit";
+  disabled?: boolean;
 }
 
 export default function Button({
@@ -41,8 +42,11 @@ export default function Button({
   block = false,
   onClick,
   type = "button",
+  disabled = false,
 }: ButtonProps) {
-  const classes = `${base} ${variants[variant]} ${sizes[size]} ${block ? "w-full" : ""} ${className}`;
+  const classes = `${base} ${variants[variant]} ${sizes[size]} ${block ? "w-full" : ""} ${
+    disabled ? "opacity-50 pointer-events-none" : ""
+  } ${className}`;
   if (href) {
     return (
       <Link href={href} className={classes}>
@@ -51,7 +55,7 @@ export default function Button({
     );
   }
   return (
-    <button type={type} onClick={onClick} className={classes}>
+    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
       {children}
     </button>
   );

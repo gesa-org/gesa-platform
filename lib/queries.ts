@@ -74,6 +74,17 @@ export async function getSiteContent<T = unknown>(key: string): Promise<T | null
   return (data?.value as T) ?? null;
 }
 
+export async function getActiveClinicLocations(): Promise<Tables<"clinic_locations">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("clinic_locations")
+    .select("*")
+    .eq("is_active", true)
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getCrisisResources(): Promise<Tables<"crisis_resources">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("crisis_resources").select("*").order("region");
@@ -143,6 +154,21 @@ export async function getAllBookingRequests(): Promise<BookingRequestWithTherapi
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as BookingRequestWithTherapist[];
+}
+
+export type MatchRequestWithTherapist = Tables<"match_requests"> & {
+  selected_therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email" | "contact_phone"> | null;
+  clinic_location: Pick<Tables<"clinic_locations">, "id" | "name" | "address"> | null;
+};
+
+export async function getAllMatchRequests(): Promise<MatchRequestWithTherapist[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("match_requests")
+    .select("*, selected_therapist:therapists(id, full_name, contact_email, contact_phone), clinic_location:clinic_locations(id, name, address)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as MatchRequestWithTherapist[];
 }
 
 export async function getAllProfiles(): Promise<Tables<"profiles">[]> {

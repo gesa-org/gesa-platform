@@ -154,7 +154,7 @@ export default function AboutPage() {
               Become a volunteer therapist <ArrowRight size={16} />
             </Link>
             <Link
-              href="/intake"
+              href="/find-your-therapist"
               className="inline-flex items-center rounded-full border border-white/60 px-6 py-3.5 text-[15px] font-semibold text-white"
             >
               Find a therapist

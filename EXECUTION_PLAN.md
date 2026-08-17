@@ -307,6 +307,44 @@ After Phase 8 shipped, Roy confirmed signup/login now works end-to-end (the Supa
 
 **Verification:** `npx tsc --noEmit` clean (same pre-existing sandbox-only `resend` error as before). Full `npx jest` suite passes (7 suites, 19 tests).
 
+## Phase 9 — "Find Your Therapist" AI-matching wizard
+
+Roy described a 4-step AI-matching wizard (assessment → preferences → format/location → AI matches + booking modal with Zoom/WhatsApp/Google Maps) that he believed already existed in the codebase. An Explore-subagent audit — including both gitignored prototype folders (`gesa-website/`, `gesa-backend-refactor/`) — confirmed it did not exist anywhere, old or current; the project's own `EXECUTION_PLAN.md` (this file) already said as much for Phase 5. One useful find during the audit: a legacy, completely unused `gesa_timeslots` table in Production with 5,800 real per-therapist appointment slots — but dated July 27–Aug 7, 2026, already in the past, so not usable as-is for a live calendar.
+
+**Scope decisions from Roy before building:**
+- Matching engine: real LLM-based matching (not rule-based) — therapist `specialties` data is real but messy/sparse (32 distinct values, several non-English, `tracks` empty on every row), which an LLM handles better than rigid filters.
+- Zoom: manual follow-up (team/therapist sends the real link after confirming) — no Zoom API/account needed.
+- WhatsApp: simple `wa.me` deep link using the therapist's phone number — no WhatsApp Business API.
+- Calendar/availability: a simple date+time request (no real slot enforcement) — matches how booking already works everywhere else in the app.
+
+**Database (Dev + Production):**
+- `therapists.contact_phone` (text, nullable) — powers the WhatsApp deep link, same pattern as `contact_email` from Phase 8.
+- `clinic_locations` table (name, address, is_active) for the In-Person format step. Seeded with one **inactive placeholder row** — real addresses still need to come from Roy; until then the wizard gracefully shows "our team will confirm a location" instead of a location picker.
+- `match_requests` table — the wizard's full submission (contact info, symptoms, treatment type, gender preference, session format, clinic location, preferred date/time, matched therapist ids, selected therapist, status). Kept separate from `booking_requests` (the simpler 4-entry-route intake flow) rather than overloading that table.
+- RLS: public insert on `match_requests`/`clinic_locations`; admin+reviewer read, admin-only write — same convention as Phase 8's `profiles_admin_update`.
+
+**Built:**
+- `lib/ai/matchTherapists.ts` — calls Anthropic's API (`claude-haiku-4-5-20251001`) with the client's assessment/preferences and the real active/verified therapist roster, asking for up to 3 ranked matches with one-sentence reasoning each as strict JSON. Validates every returned id against the real candidate pool (guards against hallucinated ids) and **always falls back to a keyword+gender rule-based scorer** on any API error, missing key, or parse failure — matching must never leave a client with zero results. Needs a real `ANTHROPIC_API_KEY`; documented in `ENV_VARS.md` for both Dev and Production. Without it, the app silently uses the rule-based fallback — the feature still works, just without AI reasoning.
+- `/api/match` (POST) — runs the match, returns full therapist records + reasoning for the UI.
+- `/find-your-therapist` — the 4-step wizard (`components/match/MatchWizard.tsx` + one component per step). Assessment step: 12 curated experience/emotion tags. Preferences: treatment type (from real specialty values) + gender preference. Format & Location: Online/Call/In-Person, with the clinic picker only shown once real active locations exist. Matches: calls `/api/match`, shows up to 3 cards with AI reasoning quotes, "Book a Session" opens `BookingModal.tsx`.
+- `BookingModal.tsx` — contact fields, native date+time pickers (explicitly labeled as a request, not a confirmed slot), and format-specific messaging: Online shows manual-Zoom-follow-up text; Call shows a real `wa.me` WhatsApp button (only after the request is submitted, and only if the matched therapist has a `contact_phone` on file); In-Person shows the clinic address plus a free Google Maps directions link (`google.com/maps/search` — no API key/billing needed). Submits to `/api/match-booking`, which inserts into `match_requests` and sends 3 emails (client confirmation, team notification, therapist notification via `contact_email` if set) — same resilient "email failure never blocks the booking" pattern as Phase 7's booking flow.
+- **Admin back office**: `/admin/match-requests` (status management, same pattern as `/admin/bookings`), added to admin nav, overview tiles, and the notification bell (now counts new `booking_requests` **and** new `match_requests` combined, linking to `/admin`).
+- Wired the site's "Find your therapist" CTAs (Hero, Footer, About page) to the new `/find-your-therapist` wizard. Deliberately left the homepage's "Four paths to support" quick-entry routes (crisis/veteran/general/helpers → `/intake`) and the therapist profile page's "Book a free session" link untouched — those serve a different purpose (fast, low-friction entry, especially for the crisis path) and shouldn't be forced through a longer wizard.
+
+**Verification:** `npx tsc --noEmit` clean (same pre-existing sandbox-only `resend` error as always). Full `npx jest` suite passes (7 suites, 19 tests — had to add `contact_phone: null` to the `TherapistsDirectory.test.tsx` mock fixture). Manually grepped every new file for the unescaped-apostrophe pattern that broke the Phase 8/8.1 build — none found this time.
+
+**Known gaps / left for Roy:**
+- `ANTHROPIC_API_KEY` isn't set anywhere yet — add it to Vercel (Dev + Production) per `ENV_VARS.md` to turn on real AI matching; the rule-based fallback works in the meantime.
+- No real clinic address yet — the In-Person step currently tells clients "our team will confirm a location." Give me a real name/address and I'll seed it (or add an admin UI to manage locations, if you want more than one).
+- `contact_phone` isn't populated for any of the 145 real therapists yet, same gap as `contact_email` from Phase 8 — the WhatsApp link silently doesn't show until it's set.
+- Same standing reminder as every phase — push before this exists on the live site:
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 9: Find Your Therapist AI-matching wizard"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

@@ -28,11 +28,11 @@ export default function NotificationBell() {
       if (cancelled || profile?.role !== "admin") return;
       setIsAdmin(true);
 
-      const { count: newCount } = await supabase
-        .from("booking_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "new");
-      if (!cancelled) setCount(newCount ?? 0);
+      const [bookings, matches] = await Promise.all([
+        supabase.from("booking_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
+        supabase.from("match_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
+      ]);
+      if (!cancelled) setCount((bookings.count ?? 0) + (matches.count ?? 0));
     }
 
     load();
@@ -47,9 +47,9 @@ export default function NotificationBell() {
 
   return (
     <Link
-      href="/admin/bookings"
+      href="/admin"
       className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white transition-colors hover:bg-secondary"
-      title={count > 0 ? `${count} new booking request${count === 1 ? "" : "s"}` : "No new booking requests"}
+      title={count > 0 ? `${count} new request${count === 1 ? "" : "s"}` : "No new requests"}
     >
       <Bell size={18} />
       {count > 0 && (

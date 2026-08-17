@@ -25,7 +25,7 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-wrap gap-4 mt-6">
-              <Link href="/intake" className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
+              <Link href="/find-your-therapist" className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
                 Find your therapist <ArrowRight size={18} />
               </Link>
               <Link href="/support-groups" className="inline-flex items-center justify-center gap-2 bg-white text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">

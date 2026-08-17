@@ -17,6 +17,7 @@ non-`uat` branch automatically).
 | 🌐 `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_pwqblE4IsgIS51akreuPwA_vdrHnYza` | Publishable key. Legacy anon JWT also works if a library needs it: see note below |
 | 🔒 `SUPABASE_SERVICE_ROLE_KEY` | *(get from Supabase Dashboard → gesa-dev → Project Settings → API)* | Not fetchable by me — grab it yourself |
 | 🔒 `RESEND_API_KEY` | *(your Resend dev/test API key)* | Leave blank to keep emails no-op'd (current behavior) |
+| 🔒 `ANTHROPIC_API_KEY` | *(your Anthropic API key)* | Powers the "Find Your Therapist" AI-matching wizard (Phase 9). Get one from console.anthropic.com. Leave blank and matching silently falls back to a simpler rule-based scorer — the feature still works, just without AI reasoning. |
 | 🔒 `RESEND_FROM_EMAIL` | `GESA <no-reply@gesa.org>` | Needs a domain verified in Resend before real sends work |
 | 🔒 `GESA_CONTACT_INBOX` | your team inbox | Where contact-form notifications land |
 | 🌐 `NEXT_PUBLIC_SITE_URL` | `https://<your-preview-domain>.vercel.app` | Vercel sets a per-deploy URL automatically; leave blank to let the app fall back, or use `VERCEL_URL` |
@@ -46,6 +47,7 @@ Vercel scope: **Production**.
 | 🌐 `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_De4l1-DwnjFhvCFP2SWPew_gHatlxs3` | Publishable key |
 | 🔒 `SUPABASE_SERVICE_ROLE_KEY` | *(get from Supabase Dashboard → Production project → Project Settings → API)* | Grab yourself, same as Dev |
 | 🔒 `RESEND_API_KEY` | *(your Resend production API key)* | |
+| 🔒 `ANTHROPIC_API_KEY` | *(your Anthropic API key)* | Same as Dev — powers AI matching. |
 | 🔒 `RESEND_FROM_EMAIL` | `GESA <no-reply@gesa.org>` | |
 | 🔒 `GESA_CONTACT_INBOX` | your team inbox | |
 | 🌐 `NEXT_PUBLIC_SITE_URL` | `https://gesa.org` (or whatever domain you point at this Vercel project) | |

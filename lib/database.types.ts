@@ -139,6 +139,7 @@ export type TestimonialRow = {
 export type TherapistRow = {
   bio: string | null;
   contact_email: string | null;
+  contact_phone: string | null;
   created_at: string;
   credentials: string | null;
   full_name: string;
@@ -171,6 +172,36 @@ export type BookingRequestRow = {
   status: string;
 }
 
+export type ClinicLocationRow = {
+  address: string;
+  created_at: string;
+  id: string;
+  is_active: boolean;
+  name: string;
+}
+
+export type GenderPreference = "woman" | "man" | "nonbinary" | "no_preference";
+export type SessionFormat = "online" | "call" | "in_person";
+
+export type MatchRequestRow = {
+  ai_reasoning: Json | null;
+  clinic_location_id: string | null;
+  created_at: string;
+  email: string;
+  gender_preference: GenderPreference;
+  id: string;
+  matched_therapist_ids: string[];
+  name: string;
+  phone: string | null;
+  preferred_date: string | null;
+  preferred_time: string | null;
+  selected_therapist_id: string | null;
+  session_format: SessionFormat;
+  status: string;
+  symptoms: string[];
+  treatment_type: string | null;
+}
+
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.15" };
   public: {
@@ -191,6 +222,28 @@ export type Database = {
         ];
       };
       chat_messages: { Row: ChatMessageRow; Insert: Partial<ChatMessageRow> & Pick<ChatMessageRow, "body" | "sender_id" | "thread_id">; Update: Partial<ChatMessageRow>; Relationships: [] };
+      clinic_locations: { Row: ClinicLocationRow; Insert: Partial<ClinicLocationRow> & Pick<ClinicLocationRow, "name" | "address">; Update: Partial<ClinicLocationRow>; Relationships: [] };
+      match_requests: {
+        Row: MatchRequestRow;
+        Insert: Partial<MatchRequestRow> & Pick<MatchRequestRow, "name" | "email" | "session_format">;
+        Update: Partial<MatchRequestRow>;
+        Relationships: [
+          {
+            foreignKeyName: "match_requests_clinic_location_id_fkey";
+            columns: ["clinic_location_id"];
+            isOneToOne: false;
+            referencedRelation: "clinic_locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "match_requests_selected_therapist_id_fkey";
+            columns: ["selected_therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       chat_threads: {
         Row: ChatThreadRow;
         Insert: Partial<ChatThreadRow> & Pick<ChatThreadRow, "client_id" | "therapist_id">;

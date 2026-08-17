@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth/requireAdmin";
 
 const NAV = [
   { href: "/admin", label: "Overview" },
+  { href: "/admin/match-requests", label: "Find Your Therapist" },
   { href: "/admin/bookings", label: "Booking requests" },
   { href: "/admin/inquiries", label: "Inquiries" },
   { href: "/admin/registrations", label: "Group registrations" },
