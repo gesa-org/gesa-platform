@@ -6,23 +6,28 @@
 
 @layer base {
   :root {
-    --background: #f7f3ea;
-    --foreground: #33352d;
-    --card: #fffdf8;
-    --primary: #5c6a4c;
-    --primary-600: #454f39;
+    /* Phase 11 — real brand palette (Deep Tile Blue / Blue Gray / Warm Gold /
+       Sage Green / Warm Ivory), supplied by Roy. Replaces the earlier sage/
+       clay/amber placeholder set used since Phase 7. Only these values
+       change — every component still reads the same variable names, so no
+       component code or copy needed to change. */
+    --background: #f2efe6;
+    --foreground: #2b3238;
+    --card: #fffdfa;
+    --primary: #1f3a4d;
+    --primary-600: #16293a;
     --primary-fg: #ffffff;
-    --secondary: #efe8d9;
-    --accent: #899a72;
-    --accent-soft: #e9ecdd;
-    --clay: #bd8a67;
-    --clay-soft: #f4e9de;
-    --muted: #efe8d9;
-    --muted-fg: #6f6a5c;
-    --border: #e6ded0;
+    --secondary: #e9edef;
+    --accent: #8aa082;
+    --accent-soft: #e8ede6;
+    --clay: #c7a163;
+    --clay-soft: #f7efde;
+    --muted: #e9edef;
+    --muted-fg: #5f6f78;
+    --border: #dce3e6;
     --destructive: #bb5138;
-    --amber: #a97e2c;
-    --amber-soft: #f7efdc;
+    --amber: #c7a163;
+    --amber-soft: #f7efde;
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
     --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

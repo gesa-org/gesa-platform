@@ -33,7 +33,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
               className={`relative rounded-2xl border p-5 text-left outline-none transition-all duration-300 ${
                 isOn
                   ? "border-primary bg-primary text-white shadow-lg"
-                  : "border-border bg-[#faf7f0] hover:border-accent hover:shadow-soft"
+                  : "border-border bg-[#f5f2ea] hover:border-accent hover:shadow-soft"
               }`}
             >
               <span
@@ -70,7 +70,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
         <div className="w-full max-w-[420px] rounded-[26px] bg-gradient-to-br from-primary to-accent p-1.5 shadow-lg">
           <div className="flex min-h-[380px] flex-col overflow-hidden rounded-[20px] bg-white">
             {active.format === "online" ? (
-              <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#6f8570] to-primary p-6 text-white">
+              <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#4a6578] to-primary p-6 text-white">
                 <div className="text-center text-sm opacity-90">{active.title}</div>
                 <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/35 bg-white/15 font-serif text-3xl">
                   {(active.facilitator_name ?? "?")
@@ -83,7 +83,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
                     <span
                       key={k}
                       className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                        k === "end" ? "bg-destructive text-white" : "bg-white/90 text-[#26382e]"
+                        k === "end" ? "bg-destructive text-white" : "bg-white/90 text-[#1f3a4d]"
                       }`}
                     >
                       {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
@@ -92,11 +92,11 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
                 </div>
               </div>
             ) : (
-              <div className="flex flex-1 flex-col bg-[#eef1ea] p-6">
+              <div className="flex flex-1 flex-col bg-[#e9edef] p-6">
                 <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-white/70 text-primary">
                   <MapPin size={30} />
                 </div>
-                <div className="text-sm text-[#3b4a41]">
+                <div className="text-sm text-[#3d4a52]">
                   <div className="flex items-center gap-2 py-1">
                     <MapPin size={14} /> {active.location}
                   </div>

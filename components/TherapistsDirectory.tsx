@@ -109,7 +109,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
 
         <a
           href="/contact?subject=Volunteer"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-clay px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a25835]"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-clay px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#a8813f]"
         >
           <Users size={16} /> Join us as a therapist
         </a>

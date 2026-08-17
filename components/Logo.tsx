@@ -1,16 +1,19 @@
-// Wordmark mark: two overlapping circles (sage + clay) — two people meeting
-// in support. Used alongside the "GESA" serif wordmark in the header/footer.
+import Image from "next/image";
+
+// Real GESA "G" mark, supplied by Roy (Phase 11) — replaces the earlier
+// two-circle placeholder used since Phase 7. The source file has a solid
+// ivory background (not transparent), which blends closely with the site's
+// own background tones, so it reads fine as a small inline mark without
+// needing background removal.
 export default function Logo({ size = 36 }: { size?: number }) {
   return (
-    <svg
+    <Image
+      src="/images/brand/gesa-logo.jpg"
+      alt="GESA"
       width={size}
       height={size}
-      viewBox="0 0 40 40"
-      aria-hidden="true"
-      className="flex-none"
-    >
-      <circle cx="15" cy="20" r="12" fill="#899a72" opacity="0.8" />
-      <circle cx="25" cy="20" r="12" fill="#bd8a67" opacity="0.8" />
-    </svg>
+      className="flex-none rounded-full object-cover"
+      priority
+    />
   );
 }

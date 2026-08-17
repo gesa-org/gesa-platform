@@ -13,7 +13,7 @@ const variants: Record<Variant, string> = {
   outline:
     "bg-white text-primary border border-border hover:border-primary-600 hover:bg-accent-soft hover:-translate-y-px",
   ghost: "bg-secondary text-foreground hover:bg-muted",
-  clay: "bg-clay text-white hover:bg-[#a25835] hover:-translate-y-px",
+  clay: "bg-clay text-white hover:bg-[#a8813f] hover:-translate-y-px",
 };
 
 const sizes: Record<Size, string> = {

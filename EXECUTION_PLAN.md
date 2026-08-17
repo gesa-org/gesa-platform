@@ -380,6 +380,29 @@ git commit -m "Phase 10: translation engine, notification redesign, CRM therapis
 git push
 ```
 
+## Phase 11 — Real logo, real color palette, scroll showcase effect
+
+Roy shared a reference video (a pinned split-screen "explore our work" section where a project image zooms/crossfades in sync with scroll position) plus the real GESA logo and color palette, asking me to explain the effect and get his sign-off on placement before building anything. Presented the analysis and three questions up front: where should the effect go, and confirm the logo/color rollout — he chose the "Four Paths to Support" homepage section for the effect, and approved both the logo swap and color remap immediately.
+
+**Logo:** `public/images/brand/gesa-logo.jpg` (the real "G" mark Roy supplied) replaces the two-circle placeholder in `components/Logo.tsx` everywhere it's used — header, footer, and the login/signup pages (which had a separate, older `Leaf` icon placeholder that was never updated when `Logo.tsx` was introduced in Phase 7 — fixed for consistency).
+
+**Color palette:** remapped every CSS custom property in `app/globals.css` (`--primary`, `--accent`, `--clay`, `--background`, `--secondary`/`--muted`, `--border`) to the real Deep Tile Blue / Sage Green / Warm Gold / Warm Ivory / Blue Gray palette. Since every Tailwind color token in `tailwind.config.ts` already reads from these CSS variables (`primary: "var(--primary)"`, etc.), this one file change re-themes the entire site with no component code touched. Also swept and fixed several **hardcoded hex colors that bypassed the CSS variable system entirely** and would otherwise have clashed with the new palette: a leftover dark-green footer theme (`Footer.tsx`), off-palette sage greens in the support-groups video-call mockup (`SupportGroupsInteractive.tsx`), and a stale terracotta button-hover shade used by the "clay" button variant in three places.
+
+**Scroll showcase effect** (`components/home/Paths.tsx`, fully rewritten): same four paths, same exact copy, links, and CTA labels as before — only the presentation changed. A scroll listener (throttled via `requestAnimationFrame`, no new dependency) computes a continuous progress value across a tall pinned container; both the left-side text panel and the right-side image panel crossfade between the four paths' content in sync with scroll position, with a subtle zoom on the active image — reproducing the reference video's mechanic without adopting a new animation library, so it behaves consistently across browsers. Uses four placeholder Unsplash stock photos (one per path) since this section previously had no imagery at all — **this sandbox's network restrictions meant I couldn't preview-load these before shipping; please confirm they render correctly once deployed** and swap in real photos whenever you have them.
+
+**Verification:** `npx tsc --noEmit` clean (same pre-existing sandbox-only `resend` error as always). **Could not get a clean `npx jest` run this round** — every attempt, including the smallest/fastest suite, timed out in this sandbox session (tsc itself still completes normally, so the environment isn't fully frozen; this looks like jest-specific degradation on the Windows-mounted filesystom over a long session, not a defect introduced by this phase's changes, none of which touch anything under test — CSS values, a static image swap, and one presentational component with no existing test coverage). Recommend treating Vercel's own build/lint as the authoritative check for this phase, same as always.
+
+**Known gaps / left for Roy:**
+- Confirm the four placeholder stock photos in the new Paths showcase actually load; replace with real photography whenever ready.
+- The uploaded logo file has a solid ivory background (not transparent) — reads fine at the small sizes used in the header/footer, but a transparent-background version would look cleaner if ever used somewhere with a different background color.
+- Same standing reminder — push before any of this exists on the live site:
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 11: real logo, real color palette, scroll showcase effect on Four Paths"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

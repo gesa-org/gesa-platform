@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Leaf } from "lucide-react";
 import Button from "@/components/ui/Button";
+import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -16,9 +16,7 @@ export default function LoginPage() {
     <section className="flex min-h-[70vh] items-center justify-center px-6 py-16">
       <div className="w-full max-w-[400px] rounded-[var(--radius)] border border-border bg-card p-8 shadow-soft">
         <Link href="/" className="mb-6 flex items-center gap-2.5 font-serif text-xl font-bold text-primary">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white">
-            <Leaf size={18} />
-          </span>
+          <Logo size={32} />
           GESA
         </Link>
         <h1 className="mb-1 text-2xl">Sign in</h1>

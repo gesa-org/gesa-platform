@@ -7,7 +7,7 @@ import NotificationBell from '@/components/admin/NotificationBell';
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-40 bg-[#faf8f3d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
+    <header className="sticky top-0 z-40 bg-[#f2efe6d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
       <div className="max-w-[1160px] mx-auto px-6 flex items-center h-[74px] gap-5">
         <Link href="/" className="flex items-center gap-2.5 font-serif text-[22px] font-bold text-primary">
           <Logo size={34} />
