@@ -40,7 +40,11 @@ export default function LoginPage() {
               setError(signInError.message);
               return;
             }
-            router.push("/");
+            // Read `next` directly from the URL rather than via useSearchParams(),
+            // which would force this page out of static rendering (Next 14
+            // requires a Suspense boundary around that hook).
+            const next = new URLSearchParams(window.location.search).get("next");
+            router.push(next || "/");
             router.refresh();
           }}
         >

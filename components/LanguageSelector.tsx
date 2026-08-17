@@ -3,19 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { LANGUAGES } from "@/lib/languages";
 
 // Preference control only — no site-wide translation. Selecting a language
 // updates profiles.preferred_language for signed-in users (persists across
 // devices/sessions); signed-out visitors just get a local UI preference for
 // the current tab, which resets on reload since there's nowhere to save it.
-const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "he", label: "עברית" },
-  { code: "ar", label: "العربية" },
-  { code: "ru", label: "Русский" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-];
 
 export default function LanguageSelector() {
   const [open, setOpen] = useState(false);

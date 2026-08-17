@@ -294,6 +294,19 @@ git commit -m "Phase 8: CRM dashboard, notifications, therapist profiles, langua
 git push
 ```
 
+## Phase 8.1 — My Account page
+
+After Phase 8 shipped, Roy confirmed signup/login now works end-to-end (the Supabase Auth Site URL fix from earlier held) — but flagged that once signed in, there was no way to actually view or edit your own account. True: `AuthStatus.tsx` only ever rendered "Sign In" or "Sign out," nothing in between, and no `/account` route existed anywhere in the app.
+
+**Built:**
+- `lib/auth/requireUser.ts` — signed-in-only guard (no role check), redirects to `/login?next=<path>` if signed out.
+- `app/account/page.tsx` + `components/account/AccountForm.tsx` — view/edit full name, phone, country, preferred language; email shown read-only (tied to login); role shown read-only, with a "Go to CRM Dashboard" shortcut if the signed-in user is an admin.
+- `components/AuthStatus.tsx` reworked from a single "Sign out" button into a dropdown ("My account" / "Sign out") so the new page is actually reachable.
+- `lib/languages.ts` — pulled the language list out of `LanguageSelector.tsx` into a shared constant so the header selector and the account page's language field can't drift out of sync.
+- `app/login/page.tsx` now respects a `?next=` redirect target (read from `window.location.search` rather than `useSearchParams()`, which would've forced the page out of static rendering without a Suspense boundary).
+
+**Verification:** `npx tsc --noEmit` clean (same pre-existing sandbox-only `resend` error as before). Full `npx jest` suite passes (7 suites, 19 tests).
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
