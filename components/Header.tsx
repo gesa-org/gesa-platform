@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { Globe, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import AuthStatus from '@/components/AuthStatus';
 import Logo from '@/components/Logo';
+import LanguageSelector from '@/components/LanguageSelector';
+import NotificationBell from '@/components/admin/NotificationBell';
 
 export default function Header() {
   return (
@@ -22,9 +24,8 @@ export default function Header() {
           <Link href="/contact?subject=Donation" className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft">
             <Heart size={16} /> Donate
           </Link>
-          <button className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center hover:bg-secondary transition-colors" title="Language">
-            <Globe size={18} />
-          </button>
+          <NotificationBell />
+          <LanguageSelector />
           <AuthStatus />
         </div>
       </div>

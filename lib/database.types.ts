@@ -138,6 +138,7 @@ export type TestimonialRow = {
 
 export type TherapistRow = {
   bio: string | null;
+  contact_email: string | null;
   created_at: string;
   credentials: string | null;
   full_name: string;

@@ -20,6 +20,7 @@ function makeTherapist(overrides: Partial<Tables<"therapists">>): Tables<"therap
     slug: "jane-doe",
     full_name: "Jane Doe",
     bio: null,
+    contact_email: null,
     short_summary: "Warm, trauma-informed support.",
     specialties: ["Trauma Support"],
     languages: ["English"],

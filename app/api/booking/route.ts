@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmailSafely } from "@/lib/email/resend";
-import { bookingConfirmationEmail, bookingTeamNotificationEmail } from "@/lib/email/templates";
+import {
+  bookingConfirmationEmail,
+  bookingTeamNotificationEmail,
+  therapistNewMatchEmail,
+} from "@/lib/email/templates";
 
 const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
@@ -40,7 +44,22 @@ export async function POST(request: Request) {
   }
 
   const label = ENTRY_ROUTE_LABELS[entryRoute];
-  const [toSender, toTeam] = await Promise.all([
+
+  // Look up the matched therapist's contact_email server-side rather than
+  // trusting anything the client sent — most of the 145 real therapists
+  // don't have a linked Supabase Auth login yet, so this plain email column
+  // (added in Phase 8) is the only reliable way to reach them directly.
+  let therapistContactEmail: string | null = null;
+  if (matchedTherapistId) {
+    const { data: therapist } = await supabase
+      .from("therapists")
+      .select("contact_email")
+      .eq("id", matchedTherapistId)
+      .maybeSingle();
+    therapistContactEmail = therapist?.contact_email ?? null;
+  }
+
+  const [toSender, toTeam, toTherapist] = await Promise.all([
     sendEmailSafely({
       to: email,
       subject: "You're matched with a GESA therapist",
@@ -51,7 +70,14 @@ export async function POST(request: Request) {
       subject: `New booking request: ${label}`,
       html: bookingTeamNotificationEmail(label, name, email, matchedTherapistName),
     }),
+    therapistContactEmail
+      ? sendEmailSafely({
+          to: therapistContactEmail,
+          subject: `New client match: ${name}`,
+          html: therapistNewMatchEmail(matchedTherapistName, name, email, label),
+        })
+      : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
   ]);
 
-  return NextResponse.json({ toSender, toTeam });
+  return NextResponse.json({ toSender, toTeam, toTherapist });
 }

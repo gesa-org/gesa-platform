@@ -90,3 +90,67 @@ export async function getRandomMatchedTherapist(): Promise<Tables<"therapists"> 
   if (therapists.length === 0) return null;
   return therapists[Math.floor(Math.random() * therapists.length)];
 }
+
+export async function getTherapistBySlug(slug: string): Promise<Tables<"therapists"> | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapists")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .eq("is_verified", true)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// --- Admin-only reads below. Every one of these relies on the *_admin_read
+// RLS policies (admin/reviewer) — they run under the signed-in admin's own
+// session via lib/supabase/server.ts, never a service-role client. The page
+// calling these must already be gated by requireAdmin() (see
+// lib/auth/requireAdmin.ts); RLS is the real enforcement, the page guard is
+// defense-in-depth.
+
+export async function getAllInquiries(): Promise<Tables<"inquiries">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("inquiries")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getAllGroupRegistrations(): Promise<Tables<"group_registrations">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("group_registrations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export type BookingRequestWithTherapist = Tables<"booking_requests"> & {
+  matched_therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email"> | null;
+};
+
+export async function getAllBookingRequests(): Promise<BookingRequestWithTherapist[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .select("*, matched_therapist:therapists(id, full_name, contact_email)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as BookingRequestWithTherapist[];
+}
+
+export async function getAllProfiles(): Promise<Tables<"profiles">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}

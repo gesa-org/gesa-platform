@@ -82,6 +82,25 @@ export function bookingTeamNotificationEmail(
   `);
 }
 
+export function therapistNewMatchEmail(
+  therapistName: string,
+  clientName: string,
+  clientEmail: string,
+  entryRouteLabel: string
+) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You've been matched, ${therapistName || "there"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      GESA has matched you with a new client through our site: <strong>${clientName}</strong>
+      (${clientEmail}), reaching out via "${entryRouteLabel}".
+    </p>
+    <p style="color:#33352d;line-height:1.6;">
+      Please reach out to them directly to schedule their first free session. If anything about this
+      match doesn't feel right, reply to this email and our team will help reassign it.
+    </p>
+  `);
+}
+
 export function groupRegistrationEmail(name: string, groupTitle: string, schedule: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're registered, ${name}</h1>
