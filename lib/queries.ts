@@ -102,6 +102,25 @@ export async function getRandomMatchedTherapist(): Promise<Tables<"therapists"> 
   return therapists[Math.floor(Math.random() * therapists.length)];
 }
 
+// Admin-only: unlike getActiveTherapists(), this doesn't filter on
+// is_active/is_verified, so deactivated ("deleted") therapists still show up
+// for an admin to review or reactivate. Relies on the pre-existing
+// therapists_self_read RLS policy, which already grants admin/reviewer read
+// access to every therapist row.
+export async function getAllTherapistsAdmin(): Promise<Tables<"therapists">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("therapists").select("*").order("full_name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getTherapistByIdAdmin(id: string): Promise<Tables<"therapists"> | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("therapists").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function getTherapistBySlug(slug: string): Promise<Tables<"therapists"> | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -169,6 +188,93 @@ export async function getAllMatchRequests(): Promise<MatchRequestWithTherapist[]
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as MatchRequestWithTherapist[];
+}
+
+// Admin-only monitoring view over client<->therapist chat. RLS on
+// chat_threads/chat_messages already grants admin read access (see
+// EXECUTION_PLAN.md Phase 10 — "OR auth_role() = 'admin'" was already present
+// before this phase); this just adds the admin-facing query + UI that never
+// existed.
+export type ChatThreadSummary = {
+  id: string;
+  createdAt: string;
+  clientName: string;
+  therapistName: string;
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  messageCount: number;
+};
+
+export async function getAllChatThreads(): Promise<ChatThreadSummary[]> {
+  const supabase = await createClient();
+  const { data: threads, error } = await supabase
+    .from("chat_threads")
+    .select("id, created_at, clients(full_name), therapists(full_name)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  if (!threads) return [];
+
+  const threadIds = threads.map((t) => t.id);
+  const lastByThread = new Map<string, { body: string; created_at: string }>();
+  const countByThread = new Map<string, number>();
+
+  if (threadIds.length) {
+    const { data: messages } = await supabase
+      .from("chat_messages")
+      .select("thread_id, body, created_at")
+      .in("thread_id", threadIds)
+      .order("created_at", { ascending: false });
+    messages?.forEach((m) => {
+      countByThread.set(m.thread_id, (countByThread.get(m.thread_id) ?? 0) + 1);
+      if (!lastByThread.has(m.thread_id)) lastByThread.set(m.thread_id, m);
+    });
+  }
+
+  return threads.map((t) => {
+    const last = lastByThread.get(t.id);
+    return {
+      id: t.id,
+      createdAt: t.created_at,
+      clientName: t.clients?.full_name ?? "Client",
+      therapistName: t.therapists?.full_name ?? "Therapist",
+      lastMessage: last?.body ?? null,
+      lastMessageAt: last?.created_at ?? null,
+      messageCount: countByThread.get(t.id) ?? 0,
+    };
+  });
+}
+
+export type ChatMessageWithSenderLabel = Tables<"chat_messages"> & { senderLabel: string };
+
+export async function getChatThreadForAdmin(
+  threadId: string
+): Promise<{ clientName: string; therapistName: string; messages: ChatMessageWithSenderLabel[] } | null> {
+  const supabase = await createClient();
+  const { data: thread, error } = await supabase
+    .from("chat_threads")
+    .select("id, clients(full_name, profile_id), therapists(full_name, profile_id)")
+    .eq("id", threadId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!thread) return null;
+
+  const { data: messages } = await supabase
+    .from("chat_messages")
+    .select("*")
+    .eq("thread_id", threadId)
+    .order("created_at", { ascending: true });
+
+  const clientProfileId = thread.clients?.profile_id;
+  const labeled = (messages ?? []).map((m) => ({
+    ...m,
+    senderLabel: m.sender_id === clientProfileId ? "Client" : "Therapist",
+  }));
+
+  return {
+    clientName: thread.clients?.full_name ?? "Client",
+    therapistName: thread.therapists?.full_name ?? "Therapist",
+    messages: labeled,
+  };
 }
 
 export async function getAllProfiles(): Promise<Tables<"profiles">[]> {

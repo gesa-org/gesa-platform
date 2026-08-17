@@ -1,5 +1,9 @@
-// Shared list for both the header LanguageSelector and the account page's
-// language field, so the two stay in sync automatically.
+// Shared list for the header LanguageSelector, the account page's language
+// field, and the translation engine. Codes are Google Cloud Translation
+// language codes. Expanded from the original 6 to a broad, genuinely global
+// spread (every populated continent, the UN official languages, and GESA's
+// largest actual audiences) rather than every one of Google's 100+
+// supported codes, which would make the picker unusable.
 export const LANGUAGES = [
   { code: "en", label: "English" },
   { code: "he", label: "עברית" },
@@ -7,4 +11,37 @@ export const LANGUAGES = [
   { code: "ru", label: "Русский" },
   { code: "es", label: "Español" },
   { code: "fr", label: "Français" },
+  { code: "de", label: "Deutsch" },
+  { code: "it", label: "Italiano" },
+  { code: "pt", label: "Português" },
+  { code: "nl", label: "Nederlands" },
+  { code: "pl", label: "Polski" },
+  { code: "uk", label: "Українська" },
+  { code: "el", label: "Ελληνικά" },
+  { code: "tr", label: "Türkçe" },
+  { code: "fa", label: "فارسی" },
+  { code: "ur", label: "اردو" },
+  { code: "hi", label: "हिन्दी" },
+  { code: "bn", label: "বাংলা" },
+  { code: "zh-CN", label: "中文 (简体)" },
+  { code: "zh-TW", label: "中文 (繁體)" },
+  { code: "ja", label: "日本語" },
+  { code: "ko", label: "한국어" },
+  { code: "vi", label: "Tiếng Việt" },
+  { code: "th", label: "ไทย" },
+  { code: "id", label: "Bahasa Indonesia" },
+  { code: "ms", label: "Bahasa Melayu" },
+  { code: "tl", label: "Filipino" },
+  { code: "sw", label: "Kiswahili" },
+  { code: "am", label: "አማርኛ" },
+  { code: "yo", label: "Yorùbá" },
+  { code: "ha", label: "Hausa" },
+  { code: "af", label: "Afrikaans" },
+  { code: "sv", label: "Svenska" },
+  { code: "no", label: "Norsk" },
+  { code: "da", label: "Dansk" },
+  { code: "fi", label: "Suomi" },
+  { code: "ro", label: "Română" },
+  { code: "hu", label: "Magyar" },
+  { code: "cs", label: "Čeština" },
 ];

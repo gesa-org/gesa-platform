@@ -15,6 +15,13 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        // Phase 10: therapist photo uploads land in Supabase Storage, whose
+        // public URLs are hosted at <project-ref>.supabase.co — wildcarded
+        // so this covers both the Dev and Production projects.
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
     ],
   },
 };

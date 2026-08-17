@@ -202,6 +202,15 @@ export type MatchRequestRow = {
   treatment_type: string | null;
 }
 
+export type TranslationCacheRow = {
+  created_at: string;
+  id: string;
+  source_hash: string;
+  source_text: string;
+  target_lang: string;
+  translated_text: string;
+}
+
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.15" };
   public: {
@@ -276,6 +285,12 @@ export type Database = {
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };
       therapists: { Row: TherapistRow; Insert: Partial<TherapistRow> & Pick<TherapistRow, "full_name" | "slug">; Update: Partial<TherapistRow>; Relationships: [] };
+      translation_cache: {
+        Row: TranslationCacheRow;
+        Insert: Partial<TranslationCacheRow> & Pick<TranslationCacheRow, "source_hash" | "target_lang" | "source_text" | "translated_text">;
+        Update: Partial<TranslationCacheRow>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

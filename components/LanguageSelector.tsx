@@ -1,36 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Globe } from "lucide-react";
+import { Globe, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LANGUAGES } from "@/lib/languages";
+import { useTranslation } from "@/components/TranslationProvider";
 
-// Preference control only — no site-wide translation. Selecting a language
-// updates profiles.preferred_language for signed-in users (persists across
-// devices/sessions); signed-out visitors just get a local UI preference for
-// the current tab, which resets on reload since there's nowhere to save it.
-
+// The dropdown itself; actual page translation is handled by
+// TranslationProvider (components/TranslationProvider.tsx), which this just
+// calls into. Still persists the choice to profiles.preferred_language for
+// signed-in users so it follows them across devices.
 export default function LanguageSelector() {
+  const { language, translating, setLanguage } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [current, setCurrent] = useState("en");
-  const [saving, setSaving] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("preferred_language")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (profile?.preferred_language) setCurrent(profile.preferred_language);
-    })();
-  }, []);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -41,9 +24,7 @@ export default function LanguageSelector() {
   }, []);
 
   async function select(code: string) {
-    setCurrent(code);
     setOpen(false);
-    setSaving(true);
     const supabase = createClient();
     const {
       data: { user },
@@ -51,29 +32,29 @@ export default function LanguageSelector() {
     if (user) {
       await supabase.from("profiles").update({ preferred_language: code }).eq("id", user.id);
     }
-    setSaving(false);
+    setLanguage(code);
   }
 
-  const currentLabel = LANGUAGES.find((l) => l.code === current)?.label ?? "English";
+  const currentLabel = LANGUAGES.find((l) => l.code === language)?.label ?? "English";
 
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative" ref={ref} data-no-translate>
       <button
         onClick={() => setOpen((v) => !v)}
-        title={`Preferred language: ${currentLabel}`}
+        title={`Language: ${currentLabel}`}
         className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white transition-colors hover:bg-secondary disabled:opacity-60"
-        disabled={saving}
+        disabled={translating}
       >
-        <Globe size={18} />
+        {translating ? <Loader2 size={18} className="animate-spin" /> : <Globe size={18} />}
       </button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-44 overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
+        <div className="absolute right-0 top-12 z-50 max-h-[360px] w-48 overflow-y-auto rounded-2xl border border-border bg-white shadow-lg">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
               onClick={() => select(l.code)}
               className={`block w-full px-4 py-2.5 text-left text-[14px] transition-colors hover:bg-secondary ${
-                l.code === current ? "font-semibold text-primary" : "text-foreground"
+                l.code === language ? "font-semibold text-primary" : "text-foreground"
               }`}
             >
               {l.label}

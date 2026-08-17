@@ -345,6 +345,41 @@ git commit -m "Phase 9: Find Your Therapist AI-matching wizard"
 git push
 ```
 
+## Phase 10 — Translation, notification redesign, CRM therapist management, messaging oversight
+
+Four requests in one batch, with real architecture decisions clarified with Roy first:
+- Real machine-translation (Google Cloud Translation API) over a free embeddable widget or holding off.
+- Build therapist-side notifications now, dormant, even though zero therapists currently have a real login (`profile_id` is null on every therapist row in both Dev and Production) — it'll activate the moment one does.
+- Real image upload for therapist photos (Supabase Storage) over a plain URL field.
+- "Delete" a therapist means deactivate (hide from the public directory, fully reversible), not permanently destroy the row — this is real data for 145 real volunteers.
+
+**Database (Dev + Production):**
+- `match_requests_therapist_read` / `booking_requests_therapist_read` RLS policies — let a therapist read their own session requests once `therapists.profile_id` is set to their auth id. Dormant today, live the moment a real therapist account exists.
+- `therapist-photos` Storage bucket (public read; admin-only insert/update/delete) for the new photo upload feature.
+- `translation_cache` table (public read/insert — it only ever stores already-public UI copy, never PII) so repeat translations of the same string don't re-hit the Google Translate API.
+- `next.config.mjs` — added `*.supabase.co` to `images.remotePatterns` so uploaded therapist photos render via `next/image`.
+
+**Built:**
+- **Nav/access control**: removed the CRM link from the notification bell entirely; added an admin-only "CRM Dashboard" item to the `AuthStatus` account dropdown (checks the signed-in user's own role client-side, same pattern as `NotificationBell`).
+- **Notification system redesign**: `NotificationBell.tsx` is now a real dropdown panel, not just a badge-and-link. Admins see recent match requests, booking requests, and contact-form inquiries merged into one feed; clicking an item opens a detail modal with the inquirer's info and their selected therapist. Therapists (once a real account exists) see their own upcoming sessions with date/time/modality. Note: contact-form `inquiries` has no status column, so "new" for that type is approximated as "recent" rather than tracked read/unread — flagging in case you want a real read-state later.
+- **Messaging oversight**: `/admin/messages` (thread list) + `/admin/messages/[threadId]` (read-only transcript). The RLS allowing admin to read chat threads/messages already existed before this phase — this just adds the UI to actually use it. Conversations remain otherwise private to the client and therapist.
+- **CRM Therapist Management**: `/admin/therapists` (list, status badges) + `/admin/therapists/[id]` (edit form: photo upload to Supabase Storage, full name, short summary, bio, credentials, specialties, languages; a "Deactivate/Reactivate" toggle instead of real deletion).
+- **Translation engine**: `lib/translate.ts` calls the Google Cloud Translation API (needs `GOOGLE_TRANSLATE_API_KEY`, documented in `ENV_VARS.md`; without it the page silently skips translation rather than breaking), cached in `translation_cache`. `TranslationProvider.tsx` (wraps the whole app in `app/layout.tsx`) walks all visible DOM text and swaps it for translated text whenever a non-English language is active, re-running on every route change. Language list expanded from 6 to 38 languages spanning every populated continent (`lib/languages.ts`). Two known, deliberate limitations of this approach (documented in the component itself): content that appears after an in-page fetch (e.g. AI match results) isn't caught until the next navigation since there's no live DOM observer; and switching languages always does a full page reload rather than a seamless transition, so translation always starts from clean original English content instead of trying to fragile-ly undo in-place text edits.
+
+**Verification:** `npx tsc --noEmit` clean (same pre-existing sandbox-only `resend` error as always). Full `npx jest` suite passes (7 suites, 19 tests — split across a few calls since this sandbox got noticeably slower after the new dependencies installed; not a code issue). Manually grepped every new file for the unescaped-apostrophe pattern that broke the Phase 8/8.1 build — none found.
+
+**Known gaps / left for Roy:**
+- `GOOGLE_TRANSLATE_API_KEY` isn't set anywhere yet — add it to Vercel (Dev + Production) to turn on real translation.
+- No therapist has a real login yet, so therapist-side notifications can't be demonstrated live until one does (per your choice to build it dormant rather than convert the demo account or skip it).
+- Contact-form inquiries have no read/unread tracking — every admin bell refresh shows the most recent ones regardless of whether they've been seen.
+- Same standing reminder — push before any of this exists on the live site:
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 10: translation engine, notification redesign, CRM therapist management, messaging oversight"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

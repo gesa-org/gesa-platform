@@ -2,19 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { User, ChevronDown } from "lucide-react";
+import { User, ChevronDown, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthStatus() {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+
+    async function loadRole(userId: string) {
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+      setIsAdmin(profile?.role === "admin");
+    }
+
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
+      if (data.user) loadRole(data.user.id);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email ?? null);
+      if (session?.user) loadRole(session.user.id);
+      else setIsAdmin(false);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -63,6 +75,15 @@ export default function AuthStatus() {
           >
             My account
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1.5 border-t border-border px-4 py-2.5 text-[14px] font-medium text-primary transition-colors hover:bg-secondary"
+            >
+              <ShieldCheck size={15} /> CRM Dashboard
+            </Link>
+          )}
           <button
             onClick={async () => {
               const supabase = createClient();

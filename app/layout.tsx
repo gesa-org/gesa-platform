@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CrisisButton from "@/components/CrisisButton";
+import TranslationProvider from "@/components/TranslationProvider";
 
 export const metadata: Metadata = {
   title: "GESA (Global Emotional Support Alliance)",
@@ -18,10 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <CrisisButton />
+        <TranslationProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CrisisButton />
+        </TranslationProvider>
       </body>
     </html>
   );

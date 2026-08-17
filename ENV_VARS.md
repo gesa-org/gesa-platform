@@ -18,6 +18,7 @@ non-`uat` branch automatically).
 | 🔒 `SUPABASE_SERVICE_ROLE_KEY` | *(get from Supabase Dashboard → gesa-dev → Project Settings → API)* | Not fetchable by me — grab it yourself |
 | 🔒 `RESEND_API_KEY` | *(your Resend dev/test API key)* | Leave blank to keep emails no-op'd (current behavior) |
 | 🔒 `ANTHROPIC_API_KEY` | *(your Anthropic API key)* | Powers the "Find Your Therapist" AI-matching wizard (Phase 9). Get one from console.anthropic.com. Leave blank and matching silently falls back to a simpler rule-based scorer — the feature still works, just without AI reasoning. |
+| 🔒 `GOOGLE_TRANSLATE_API_KEY` | *(your Google Cloud Translation API key)* | Powers site-wide language translation (Phase 10). Get one from console.cloud.google.com — enable the "Cloud Translation API" on a project, then create an API key. Leave blank and the language picker still saves a preference but no longer translates the page. |
 | 🔒 `RESEND_FROM_EMAIL` | `GESA <no-reply@gesa.org>` | Needs a domain verified in Resend before real sends work |
 | 🔒 `GESA_CONTACT_INBOX` | your team inbox | Where contact-form notifications land |
 | 🌐 `NEXT_PUBLIC_SITE_URL` | `https://<your-preview-domain>.vercel.app` | Vercel sets a per-deploy URL automatically; leave blank to let the app fall back, or use `VERCEL_URL` |
@@ -48,6 +49,7 @@ Vercel scope: **Production**.
 | 🔒 `SUPABASE_SERVICE_ROLE_KEY` | *(get from Supabase Dashboard → Production project → Project Settings → API)* | Grab yourself, same as Dev |
 | 🔒 `RESEND_API_KEY` | *(your Resend production API key)* | |
 | 🔒 `ANTHROPIC_API_KEY` | *(your Anthropic API key)* | Same as Dev — powers AI matching. |
+| 🔒 `GOOGLE_TRANSLATE_API_KEY` | *(your Google Cloud Translation API key)* | Same as Dev — powers site translation. |
 | 🔒 `RESEND_FROM_EMAIL` | `GESA <no-reply@gesa.org>` | |
 | 🔒 `GESA_CONTACT_INBOX` | your team inbox | |
 | 🌐 `NEXT_PUBLIC_SITE_URL` | `https://gesa.org` (or whatever domain you point at this Vercel project) | |
