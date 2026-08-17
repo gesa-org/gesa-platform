@@ -21,7 +21,7 @@ export default async function AccountPage() {
       <span className="eyebrow">Your account</span>
       <h1 className="mb-2 text-[30px]">My Account</h1>
       <p className="mb-7 text-muted-fg">
-        View and update your details. Your email is tied to your login and can't be changed here.
+        View and update your details. Your email is tied to your login and can&apos;t be changed here.
       </p>
 
       <div className="mb-6 flex items-center justify-between rounded-[var(--radius)] border border-border bg-card p-5">

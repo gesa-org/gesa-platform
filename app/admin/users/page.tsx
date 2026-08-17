@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
       <div className="border-b border-border p-5">
         <h2 className="text-lg">Registered users ({profiles.length})</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
-          Change a user's role to grant or remove access. Restricted to administrators.
+          Change a user&apos;s role to grant or remove access. Restricted to administrators.
         </p>
       </div>
       <div className="overflow-x-auto">

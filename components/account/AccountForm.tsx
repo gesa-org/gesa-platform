@@ -89,7 +89,7 @@ export default function AccountForm({ profile }: { profile: Tables<"profiles"> }
       <div className="flex items-center gap-4">
         <Button type="submit">{pending ? "Saving…" : "Save changes"}</Button>
         {status === "saved" && <span className="text-[13.5px] font-medium text-primary">Saved.</span>}
-        {status === "error" && <span className="text-[13.5px] font-medium text-destructive">Couldn't save — try again.</span>}
+        {status === "error" && <span className="text-[13.5px] font-medium text-destructive">Couldn&apos;t save — try again.</span>}
       </div>
     </form>
   );
