@@ -1,22 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { LifeBuoy, Shield, Heart, Users, ArrowRight } from "lucide-react";
 
 // Phase 11 — same four paths, same copy, same links as before. Only the
-// layout changed: a scroll-pinned, crossfading showcase modeled on the
-// reference video Roy shared (a pinned split-screen panel where the image
-// zooms/crossfades between items as you scroll, in sync with the text).
-// Implemented with a plain scroll listener + CSS opacity/transform rather
-// than a new animation library, so there's no added dependency and it works
-// the same in every modern browser.
+// presentation changed: a scroll-pinned, crossfading showcase modeled on the
+// reference video Roy shared.
 //
-// Placeholder stock photos (Unsplash) — this sandbox's network restrictions
-// meant I couldn't preview-load these before shipping; please confirm they
-// render correctly after deploy and swap them for real photos whenever you
-// have them.
+// Phase 11.1 fix: the first version drove opacity from React state and then
+// layered a CSS `transition` on top of it. Every scroll tick restarted that
+// transition mid-flight, so the crossfade never caught up to the actual
+// scroll position — that's what read as "staggering." Fixed by removing the
+// CSS transition entirely and instead running a continuous
+// requestAnimationFrame loop that smooths (lerps) the progress value itself
+// and writes opacity/transform straight to the DOM via refs, bypassing React
+// re-renders. This is the standard technique behind smooth scroll-scrubbed
+// effects (it's what libraries like GSAP ScrollTrigger do internally) — one
+// continuously-updated number driving the animation, no competing timers.
+//
+// Images: one real, on-theme stock photo per path (Unsplash). This
+// sandbox's outbound network is proxied and explicitly blocks
+// images.unsplash.com for me, so I still can't preview-load these myself —
+// confirmed via a direct connectivity test, not a guess. Production
+// (Vercel) has normal internet access, and the Hero section's photo from
+// this same domain has been live and working since Phase 7, so the domain
+// itself is not the risk — only whether these specific photo ids still
+// exist. Flag me immediately if any path's image doesn't load and I'll
+// swap it same-session.
 const PATHS = [
   {
     id: "crisis",
@@ -27,7 +39,7 @@ const PATHS = [
     ctaLink: "/intake?path=crisis",
     ctaLabel: "Reach out now",
     badgeClass: "bg-destructive text-white",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1200&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1200&auto=format&fit=crop",
   },
   {
     id: "veteran",
@@ -38,7 +50,7 @@ const PATHS = [
     ctaLink: "/intake?path=veteran",
     ctaLabel: "Reach out now",
     badgeClass: "bg-primary-600 text-white",
-    image: "https://images.unsplash.com/photo-1516307365426-bea591f05011?q=80&w=1200&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
   },
   {
     id: "general",
@@ -59,37 +71,68 @@ const PATHS = [
     ctaLink: "/intake?path=helpers",
     ctaLabel: "Book a session",
     badgeClass: "bg-clay text-white",
-    image: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1200&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=1200&auto=format&fit=crop",
   },
 ];
 
 export default function Paths() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
+  const textRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const rawProgress = useRef(0);
+  const smoothProgress = useRef(0);
+  const rafRef = useRef<number>();
 
   useEffect(() => {
-    let raf = 0;
-
-    function computeProgress() {
+    function updateRawProgress() {
       const el = containerRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const scrollableHeight = el.offsetHeight - window.innerHeight;
       const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(scrollableHeight, 0));
-      const next = scrollableHeight > 0 ? (scrolled / scrollableHeight) * (PATHS.length - 1) : 0;
-      setProgress(next);
+      rawProgress.current = scrollableHeight > 0 ? (scrolled / scrollableHeight) * (PATHS.length - 1) : 0;
+    }
+
+    function tick() {
+      // Lerp toward the real scroll position every frame — this is the
+      // smoothing, done once, in one place, instead of via CSS transitions
+      // that fight the next scroll update.
+      smoothProgress.current += (rawProgress.current - smoothProgress.current) * 0.18;
+      const p = smoothProgress.current;
+
+      PATHS.forEach((_, i) => {
+        const distance = Math.abs(p - i);
+        const textEl = textRefs.current[i];
+        const imgEl = imageRefs.current[i];
+
+        if (textEl) {
+          const textOpacity = Math.max(0, 1 - distance * 1.6);
+          textEl.style.opacity = String(textOpacity);
+          textEl.style.pointerEvents = textOpacity > 0.5 ? "auto" : "none";
+        }
+        if (imgEl) {
+          const imgOpacity = Math.max(0, 1 - distance);
+          const scale = 1.06 - Math.min(distance, 1) * 0.06;
+          imgEl.style.opacity = String(imgOpacity);
+          imgEl.style.transform = `scale(${scale})`;
+        }
+      });
+
+      rafRef.current = requestAnimationFrame(tick);
     }
 
     function onScroll() {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(computeProgress);
+      updateRawProgress();
     }
 
-    computeProgress();
+    updateRawProgress();
+    smoothProgress.current = rawProgress.current;
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    rafRef.current = requestAnimationFrame(tick);
+
     return () => {
-      cancelAnimationFrame(raf);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
@@ -114,46 +157,43 @@ export default function Paths() {
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
           <div className="wrap grid w-full items-center gap-10 md:grid-cols-2">
             <div className="relative h-[320px] md:h-[380px]">
-              {PATHS.map((p, i) => {
-                const distance = Math.abs(progress - i);
-                const opacity = Math.max(0, 1 - distance * 1.4);
-                return (
-                  <div
-                    key={p.id}
-                    className="absolute inset-0 flex flex-col justify-center transition-opacity duration-150"
-                    style={{ opacity, pointerEvents: opacity > 0.5 ? "auto" : "none" }}
-                  >
-                    <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-[14px] ${p.badgeClass}`}>
-                      <p.icon size={24} />
-                    </div>
-                    <h3 className="mt-3.5 mb-2 text-[24px]">{p.title}</h3>
-                    <p className="max-w-[440px] text-[15px] text-muted-fg">{p.description}</p>
-                    <Link
-                      href={p.ctaLink}
-                      className="mt-5 inline-flex w-fit items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-[15px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
-                    >
-                      {p.ctaLabel} <ArrowRight size={16} />
-                    </Link>
+              {PATHS.map((p, i) => (
+                <div
+                  key={p.id}
+                  ref={(el) => {
+                    textRefs.current[i] = el;
+                  }}
+                  className="absolute inset-0 flex flex-col justify-center"
+                  style={{ opacity: i === 0 ? 1 : 0 }}
+                >
+                  <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-[14px] ${p.badgeClass}`}>
+                    <p.icon size={24} />
                   </div>
-                );
-              })}
+                  <h3 className="mt-3.5 mb-2 text-[24px]">{p.title}</h3>
+                  <p className="max-w-[440px] text-[15px] text-muted-fg">{p.description}</p>
+                  <Link
+                    href={p.ctaLink}
+                    className="mt-5 inline-flex w-fit items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-[15px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
+                  >
+                    {p.ctaLabel} <ArrowRight size={16} />
+                  </Link>
+                </div>
+              ))}
             </div>
 
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[26px] shadow-2xl">
-              {PATHS.map((p, i) => {
-                const distance = Math.abs(progress - i);
-                const opacity = Math.max(0, 1 - distance);
-                const scale = 1.04 - Math.min(distance, 1) * 0.04;
-                return (
-                  <div
-                    key={p.id}
-                    className="absolute inset-0"
-                    style={{ opacity, transform: `scale(${scale})`, transition: "opacity 150ms linear" }}
-                  >
-                    <Image src={p.image} alt={p.title} fill className="object-cover" priority={i === 0} />
-                  </div>
-                );
-              })}
+              {PATHS.map((p, i) => (
+                <div
+                  key={p.id}
+                  ref={(el) => {
+                    imageRefs.current[i] = el;
+                  }}
+                  className="absolute inset-0"
+                  style={{ opacity: i === 0 ? 1 : 0, willChange: "opacity, transform" }}
+                >
+                  <Image src={p.image} alt={p.title} fill className="object-cover" priority={i === 0} />
+                </div>
+              ))}
               <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
             </div>
           </div>

@@ -403,6 +403,25 @@ git commit -m "Phase 11: real logo, real color palette, scroll showcase effect o
 git push
 ```
 
+## Phase 11.1 — Fixed the scroll showcase stutter
+
+Roy reported the Phase 11 scroll effect looked "staggering" and asked me to either remove it or fix it properly with better, more on-theme images.
+
+**Root cause, found by re-reading my own Phase 11 code rather than guessing:** the crossfade opacity was driven by React state on every scroll tick, but I'd also left a CSS `transition: opacity 150ms` on the same elements. Every new scroll-driven value restarted that transition mid-flight, so the animation was constantly racing against itself instead of tracking the scroll position — that's exactly what reads as stuttering.
+
+**Fix:** rewrote the effect to use one continuous `requestAnimationFrame` loop that smooths (lerps) a single progress value toward the real scroll position every frame, and writes opacity/transform straight to the DOM via refs — no CSS transitions competing with it, no React re-renders in the animation loop. This is the standard technique behind smooth scroll-scrubbed effects (conceptually what GSAP ScrollTrigger does under the hood).
+
+**Images:** also confirmed, via a direct connectivity test from this sandbox (not a guess), that `images.unsplash.com` is explicitly blocked by this sandbox's own network proxy — a sandbox-specific restriction, not a sign the images won't work in production. Production (Vercel) has normal outbound internet access, and the Hero section's photo from this same domain has been live since Phase 7. Still can't preview-load new photo ids myself, so picked more specifically on-theme ones per path (counseling office for crisis, family imagery for veterans, reused the already-proven Hero photo for "seeking support," caregiving imagery for helpers) and flagged that Roy should tell me immediately if any don't load so I can swap same-session.
+
+**Verification:** `npx tsc --noEmit` clean (same pre-existing `resend` error). Jest still unreliable in this sandbox session (see Phase 11 notes) — didn't attempt again since this change touches only `components/home/Paths.tsx`, which has no test coverage.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 11.1: fix scroll showcase stutter, better on-theme images"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
