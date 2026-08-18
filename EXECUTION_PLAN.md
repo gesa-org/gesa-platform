@@ -519,6 +519,25 @@ git commit -m "Phase 16: compact 3-card Paths section with modern backgrounds, d
 git push
 ```
 
+## Phase 17 — Home Hero refreshed against a Claude Design mockup
+
+Roy shared a mockup image (made with Claude Design, Anthropic's separate design tool) asking to update the Home Hero to look like it.
+
+**What I copied:** a faint line-art texture (globe and chain-link icon outlines) scattered across the hero background at very low opacity, a soft multi-color glow blob layered behind the headline, and the media card breaking out of the normal grid to bleed all the way to the browser's right edge instead of stopping at the page's usual content width. On large screens that media card also tucks slightly under the sticky header — the header's `z-40` sits above the hero's `z-10`, so the overlap resolves cleanly with no visual glitch or scroll bug.
+
+**What I deliberately skipped:** the trust badges ("Verified Professionals" etc.) showed with a strikethrough in the mockup — that reads as an AI-image-generation artifact, not an intentional design choice, and copying it would visually suggest those claims had been retracted. I also kept the existing looping therapy-session video (Phase 15) rather than sourcing the mockup's specific photo (hands passing papers) — that asset is already verified working in production, and swapping to an unconfirmed stock photo URL risked repeating the broken-image problem from earlier phases.
+
+**Technical note:** the bleeding media card is positioned relative to the full-width `<section>` rather than the page's usual `max-w-[1160px]` content wrapper — that's what lets it reach the actual browser edge instead of stopping at the normal content boundary. `overflow-hidden`, previously on the section itself, moved to just the decorative background layer so it doesn't clip the bleeding card.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Confirmed no unescaped apostrophes in the touched JSX.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 17: refresh Home Hero with decorative texture, glow, and edge-to-edge media bleed"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
