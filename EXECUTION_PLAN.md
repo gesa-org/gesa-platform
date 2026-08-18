@@ -481,6 +481,25 @@ git commit -m "Phase 14: swap in transparent-background GESA logo PNG"
 git push
 ```
 
+## Phase 15 — Home Hero photo replaced with a looping therapy-session video
+
+Roy asked to remove the static garden photo from the Home Hero and replace it with something that has motion — "like a video playing" — relevant to what GESA does, and said I could source it online.
+
+**What I found:** a royalty-free therapy-session clip on Pexels ("Patient and Psychologist During a Session" by Polina Tankilevitch, free license, no attribution required) showing a calm one-on-one counseling conversation — matches the "therapy/counseling session" mood Roy picked. Pexels hosts a direct CDN file for it (same pattern already used for the Unsplash photo since Phase 7 — a direct URL, not a downloaded file living in the repo).
+
+**Fix:** in `components/Hero.tsx`, replaced the `<img>` with a `<video autoPlay muted loop playsInline>` pointed at that Pexels CDN URL, keeping the original Unsplash photo as the `poster` frame so there's an instant visual before the video finishes loading. Muted + inline autoplay is required for the browser to allow autoplay at all, so sound was never part of the plan. Everything else in the Hero — the rounded card, dark overlay, and the "Over 5,000+ Sessions Completed" trust chip — is untouched.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error. Couldn't preview the video playing myself (same sandbox network restriction that's blocked previewing Unsplash photos since Phase 11 — this only affects my ability to preview, not whether it loads in production/Vercel).
+
+**Known gap:** if the clip doesn't feel right once you see it live, swapping it is a one-line change (just the `src` in the `<source>` tag) — let me know and I'll find another.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 15: replace Home Hero photo with looping therapy-session video"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

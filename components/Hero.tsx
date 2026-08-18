@@ -53,14 +53,26 @@ export default function Hero() {
 
           {/* Hero Image / Media */}
           <div className="relative rounded-[26px] overflow-hidden shadow-2xl aspect-[9/10] bg-gradient-to-br from-primary to-accent">
-            {/* We will use a placeholder or local image here */}
             <div className="absolute inset-0 bg-black/10 z-10"></div>
-            <img 
-              src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1000&auto=format&fit=crop" 
-              alt="Therapy session" 
+            {/* Looping background video of a therapy session (Pexels, royalty-free) —
+                replaces the earlier static photo. Falls back to the same photo as a
+                poster frame while the video loads, and autoplay is muted/inline so it
+                works across browsers without a user gesture. */}
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              poster="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1000&auto=format&fit=crop"
               className="w-full h-full object-cover z-0 relative"
-            />
-            
+            >
+              <source
+                src="https://videos.pexels.com/video-files/5234724/5234724-hd_1920_1080_25fps.mp4"
+                type="video/mp4"
+              />
+            </video>
+
             {/* Trust Chip Overlay */}
             <div className="absolute left-6 bottom-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
               <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
