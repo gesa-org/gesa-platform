@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function Hero() {
   return (
@@ -13,6 +14,9 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12 items-center">
           {/* Text Content */}
           <div className="max-w-2xl">
+            <div className="mb-6">
+              <Logo size={130} />
+            </div>
             <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
               <Sparkle size={13} /> A global volunteer support alliance
             </span>
