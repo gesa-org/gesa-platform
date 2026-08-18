@@ -12,16 +12,20 @@ import Logo from '@/components/Logo';
 // since the header's z-index already sits above the hero content, so the
 // overlap resolves cleanly instead of causing a stacking bug.
 //
-// Two things from the mockup were deliberately NOT copied: the trust badges
+// One thing from the mockup was deliberately NOT copied: the trust badges
 // ("Verified Professionals" etc.) appeared with a strikethrough in the
-// reference image, which reads as a rendering artifact from the AI image
-// generator rather than an intended design choice — copying it would make
-// real claims about the platform look retracted. The specific photo in the
-// mockup (hands passing papers in a group setting) also wasn't sourced,
-// since the current looping video (Phase 15) already carries the same
-// warm, supportive tone and is a verified-working asset — swapping in an
-// unverified stock photo URL risked repeating the broken-image issue from
-// earlier phases. Both are easy follow-ups if Roy wants them.
+// reference image. That reads as a rendering artifact from the AI image
+// generator rather than an intended design choice, since the mockup itself
+// is a synthesized image, not a real screenshot — its exact photo (hands
+// passing papers) doesn't exist as an actual stock photo either. Flagged
+// back to Roy rather than silently adding a strikethrough over real,
+// accurate claims about the platform.
+//
+// Phase 18 — Roy asked again for an exact match, specifically the static
+// photo instead of the Phase 15 video. Sourced a real, verified-existing
+// Pexels photo of a group therapy session (id 7176305, confirmed via
+// Pexels' own site before use) as the closest real equivalent to the
+// mockup's synthesized image.
 export default function Hero() {
   return (
     <section className="relative bg-background border-b border-border pt-16 pb-20">
@@ -89,20 +93,12 @@ export default function Hero() {
               rendering the media twice. */}
           <div className="relative rounded-[26px] overflow-hidden shadow-2xl aspect-[9/10] bg-gradient-to-br from-primary to-accent lg:hidden">
             <div className="absolute inset-0 bg-black/10 z-10"></div>
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              poster="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1000&auto=format&fit=crop"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.pexels.com/photos/7176305/pexels-photo-7176305.jpeg?auto=compress&cs=tinysrgb&w=1200"
+              alt="A group therapy session"
               className="w-full h-full object-cover z-0 relative"
-            >
-              <source
-                src="https://videos.pexels.com/video-files/5234724/5234724-hd_1920_1080_25fps.mp4"
-                type="video/mp4"
-              />
-            </video>
+            />
             <div className="absolute left-6 bottom-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
               <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
                 <HeartHandshake size={20} />
@@ -131,24 +127,16 @@ export default function Hero() {
           top resolves cleanly with no stacking bug. */}
       <div className="hidden lg:block absolute right-0 top-[-56px] bottom-0 z-10 w-[48vw] max-w-[760px] min-h-[560px] overflow-hidden rounded-l-[26px] shadow-2xl bg-gradient-to-br from-primary to-accent">
         <div className="absolute inset-0 bg-black/10 z-10"></div>
-        {/* Looping background video of a therapy session (Pexels, royalty-free) —
-            replaces the earlier static photo. Falls back to the same photo as a
-            poster frame while the video loads, and autoplay is muted/inline so it
-            works across browsers without a user gesture. */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1000&auto=format&fit=crop"
+        {/* Phase 18 — swapped the looping video back for a static photo. Roy's
+            reference mockup showed a still image, not motion, and asked for an
+            exact match — a playing video is a real, meaningful difference from
+            a static mockup, so a still photo fits the ask better here. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://images.pexels.com/photos/7176305/pexels-photo-7176305.jpeg?auto=compress&cs=tinysrgb&w=1200"
+          alt="A group therapy session"
           className="w-full h-full object-cover z-0 relative"
-        >
-          <source
-            src="https://videos.pexels.com/video-files/5234724/5234724-hd_1920_1080_25fps.mp4"
-            type="video/mp4"
-          />
-        </video>
+        />
 
         {/* Trust Chip Overlay */}
         <div className="absolute left-6 bottom-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
