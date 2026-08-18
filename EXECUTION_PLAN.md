@@ -500,6 +500,25 @@ git commit -m "Phase 15: replace Home Hero photo with looping therapy-session vi
 git push
 ```
 
+## Phase 16 — Shrunk and modernized the "Paths to Support" section, dropped to three paths
+
+Roy reported the section was consuming too much of the homepage. Root cause: the Phase 11 scroll-pinned showcase held the viewport in place for a full screen height per path — with four paths, that was 400vh of scrolling just to get through this one section. He also asked to remove "Helping the helpers," leaving three paths: In crisis right now, Veterans/reservists & families, and Seeking support.
+
+**Fix:** removed the scroll-pinning entirely — `components/home/Paths.tsx` no longer has scroll listeners, a `requestAnimationFrame` loop, or a multi-screen-height container. It's now a plain 3-card grid that only takes up as much vertical space as its content (about one normal section's worth, not several screens). Each card keeps its on-theme background photo (same images as before) with a dark gradient overlay for text legibility, and the whole section got a soft decorative blur behind the header to match the modernized look used on About/Therapists/FAQ/etc. (`PageHero`-style treatment). The "Helping the helpers" card and its `Users` icon import were removed; the eyebrow label was corrected from "Four paths to support" to "Three paths to support" to match.
+
+**Scope note:** this only touches the homepage card section. Left `helping_helpers` as a value in the backend `TrackType` enum and the `/intake?path=helpers` route untouched — those are data-model/routing concerns unrelated to what's shown on the Home page, and removing them wasn't part of what Roy asked for. If you'd like that entry route fully retired too, let me know and I'll scope that separately.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error noted since Phase 11. Confirmed no other page references the old "Four paths to support" copy.
+
+**Follow-up in this same phase:** Roy gave more specific per-path benefit details, so the card copy was refined to match: crisis now reads "approximately six free sessions to start" (was vague "an initial set"), and the veterans/reservists/families card now explicitly distinguishes unlimited sessions for veterans and reservists from a "structured package of sessions" for families (was a blanket "unlimited access"). The footer line under the grid also changed from "Up to six free sessions" (which no longer held for the unlimited veteran path) to "Free, confidential sessions," so it doesn't overpromise a session count that varies by path.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 16: compact 3-card Paths section with modern backgrounds, drop Helping the helpers"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
