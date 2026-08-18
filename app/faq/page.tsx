@@ -1,3 +1,5 @@
+import { HelpCircle } from "lucide-react";
+import PageHero from "@/components/ui/PageHero";
 import FaqAccordion from "@/components/FaqAccordion";
 import { getFaqs } from "@/lib/queries";
 
@@ -7,12 +9,11 @@ export default async function FaqPage() {
   const faqs = await getFaqs();
 
   return (
-    <section className="section narrow">
-      <div className="text-center">
-        <span className="eyebrow">FAQ</span>
-        <h1 className="my-2.5 text-[38px]">Frequently asked questions</h1>
-      </div>
-      <FaqAccordion faqs={faqs} />
-    </section>
+    <>
+      <PageHero icon={HelpCircle} eyebrow="FAQ" title="Frequently asked questions" narrow />
+      <section className="section narrow pt-0">
+        <FaqAccordion faqs={faqs} />
+      </section>
+    </>
   );
 }

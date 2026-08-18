@@ -1,7 +1,15 @@
 import Link from "next/link";
-import { Phone, MessageCircle, Globe2, ExternalLink } from "lucide-react";
+import { Phone, MessageCircle, Globe2, ExternalLink, HeartPulse, ShieldCheck, HandHeart, Users } from "lucide-react";
 import { getCrisisResources, getRandomMatchedTherapist } from "@/lib/queries";
 import IntakeMatchFlow from "@/components/intake/IntakeMatchFlow";
+import PageHero from "@/components/ui/PageHero";
+
+const PATH_ICON: Record<string, typeof HeartPulse> = {
+  crisis: HeartPulse,
+  veteran: ShieldCheck,
+  general: HandHeart,
+  helpers: Users,
+};
 
 const PATH_MAP: Record<string, { label: string; entryRoute: string }> = {
   crisis: { label: "In crisis right now", entryRoute: "crisis" },
@@ -22,14 +30,14 @@ export default async function IntakePage({
   const crisisResources = pathKey === "crisis" ? await getCrisisResources() : [];
 
   return (
-    <div className="section wrap max-w-[640px]">
-      <div className="text-center">
-        <span className="eyebrow">{label}</span>
-        <h1 className="mx-auto mt-3 mb-2.5 max-w-[560px] text-[32px]">
-          {pathKey === "crisis" ? "Help is available right now" : "You&apos;re one step from support"}
-        </h1>
-      </div>
-
+    <>
+      <PageHero
+        icon={PATH_ICON[pathKey]}
+        eyebrow={label}
+        title={pathKey === "crisis" ? "Help is available right now" : "You're one step from support"}
+        narrow
+      />
+      <section className="section narrow pt-0">
       {pathKey === "crisis" && crisisResources.length > 0 && (
         <div className="mt-8 flex flex-col gap-2.5">
           {crisisResources.slice(0, 4).map((r) => (
@@ -86,6 +94,7 @@ export default async function IntakePage({
           </p>
         )}
       </div>
-    </div>
+      </section>
+    </>
   );
 }

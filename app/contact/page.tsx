@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { Mail } from "lucide-react";
+import PageHero from "@/components/ui/PageHero";
 import ContactForm from "./ContactForm";
 
 export const metadata = {
@@ -7,19 +9,19 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <section className="section narrow">
-      <div className="text-center">
-        <span className="eyebrow">Contact</span>
-        <h1 className="my-2.5 text-[38px]">We&apos;re here to help</h1>
-        <p className="mx-auto max-w-[560px] text-muted-fg">
-          Questions about support, volunteering, or donating — send us a note and we&apos;ll get back
-          to you.
-        </p>
-      </div>
-
-      <Suspense fallback={null}>
-        <ContactForm />
-      </Suspense>
-    </section>
+    <>
+      <PageHero
+        icon={Mail}
+        eyebrow="Contact"
+        title="We're here to help"
+        description="Questions about support, volunteering, or donating — send us a note and we'll get back to you."
+        narrow
+      />
+      <section className="section narrow pt-0">
+        <Suspense fallback={null}>
+          <ContactForm />
+        </Suspense>
+      </section>
+    </>
   );
 }

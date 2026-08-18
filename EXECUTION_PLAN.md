@@ -422,6 +422,27 @@ git commit -m "Phase 11.1: fix scroll showcase stutter, better on-theme images"
 git push
 ```
 
+## Phase 12 — Extended the Hero's visual polish site-wide
+
+Roy asked to update the home landing page to match a screenshot he sent. That screenshot matched the current live Hero exactly, so I asked what he actually wanted changed — he answered "extend this look site-wide." So the Hero's decorative treatment (soft blurred accent circle, pill-shaped eyebrow badge with icon, consistent spacing) needed to spread to every other page, which previously used a flat, unstyled `.hero`/`.eyebrow` header.
+
+**What I built:** `components/ui/PageHero.tsx`, a shared header component (same pattern as `Card`/`Button`) taking an optional icon, eyebrow text, title, optional description, and an optional `narrow` flag for the tighter-width pages. It renders the blurred accent circle and pill badge once so every page stays visually consistent and any future tweak only needs to happen in one file.
+
+**Applied to 8 pages:** About, Therapists, Support Groups, Contact, FAQ, Blog, Find Your Therapist, and Intake. Each page's old flat header block was replaced with `<PageHero .../>` followed by the page's existing body content in its own `section` (nothing below the header was touched — grids, forms, wizards, and accordions are all unchanged).
+
+Intake needed special handling since its header text depends on which of the four entry paths the visitor came from (crisis, veteran, general, helpers). Gave each path its own icon (`HeartPulse`, `ShieldCheck`, `HandHeart`, `Users`) so the badge still feels tailored per-path rather than generic. Also fixed a real bug while in there: the "You're one step from support" headline was written as the literal text `You&apos;re` inside a JS string (not JSX children), so it was rendering the literal characters `&apos;` on screen instead of an apostrophe. Now a plain `'` in a string, which is correct in that context.
+
+**Verification:** `npx tsc --noEmit` clean except the same pre-existing `resend` module-typing error from earlier phases (confirmed via `git diff --name-only` that `lib/email/resend.ts` isn't part of this change — it's an unrelated, already-known sandbox/typing quirk, not something this phase introduced). Manually re-read every changed file's JSX text for the unescaped-apostrophe pattern that broke past builds — all clear; the only apostrophes present are inside JS string literals (props, object values), which don't need escaping.
+
+**Known gap / left for Roy:** the four Intake path icons are a judgment call on my part (crisis = pulse, veterans = shield, general = handshake-heart, helpers = people) — swap easily in `app/intake/page.tsx`'s `PATH_ICON` map if you'd like different ones.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 12: extend Hero visual polish (PageHero) site-wide across 8 pages"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

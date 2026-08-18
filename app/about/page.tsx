@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } from "lucide-react";
 import Card from "@/components/ui/Card";
+import PageHero from "@/components/ui/PageHero";
 
 export const metadata = {
   title: "About — GESA",
@@ -58,22 +59,25 @@ function initials(name: string) {
 export default function AboutPage() {
   return (
     <>
-      <section className="hero" style={{ padding: "74px 0" }}>
-        <div className="wrap max-w-[820px]">
-          <span className="eyebrow">About GESA</span>
-          <h1 className="my-3.5 text-[clamp(36px,5vw,50px)]">Who We Are</h1>
-          <p className="sub text-muted-fg text-lg">
+      <PageHero
+        icon={HeartHandshake}
+        eyebrow="About GESA"
+        title="Who We Are"
+        maxWidth="820px"
+        description={
+          <>
             GESA (Global Emotional Support Alliance) is a nonprofit, volunteer-powered network that
             makes emotional support free and human for anyone who needs it. We connect verified
             volunteer therapists around the world with people carrying the weight of war, terror, and
             antisemitism.
-          </p>
-          <p className="sub text-muted-fg text-lg">
-            Care should never depend on what you can pay. Everyone who reaches out receives up to six
-            free, trauma-informed sessions — no forms upfront, no barriers.
-          </p>
-        </div>
-      </section>
+          </>
+        }
+      >
+        <p className="mx-auto mt-3 max-w-[620px] text-muted-fg">
+          Care should never depend on what you can pay. Everyone who reaches out receives up to six
+          free, trauma-informed sessions — no forms upfront, no barriers.
+        </p>
+      </PageHero>
 
       <section className="section wrap max-w-[760px]">
         <h2 className="text-[30px]">Why GESA exists</h2>
