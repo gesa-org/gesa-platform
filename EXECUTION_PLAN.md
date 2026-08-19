@@ -636,5 +636,24 @@ git push
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
 - Manual: visual diff against `gesa-site.html`, RLS smoke test (anon can read public tables, cannot read PII tables)
 
+## Phase 22 — Three Paths cards back in a single straight row
+
+Roy asked for the three cards back in "straight order" after Phase 21 split them into an asymmetric full-width-plus-two-column layout.
+
+**The tradeoff, surfaced before building:** going back to one straight row of three equal cards reopens the exact problem Phase 21 fixed — the Veterans photo is landscape (three people spread across the frame) and doesn't fit a narrow portrait slot without cropping someone out. Asked Roy directly: crop again (and lose someone), or keep everyone visible with the photo shown smaller than the other two. He chose to keep everyone visible.
+
+**Fix:** reverted to a single `md:grid-cols-3` row. Crisis and Support are unchanged (`object-cover`, fills the card edge-to-edge). The Veterans card alone uses `object-contain` on a navy background fill (`bg-[#16293a]`, matching the site's existing dark navy from the footer) instead of `object-cover` — the full photo (veteran, wife, daughter, plus the complete badge/heading/description/button) is shown letterboxed, rather than cropped, inside the same 420px-tall card as the other two.
+
+**Verified the actual visual outcome before shipping, not just the code:** composited a mock of the card at its real rendered size (370×420) to see exactly how much letterboxing this produces — the photo ends up roughly 230px tall centered in the 420px card, with visible navy bars above and below. Flagged this plainly to Roy rather than assuming the tradeoff he picked would look fine sight unseen.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 22: three Paths cards back in one row, Veterans letterboxed instead of cropped"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -29,26 +29,18 @@ import Image from "next/image";
 //
 // Phase 21 — the Veterans photo is landscape (a veteran, his wife, and
 // daughter spread across the full frame) while Crisis and Support are
-// portrait. Forcing it into the same narrow 1-of-3 column as the other two
-// always meant cropping someone out — first the button (reported and fixed
-// in Phase 20), then, once that was fixed, the daughter's face (found while
-// testing this fix, before shipping it). There's no crop that fits a wide
-// three-person scene into a narrow portrait slot without losing someone.
-// The actual fix is layout, not cropping: the Veterans card now gets its
-// own full-width row sized to the photo's real aspect ratio (a plain
-// resize, zero cropping — `veterans-fullwidth.jpg`), with Crisis and
-// Support sharing a two-column row below it.
-const VETERAN_PATH = {
-  id: "veteran",
-  title: "Veterans, reservists & families",
-  description:
-    "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
-  ctaLink: "/intake?path=veteran",
-  ctaLabel: "Reach out now",
-  image: "/images/paths/veterans-fullwidth.jpg",
-};
-
-const OTHER_PATHS = [
+// portrait, so any crop that fit the same narrow 1-of-3 column as the
+// other two cut someone out — first the button, then the daughter's face.
+// Gave it a full-width row instead so nothing was cropped.
+//
+// Phase 22 — Roy asked for the three cards back in one straight row.
+// Reverted to a single 3-column grid, but kept the "nobody gets cropped
+// out" fix from Phase 21 by having the Veterans card alone use
+// object-contain instead of object-cover: the full photo (all three
+// people, full badge/heading/description/button) shows letterboxed on a
+// navy fill rather than being cropped to fill the card edge-to-edge like
+// the other two, which are portrait and don't need it.
+const PATHS = [
   {
     id: "crisis",
     title: "In crisis right now",
@@ -57,6 +49,17 @@ const OTHER_PATHS = [
     ctaLink: "/intake?path=crisis",
     ctaLabel: "Reach out now",
     image: "/images/paths/crisis-optimized.jpg",
+    fit: "cover" as const,
+  },
+  {
+    id: "veteran",
+    title: "Veterans, reservists & families",
+    description:
+      "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
+    ctaLink: "/intake?path=veteran",
+    ctaLabel: "Reach out now",
+    image: "/images/paths/veterans-fullwidth.jpg",
+    fit: "contain" as const,
   },
   {
     id: "general",
@@ -66,6 +69,7 @@ const OTHER_PATHS = [
     ctaLink: "/intake?path=general",
     ctaLabel: "Reach out now",
     image: "/images/paths/seeking-support-optimized.jpg",
+    fit: "cover" as const,
   },
 ];
 
@@ -88,37 +92,26 @@ export default function Paths() {
           </p>
         </div>
 
-        <div className="mt-10 flex flex-col gap-6">
-          <Link
-            href={VETERAN_PATH.ctaLink}
-            aria-label={`${VETERAN_PATH.ctaLabel} — ${VETERAN_PATH.title}: ${VETERAN_PATH.description}`}
-            className="group relative block aspect-[1600/995] w-full overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
-          >
-            <Image
-              src={VETERAN_PATH.image}
-              alt={`${VETERAN_PATH.title} — ${VETERAN_PATH.description}`}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </Link>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {OTHER_PATHS.map((p) => (
-              <Link
-                key={p.id}
-                href={p.ctaLink}
-                aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
-                className="group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
-              >
-                <Image
-                  src={p.image}
-                  alt={`${p.title} — ${p.description}`}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-              </Link>
-            ))}
-          </div>
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {PATHS.map((p) => (
+            <Link
+              key={p.id}
+              href={p.ctaLink}
+              aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
+              className={`group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl ${
+                p.fit === "contain" ? "bg-[#16293a]" : ""
+              }`}
+            >
+              <Image
+                src={p.image}
+                alt={`${p.title} — ${p.description}`}
+                fill
+                className={`transition-transform duration-500 group-hover:scale-105 ${
+                  p.fit === "contain" ? "object-contain" : "object-cover"
+                }`}
+              />
+            </Link>
+          ))}
         </div>
 
         <p className="mt-8 text-center text-[13px] text-muted-fg">
