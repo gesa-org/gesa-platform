@@ -34,12 +34,21 @@ import Image from "next/image";
 // Gave it a full-width row instead so nothing was cropped.
 //
 // Phase 22 — Roy asked for the three cards back in one straight row.
-// Reverted to a single 3-column grid, but kept the "nobody gets cropped
-// out" fix from Phase 21 by having the Veterans card alone use
-// object-contain instead of object-cover: the full photo (all three
-// people, full badge/heading/description/button) shows letterboxed on a
-// navy fill rather than being cropped to fill the card edge-to-edge like
-// the other two, which are portrait and don't need it.
+// Reverted to a single 3-column grid, kept the Veterans card visible
+// end-to-end via object-contain on a navy fill rather than cropping anyone
+// out — but that shrank the whole composite (photo + text + button
+// together) to fit the letterbox, so it looked visibly smaller than the
+// other two full-bleed cards.
+//
+// Phase 23 — Roy provided a new, tighter crop of the veteran/wife/daughter
+// (already close to the card's own aspect ratio, so it fills the frame
+// edge-to-edge with no letterboxing and no one cut off). That photo had no
+// badge/heading/description/button baked in like Crisis and Support do, so
+// one was composed onto it (matching font, sizing, and the same white-pill
+// button style as the other two cards) rather than leaving it a bare photo
+// or falling back to a mismatched live-HTML overlay. All three cards are
+// back to the exact same treatment: one full-bleed image, object-cover,
+// same card height — genuinely consistent, not just visually similar.
 const PATHS = [
   {
     id: "crisis",
@@ -49,7 +58,6 @@ const PATHS = [
     ctaLink: "/intake?path=crisis",
     ctaLabel: "Reach out now",
     image: "/images/paths/crisis-optimized.jpg",
-    fit: "cover" as const,
   },
   {
     id: "veteran",
@@ -58,8 +66,7 @@ const PATHS = [
       "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
     ctaLink: "/intake?path=veteran",
     ctaLabel: "Reach out now",
-    image: "/images/paths/veterans-fullwidth.jpg",
-    fit: "contain" as const,
+    image: "/images/paths/veterans-composed.jpg",
   },
   {
     id: "general",
@@ -69,7 +76,6 @@ const PATHS = [
     ctaLink: "/intake?path=general",
     ctaLabel: "Reach out now",
     image: "/images/paths/seeking-support-optimized.jpg",
-    fit: "cover" as const,
   },
 ];
 
@@ -98,17 +104,13 @@ export default function Paths() {
               key={p.id}
               href={p.ctaLink}
               aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
-              className={`group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl ${
-                p.fit === "contain" ? "bg-[#16293a]" : ""
-              }`}
+              className="group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
             >
               <Image
                 src={p.image}
                 alt={`${p.title} — ${p.description}`}
                 fill
-                className={`transition-transform duration-500 group-hover:scale-105 ${
-                  p.fit === "contain" ? "object-contain" : "object-cover"
-                }`}
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </Link>
           ))}

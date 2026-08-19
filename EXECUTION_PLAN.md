@@ -655,5 +655,28 @@ git commit -m "Phase 22: three Paths cards back in one row, Veterans letterboxed
 git push
 ```
 
+## Phase 23 — Veterans card: matched to the other two exactly, not just similar
+
+Roy confirmed what Phase 22's preview flagged: the letterboxed card looked imbalanced next to the two full-bleed cards — not because of any font-size difference, but because `object-contain` shrank the entire composite (photo + badge + text + button together) to fit inside the letterbox, so everything read smaller at a glance.
+
+**New photo:** Roy provided a tighter, closer crop of the veteran/wife/daughter — already close to the card's own aspect ratio (0.88), so a small, centered crop fills the 420px card edge-to-edge with `object-cover` and nobody gets cut off, unlike the original wide landscape photo from Phase 19/20/21.
+
+**The catch:** that new photo was a plain, uploaded screenshot with no badge/heading/description/button baked into it, unlike Crisis and Support (which came out of Claude Design with all of that already rendered into the image). Using it as-is would've left the Veterans card as a bare photo with no visible label at all — a worse regression than the letterboxing. Composed the same badge/heading/description/button treatment onto it directly (Liberation Serif Bold for the heading, matching the other cards' serif look; a hand-drawn shield glyph in a navy badge; the same bottom-heavy dark gradient for legibility; a white pill button in the same style), sized in the exact same proportions used elsewhere in the codebase (46px badge, 19px heading, 13.5px description, 14px button — doubled for a crisp 740×840 retina-ready file). Saved as `public/images/paths/veterans-composed.jpg`.
+
+All three cards are now driven by the exact same code path — one `object-cover` image per card, same height, same rounded corners, no per-card branching left in `Paths.tsx`. That's a stronger guarantee of consistency than trying to eyeball-match two different rendering approaches side by side, which is what led to the imbalance in the first place.
+
+**Verified before shipping, not just described:** composited a mock of all three cards side by side at their real 370×420 display size (not just the raw source images) to confirm they actually read as a matched set — screenshot reviewed before committing to the change.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11.
+
+**Known gap:** `public/images/paths/` has accumulated several unused intermediate files across Phases 19–23 (`veterans.jpg`, `veterans-optimized.jpg`, `veterans-optimized-v2.jpg`, `veterans-fullwidth.jpg`, plus oversized originals) — none referenced by any code. Can't delete from your synced folder without asking; let me know if you'd like this cleaned up.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 23: rebuild Veterans card with matching composed badge/heading/button, full-bleed like the other two"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
