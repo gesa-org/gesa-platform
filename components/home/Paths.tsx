@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LifeBuoy, Shield, Heart, ArrowRight } from "lucide-react";
 
 // Phase 16 — replaced the scroll-pinned, 300vh-tall crossfade showcase
 // (Phase 11/11.1) with a compact, static 3-card grid. Roy's feedback: the
@@ -9,45 +8,51 @@ import { LifeBuoy, Shield, Heart, ArrowRight } from "lucide-react";
 // and "Helping the helpers" was no longer needed, leaving three paths:
 // crisis, veterans/reservists/families, and general support.
 //
-// Each card now carries its own on-theme background photo (same images used
-// before) with a gradient overlay for legibility, plus a soft decorative
-// blur behind the section header to match the modernized look used
-// elsewhere on the site (see components/ui/PageHero.tsx). No scroll
-// listeners, no requestAnimationFrame loop, no pinned height — just a
-// normal section that takes only as much vertical space as its content.
+// Phase 19 — Roy sent three finished card designs (built with Claude
+// Design) for this section, one per path, each already containing its own
+// icon badge, heading, description, and "Reach out now" button baked into
+// the image itself. Rendering our own HTML badge/heading/description/button
+// on top of these — the approach used since Phase 16 — would have shown
+// duplicate text stacked on top of the image's own baked-in text. Instead,
+// each card is now just that one image, and the whole card is wrapped in a
+// single link (since the button in the image is no longer a real,
+// clickable element) with an aria-label carrying the same information a
+// screen reader would otherwise get from the separate heading/description/
+// button that used to be real DOM text.
+//
+// The three source files (uploaded as Crisis.jpg / Support.jpg /
+// Veterans.jpg) were 2.2–2.5MB each — fine for a one-off download, too
+// heavy for a homepage section that loads on every visit. Resized to a
+// 1400px-wide max and re-compressed (quality 82) before adding to the
+// repo, cutting each file to roughly 160–275KB with no visible quality
+// loss at the sizes these cards actually render at.
 const PATHS = [
   {
     id: "crisis",
-    icon: LifeBuoy,
     title: "In crisis right now",
     description:
       "For anyone shaken by war, terror, or disaster. Fast, gentle help when you can't wait — approximately six free sessions to start.",
     ctaLink: "/intake?path=crisis",
     ctaLabel: "Reach out now",
-    badgeClass: "bg-destructive text-white",
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/paths/crisis-optimized.jpg",
   },
   {
     id: "veteran",
-    icon: Shield,
     title: "Veterans, reservists & families",
     description:
       "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
     ctaLink: "/intake?path=veteran",
     ctaLabel: "Reach out now",
-    badgeClass: "bg-primary-600 text-white",
-    image: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/paths/veterans-optimized.jpg",
   },
   {
     id: "general",
-    icon: Heart,
     title: "Seeking support",
     description:
       "For anyone carrying anxiety, ongoing stress, or the weight of antisemitism. Start here — more is coming.",
     ctaLink: "/intake?path=general",
     ctaLabel: "Reach out now",
-    badgeClass: "bg-accent text-white",
-    image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1200&auto=format&fit=crop",
+    image: "/images/paths/seeking-support-optimized.jpg",
   },
 ];
 
@@ -72,32 +77,19 @@ export default function Paths() {
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {PATHS.map((p) => (
-            <div
+            <Link
               key={p.id}
-              className="group relative flex h-[420px] flex-col justify-end overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
+              href={p.ctaLink}
+              aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
+              className="group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
             >
               <Image
                 src={p.image}
-                alt={p.title}
+                alt={`${p.title} — ${p.description}`}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/5" />
-
-              <div className="relative z-10 flex flex-col p-6">
-                <div className={`mb-3.5 flex h-[46px] w-[46px] items-center justify-center rounded-[12px] ${p.badgeClass}`}>
-                  <p.icon size={22} />
-                </div>
-                <h3 className="mb-1.5 text-[19px] text-white">{p.title}</h3>
-                <p className="mb-4 text-[13.5px] leading-[1.5] text-white/85">{p.description}</p>
-                <Link
-                  href={p.ctaLink}
-                  className="inline-flex w-fit items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-[14px] font-semibold text-primary transition-colors hover:bg-white/90"
-                >
-                  {p.ctaLabel} <ArrowRight size={15} />
-                </Link>
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
 

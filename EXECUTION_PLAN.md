@@ -557,6 +557,25 @@ git commit -m "Phase 18: swap Home Hero video for a verified static group-therap
 git push
 ```
 
+## Phase 19 — Three Paths cards replaced with Roy's finished designs
+
+Roy sent three finished card images (built with Claude Design), one per path — crisis, veterans/reservists/families, and seeking support — each already containing its own icon badge, heading, description, and "Reach out now" button baked into the image itself.
+
+**Why the cards changed structurally, not just the photo:** since Phase 16, each card was a photo with our own HTML badge/heading/description/button layered on top in a dark gradient overlay. Roy's new images already contain all of that as pixels. Layering our own text on top again would have shown two headings, two descriptions, and two buttons stacked on the same card. So each card is now just the image — full width, full height, nothing overlaid — and the whole card is wrapped in a single link (since the button baked into the image can no longer be a real clickable element on its own). An `aria-label` on that link carries the same heading + description + button text a screen reader would previously have read from the separate DOM elements, so nothing was lost for accessibility.
+
+**Image handling:** the three uploaded files (`Crisis.jpg`, `Support.jpg`, `Veterans.jpg`) were 2.2–2.5MB each — too heavy for a section that loads on every homepage visit. Resized to a 1400px-wide max and re-compressed before adding to the repo (`public/images/paths/*-optimized.jpg`), bringing each down to roughly 160–275KB with no visible quality loss at the size these cards render at.
+
+**Known gap:** the original, oversized copies of the three files also ended up in `public/images/paths/` as an unavoidable side effect of how they were processed, and are unused by the code. I can't delete files from your synced folder without asking first — let me know if you'd like them removed to keep the repo lean.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 19: replace Three Paths cards with finished designs (image + link, no overlaid text)"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
