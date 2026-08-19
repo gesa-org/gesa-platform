@@ -576,6 +576,42 @@ git commit -m "Phase 19: replace Three Paths cards with finished designs (image 
 git push
 ```
 
+## Phase 20 — Veterans card crop fix, real multi-therapist matching, and conflict-free session booking
+
+Four related asks in one message: (1) the Veterans card's "Reach out now" button wasn't visible, (2) clicking a path card assigned one random therapist with no choice, (3) add Email as a third contact option alongside WhatsApp/Zoom, (4) make sure a booked date/time can never be double-booked, applied globally.
+
+**1. Veterans card crop.** Root cause: the Veterans image (`Veterans.jpg`) was landscape (2624×1632) while Crisis and Support were portrait — inside the fixed 420px-tall, ~370px-wide card slot, `object-cover`'s default center crop trimmed almost half the image off each side, cutting the badge and button that sit on the left of the composition. Fixed by re-cropping the source image itself (left-anchored, to the card's actual aspect ratio) rather than relying on CSS to guess a good crop — `public/images/paths/veterans-optimized-v2.jpg`. Confirmed visually before shipping: badge, full heading, full description, and the button are all now intact.
+
+**2 & 3. Multi-therapist list + Email/WhatsApp/Zoom.** Scoping questions asked and answered: Zoom stays manual follow-up (recommended — no Zoom API credentials on file), and this new flow applies to the intake/path modals only for now (the Find Your Therapist wizard's existing `BookingModal` is untouched).
+
+Replaced `getRandomMatchedTherapist()` (pure `Math.random()` pick, ignored what the client was seeking) with the same AI matching engine (`lib/ai/matchTherapists.ts`) the wizard already uses, fed a per-path hint (crisis/veteran/general/helpers → a treatment-type + symptom-keyword hint) instead of the wizard's assessment-step answers. `app/intake/page.tsx` now returns up to 3 relevant matches; `components/intake/IntakeMatchFlow.tsx` renders them as a list with each therapist's photo, verification badge, and a one-line reason they were matched, so the client picks who they want instead of getting assigned one name.
+
+Choosing a therapist opens `components/intake/IntakeBookingModal.tsx` (new), which is where Email joins WhatsApp and Zoom as a real, equal third option — a simple channel selector before the date/time picker. Each channel's follow-through: Email confirms and continues by email (already-working Resend infra); WhatsApp generates a `wa.me` deep link to the therapist directly (same pattern the wizard's modal already used, extended here); Zoom tells the client GESA will email the link before the session — consistent with the "manual follow-up" scoping answer.
+
+**4. Conflict-free scheduling — built from scratch, not just checked.** This didn't exist anywhere in the app before this phase: every prior "booking" (`match_requests`, `booking_requests`) only ever stored a *preferred* date/time with zero enforcement — two people could request the identical slot and nothing would stop it; a human had to notice and sort it out by hand. New schema (applied to both dev and prod):
+
+- `therapist_weekly_hours` — each therapist's recurring bookable windows (seeded Mon–Fri 9am–5pm in their own local time for every existing therapist, per the "fixed weekly hours" scoping answer, so the feature has real data on day one).
+- `session_bookings` — actual reservations, with `UNIQUE(therapist_id, session_date, session_time)`. This constraint, not application logic, is what makes double-booking structurally impossible — even a race condition (two people submitting the exact same slot in the same instant) can only ever produce one confirmed row; the second insert is rejected by Postgres itself (verified directly: attempted a duplicate insert against the live database and confirmed it fails with `23505 duplicate key value`).
+- `get_booked_slots(therapist_id, date)` — a `SECURITY DEFINER` function that lets anonymous visitors check which times are taken *without* being able to read other clients' names or emails (RLS on `session_bookings` itself only allows admin/reviewer/the-therapist-in-question to read full rows).
+
+`GET /api/therapist-availability` generates the day's bookable times from `therapist_weekly_hours` minus whatever `get_booked_slots` reports, so the calendar in `IntakeBookingModal` only ever shows real, free slots. `POST /api/intake-booking` re-checks availability immediately before inserting (defense in depth) and catches a `23505` from the database as the final backstop, returning a clear "that time was just taken, pick another" message instead of a generic error or, worse, a silent double-booking.
+
+**Admin visibility (not explicitly asked for, but necessary):** a booking system your team can't see isn't usable, so added `/admin/sessions` — a read-only table of every confirmed session (date, client, therapist, channel, path) with a status dropdown; marking one "cancelled" immediately frees that slot back up, since `get_booked_slots` only counts `status = 'confirmed'` rows. Added a nav link and an overview-page tile matching the existing admin patterns.
+
+**Known gaps / left for Roy:**
+- No admin UI yet to edit a therapist's weekly hours beyond the Mon–Fri 9–5 default seeded for everyone — for now that would need a direct database edit. Happy to build a simple editor into the existing therapist admin page if useful.
+- Times are shown in each therapist's own local time zone (labeled), not converted to the client's — no timezone-conversion UI was asked for or built.
+- Per the scoping answer, this new flow is intake-only; the Find Your Therapist wizard's booking modal still uses the older unconstrained date/time inputs. Say the word if you'd like that unified too.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Scanned every new/changed file for the unescaped-apostrophe JSX pattern that broke earlier builds — none found. Verified the unique constraint directly against the live production database with a real duplicate-insert attempt (see above), not just by reading the migration.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 20: fix Veterans card crop, multi-therapist matching, Email/WhatsApp/Zoom, conflict-free session booking"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass

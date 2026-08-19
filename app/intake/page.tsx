@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Phone, MessageCircle, Globe2, ExternalLink, HeartPulse, ShieldCheck, HandHeart, Users } from "lucide-react";
-import { getCrisisResources, getRandomMatchedTherapist } from "@/lib/queries";
+import { getCrisisResources, getActiveTherapists } from "@/lib/queries";
+import { matchTherapists } from "@/lib/ai/matchTherapists";
 import IntakeMatchFlow from "@/components/intake/IntakeMatchFlow";
 import PageHero from "@/components/ui/PageHero";
 
@@ -18,15 +19,51 @@ const PATH_MAP: Record<string, { label: string; entryRoute: string }> = {
   helpers: { label: "Helping the helpers", entryRoute: "helpers" },
 };
 
+// Phase 20 — each path now feeds the same AI matching engine used by the
+// Find Your Therapist wizard (lib/ai/matchTherapists.ts) with a hint
+// describing what that path is about, instead of picking one therapist at
+// random. This is what lets "Reach out now" show a short, relevant list of
+// therapists to choose from rather than assigning just one.
+const PATH_MATCH_HINT: Record<string, { treatmentType: string; symptoms: string[] }> = {
+  crisis: {
+    treatmentType: "Crisis support",
+    symptoms: ["shaken by war, terror, or disaster", "needs fast, gentle help"],
+  },
+  veteran: {
+    treatmentType: "Veteran, reservist, and military family support",
+    symptoms: ["military service adjustment", "trauma from service", "strain on military families"],
+  },
+  general: {
+    treatmentType: "General emotional support",
+    symptoms: ["anxiety", "ongoing stress", "weight of antisemitism"],
+  },
+  helpers: {
+    treatmentType: "Support for helpers and caregivers",
+    symptoms: ["caregiver burnout", "compassion fatigue"],
+  },
+};
+
 export default async function IntakePage({
   searchParams,
 }: {
   searchParams: { path?: string };
 }) {
   const pathKey = searchParams.path && PATH_MAP[searchParams.path] ? searchParams.path : "general";
-  const { label, entryRoute } = PATH_MAP[pathKey];
+  const { label } = PATH_MAP[pathKey];
 
-  const therapist = await getRandomMatchedTherapist();
+  const therapists = await getActiveTherapists();
+  const hint = PATH_MATCH_HINT[pathKey];
+  const results =
+    therapists.length > 0
+      ? await matchTherapists({ symptoms: hint.symptoms, treatmentType: hint.treatmentType, genderPreference: "no_preference" }, therapists)
+      : [];
+  const matches = results
+    .map((r) => {
+      const therapist = therapists.find((t) => t.id === r.therapistId);
+      return therapist ? { therapist, reasoning: r.reasoning } : null;
+    })
+    .filter((m): m is { therapist: (typeof therapists)[number]; reasoning: string } => m !== null);
+
   const crisisResources = pathKey === "crisis" ? await getCrisisResources() : [];
 
   return (
@@ -82,8 +119,8 @@ export default async function IntakePage({
             You can also connect with a volunteer therapist for ongoing, free support.
           </p>
         )}
-        {therapist ? (
-          <IntakeMatchFlow entryRoute={entryRoute} therapist={therapist} />
+        {matches.length > 0 ? (
+          <IntakeMatchFlow pathKey={pathKey} matches={matches} />
         ) : (
           <p className="text-center text-muted-fg">
             We don&apos;t have any verified therapists available right now — please check back soon or{" "}

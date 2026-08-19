@@ -211,6 +211,32 @@ export type TranslationCacheRow = {
   translated_text: string;
 }
 
+export type TherapistWeeklyHoursRow = {
+  id: string;
+  therapist_id: string;
+  day_of_week: number; // 0 = Sunday .. 6 = Saturday
+  start_time: string; // "HH:MM:SS", therapist's own local time (see therapists.time_zone)
+  end_time: string;
+  created_at: string;
+}
+
+export type ContactChannel = "email" | "whatsapp" | "zoom";
+export type BookingStatus = "confirmed" | "cancelled";
+
+export type SessionBookingRow = {
+  id: string;
+  therapist_id: string;
+  client_name: string;
+  client_email: string;
+  client_phone: string | null;
+  session_date: string; // "YYYY-MM-DD"
+  session_time: string; // "HH:MM:SS"
+  contact_channel: ContactChannel;
+  path: string | null;
+  status: BookingStatus;
+  created_at: string;
+}
+
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.15" };
   public: {
@@ -285,6 +311,34 @@ export type Database = {
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };
       therapists: { Row: TherapistRow; Insert: Partial<TherapistRow> & Pick<TherapistRow, "full_name" | "slug">; Update: Partial<TherapistRow>; Relationships: [] };
+      therapist_weekly_hours: {
+        Row: TherapistWeeklyHoursRow;
+        Insert: Partial<TherapistWeeklyHoursRow> & Pick<TherapistWeeklyHoursRow, "therapist_id" | "day_of_week" | "start_time" | "end_time">;
+        Update: Partial<TherapistWeeklyHoursRow>;
+        Relationships: [
+          {
+            foreignKeyName: "therapist_weekly_hours_therapist_id_fkey";
+            columns: ["therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      session_bookings: {
+        Row: SessionBookingRow;
+        Insert: Partial<SessionBookingRow> & Pick<SessionBookingRow, "therapist_id" | "client_name" | "client_email" | "session_date" | "session_time" | "contact_channel">;
+        Update: Partial<SessionBookingRow>;
+        Relationships: [
+          {
+            foreignKeyName: "session_bookings_therapist_id_fkey";
+            columns: ["therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       translation_cache: {
         Row: TranslationCacheRow;
         Insert: Partial<TranslationCacheRow> & Pick<TranslationCacheRow, "source_hash" | "target_lang" | "source_text" | "translated_text">;
@@ -297,6 +351,7 @@ export type Database = {
       auth_role: { Args: Record<string, never>; Returns: AppRole };
       get_or_create_my_client: { Args: Record<string, never>; Returns: string };
       get_or_create_thread: { Args: { p_therapist_id: string }; Returns: string };
+      get_booked_slots: { Args: { p_therapist_id: string; p_date: string }; Returns: { session_time: string }[] };
     };
     Enums: {
       app_role: AppRole;

@@ -160,6 +160,84 @@ export function matchTeamNotificationEmail(
   `);
 }
 
+const CHANNEL_LABEL: Record<string, string> = {
+  email: "Email",
+  whatsapp: "WhatsApp",
+  zoom: "Zoom",
+};
+
+// Phase 20 — real, conflict-free session booking (as opposed to the earlier
+// match_requests/booking_requests flows, which only ever captured a
+// "preferred" date/time with no guarantee it was actually free). These three
+// templates confirm an actual reserved slot in session_bookings.
+export function sessionBookingConfirmationEmail(
+  name: string,
+  therapistName: string,
+  sessionDate: string,
+  sessionTime: string,
+  contactChannel: string
+) {
+  const channelNote =
+    contactChannel === "whatsapp"
+      ? "We've shared a WhatsApp link so you can message your therapist directly."
+      : contactChannel === "zoom"
+        ? "We'll email you the Zoom link before your session starts."
+        : "Your therapist will reach out to you at this email address to confirm any final details.";
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're booked, ${name || "friend"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      Your session with <strong>${therapistName}</strong> is confirmed for
+      <strong>${sessionDate} at ${sessionTime}</strong> via <strong>${CHANNEL_LABEL[contactChannel] ?? contactChannel}</strong>.
+    </p>
+    <p style="color:#33352d;line-height:1.6;">${channelNote}</p>
+    <p style="color:#33352d;line-height:1.6;">
+      This slot is reserved just for you — no one else can book it. If you need to reschedule, reply to
+      this email and our team will help.
+    </p>
+  `);
+}
+
+export function sessionBookingTeamNotificationEmail(
+  name: string,
+  email: string,
+  therapistName: string,
+  sessionDate: string,
+  sessionTime: string,
+  contactChannel: string,
+  path: string | null
+) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New confirmed session booking</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>From:</strong> ${name} (${email})</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Therapist:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>When:</strong> ${sessionDate} at ${sessionTime}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Channel:</strong> ${CHANNEL_LABEL[contactChannel] ?? contactChannel}</p>
+    ${path ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Path:</strong> ${path}</p>` : ""}
+    <p style="color:#33352d;line-height:1.6;margin-top:10px;">This slot is reserved and cannot be double-booked.</p>
+  `);
+}
+
+export function sessionBookingTherapistNotificationEmail(
+  therapistName: string,
+  clientName: string,
+  clientEmail: string,
+  sessionDate: string,
+  sessionTime: string,
+  contactChannel: string
+) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">New session booked, ${therapistName || "there"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      <strong>${clientName}</strong> (${clientEmail}) has booked a session with you for
+      <strong>${sessionDate} at ${sessionTime}</strong>, preferring to connect via
+      <strong>${CHANNEL_LABEL[contactChannel] ?? contactChannel}</strong>.
+    </p>
+    <p style="color:#33352d;line-height:1.6;">
+      This time is reserved on your calendar — no one else can be booked into the same slot.
+    </p>
+  `);
+}
+
 export function groupRegistrationEmail(name: string, groupTitle: string, schedule: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're registered, ${name}</h1>

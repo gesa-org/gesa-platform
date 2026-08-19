@@ -6,27 +6,36 @@ import {
   getAllInquiries,
   getAllMatchRequests,
   getAllProfiles,
+  getAllSessionBookings,
 } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  const [inquiries, bookings, registrations, profiles, matchRequests] = await Promise.all([
+  const [inquiries, bookings, registrations, profiles, matchRequests, sessionBookings] = await Promise.all([
     getAllInquiries(),
     getAllBookingRequests(),
     getAllGroupRegistrations(),
     getAllProfiles(),
     getAllMatchRequests(),
+    getAllSessionBookings(),
   ]);
 
   const newBookings = bookings.filter((b) => b.status === "new").length;
   const newMatchRequests = matchRequests.filter((m) => m.status === "new").length;
+  const confirmedSessions = sessionBookings.filter((s) => s.status === "confirmed").length;
   const roleCounts = profiles.reduce<Record<string, number>>((acc, p) => {
     acc[p.role] = (acc[p.role] ?? 0) + 1;
     return acc;
   }, {});
 
   const tiles = [
+    {
+      label: "Session bookings",
+      value: sessionBookings.length,
+      sub: `${confirmedSessions} confirmed`,
+      href: "/admin/sessions",
+    },
     {
       label: "Find Your Therapist",
       value: matchRequests.length,

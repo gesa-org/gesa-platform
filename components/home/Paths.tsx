@@ -43,7 +43,7 @@ const PATHS = [
       "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
     ctaLink: "/intake?path=veteran",
     ctaLabel: "Reach out now",
-    image: "/images/paths/veterans-optimized.jpg",
+    image: "/images/paths/veterans-optimized-v2.jpg",
   },
   {
     id: "general",

@@ -175,6 +175,26 @@ export async function getAllBookingRequests(): Promise<BookingRequestWithTherapi
   return (data ?? []) as unknown as BookingRequestWithTherapist[];
 }
 
+export type SessionBookingWithTherapist = Tables<"session_bookings"> & {
+  therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email"> | null;
+};
+
+// Phase 20 — admin visibility into real, conflict-free session bookings
+// (session_bookings), distinct from the older, unconstrained "preferred
+// time" requests in match_requests/booking_requests. Every row here
+// represents an actually-reserved slot (enforced by a DB unique constraint,
+// not just a request).
+export async function getAllSessionBookings(): Promise<SessionBookingWithTherapist[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("session_bookings")
+    .select("*, therapist:therapists(id, full_name, contact_email)")
+    .order("session_date", { ascending: true })
+    .order("session_time", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as unknown as SessionBookingWithTherapist[];
+}
+
 export type MatchRequestWithTherapist = Tables<"match_requests"> & {
   selected_therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email" | "contact_phone"> | null;
   clinic_location: Pick<Tables<"clinic_locations">, "id" | "name" | "address"> | null;
