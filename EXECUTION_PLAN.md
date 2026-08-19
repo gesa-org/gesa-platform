@@ -769,5 +769,22 @@ git commit -m "Phase 27: fix Book a Session modal being clipped by a transformed
 git push
 ```
 
+## Phase 28 — Clean, spaced-out "GESA" wordmark
+
+Roy sent two references: the current bold navy serif "GESA" next to the logo, and a target look — light, letter-spaced, sans-serif text in a soft slate-blue tone. Sampled the actual pixel color from his reference image rather than eyeballing it (came out to roughly `#8c9eae`).
+
+**Changed the wordmark everywhere it appears** — `components/Header.tsx`, `components/Footer.tsx`, `app/login/page.tsx`, `app/signup/page.tsx` — from `font-serif ... font-bold text-primary` (bold navy serif, tight kerning) to `font-sans font-medium tracking-[0.25em]` in the sampled soft blue-gray. Footer keeps a slightly lighter tint (`#a9b9c4` vs `#8c9eae`) since it sits on the dark navy footer background and needs a touch more contrast to stay readable — same clean, spaced-out treatment, just tuned for that background.
+
+**On "remove the edges":** checked every place the logo lockup renders (header, footer, login, signup, home hero) — none of them actually have a border/box wrapping the logo+text in the current code. The boxed look in Roy's first reference looks like an artifact of how that image was captured (e.g. a favicon/tab preview), not something present in the site's CSS, so there was nothing to remove there. Flagging this in case Roy meant a specific element I haven't found — happy to fix it directly if he points to where it still shows up live.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Rendered a rough color/spacing proof locally to confirm the direction before shipping — real font rendering (the site's actual sans-serif stack) will look slightly different than this rough check, so please confirm it reads right once deployed.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 28: clean, letter-spaced sans-serif GESA wordmark in soft blue-gray"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="max-w-[1160px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="flex items-center gap-2.5 font-serif text-[22px] font-bold text-white">
+            <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#a9b9c4]">
               <Logo size={34} />
               GESA
             </Link>
