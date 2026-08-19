@@ -26,7 +26,29 @@ import Image from "next/image";
 // 1400px-wide max and re-compressed (quality 82) before adding to the
 // repo, cutting each file to roughly 160–275KB with no visible quality
 // loss at the sizes these cards actually render at.
-const PATHS = [
+//
+// Phase 21 — the Veterans photo is landscape (a veteran, his wife, and
+// daughter spread across the full frame) while Crisis and Support are
+// portrait. Forcing it into the same narrow 1-of-3 column as the other two
+// always meant cropping someone out — first the button (reported and fixed
+// in Phase 20), then, once that was fixed, the daughter's face (found while
+// testing this fix, before shipping it). There's no crop that fits a wide
+// three-person scene into a narrow portrait slot without losing someone.
+// The actual fix is layout, not cropping: the Veterans card now gets its
+// own full-width row sized to the photo's real aspect ratio (a plain
+// resize, zero cropping — `veterans-fullwidth.jpg`), with Crisis and
+// Support sharing a two-column row below it.
+const VETERAN_PATH = {
+  id: "veteran",
+  title: "Veterans, reservists & families",
+  description:
+    "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
+  ctaLink: "/intake?path=veteran",
+  ctaLabel: "Reach out now",
+  image: "/images/paths/veterans-fullwidth.jpg",
+};
+
+const OTHER_PATHS = [
   {
     id: "crisis",
     title: "In crisis right now",
@@ -35,15 +57,6 @@ const PATHS = [
     ctaLink: "/intake?path=crisis",
     ctaLabel: "Reach out now",
     image: "/images/paths/crisis-optimized.jpg",
-  },
-  {
-    id: "veteran",
-    title: "Veterans, reservists & families",
-    description:
-      "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
-    ctaLink: "/intake?path=veteran",
-    ctaLabel: "Reach out now",
-    image: "/images/paths/veterans-optimized-v2.jpg",
   },
   {
     id: "general",
@@ -75,22 +88,37 @@ export default function Paths() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {PATHS.map((p) => (
-            <Link
-              key={p.id}
-              href={p.ctaLink}
-              aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
-              className="group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
-            >
-              <Image
-                src={p.image}
-                alt={`${p.title} — ${p.description}`}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </Link>
-          ))}
+        <div className="mt-10 flex flex-col gap-6">
+          <Link
+            href={VETERAN_PATH.ctaLink}
+            aria-label={`${VETERAN_PATH.ctaLabel} — ${VETERAN_PATH.title}: ${VETERAN_PATH.description}`}
+            className="group relative block aspect-[1600/995] w-full overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
+          >
+            <Image
+              src={VETERAN_PATH.image}
+              alt={`${VETERAN_PATH.title} — ${VETERAN_PATH.description}`}
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </Link>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {OTHER_PATHS.map((p) => (
+              <Link
+                key={p.id}
+                href={p.ctaLink}
+                aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
+                className="group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
+              >
+                <Image
+                  src={p.image}
+                  alt={`${p.title} — ${p.description}`}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </Link>
+            ))}
+          </div>
         </div>
 
         <p className="mt-8 text-center text-[13px] text-muted-fg">

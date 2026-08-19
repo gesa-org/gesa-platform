@@ -612,6 +612,25 @@ git commit -m "Phase 20: fix Veterans card crop, multi-therapist matching, Email
 git push
 ```
 
+## Phase 21 — Veterans card: full-width layout instead of another crop
+
+Roy pointed out the Phase 20 crop still didn't show "the veteran and the family" clearly.
+
+**Why cropping alone couldn't fix this:** the Veterans photo is a landscape composition — veteran, wife, and daughter spread across the full frame — while Crisis and Support are portrait. Any crop narrow enough to fit the same 1-of-3 portrait column as the other two cards had to cut someone out. The Phase 20 crop fixed the button (Roy's original complaint) but, in testing this follow-up before shipping, showed the daughter with her face cropped off — same root problem, different symptom.
+
+**Fix:** stopped trying to crop a wide photo into a narrow slot and changed the layout instead. The Veterans card now gets its own full-width row sized to the photo's actual aspect ratio (`aspect-[1600/995]`, matching the source image exactly — `veterans-fullwidth.jpg`, a plain resize with zero cropping), so the veteran, his wife, and daughter, plus the full badge/heading/description/button, are all visible with nothing cut off. Crisis and Support now share a two-column row below it instead of all three sitting in one three-column row.
+
+**Verification:** generated three candidate crops and actually looked at each one (via the Read tool) before choosing — first a portrait crop that cut into the heading text, then a wider crop that still cropped the daughter's face, then the full-width no-crop layout that shows everyone. `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11.
+
+**Known gap:** `public/images/paths/` now has a few unused intermediate files from this and the Phase 19 image processing (`veterans.jpg`, `veterans-optimized.jpg`, `veterans-optimized-v2.jpg`, plus the oversized originals) — none are referenced by any code, but I can't delete files from your synced folder without asking. Let me know if you'd like the folder cleaned up.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 21: full-width layout for Veterans card instead of cropping out family members"
+git push
+```
+
 ## Verification (per phase)
 - `npm run typecheck` and `npm run build` must pass before a phase is marked done
 - From Phase 5 onward: `npm test` and `npx playwright test` must pass
