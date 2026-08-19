@@ -96,22 +96,32 @@ export default function TranslationProvider({ children }: { children: React.Reac
       const uniqueTexts = Array.from(new Set(nodes.map((n) => n.textContent || "")));
       if (uniqueTexts.length === 0) return;
 
-      const translatedMap = new Map<string, string>();
+      const chunks: string[][] = [];
       for (let i = 0; i < uniqueTexts.length; i += BATCH_SIZE) {
-        const chunk = uniqueTexts.slice(i, i + BATCH_SIZE);
-        try {
-          const res = await fetch("/api/translate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ texts: chunk, targetLang: lang }),
-          });
-          if (!res.ok) continue;
-          const data = await res.json();
-          chunk.forEach((original, idx) => translatedMap.set(original, data.translated?.[idx] ?? original));
-        } catch {
-          // Skip this chunk — the rest of the page can still translate.
-        }
+        chunks.push(uniqueTexts.slice(i, i + BATCH_SIZE));
       }
+
+      // Fire all batches in parallel rather than awaiting them one at a
+      // time — each batch is an independent request, so there's no reason
+      // to serialize them. On a large page (many unique strings) this cuts
+      // total wait time from N sequential round trips down to roughly one.
+      const translatedMap = new Map<string, string>();
+      await Promise.all(
+        chunks.map(async (chunk) => {
+          try {
+            const res = await fetch("/api/translate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ texts: chunk, targetLang: lang }),
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            chunk.forEach((original, idx) => translatedMap.set(original, data.translated?.[idx] ?? original));
+          } catch {
+            // Skip this chunk — the rest of the page can still translate.
+          }
+        })
+      );
 
       nodes.forEach((node) => {
         const translated = translatedMap.get(node.textContent || "");
@@ -124,6 +134,12 @@ export default function TranslationProvider({ children }: { children: React.Reac
 
   useEffect(() => {
     if (language === "en") return;
+    // The admin panel is internal-only and not part of the public-facing
+    // translation feature. Walking its (often large) tables and firing
+    // /api/translate batches on every navigation was making admin pages
+    // feel like they'd hung — this is the fix for that. Public pages are
+    // unaffected.
+    if (pathname?.startsWith("/admin")) return;
     const key = `${pathname}:${language}`;
     if (appliedKey.current === key) return;
     appliedKey.current = key;
