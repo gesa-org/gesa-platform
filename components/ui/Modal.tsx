@@ -2,7 +2,8 @@
 
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({
   open,
@@ -13,6 +14,20 @@ export default function Modal({
   onClose: () => void;
   children: ReactNode;
 }) {
+  // Rendered via a portal straight into document.body rather than in place.
+  // Without this, a modal opened from inside any element that has a CSS
+  // `transform` on it (e.g. a therapist card's `hover:-translate-y-1`) gets
+  // trapped: a transformed ancestor becomes the containing block for
+  // `position: fixed` descendants, so instead of covering the full viewport
+  // the modal was clipped to that card's own box (and its `overflow-hidden`
+  // corners cut it off further) with no dark backdrop behind it — exactly
+  // the "static/glitchy modal" bug reported from the Our Therapists page's
+  // Book a Session button. Portalling to `document.body` guarantees the
+  // modal always positions and sizes against the real viewport, regardless
+  // of what component opened it.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -20,9 +35,9 @@ export default function Modal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(15,30,36,.5)] p-5"
       onClick={onClose}
@@ -40,6 +55,7 @@ export default function Modal({
         </button>
         <div className="clear-both">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

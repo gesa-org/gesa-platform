@@ -752,5 +752,22 @@ git commit -m "Phase 26: Book a Session CTA on Our Therapists, CRM wiring, notif
 git push
 ```
 
+## Phase 27 — Fixed the clipped/static "Book a Session" modal
+
+Roy sent a screen recording of the new Book a Session modal (Phase 26) opening broken on the Our Therapists page: no dark backdrop, the modal box clipped to a narrow sliver overlapping the therapist cards, its top and right edges cut off mid-content.
+
+**Root cause, found by extracting frames from the recording and reasoning through the CSS, not guessed:** `components/TherapistCard.tsx`'s outer card `div` has `hover:-translate-y-1` — a `transform` applied on hover. Per the CSS spec, any element with a `transform` becomes the *containing block* for its `position: fixed` descendants. The booking modal (`components/ui/Modal.tsx`, rendered via `IntakeBookingModal`) is mounted inside that same card through `BookSessionButton`, and uses `fixed inset-0` to cover the full screen — but the moment the card is hovered, that `fixed` positioning gets hijacked by the transformed card instead of the viewport, and the card's own `overflow-hidden` (used for its rounded corners) clips it on top of that. That combination is exactly what the recording shows: a modal trapped and cut off inside the card's box, with the rest of the page untouched and undimmed behind it.
+
+**Fix, `components/ui/Modal.tsx`:** render the modal through a React portal straight into `document.body` (`createPortal`) instead of in place in the component tree. This guarantees the modal always sizes and positions against the real viewport no matter which component opens it or what CSS properties its ancestors have — the same class of bug can't recur for any future modal built on this component, not just the one Roy hit.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. This is a single, isolated, low-risk change to the shared `Modal` component — no other files touched.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 27: fix Book a Session modal being clipped by a transformed ancestor card"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
