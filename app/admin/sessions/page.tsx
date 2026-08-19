@@ -14,6 +14,7 @@ const PATH_LABELS: Record<string, string> = {
   veteran: "Veterans, reservists & families",
   general: "Seeking support",
   helpers: "Helping the helpers",
+  directory: "Our Therapists directory",
 };
 
 // Phase 20 — these rows are real, conflict-free reservations (a DB unique

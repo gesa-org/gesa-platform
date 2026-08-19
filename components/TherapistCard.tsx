@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
 import type { Tables } from "@/lib/database.types";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
+import BookSessionButton from "@/components/therapists/BookSessionButton";
 
 export default function TherapistCard({ t }: { t: Tables<"therapists"> }) {
   const initials = t.full_name
@@ -50,7 +51,8 @@ export default function TherapistCard({ t }: { t: Tables<"therapists"> }) {
           </div>
         </div>
       </Link>
-      <div className="px-[18px] pb-3 pt-2">
+      <div className="flex flex-col gap-1.5 px-[18px] pb-3 pt-2">
+        <BookSessionButton therapist={t} />
         <MessageTherapistButton therapistId={t.id} />
       </div>
     </div>

@@ -722,5 +722,35 @@ git commit -m "Phase 25: stop admin panel from running site translation, paralle
 git push
 ```
 
+## Phase 26 — Book a Session on Our Therapists, CRM wiring, notification bell redesign
+
+Three requests: a "Book a Session" CTA on the Our Therapists directory (previously only "Message" existed there), make sure it's captured in the CRM, and polish the notification bell.
+
+**Investigated first, rather than building a new booking flow from scratch:** this codebase already has two different booking architectures — an older one (`match_requests`/`booking_requests`) that just takes a free-text "preferred date/time" with no real availability checking, and the real one built in Phase 20 (`session_bookings`, `IntakeBookingModal.tsx`, `/api/intake-booking`) that checks live availability and is protected by a database-level `UNIQUE(therapist_id, session_date, session_time)` constraint so two people can never grab the same slot. Reused the Phase 20 flow rather than the older pattern, since it's the one that actually delivers on "book a session" without risking double-bookings.
+
+**Built:**
+- `components/therapists/BookSessionButton.tsx` — new button on each therapist card, opens `IntakeBookingModal` for that therapist tagged with `path: "directory"` (so admins can tell a directory-originated booking apart from the homepage's crisis/veteran/general/helpers entry points). No new booking logic was written — this reuses the exact same conflict-free scheduling, channel picker (Email/WhatsApp/Zoom), and confirmation emails already live on the homepage.
+- `components/TherapistCard.tsx` — added the new button alongside the existing `MessageTherapistButton`, both in the card footer.
+- `app/admin/sessions/page.tsx` — added `directory` to the `PATH_LABELS` map so these bookings show a readable label instead of the raw string. No other CRM change was needed: `getAllSessionBookings()` already has no filter on `path`, so directory bookings appear in `/admin/sessions` automatically.
+
+**Notification bell — a real gap found, not just cosmetic polish:** `NotificationBell.tsx` merges recent `match_requests`, `booking_requests`, and `inquiries` into one feed, but never queried `session_bookings` at all — meaning every session booked through the homepage's "Reach out now" flow (Phase 20) *and* every new booking from this phase's directory CTA would land correctly in `/admin/sessions` but silently never appear as a notification. Added a fourth parallel query for `session_bookings` and extended the detail modal to render its distinct fields (`client_name`/`client_email`/`session_date`/`session_time`/`contact_channel`/`path`) which don't match the older tables' `name`/`email`/`preferred_date` shape.
+
+**Redesign, `components/admin/NotificationBell.tsx`:**
+- Relative timestamps ("2h ago") on every item, exact date/time in the detail modal.
+- Click-outside-to-close — previously the dropdown only closed by clicking an item or the bell again; now closes on any click outside it.
+- A real unread count: previously it looked at a `status` column that doesn't consistently exist or mean "new" the same way across `match_requests`/`booking_requests`/`inquiries`/`session_bookings`, so the badge either under-counted or (for a therapist) never went down at all. Switched to a `localStorage`-backed "last opened" timestamp — anything newer than the last time the bell was opened counts as unread, cleared the moment it's opened, with a small dot next to each still-unread item in the list.
+- Per-type colored icon badges instead of a single flat icon color, a loading skeleton instead of a blank/empty-looking panel on first load, a "View all" link to the CRM, and `aria-haspopup`/`aria-expanded`/`role="menu"`/`role="menuitem"` for screen readers.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped all new/changed files for the unescaped-apostrophe pattern that's broken past builds — the only matches are inside code comments, not JSX text, so no fix needed.
+
+**Known gap:** the notification bell's "last opened" read-state lives in each admin's own browser (`localStorage`), not the database — switching browsers or devices resets it to "everything unread." Fine for now given there's a single admin workflow, but worth moving server-side if multiple admins need a shared read state later.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 26: Book a Session CTA on Our Therapists, CRM wiring, notification bell redesign"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
