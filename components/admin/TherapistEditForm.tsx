@@ -13,6 +13,7 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
   const [shortSummary, setShortSummary] = useState(therapist.short_summary ?? "");
   const [bio, setBio] = useState(therapist.bio ?? "");
   const [credentials, setCredentials] = useState(therapist.credentials ?? "");
+  const [contactEmail, setContactEmail] = useState(therapist.contact_email ?? "");
   const [specialties, setSpecialties] = useState(therapist.specialties.join(", "));
   const [languages, setLanguages] = useState(therapist.languages.join(", "));
   const [isActive, setIsActive] = useState(therapist.is_active);
@@ -52,6 +53,7 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
         short_summary: shortSummary || null,
         bio: bio || null,
         credentials: credentials || null,
+        contact_email: contactEmail || null,
         specialties: specialties
           .split(",")
           .map((s) => s.trim())
@@ -123,6 +125,20 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
             onChange={(e) => setCredentials(e.target.value)}
             className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
           />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Contact email</label>
+          <input
+            type="email"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            placeholder="therapist@example.com"
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+          <p className="mt-1 text-[12.5px] text-muted-fg">
+            Used for match/booking notifications sent to this therapist.
+          </p>
         </div>
 
         <div>

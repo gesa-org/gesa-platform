@@ -4,13 +4,19 @@ import type { Tables } from "@/lib/database.types";
 // Server-side read helpers. All of these run under the anon key + RLS —
 // no service role needed since every table here has a public-read policy.
 
+// Phase 24 — is_active is the sole gate for public visibility (enforced at
+// the RLS level, see therapists_public_read policy). This used to also
+// filter on is_verified, but that's a separate, unrelated flag with no
+// admin UI to ever set it — 9 therapists were active-but-unverified and
+// invisible on the public directory despite the admin dashboard showing
+// them as "Active." Dropped here to match the RLS policy and avoid the
+// same confusion recurring in app code even though RLS already enforces it.
 export async function getActiveTherapists(): Promise<Tables<"therapists">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("therapists")
     .select("*")
     .eq("is_active", true)
-    .eq("is_verified", true)
     .order("full_name");
   if (error) throw error;
   return data ?? [];
@@ -128,7 +134,6 @@ export async function getTherapistBySlug(slug: string): Promise<Tables<"therapis
     .select("*")
     .eq("slug", slug)
     .eq("is_active", true)
-    .eq("is_verified", true)
     .maybeSingle();
   if (error) throw error;
   return data;

@@ -20,8 +20,7 @@ export async function POST(request: Request) {
     .select(
       "id, full_name, slug, photo_url, specialties, short_summary, bio, languages, gender, years_experience, is_verified, contact_phone"
     )
-    .eq("is_active", true)
-    .eq("is_verified", true);
+    .eq("is_active", true);
 
   if (error) {
     return NextResponse.json({ error: "could not load therapists" }, { status: 500 });

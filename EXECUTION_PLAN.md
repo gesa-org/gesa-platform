@@ -678,5 +678,24 @@ git commit -m "Phase 23: rebuild Veterans card with matching composed badge/head
 git push
 ```
 
+## Phase 24 — CRM Therapist enable/disable actually works everywhere now, plus a contact email field
+
+Roy asked for two things in the Therapists section of the CRM: enable/disable that actually controls public visibility, and a manual contact email field.
+
+**The enable/disable control already existed** (`TherapistEditForm.tsx`'s "Deactivate/Reactivate" button, shipped in Phase 10) — but it only ever toggled `is_active`. Digging into why that wouldn't be a complete fix surfaced the real bug: a database-level security policy (`therapists_public_read`, enforced by Postgres row-level security, not app code) required `is_active AND is_verified` for a therapist to be readable by the public site at all. `is_verified` is a second, unrelated flag with no admin UI anywhere to ever set it — and 9 therapists in production were sitting at `is_active = true, is_verified = false`, meaning the CRM showed them as "Active" while they were silently invisible on the live "Our Therapists" page. Toggling "Reactivate" on any of those 9 would have appeared to work in the admin table without ever actually bringing them back.
+
+**Fix:** rewrote the `therapists_public_read` RLS policy (applied to both dev and prod) to check only `is_active = true` — this is the actual visibility gate now, enforced at the database level where it can't be bypassed by a stray app-code query. Also removed the now-redundant `is_verified` filters from `getActiveTherapists()`, `getTherapistBySlug()`, and `/api/match`'s therapist query, so app code matches what the database now enforces instead of quietly relying on a filter that no longer does anything. Verified directly against production: querying `is_active = true` now returns all 145 previously-eligible-plus-9-newly-visible therapists, confirmed against the RLS policy's own definition before and after.
+
+**Contact email field:** added a plain email input to `TherapistEditForm.tsx` (writes to the existing `therapists.contact_email` column, already used elsewhere for match/booking notification emails — no schema change needed, the column just had no admin-facing input before this).
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Re-ran the Supabase security advisor after the policy change — no new findings introduced.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 24: fix therapist enable/disable to be the sole visibility gate, add contact email field"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
