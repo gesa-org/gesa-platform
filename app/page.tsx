@@ -1,4 +1,3 @@
-import Hero from "@/components/Hero";
 import Paths from "@/components/home/Paths";
 import Stats from "@/components/home/Stats";
 import Testimonials from "@/components/home/Testimonials";
@@ -20,7 +19,6 @@ export default async function Home() {
 
   return (
     <div className="home-reveal-page__main flex flex-col">
-      <Hero />
       <Paths />
       <Stats />
       <Testimonials testimonials={testimonials} />

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } from "lucide-react";
 import Card from "@/components/ui/Card";
-import PageHero from "@/components/ui/PageHero";
+import Hero from "@/components/Hero";
 
 export const metadata = {
   title: "About — GESA",
@@ -59,25 +59,7 @@ function initials(name: string) {
 export default function AboutPage() {
   return (
     <>
-      <PageHero
-        icon={HeartHandshake}
-        eyebrow="About GESA"
-        title="Who We Are"
-        maxWidth="820px"
-        description={
-          <>
-            GESA (Global Emotional Support Alliance) is a nonprofit, volunteer-powered network that
-            makes emotional support free and human for anyone who needs it. We connect verified
-            volunteer therapists around the world with people carrying the weight of war, terror, and
-            antisemitism.
-          </>
-        }
-      >
-        <p className="mx-auto mt-3 max-w-[620px] text-muted-fg">
-          Care should never depend on what you can pay. Everyone who reaches out receives up to six
-          free, trauma-informed sessions — no forms upfront, no barriers.
-        </p>
-      </PageHero>
+      <Hero />
 
       <section className="section wrap max-w-[760px]">
         <h2 className="text-[30px]">Why GESA exists</h2>

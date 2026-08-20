@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle, Globe2, Link2 } from 'lucide-react';
-import Logo from '@/components/Logo';
 
 // Phase 17 — Roy shared a mockup (built with Claude Design) asking to bring
 // the Home Hero's look closer to it. Two real, implementable changes came
@@ -26,6 +25,13 @@ import Logo from '@/components/Logo';
 // Pexels photo of a group therapy session (id 7176305, confirmed via
 // Pexels' own site before use) as the closest real equivalent to the
 // mockup's synthesized image.
+//
+// Phase 30 — this component moved off the Home page entirely (Home's new
+// landing section is Paths — see components/home/Paths.tsx) and now opens
+// the About page instead. Also dropped the large 130px Logo mark that used
+// to sit above the eyebrow badge: the header already shows the GESA logo on
+// every page including About, so repeating it here was pure redundancy, not
+// a second, different piece of information.
 export default function Hero() {
   return (
     <section className="relative bg-background border-b border-border pt-16 pb-20">
@@ -50,9 +56,6 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12 items-center">
           {/* Text Content */}
           <div className="max-w-2xl relative">
-            <div className="mb-6">
-              <Logo size={130} />
-            </div>
             <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
               <Sparkle size={13} /> A global volunteer support alliance
             </span>

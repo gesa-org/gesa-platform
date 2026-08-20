@@ -818,5 +818,24 @@ git commit -m "Phase 29: home page footer reveal effect (CTA + footer uncovered 
 git push
 ```
 
+## Phase 30 — Three Paths to Support becomes the Home landing section; Hero moved to About
+
+Roy pointed at the current Home Hero (headline, group-therapy photo, trust badges) and asked to move it to the About page, drop the large 130px logo mark from it since it's redundant with the header's logo on every page, and make "Three Paths to Support" the new first thing visitors see on Home — done professionally, in a way that still represents the site's mission now that it's carrying the landing-page job on its own.
+
+**Removed the redundant logo, moved Hero to About:** `components/Hero.tsx` no longer imports or renders the large `Logo`. `app/about/page.tsx` now opens with `<Hero />` in place of its old `PageHero` header block — same headline, photo, CTAs, and trust badges Roy pointed at, just without the duplicate logo. Nothing else on the About page changed.
+
+**Made Paths the real landing section, not just a mid-page card grid:** `components/home/Paths.tsx` picked up the pieces of messaging that left with Hero — an eyebrow badge ("A global volunteer support alliance"), a proper landing-sized headline (now the page's actual `<h1>`, since Hero no longer supplies one on Home), the mission-statement copy, and the same three trust badges (Verified Professionals / 100% Free Sessions / Global Community) Hero used to show — all above the three path cards, which are unchanged. Gave the section hero-level top padding instead of the flatter mid-page `.section` spacing it had before, since it's now the first thing under the sticky header rather than something that assumed a hero above it.
+
+**`app/page.tsx`** no longer imports or renders `Hero` — Home now opens directly with Paths, then Stats, then Testimonials, then the footer reveal layer from Phase 29.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped every changed file for the unescaped-apostrophe pattern that's broken past builds — all matches are inside comments or plain JS string literals (not JSX children text), so nothing needed fixing. Couldn't get a clean `next build`/dev-server screenshot from this sandbox (the same file-lock limitation noted since Phase 1) to visually confirm the new Paths landing section — recommend treating Vercel's own deploy as the real check here, same as every phase where that's been the case before.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 30: Three Paths to Support is now the Home landing section; Hero (logo removed) moved to About"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Sparkle, ShieldCheck, HeartHandshake, Users } from "lucide-react";
 
 // Phase 16 — replaced the scroll-pinned, 300vh-tall crossfade showcase
 // (Phase 11/11.1) with a compact, static 3-card grid. Roy's feedback: the
@@ -49,6 +50,15 @@ import Image from "next/image";
 // or falling back to a mismatched live-HTML overlay. All three cards are
 // back to the exact same treatment: one full-bleed image, object-cover,
 // same card height — genuinely consistent, not just visually similar.
+//
+// Phase 30 — this section is now the Home page's landing interface. The old
+// Hero (headline, photo, trust badges) moved to the About page, so this is
+// the first thing a visitor sees here — it needed to carry more of the
+// "what is GESA, why should I trust it" weight than it used to as a
+// mid-page section that assumed a hero above it. Added the same eyebrow
+// badge style and trust-badge row Hero used to show (verified/free/global),
+// sized the heading like a real landing headline, and gave the section
+// hero-level top spacing instead of a plain mid-page section's padding.
 const PATHS = [
   {
     id: "crisis",
@@ -81,24 +91,41 @@ const PATHS = [
 
 export default function Paths() {
   return (
-    <section aria-labelledby="paths-heading" className="relative overflow-hidden">
+    <section aria-labelledby="paths-heading" className="relative overflow-hidden pt-16 pb-16 md:pt-20">
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-accent-soft opacity-50 blur-[110px]" />
       </div>
 
-      <div className="section wrap relative z-10">
+      <div className="wrap relative z-10">
         <div className="text-center">
-          <span className="eyebrow">Three paths to support</span>
-          <h2 id="paths-heading" className="mx-auto mt-3 mb-2.5 max-w-[760px] text-[34px]">
-            Two clicks to support
-          </h2>
-          <p className="mx-auto max-w-[620px] text-muted-fg">
-            Choose your path and confirm — you&apos;ll be matched with a therapist who understands,
-            for a free, confidential session. No forms, no accounts, no questions upfront.
+          <span className="relative mb-5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-4 py-1.5 text-[13px] font-semibold text-primary">
+            <Sparkle size={13} /> A global volunteer support alliance
+          </span>
+          <h1
+            id="paths-heading"
+            className="mx-auto mb-4 max-w-[820px] font-serif text-[clamp(32px,4.6vw,50px)] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground"
+          >
+            Two clicks to a therapist who understands
+          </h1>
+          <p className="mx-auto max-w-[620px] text-[17px] leading-[1.55] text-muted-fg">
+            GESA (Global Emotional Support Alliance) connects you with a verified volunteer
+            therapist for a free, confidential session — no forms, no accounts, no questions
+            upfront. Choose the path below that fits you and confirm.
           </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-6 text-[14px] font-medium text-muted-fg">
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="text-accent" size={18} /> Verified Professionals
+            </span>
+            <span className="flex items-center gap-2">
+              <HeartHandshake className="text-accent" size={18} /> 100% Free Sessions
+            </span>
+            <span className="flex items-center gap-2">
+              <Users className="text-accent" size={18} /> Global Community
+            </span>
+          </div>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
           {PATHS.map((p) => (
             <Link
               key={p.id}
