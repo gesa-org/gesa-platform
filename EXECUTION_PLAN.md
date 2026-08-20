@@ -837,5 +837,26 @@ git commit -m "Phase 30: Three Paths to Support is now the Home landing section;
 git push
 ```
 
+## Phase 31 — Our Therapists filter sidebar redesign
+
+Roy sent a reference image redesigning the "Our Therapists" filter sidebar — pill-style radio buttons, segmented button grids, and a bordered dropdown-with-chevron look — asking for the visual design to change without touching how the Language field's dropdown works or its options.
+
+**What changed vs. what didn't, field by field** (`components/TherapistsDirectory.tsx`):
+- **Search by name** — restyled from a plain bordered input to a rounded pill with a leading search icon.
+- **Definition of a therapist** — was a plain `<select>`; now a vertical list of radio-style pills matching the reference. Kept exactly the same option list and filtering logic (every distinct specialty tag in the real therapist data) — the real list runs to dozens of values, well past the handful shown in Roy's reference image, so it's a scrollable capped-height list rather than an ever-growing column, to keep it usable and "professional" rather than becoming a giant unstyled wall of buttons.
+- **Language** — left as a real `<select>` with the same options and single-value behavior, per Roy's explicit "keep the dropdown and its inside details... don't change any" instruction. Only the chrome changed: hid the native arrow, added a custom chevron icon, and gave it the same rounded bordered-box look as the rest of the sidebar.
+- **Meeting duration** — was a `<select>`, now a segmented 2-column button grid using the same real session-length values (30/45/60/90 minutes, whatever's actually present in the data). Tapping an already-selected duration clears it back to "any."
+- **Gender** — same segmented treatment, now three options (male/female/non-binary) instead of two. Non-binary already had a label defined in this file from an earlier phase but no way to actually select it — this just exposes a filter option the code was already halfway set up for, it's not new data or a new column.
+- **Bottom buttons** — kept "Join us as a therapist" as-is, added an "Apply filters" button in GESA's sage accent color matching the reference. Filtering here has always applied live as you type/select, so this button doesn't gate anything — it smooth-scrolls down to the results grid, and only shows on mobile/tablet (`lg:hidden`) where the sidebar and results stack vertically and jumping to results is actually useful; on desktop the results are already visible beside the filters, so the button would be dead weight there.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped for the unescaped-apostrophe pattern — none introduced. Couldn't get a real rendered screenshot in this sandbox (Playwright's browser binary isn't installed here and installing it has been unreliable in past phases) — the selected/unselected pill styling directly reuses the exact pattern already shipped and working in `IntakeBookingModal`'s channel picker (Email/WhatsApp/Zoom), so confidence is high, but please take a look once it's live.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 31: redesign Our Therapists filter sidebar (pills, segmented buttons, styled dropdown)"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
