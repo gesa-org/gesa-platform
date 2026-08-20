@@ -5,7 +5,7 @@ test.describe("Site navigation", () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: /find a therapist/i })).toBeVisible();
-    await expect(page.getByText("Two clicks to support")).toBeVisible();
+    await expect(page.getByText("Two clicks to a therapist who understands")).toBeVisible();
   });
 
   test("header nav links reach the right pages", async ({ page }) => {
@@ -13,7 +13,7 @@ test.describe("Site navigation", () => {
 
     await page.getByRole("link", { name: "About" }).click();
     await expect(page).toHaveURL(/\/about$/);
-    await expect(page.getByRole("heading", { name: "Who We Are" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /the path to emotional recovery begins here/i })).toBeVisible();
 
     await page.getByRole("link", { name: "Our Therapists" }).click();
     await expect(page).toHaveURL(/\/therapists$/);
@@ -21,9 +21,17 @@ test.describe("Site navigation", () => {
 
     await page.getByRole("link", { name: "Support Groups" }).click();
     await expect(page).toHaveURL(/\/support-groups$/);
+  });
 
-    await page.getByRole("link", { name: "Blog" }).click();
-    await expect(page).toHaveURL(/\/blog$/);
+  // Blog is intentionally disabled (Phase 32) — no header link anymore, and
+  // the route itself redirects to Home since there's no content to publish
+  // yet. This replaces the old "click Blog in the header" assertion above.
+  test("blog is disabled: no header link, and /blog redirects home", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("navigation").getByRole("link", { name: "Blog" })).toHaveCount(0);
+
+    const response = await page.goto("/blog");
+    expect(response?.url()).toMatch(/\/$/);
   });
 
   test("footer legal links resolve without 404s", async ({ page }) => {

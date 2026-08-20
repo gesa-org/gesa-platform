@@ -858,5 +858,25 @@ git commit -m "Phase 31: redesign Our Therapists filter sidebar (pills, segmente
 git push
 ```
 
+## Phase 32 — Blog disabled, moved into the Footer's Explore column
+
+Roy asked to pull "Blog" out of the main nav, move it into the Footer's Explore section, and make sure it can't actually be opened right now since there are no posts/stories to show yet.
+
+**Built:**
+- `components/Header.tsx` — removed the "Blog" link from the main nav entirely.
+- `components/Footer.tsx` — added "Blog" to the existing Explore column, but as a plain `<span>` with `aria-disabled`, a "not-allowed" cursor, and a small "Soon" tag — not a `Link`, so there's nothing to click and no href pointing anywhere.
+- `app/blog/page.tsx` and `app/blog/[slug]/page.tsx` — both routes now just `redirect("/")` instead of rendering the (empty) blog list or a post. This covers anyone who hits `/blog` directly via an old bookmark, external link, or search result, not just people navigating through the site's own nav. The real list/detail implementation (querying `getPublishedBlogPosts()`/`getBlogPostBySlug()`, the card grid, etc.) wasn't deleted — it's sitting in git history from right before this change, so turning Blog back on later is just restoring that and removing the redirect once there's something to publish.
+
+**Also fixed two E2E test assertions this change would have broken, plus two more already broken by earlier phases this session:** `tests/e2e/navigation.spec.ts` had a test that clicked "Blog" in the header and expected `/blog` to render — replaced with a test that confirms the header link is gone and that `/blog` redirects home. While in that file, also caught and fixed two assertions left stale by Phase 30 (Home's Paths heading text changed to "Two clicks to a therapist who understands," and About's page heading is now Hero's "The path to emotional recovery begins here" instead of the old "Who We Are") — both were already broken before today's change, not something this phase introduced, but worth fixing while touching the file rather than leaving known-broken tests in place.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped every changed file for the unescaped-apostrophe pattern — all matches are inside comments, not JSX text. Confirmed no other component links to `/blog` anywhere else in the app (grepped the whole codebase) — the header and footer were the only two places.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 32: disable Blog, move it to Footer Explore as a non-clickable Soon label"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

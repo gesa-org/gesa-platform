@@ -18,7 +18,6 @@ export default function Header() {
           <Link href="/about" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">About</Link>
           <Link href="/therapists" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">Our Therapists</Link>
           <Link href="/support-groups" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">Support Groups</Link>
-          <Link href="/blog" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">Blog</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Link href="/contact?subject=Donation" className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft">

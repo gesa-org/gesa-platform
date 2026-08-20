@@ -22,6 +22,21 @@ export default function Footer() {
               <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
               <li><Link href="/therapists" className="hover:text-white transition-colors">Our Therapists</Link></li>
               <li><Link href="/support-groups" className="hover:text-white transition-colors">Support Groups</Link></li>
+              {/* Blog moved here from the main header nav — the page has no
+                  posts to show yet, so it's a disabled, non-clickable label
+                  rather than a dead link, until there's real content. */}
+              <li>
+                <span
+                  aria-disabled="true"
+                  title="Coming soon — no posts published yet"
+                  className="inline-flex cursor-not-allowed items-center gap-1.5 text-[#5f7480]"
+                >
+                  Blog
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#8fa2ae]">
+                    Soon
+                  </span>
+                </span>
+              </li>
               <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
             </ul>
