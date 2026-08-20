@@ -916,5 +916,27 @@ git commit -m "Phase 33.1: show flag+language name in header picker; flag missin
 git push
 ```
 
+## Phase 33.2 — Same request, third time; confirmed what's live, fixed the header's RTL mirroring, restated the one real blocker
+
+Roy sent the same reference recording again, asking for the English/Hebrew switcher to "work properly across the website" with Hebrew rendering in Hebrew script everywhere. Checked before assuming anything needed rebuilding:
+
+- `git log` confirms Phase 33 (`50d39c6`) and Phase 33.1 (`8bb5c22`) are both committed, pushed, and match what's currently in the working tree — the two-language picker with flags, the `dir="rtl"`/`lang` switching, and the stale-saved-language fallback are all still exactly as documented there. Nothing had regressed or gone missing.
+- `.env.local` still has no `GOOGLE_TRANSLATE_API_KEY` entry at all (checked directly, not assumed) — this is the same blocker Phase 33.1 flagged and it's still unresolved. This is the actual reason Hebrew "doesn't work" the way Roy means: the page correctly flips to right-to-left the moment Hebrew is selected, but `lib/translate.ts`'s `translateBatch()` is built to silently fall back to the original English text whenever this key is missing, rather than erroring — so every string on the page stays in English while the layout direction changes underneath it. **This can't be fixed with more code** — it needs a real Google Cloud Translation API key from Roy's own Google Cloud account (a billing-enabled project with "Cloud Translation API" turned on, then an API key from that project), added to Vercel's environment variables for both Dev and Production per `ENV_VARS.md`. I don't have a way to create or substitute for this credential.
+
+**One real, useful fix made this round — the top navigation bar specifically, since that's what Roy pointed at:** `components/Header.tsx` was using physical-direction Tailwind utilities (`ml-2` on the nav, `ml-auto` on the right-hand action cluster) which don't flip when the document direction changes — so even with `dir="rtl"` set, the header's own layout would have stayed pinned left instead of mirroring like the reference recording. Switched both to their CSS logical-property equivalents (`ms-2`, `ms-auto` — "margin-inline-start", relative to reading direction, supported natively since Tailwind 3.3+) so the header nav and the Donate/notifications/language/account cluster now genuinely swap sides under Hebrew, not just the text alignment within them.
+
+**Also filled in a documentation gap while in this area:** `.env.example` never listed `GOOGLE_TRANSLATE_API_KEY` (or `ANTHROPIC_API_KEY` from Phase 9) at all, even though `ENV_VARS.md` did — added both with a short explanation, so a fresh local setup doesn't silently miss them.
+
+**Still an honest, open limitation** (same one flagged in Phase 33, only partially narrowed by this round's header fix): other multi-column custom layouts — the Our Therapists filter sidebar, Footer's column grid, card grids — use their own physical-direction utilities here and there and haven't been individually audited for RTL mirroring. Hebrew text in them will be correctly right-to-left and correctly translated (once the API key is set), but the overall visual arrangement of those sections may not mirror left-right the way the header now does. A full RTL layout audit across every component would be a larger, dedicated pass rather than something to fold into this round unnoticed.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped the changed file for the unescaped-apostrophe pattern — none found.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 33.2: fix header RTL mirroring with logical margins; document the missing Google Translate key blocker"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

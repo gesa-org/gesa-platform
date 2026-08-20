@@ -13,13 +13,20 @@ export default function Header() {
           <Logo size={34} />
           GESA
         </Link>
-        <nav className="hidden md:flex gap-2 ml-2">
+        {/* ms-2/ms-auto (CSS logical "margin-inline-start", not a physical
+            margin-left) rather than ml-2/ml-auto — these automatically flip
+            to the trailing/leading edge under dir="rtl" (set by
+            TranslationProvider when Hebrew is active), so the nav and the
+            right-hand action cluster actually mirror sides like the
+            reference recording, instead of staying pinned left regardless
+            of reading direction. */}
+        <nav className="hidden md:flex gap-2 ms-2">
           <Link href="/" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">Home</Link>
           <Link href="/about" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">About</Link>
           <Link href="/therapists" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">Our Therapists</Link>
           <Link href="/support-groups" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">Support Groups</Link>
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-2">
           <Link href="/contact?subject=Donation" className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft">
             <Heart size={16} /> Donate
           </Link>
