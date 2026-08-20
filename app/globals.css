@@ -90,41 +90,43 @@
   }
 }
 
-/* Home page "footer reveal" effect — the story section sits opaque and on
-   top; the donation CTA + footer sit in a fixed layer underneath it and are
-   only uncovered once the story section's reserved bottom margin scrolls
-   past. Pure CSS stacking, no scroll-driven JS. Height is normally set by
-   HomeFooterLayer's ResizeObserver via the --home-reveal-height custom
-   property on :root; the 520px here is only the pre-hydration/no-JS
-   fallback. Disabled below 760px and under prefers-reduced-motion, where
-   everything just falls back to normal document flow. */
-.home-reveal-page__main {
+/* Site-wide "footer reveal" effect (Phase 29, extended to more pages in
+   Phase 34) — the page's own content sits opaque and on top; the donation
+   CTA + footer sit in a fixed layer underneath it and are only uncovered
+   once the page's reserved bottom margin scrolls past. Pure CSS stacking, no
+   scroll-driven JS. Height is normally set by useRevealHeight's
+   ResizeObserver via the --reveal-height custom property on :root; the
+   520px here is only the pre-hydration/no-JS fallback. Disabled below 760px
+   and under prefers-reduced-motion, where everything just falls back to
+   normal document flow. Applied per-route in components/SiteFooterSlot.tsx —
+   not every page opts in (e.g. admin pages never do). */
+.reveal-page__main {
   position: relative;
   z-index: 2;
   background: var(--background);
-  margin-bottom: var(--home-reveal-height, 520px);
+  margin-bottom: var(--reveal-height, 520px);
 }
-.home-reveal-page__footer-layer {
+.reveal-page__footer-layer {
   position: fixed;
   inset: auto 0 0;
   z-index: 1;
-  min-height: var(--home-reveal-height, 520px);
+  min-height: var(--reveal-height, 520px);
 }
-.home-reveal-page__gift,
-.home-reveal-page__footer {
+.reveal-page__gift,
+.reveal-page__footer {
   position: relative;
 }
 @media (max-width: 760px) {
-  .home-reveal-page__main {
+  .reveal-page__main {
     margin-bottom: 0;
   }
-  .home-reveal-page__footer-layer {
+  .reveal-page__footer-layer {
     position: static;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-reveal-page__main,
-  .home-reveal-page__footer-layer {
+  .reveal-page__main,
+  .reveal-page__footer-layer {
     position: static;
     margin-bottom: 0;
   }

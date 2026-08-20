@@ -56,9 +56,15 @@ function initials(name: string) {
     .join("");
 }
 
+// Footer reveal effect (Phase 34 — extended from Home in Phase 29): this
+// page's own content, including its own "Join us as a caregiver" CTA
+// section further down, is the opaque "cover." The generic donate band +
+// footer sit in a separate fixed layer underneath (see SiteFooterSlot),
+// uncovered once the visitor scrolls past this page's reserved bottom
+// margin.
 export default function AboutPage() {
   return (
-    <>
+    <div className="reveal-page__main">
       <Hero />
 
       <section className="section wrap max-w-[760px]">
@@ -169,6 +175,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

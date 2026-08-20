@@ -938,5 +938,26 @@ git commit -m "Phase 33.2: fix header RTL mirroring with logical margins; docume
 git push
 ```
 
+## Phase 34 — Footer reveal effect extended to About, Our Therapists, and Support Groups
+
+Roy asked for the Phase 29 "footer reveal" effect (built Home-only) to also apply on About, Our Therapists, and Support Groups. Blog wasn't included — it's been disabled and redirects straight to Home since Phase 32, so there's no actual rendered page left for the effect to apply to; noted below rather than silently skipped.
+
+**Generalized rather than copy-pasted:** the Phase 29 implementation was written assuming exactly one page, with "home" baked into class names, a CSS variable, and a hook. Rather than duplicating that logic three more times, generalized the existing pieces so every opted-in page shares one mechanism:
+- `app/globals.css` — renamed `.home-reveal-page__*` to `.reveal-page__*` and `--home-reveal-height` to `--reveal-height`. Same rules, same behavior (opaque cover on top, fixed CTA+footer layer underneath, collapses to normal flow under 760px width or `prefers-reduced-motion`), just no longer named as if only one page could ever use them.
+- `components/layout/useRevealHeight.ts` — the height-measuring `ResizeObserver` hook, moved out of `components/home/` since it was never actually Home-specific, just named that way. The original file at `components/home/useHomeRevealHeight.ts` couldn't be deleted (files already written into the synced project folder can't be removed without asking first), so it's now a one-line re-export pointing at the new location rather than duplicate logic drifting out of sync.
+- `components/SiteFooterSlot.tsx` — replaced the single `pathname === "/"` check with a `REVEAL_ROUTES` set (`/`, `/about`, `/therapists`, `/support-groups`). Any route in that set gets the fixed donate-CTA + footer layer; everything else (including `/blog`, admin, and every other route) keeps the plain static footer exactly as before. Adding another page later, once Blog has real content, is a one-line addition to that set.
+- `app/page.tsx`, `app/about/page.tsx`, `app/therapists/page.tsx`, `app/support-groups/page.tsx` — each page's returned content is now wrapped in a `.reveal-page__main` div instead of a bare fragment, giving it the reserved bottom margin and the `z-index: 2` opaque-cover behavior. About's own existing "Join us as a caregiver" CTA section stays exactly where it is, inside that page's own cover content — the generic donate band + footer sit in the separate fixed layer underneath, same relationship as Home's "Stories of healing" section to its own reveal layer.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped the whole codebase for the old `home-reveal-page`/`home-reveal-height` names to confirm nothing was left half-renamed — no matches remain outside the compatibility re-export. Grepped every changed file for the unescaped-apostrophe pattern — all matches are inside comments or plain string literals, not JSX children text. Confirmed the Our Therapists page's sticky filter sidebar (`position: sticky` inside the new wrapper) is unaffected — the wrapper only adds `position: relative`, which sticky positioning works fine inside.
+
+**Known gap, honestly flagged:** same caveat as Phase 29 — this is a scroll-position illusion built from CSS stacking, not something I can screenshot-verify from this sandbox. Worth a quick look on desktop across all three newly-added pages once deployed.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 34: extend footer reveal effect to About, Our Therapists, and Support Groups"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
