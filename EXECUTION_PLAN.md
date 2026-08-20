@@ -786,5 +786,37 @@ git commit -m "Phase 28: clean, letter-spaced sans-serif GESA wordmark in soft b
 git push
 ```
 
+## Phase 29 — Home page "footer reveal" effect
+
+Roy pointed to §7.1.1 of design.md for a "covered footer reveal" pattern: a reference recording where the main section stays opaque and on top while scrolling, the CTA band becomes visible first, then the footer is uncovered beneath it, and scrolling back up covers it again — to be applied on the home page, directly after "Stories of healing / In their words," using GESA's own warm paper/sage/clay palette rather than the reference video's cyan/dark-blue.
+
+**Couldn't find `design.md` in the project** (checked the repo root, `gesa-website/`, `gesa-backend-refactor/`, uploads, and every existing `.md` file) — no such document exists anywhere in this codebase or its history. Since Roy's message already included the full §7.1.1 spec verbatim (behavior description, DOM structure, the recommended CSS, and implementation notes), I built directly from that rather than blocking on a file that isn't there. Flagging this in case `design.md` lives somewhere outside this project (e.g. a shared doc) that should get pulled in here for future reference.
+
+**The real implementation challenge:** the footer is rendered once, globally, in `app/layout.tsx`, shared by every route — but this effect is home-only and needs the donate CTA band and the footer to move out of normal document flow into one fixed layer, without duplicating the footer or changing how it behaves on any other page.
+
+**Built:**
+- `components/SiteFooterSlot.tsx` — new client component now rendered in `app/layout.tsx` in place of the old direct `<Footer />`. On every route except `/` it renders `<Footer />` exactly as before — zero change anywhere else in the site. On the home page only, it renders `DonateBand` + `Footer` together inside a `.home-reveal-page__footer-layer` div (fixed to the bottom of the viewport, per the CSS below).
+- `components/home/useHomeRevealHeight.ts` — a small hook using only a `ResizeObserver` (never a scroll listener, per the spec's explicit instruction) to measure the reveal layer's real rendered height and publish it as a `--home-reveal-height` CSS custom property on `:root`, so the reserved space above it always matches the actual footer height rather than a guessed constant.
+- `app/globals.css` — added the `.home-reveal-page__main` / `.home-reveal-page__footer-layer` / `.home-reveal-page__gift` / `.home-reveal-page__footer` rules essentially as specified: the story section is `position: relative; z-index: 2` with a `margin-bottom` reserving the reveal height, the CTA+footer layer is `position: fixed; z-index: 1` underneath it, both collapse to normal static flow under `max-width: 760px` and `prefers-reduced-motion: reduce`. Used `var(--background)` (GESA's warm paper) instead of the spec's placeholder `var(--color-bg)` — same variable name doesn't exist in this codebase, and this is the real equivalent already used everywhere else.
+- `app/page.tsx` — the home page's own content (Hero, Paths, Stats, Testimonials) is now wrapped in `.home-reveal-page__main` instead of a plain `min-h-screen` div, and no longer renders `DonateBand` itself — it moved into the reveal layer above so it appears right before the footer, not as a normal section at the end of the page.
+
+**Why the CSS classes aren't nested under one shared `.home-reveal-page` wrapper exactly like the spec's example markup:** the story section and the footer layer genuinely live in two different component trees (the page vs. the root layout) because of how Next.js persists the layout across routes — nesting them under one literal parent div isn't possible without restructuring the whole app shell. The spec's own implementation notes anticipate this ("if the existing app shell renders the footer globally, add a home-only modifier... instead of changing footer behavior across every route"), which is exactly what `SiteFooterSlot` does. The CSS variable is scoped to `:root` instead of a `.home-reveal-page` ancestor for the same reason — it needs to be readable from both trees.
+
+**Preserved, per the spec's explicit requirements:**
+- The crisis button (`fixed`, `z-[70]`) sits well above both reveal-layer z-indexes (2 and 1) and was untouched — still visible and clickable throughout.
+- Footer links and focus order are unaffected — the "covered" state is purely a visual stacking effect (`z-index`), the footer DOM is always present and fully focusable/tab-reachable, never `display: none` or `visibility: hidden`.
+- Mobile (≤760px) and `prefers-reduced-motion: reduce` both fall back to plain static document flow — CTA band then footer, in order, no fixed positioning, no reserved blank space.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped every changed file for the unescaped-apostrophe pattern — all matches are inside comments, not JSX text, so no fix needed. No existing test touches `DonateBand`'s position or the home page's wrapper markup, so nothing broke there.
+
+**Known gap:** this is a genuinely new interaction pattern (a scroll-position illusion built from CSS stacking, not JS-measured scroll progress) — please try it live on desktop/tablet once deployed and confirm it reads the way the reference recording intended before considering this done. If the reveal feels too abrupt or too gradual, the fix is tuning `DonateBand`/`Footer`'s own padding (which drives the measured height), not the mechanism itself.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 29: home page footer reveal effect (CTA + footer uncovered after Stories of healing)"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

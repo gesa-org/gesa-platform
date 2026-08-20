@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import SiteFooterSlot from "@/components/SiteFooterSlot";
 import CrisisButton from "@/components/CrisisButton";
 import TranslationProvider from "@/components/TranslationProvider";
 
@@ -22,7 +22,7 @@ export default function RootLayout({
         <TranslationProvider>
           <Header />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <SiteFooterSlot />
           <CrisisButton />
         </TranslationProvider>
       </body>
