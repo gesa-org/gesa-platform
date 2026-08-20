@@ -899,5 +899,22 @@ git commit -m "Phase 33: language picker narrowed to English/Hebrew, with real R
 git push
 ```
 
+## Phase 33.1 — Same request came back with the same recording; header picker made visible, real blocker identified
+
+Roy sent the identical request and reference recording again, asking to make sure English/Hebrew "works properly across the website." Checked `git log`/`git status` first rather than assuming — Phase 33 above was already committed and pushed (`50d39c6`, working tree clean before this round), so the language list, RTL direction switching, and stale-language fallback described there are already live. Two real things came out of re-checking this rather than just re-shipping the same commit:
+
+1. **The header picker didn't look like the reference.** Roy's video shows the flag + current language name sitting directly in the header ("🇺🇸 English ⌄"), not hidden behind a generic icon. The Phase 33 implementation kept the pre-existing plain globe-icon button — functionally fine, but not what the reference showed and not something you could tell your current language from at a glance. Fixed in `components/LanguageSelector.tsx`: the button now shows the flag and language name (name hidden below the `sm` breakpoint to avoid crowding the header on small screens, flag always visible), with a chevron, and the dropdown rows show flag + name too. `lib/languages.ts` gained separate `flag`/`name` fields alongside the existing combined `label` (kept as-is since `AccountForm.tsx`'s `<option>` text still uses it — no other file needed changes).
+
+2. **The likely reason Hebrew doesn't fully translate on the live site:** `GOOGLE_TRANSLATE_API_KEY` has been flagged as unset since Phase 10 and still shows only a placeholder in `ENV_VARS.md` — confirmed it's genuinely not configured anywhere by checking `.env.local` directly (no match at all, not even a blank entry). Without it, `lib/translate.ts`'s `translateBatch()` does exactly what it's designed to do when a key is missing: silently returns the original English text instead of throwing, so the page still flips to right-to-left (that part doesn't depend on the key) but the text itself stays in English — which would look exactly like "Hebrew is selected but the text isn't Hebrew." This needs a real Google Cloud Translation API key from Roy's own Google Cloud account (billing-enabled project, "Cloud Translation API" turned on) — not something I can generate or substitute for. Added to Vercel env vars (both Dev and Production) per the existing `ENV_VARS.md` instructions, this should be the last piece for Hebrew to actually translate site-wide rather than just changing direction.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped changed files for the unescaped-apostrophe pattern — none found.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 33.1: show flag+language name in header picker; flag missing GOOGLE_TRANSLATE_API_KEY as the likely translation blocker"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

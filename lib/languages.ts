@@ -10,8 +10,8 @@
 // page code — which already just maps over this list — needed no changes
 // beyond what's in this file and the RTL handling in TranslationProvider.
 export const LANGUAGES = [
-  { code: "en", label: "🇺🇸 English" },
-  { code: "he", label: "🇮🇱 עברית" },
+  { code: "en", label: "🇺🇸 English", flag: "🇺🇸", name: "English" },
+  { code: "he", label: "🇮🇱 עברית", flag: "🇮🇱", name: "עברית" },
 ];
 
 // Languages that read right-to-left. Only "he" is reachable from the picker

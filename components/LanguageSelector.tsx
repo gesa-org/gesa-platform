@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Globe, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { LANGUAGES } from "@/lib/languages";
 import { useTranslation } from "@/components/TranslationProvider";
@@ -35,29 +35,35 @@ export default function LanguageSelector() {
     setLanguage(code);
   }
 
-  const currentLabel = LANGUAGES.find((l) => l.code === language)?.label ?? "English";
+  const current = LANGUAGES.find((l) => l.code === language) ?? LANGUAGES[0];
 
   return (
     <div className="relative" ref={ref} data-no-translate>
+      {/* Shows the active language (flag + name) directly in the header,
+          matching the reference site Roy pointed to, rather than hiding it
+          behind a generic globe icon that gave no indication of the current
+          selection at a glance. */}
       <button
         onClick={() => setOpen((v) => !v)}
-        title={`Language: ${currentLabel}`}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white transition-colors hover:bg-secondary disabled:opacity-60"
+        title={`Language: ${current.name}`}
+        className="flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
         disabled={translating}
       >
-        {translating ? <Loader2 size={18} className="animate-spin" /> : <Globe size={18} />}
+        {translating ? <Loader2 size={16} className="animate-spin" /> : <span aria-hidden="true">{current.flag}</span>}
+        <span className="hidden sm:inline">{current.name}</span>
+        <ChevronDown size={14} className="text-muted-fg" />
       </button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 max-h-[360px] w-48 overflow-y-auto rounded-2xl border border-border bg-white shadow-lg">
+        <div className="absolute right-0 top-12 z-50 w-48 overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
               onClick={() => select(l.code)}
-              className={`block w-full px-4 py-2.5 text-left text-[14px] transition-colors hover:bg-secondary ${
+              className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-[14px] transition-colors hover:bg-secondary ${
                 l.code === language ? "font-semibold text-primary" : "text-foreground"
               }`}
             >
-              {l.label}
+              <span aria-hidden="true">{l.flag}</span> {l.name}
             </button>
           ))}
         </div>
