@@ -3,6 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { LANGUAGES, RTL_LANGUAGES } from "@/lib/languages";
+
+const SUPPORTED_LANGS = new Set(LANGUAGES.map((l) => l.code));
 
 type TranslationContextValue = {
   language: string;
@@ -65,9 +68,15 @@ export default function TranslationProvider({ children }: { children: React.Reac
   const appliedKey = useRef<string | null>(null);
 
   useEffect(() => {
+    // Phase 33 — the picker only offers English and Hebrew now, but
+    // localStorage or a profile row can still hold one of the languages
+    // that used to be selectable before that change. Falling back to
+    // English for anything outside the current list keeps the site
+    // genuinely limited to the two supported languages rather than quietly
+    // still speaking, say, French to whoever picked it months ago.
     const saved = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
     if (saved) {
-      setLanguageState(saved);
+      setLanguageState(SUPPORTED_LANGS.has(saved) ? saved : "en");
       return;
     }
     (async () => {
@@ -81,12 +90,28 @@ export default function TranslationProvider({ children }: { children: React.Reac
         .select("preferred_language")
         .eq("id", user.id)
         .maybeSingle();
-      if (profile?.preferred_language && profile.preferred_language !== "en") {
-        localStorage.setItem(STORAGE_KEY, profile.preferred_language);
-        setLanguageState(profile.preferred_language);
+      const preferred = profile?.preferred_language;
+      if (preferred && preferred !== "en" && SUPPORTED_LANGS.has(preferred)) {
+        localStorage.setItem(STORAGE_KEY, preferred);
+        setLanguageState(preferred);
       }
     })();
   }, []);
+
+  // Hebrew reads right-to-left — without this, translated Hebrew text still
+  // renders in a left-to-right document, which breaks alignment, punctuation
+  // placement, and the browser's own bidi handling of mixed Hebrew/Latin
+  // text (names, emails, numbers). This flips the whole document's base
+  // direction and updates the lang attribute; components built with
+  // directional Tailwind utilities (ml-/mr-, text-left, etc.) don't
+  // automatically mirror their layout, so complex multi-column sections may
+  // still read visually LTR even once the text itself is Hebrew and
+  // RTL-aligned — a real, known limitation of retrofitting RTL onto an
+  // LTR-only layout rather than something this fixes silently.
+  useEffect(() => {
+    document.documentElement.dir = RTL_LANGUAGES.has(language) ? "rtl" : "ltr";
+    document.documentElement.lang = language;
+  }, [language]);
 
   const translatePage = useCallback(async (lang: string) => {
     if (lang === "en") return;

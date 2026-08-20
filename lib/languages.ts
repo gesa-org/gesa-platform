@@ -1,47 +1,21 @@
 // Shared list for the header LanguageSelector, the account page's language
 // field, and the translation engine. Codes are Google Cloud Translation
-// language codes. Expanded from the original 6 to a broad, genuinely global
-// spread (every populated continent, the UN official languages, and GESA's
-// largest actual audiences) rather than every one of Google's 100+
-// supported codes, which would make the picker unusable.
+// language codes.
+//
+// Phase 33 — narrowed from a 38-language spread down to just English and
+// Hebrew, per Roy's reference (a similar org's site whose language switcher
+// only ever offered these two, with flags in the picker and the page
+// flipping to right-to-left when Hebrew is active). Kept as a small array
+// rather than a hardcoded pair of variables so the existing selector/account
+// page code — which already just maps over this list — needed no changes
+// beyond what's in this file and the RTL handling in TranslationProvider.
 export const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "he", label: "עברית" },
-  { code: "ar", label: "العربية" },
-  { code: "ru", label: "Русский" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-  { code: "de", label: "Deutsch" },
-  { code: "it", label: "Italiano" },
-  { code: "pt", label: "Português" },
-  { code: "nl", label: "Nederlands" },
-  { code: "pl", label: "Polski" },
-  { code: "uk", label: "Українська" },
-  { code: "el", label: "Ελληνικά" },
-  { code: "tr", label: "Türkçe" },
-  { code: "fa", label: "فارسی" },
-  { code: "ur", label: "اردو" },
-  { code: "hi", label: "हिन्दी" },
-  { code: "bn", label: "বাংলা" },
-  { code: "zh-CN", label: "中文 (简体)" },
-  { code: "zh-TW", label: "中文 (繁體)" },
-  { code: "ja", label: "日本語" },
-  { code: "ko", label: "한국어" },
-  { code: "vi", label: "Tiếng Việt" },
-  { code: "th", label: "ไทย" },
-  { code: "id", label: "Bahasa Indonesia" },
-  { code: "ms", label: "Bahasa Melayu" },
-  { code: "tl", label: "Filipino" },
-  { code: "sw", label: "Kiswahili" },
-  { code: "am", label: "አማርኛ" },
-  { code: "yo", label: "Yorùbá" },
-  { code: "ha", label: "Hausa" },
-  { code: "af", label: "Afrikaans" },
-  { code: "sv", label: "Svenska" },
-  { code: "no", label: "Norsk" },
-  { code: "da", label: "Dansk" },
-  { code: "fi", label: "Suomi" },
-  { code: "ro", label: "Română" },
-  { code: "hu", label: "Magyar" },
-  { code: "cs", label: "Čeština" },
+  { code: "en", label: "🇺🇸 English" },
+  { code: "he", label: "🇮🇱 עברית" },
 ];
+
+// Languages that read right-to-left. Only "he" is reachable from the picker
+// today, but keeping this as a set (rather than an `=== "he"` check) means
+// adding Arabic or Farsi back later is a one-line change, not a re-audit of
+// every place direction is decided.
+export const RTL_LANGUAGES = new Set(["he", "ar", "fa", "ur"]);

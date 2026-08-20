@@ -878,5 +878,26 @@ git commit -m "Phase 32: disable Blog, move it to Footer Explore as a non-clicka
 git push
 ```
 
+## Phase 33 — Language switcher narrowed to English/Hebrew, with real RTL support
+
+Roy sent a recording of a similar org's site whose header language picker only ever offers English and Hebrew (with flag icons), and switching to Hebrew flips the page to right-to-left — asked for the same on GESA, working properly everywhere.
+
+**Narrowed the list, not just the picker:** `lib/languages.ts` — cut from 38 languages down to exactly English (`🇺🇸 English`) and Hebrew (`🇮🇱 עברית`), matching the flags shown in Roy's reference. This one list already fed the header `LanguageSelector`, the account page's language field, and the translation engine, so trimming it there was enough to shrink all three at once without touching those components' code.
+
+**The actual "work properly" fix — real RTL, not just fewer options:** the translation engine (`TranslationProvider.tsx`) already supported Hebrew as a translation target since Phase 10, but it never set the page's text direction — Hebrew text was rendering machine-translated but still left-to-right, which reads wrong (misaligned punctuation, broken bidi handling of names/emails/numbers mixed with Hebrew). Added an effect that sets `document.documentElement.dir` to `rtl` when Hebrew is active (`ltr` otherwise) and updates the `lang` attribute to match, via a small `RTL_LANGUAGES` set in `lib/languages.ts` so adding Arabic or Farsi back later is a one-line change rather than a re-audit.
+
+**Stale saved languages no longer leak through:** anyone who picked one of the 36 removed languages before this change still has that code sitting in their browser's `localStorage` or their `profiles.preferred_language` row. Added a check against the current (now much shorter) language list on load — anything outside English/Hebrew falls back to English instead of the site quietly continuing to translate into a language that's no longer offered anywhere in the UI.
+
+**Known, honestly-flagged limitation:** setting `dir="rtl"` correctly flips native browser behavior (text alignment, punctuation, number/bidi handling) and is the part that actually matters for Hebrew to read correctly — but it doesn't automatically mirror custom layout built with directional Tailwind utilities (`ml-`, `mr-`, `text-left`, etc.) the way the reference site's fully RTL-aware design does. Multi-column sections (the therapist filter sidebar, footer columns, card grids) will have RTL-aligned Hebrew text but may keep their current LTR visual arrangement rather than mirroring left-right like the reference. Fully mirroring every custom component's layout for RTL would be a much larger, dedicated pass — flagging this clearly rather than claiming a pixel-perfect match to the reference video.
+
+**Verification:** `npx tsc --noEmit` clean aside from the same pre-existing, unrelated `resend` typing error since Phase 11. Grepped every changed file for the unescaped-apostrophe pattern — all matches are inside comments. Confirmed the account page's language dropdown and the header selector both automatically picked up the shorter list with no code changes needed in either file, since both already just map over `LANGUAGES`.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 33: language picker narrowed to English/Hebrew, with real RTL direction switching"
+git push
+```
+
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
