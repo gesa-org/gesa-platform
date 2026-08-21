@@ -6,8 +6,23 @@ import type { Tables } from "@/lib/database.types";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
+import type { SupportGroupsDirectoryContent } from "@/lib/content";
 
-export default function SupportGroupsInteractive({ groups }: { groups: Tables<"support_groups">[] }) {
+export const SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK: SupportGroupsDirectoryContent = {
+  published: true,
+  noGroupsMessage: "No support groups are open for registration right now — check back soon.",
+  registerButtonLabel: "Register",
+  confirmButtonLabel: "Confirm registration",
+  successHeading: "You're registered",
+};
+
+export default function SupportGroupsInteractive({
+  groups,
+  content = SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK,
+}: {
+  groups: Tables<"support_groups">[];
+  content?: SupportGroupsDirectoryContent;
+}) {
   const [activeId, setActiveId] = useState(groups[0]?.id);
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
   const [registerOpen, setRegisterOpen] = useState(false);
@@ -16,7 +31,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
   if (!active) {
     return (
       <div className="mt-10 rounded-[var(--radius)] border border-border bg-card p-7 text-center text-muted-fg">
-        No support groups are open for registration right now — check back soon.
+        {content.noGroupsMessage}
       </div>
     );
   }
@@ -117,7 +132,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
                 }}
                 className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white"
               >
-                Register
+                {content.registerButtonLabel}
               </button>
             </div>
           </div>
@@ -127,7 +142,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
       <Modal open={registerOpen} onClose={() => setRegisterOpen(false)}>
         {registerState === "done" ? (
           <div className="py-4 text-center">
-            <h3 className="mb-2 text-lg font-semibold">You&apos;re registered</h3>
+            <h3 className="mb-2 text-lg font-semibold">{content.successHeading}</h3>
             <p className="text-muted-fg">
               Confirmation for <strong>{active.title}</strong> is on its way to your inbox.
             </p>
@@ -190,7 +205,7 @@ export default function SupportGroupsInteractive({ groups }: { groups: Tables<"s
               <p className="text-sm text-destructive">Something went wrong — please try again.</p>
             )}
             <Button type="submit" block>
-              {registerState === "pending" ? "Registering…" : "Confirm registration"}
+              {registerState === "pending" ? "Registering…" : content.confirmButtonLabel}
             </Button>
           </form>
         )}

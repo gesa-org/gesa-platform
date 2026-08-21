@@ -1,52 +1,19 @@
 import Link from "next/link";
 import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } from "lucide-react";
 import Card from "@/components/ui/Card";
-import Hero from "@/components/Hero";
+import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
+import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
 
 export const metadata = {
   title: "About — GESA",
   description: "Who we are: GESA's mission, how it works, and the founders behind it.",
 };
 
-const HOW_IT_WORKS = [
-  {
-    icon: ShieldCheck,
-    title: "Verified volunteer therapists",
-    body: "A global community of credential-checked professionals who donate their time.",
-  },
-  {
-    icon: HeartHandshake,
-    title: "Up to six free sessions",
-    body: "Every person receives six sessions at no cost, with continued support afterward at a reduced donation fee.",
-  },
-  {
-    icon: Users,
-    title: "Thoughtful matching",
-    body: "We pair each person with a therapist who fits their needs, language, and preferences.",
-  },
-  {
-    icon: Globe2,
-    title: "Global reach, 20+ languages",
-    body: "Support that crosses time zones and speaks your language, online and confidential.",
-  },
-];
-
-const FOUNDERS = [
-  {
-    name: "Ilana O'Malley",
-    roleTitle: "Co-Founder, GESA",
-    email: "ilana@gesa.org",
-    shortBio:
-      "Ilana helped establish GESA out of a conviction that no one should face emotional pain alone or be priced out of care. She guides the alliance's mission of warm, accessible support and its growing worldwide community of volunteer therapists.",
-  },
-  {
-    name: "Karin Horen",
-    roleTitle: "Co-Founder, GESA",
-    email: "karin@gesa.org",
-    shortBio:
-      "Karin co-founded GESA to connect skilled, compassionate therapists with people carrying the weight of war, displacement, and antisemitism. She leads the community and partnerships that keep six sessions free for everyone who reaches out.",
-  },
-];
+// Fixed icon-per-position for the "How GESA works" cards — icon choice
+// wasn't one of the requested editable fields, only each card's title/body
+// text. If a published row ever has more/fewer points than this list, extra
+// points fall back to the last icon rather than crashing.
+const HOW_IT_WORKS_ICONS = [ShieldCheck, HeartHandshake, Users, Globe2];
 
 function initials(name: string) {
   return name
@@ -62,52 +29,60 @@ function initials(name: string) {
 // footer sit in a separate fixed layer underneath (see SiteFooterSlot),
 // uncovered once the visitor scrolls past this page's reserved bottom
 // margin.
-export default function AboutPage() {
+//
+// Phase 35 — every section on this page (Hero, mission, how-it-works cards,
+// founders, the volunteer CTA, the legal blurb) is now Content Manager-
+// editable via two site_content keys: "page_about_hero" (via the shared
+// Hero component) and "page_about_sections" (everything below it). The
+// fallback objects above are exactly today's live copy — publishing the
+// seeded rows changes nothing visually until an admin actually edits them.
+export default async function AboutPage() {
+  const [heroContent, sections] = await Promise.all([
+    getPageContent("page_about_hero", HERO_CONTENT_FALLBACK),
+    getPageContent("page_about_sections", ABOUT_SECTIONS_FALLBACK),
+  ]);
+
   return (
     <div className="reveal-page__main">
-      <Hero />
+      <Hero content={heroContent} />
 
       <section className="section wrap max-w-[760px]">
-        <h2 className="text-[30px]">Why GESA exists</h2>
-        <p className="text-muted-fg text-[15.5px]">
-          Millions of people carry pain that has nowhere to go — after displacement, loss, or the
-          quiet exhaustion of staying strong for others. GESA exists to meet that pain with warmth,
-          dignity, and real professional care.
-        </p>
-        <p className="text-muted-fg text-[15.5px]">
-          We bring skilled therapists to the people who need them most, across borders and languages,
-          and we keep it free at the point of need so that ability to pay is never the reason someone
-          goes without support.
-        </p>
+        <h2 className="text-[30px]">{sections.missionHeading}</h2>
+        {sections.missionParagraphs.map((p, i) => (
+          <p key={i} className="text-muted-fg text-[15.5px]">
+            {p}
+          </p>
+        ))}
       </section>
 
       <section className="section bg-muted">
         <div className="wrap">
-          <h2 className="text-center text-[30px] mb-2">How GESA works</h2>
+          <h2 className="text-center text-[30px] mb-2">{sections.howItWorksHeading}</h2>
           <div className="mt-7.5 mt-[30px] grid gap-[22px] sm:grid-cols-2 lg:grid-cols-4">
-            {HOW_IT_WORKS.map((pt) => (
-              <Card key={pt.title}>
-                <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-accent-soft text-primary">
-                  <pt.icon size={22} />
-                </div>
-                <h3 className="mt-3.5 mb-1.5 text-[17px]">{pt.title}</h3>
-                <p className="text-sm text-muted-fg">{pt.body}</p>
-              </Card>
-            ))}
+            {sections.howItWorksPoints.map((pt, i) => {
+              const Icon = HOW_IT_WORKS_ICONS[i] ?? HOW_IT_WORKS_ICONS[HOW_IT_WORKS_ICONS.length - 1];
+              return (
+                <Card key={pt.title}>
+                  <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-accent-soft text-primary">
+                    <Icon size={22} />
+                  </div>
+                  <h3 className="mt-3.5 mb-1.5 text-[17px]">{pt.title}</h3>
+                  <p className="text-sm text-muted-fg">{pt.body}</p>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
       <section className="section wrap max-w-[820px]">
         <div className="text-center">
-          <span className="eyebrow">Our Founders</span>
-          <h2 className="my-2.5 text-[30px]">Our Founders</h2>
-          <p className="mx-auto max-w-[600px] text-muted-fg">
-            Meet the founders behind GESA — a global home for free, trauma-informed emotional support.
-          </p>
+          <span className="eyebrow">{sections.foundersHeading}</span>
+          <h2 className="my-2.5 text-[30px]">{sections.foundersHeading}</h2>
+          <p className="mx-auto max-w-[600px] text-muted-fg">{sections.foundersIntro}</p>
         </div>
         <div className="mt-8.5 mt-[34px] grid gap-[22px] sm:grid-cols-2">
-          {FOUNDERS.map((p) => (
+          {sections.founders.map((p) => (
             <Card key={p.name} className="flex items-start gap-5">
               <div className="flex h-[112px] w-24 flex-none items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-primary-600 text-[26px] font-serif font-semibold text-white">
                 {initials(p.name)}
@@ -133,23 +108,20 @@ export default function AboutPage() {
 
       <section className="section bg-gradient-to-br from-primary to-primary-600">
         <div className="wrap text-center max-w-[640px]">
-          <h2 className="mb-2.5 text-[30px] text-white">Join us as a caregiver</h2>
-          <p className="mx-auto text-white/90">
-            Are you a licensed therapist with a few hours a month to give? Your time becomes someone&apos;s
-            turning point. Join a global network making care free and human.
-          </p>
+          <h2 className="mb-2.5 text-[30px] text-white">{sections.volunteerHeading}</h2>
+          <p className="mx-auto text-white/90">{sections.volunteerBody}</p>
           <div className="mt-5.5 mt-[22px] flex flex-wrap justify-center gap-3.5">
             <Link
-              href="/contact?subject=Volunteer"
+              href={sections.volunteerPrimaryHref}
               className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[15px] font-semibold text-primary"
             >
-              Become a volunteer therapist <ArrowRight size={16} />
+              {sections.volunteerPrimaryLabel} <ArrowRight size={16} />
             </Link>
             <Link
-              href="/find-your-therapist"
+              href={sections.volunteerSecondaryHref}
               className="inline-flex items-center rounded-full border border-white/60 px-6 py-3.5 text-[15px] font-semibold text-white"
             >
-              Find a therapist
+              {sections.volunteerSecondaryLabel}
             </Link>
           </div>
         </div>
@@ -157,14 +129,10 @@ export default function AboutPage() {
 
       <section className="section bg-accent-soft">
         <div className="wrap text-center max-w-[700px]">
-          <p className="mb-3 text-[15px] text-primary-600">
-            GESA is a registered nonprofit connecting volunteer emotional-support specialists worldwide
-            with Israelis facing war-related distress and Jewish communities abroad experiencing
-            antisemitism.
-          </p>
+          <p className="mb-3 text-[15px] text-primary-600">{sections.legalBlurb}</p>
           <div className="text-[13.5px] leading-[1.9] text-muted-fg">
             <div>
-              <strong>Donations are tax-deductible in Israel, the U.S., the U.K., and Spain.</strong>
+              <strong>{sections.taxNote}</strong>
             </div>
             <div>A registered non-profit organization.</div>
             <div className="mt-2">

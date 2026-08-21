@@ -4,6 +4,26 @@ import { useMemo, useRef, useState } from "react";
 import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
 import type { Tables } from "@/lib/database.types";
+import type { TherapistsDirectoryContent } from "@/lib/content";
+
+export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent = {
+  published: true,
+  searchLabel: "Search by name",
+  searchPlaceholder: "Find therapist…",
+  definitionLabel: "Definition of a therapist",
+  anyOptionLabel: "Any",
+  languageLabel: "Language",
+  anyLanguageLabel: "Any language",
+  durationLabel: "Meeting duration",
+  genderLabel: "Gender",
+  maleLabel: "Male",
+  femaleLabel: "Female",
+  nonbinaryLabel: "Non-binary",
+  joinAsTherapistLabel: "Join us as a therapist",
+  applyFiltersLabel: "Apply filters",
+  noResultsMessage:
+    "No therapists match your search right now. Try clearing a filter, or contact us and we'll help you find the right person.",
+};
 
 function unique(values: string[]) {
   return Array.from(new Set(values)).sort();
@@ -32,7 +52,13 @@ function RadioDot({ selected }: { selected: boolean }) {
   );
 }
 
-export default function TherapistsDirectory({ therapists }: { therapists: Tables<"therapists">[] }) {
+export default function TherapistsDirectory({
+  therapists,
+  content = THERAPISTS_DIRECTORY_CONTENT_FALLBACK,
+}: {
+  therapists: Tables<"therapists">[];
+  content?: TherapistsDirectoryContent;
+}) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [lang, setLang] = useState("");
@@ -62,12 +88,12 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
         {/* Search by name — pill input with a leading icon, matching the new
             filter design Roy supplied. */}
         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-fg">
-          Search by name
+          {content.searchLabel}
         </label>
         <div className="relative mb-5">
           <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-fg" />
           <input
-            placeholder="Find therapist…"
+            placeholder={content.searchPlaceholder}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full rounded-full border border-border bg-white py-3 pl-10 pr-4 text-[15px] focus:border-primary focus:outline-none"
@@ -81,11 +107,11 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             since that real list runs well past the handful of categories
             shown in the reference image. */}
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted-fg">
-          Definition of a therapist
+          {content.definitionLabel}
         </label>
         <div className="mb-5 flex max-h-[220px] flex-col gap-2 overflow-y-auto pr-1">
           <button type="button" onClick={() => setRole("")} className={optionClass(role === "", "flex items-center gap-2.5 text-left")}>
-            <RadioDot selected={role === ""} /> Any
+            <RadioDot selected={role === ""} /> {content.anyOptionLabel}
           </button>
           {roles.map((r) => (
             <button
@@ -105,7 +131,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             matching the bordered "field with a dropdown" look in the
             reference rather than the plain browser-default select. */}
         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-fg">
-          Language
+          {content.languageLabel}
         </label>
         <div className="relative mb-5">
           <select
@@ -113,7 +139,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             onChange={(e) => setLang(e.target.value)}
             className="w-full appearance-none rounded-2xl border border-border bg-white px-3.5 py-3 pr-9 text-[15px] focus:border-primary focus:outline-none"
           >
-            <option value="">Any language</option>
+            <option value="">{content.anyLanguageLabel}</option>
             {langs.map((l) => (
               <option key={l}>{l}</option>
             ))}
@@ -126,7 +152,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             laid out as tappable pills. Clicking the already-selected one
             deselects it back to "any duration." */}
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted-fg">
-          Meeting duration
+          {content.durationLabel}
         </label>
         <div className="mb-5 grid grid-cols-2 gap-2">
           {durations.map((d) => (
@@ -145,7 +171,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             non-binary, already had a label defined in this file but no UI
             to select it before now). */}
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted-fg">
-          Gender
+          {content.genderLabel}
         </label>
         <div className="mb-5 grid grid-cols-3 gap-2">
           <button
@@ -154,7 +180,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             className={optionClass(gender === "man", "flex flex-col items-center gap-1 py-2.5")}
           >
             <span className="text-[17px] leading-none">♂</span>
-            <span className="text-[11px]">Male</span>
+            <span className="text-[11px]">{content.maleLabel}</span>
           </button>
           <button
             type="button"
@@ -162,7 +188,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             className={optionClass(gender === "woman", "flex flex-col items-center gap-1 py-2.5")}
           >
             <span className="text-[17px] leading-none">♀</span>
-            <span className="text-[11px]">Female</span>
+            <span className="text-[11px]">{content.femaleLabel}</span>
           </button>
           <button
             type="button"
@@ -170,7 +196,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             className={optionClass(gender === "nonbinary", "flex flex-col items-center gap-1 py-2.5")}
           >
             <span className="text-[17px] leading-none">⊖</span>
-            <span className="text-[11px] leading-tight">Non-binary</span>
+            <span className="text-[11px] leading-tight">{content.nonbinaryLabel}</span>
           </button>
         </div>
 
@@ -179,14 +205,14 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             href="/contact?subject=Volunteer"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-clay px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#a8813f]"
           >
-            <Users size={16} /> Join us as a therapist
+            <Users size={16} /> {content.joinAsTherapistLabel}
           </a>
           <button
             type="button"
             onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 lg:hidden"
           >
-            <Filter size={15} /> Apply filters
+            <Filter size={15} /> {content.applyFiltersLabel}
           </button>
         </div>
       </aside>
@@ -202,10 +228,7 @@ export default function TherapistsDirectory({ therapists }: { therapists: Tables
             ))}
           </div>
         ) : (
-          <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">
-            No therapists match your search right now. Try clearing a filter, or contact us and
-            we&apos;ll help you find the right person.
-          </div>
+          <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">{content.noResultsMessage}</div>
         )}
       </div>
     </div>

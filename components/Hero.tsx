@@ -1,5 +1,21 @@
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle, Globe2, Link2 } from 'lucide-react';
+import HighlightedText from '@/components/ui/HighlightedText';
+import type { HeroContent } from '@/lib/content';
+
+export const HERO_CONTENT_FALLBACK: HeroContent = {
+  published: true,
+  eyebrow: "A global volunteer support alliance",
+  title: "The path to emotional recovery begins here",
+  highlight: "",
+  subtitle:
+    "GESA (Global Emotional Support Alliance) connects you with a verified volunteer therapist for free, culturally sensitive emotional support.",
+  ctaPrimaryLabel: "Find your therapist",
+  ctaPrimaryHref: "/find-your-therapist",
+  ctaSecondaryLabel: "Explore support groups",
+  ctaSecondaryHref: "/support-groups",
+  backgroundImage: "https://images.pexels.com/photos/7176305/pexels-photo-7176305.jpeg?auto=compress&cs=tinysrgb&w=1200",
+};
 
 // Phase 17 — Roy shared a mockup (built with Claude Design) asking to bring
 // the Home Hero's look closer to it. Two real, implementable changes came
@@ -32,7 +48,13 @@ import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle, Globe2, Link2 
 // to sit above the eyebrow badge: the header already shows the GESA logo on
 // every page including About, so repeating it here was pure redundancy, not
 // a second, different piece of information.
-export default function Hero() {
+//
+// Phase 35 — every field here (eyebrow, title, highlighted portion,
+// subtitle, both CTAs, background image) is now Content Manager-editable
+// via site_content key "page_about_hero". The literals in
+// HERO_CONTENT_FALLBACK above are exactly today's live copy, so publishing
+// the seeded row changes nothing visually until an admin actually edits it.
+export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
     <section className="relative bg-background border-b border-border pt-16 pb-20">
       {/* Decorative Background — overflow-hidden lives here rather than on the
@@ -57,22 +79,19 @@ export default function Hero() {
           {/* Text Content */}
           <div className="max-w-2xl relative">
             <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
-              <Sparkle size={13} /> A global volunteer support alliance
+              <Sparkle size={13} /> {content.eyebrow}
             </span>
             <h1 className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
-              The path to emotional recovery begins here
+              <HighlightedText text={content.title} highlight={content.highlight} />
             </h1>
-            <p className="text-[20px] text-muted-fg leading-[1.55] mb-8 max-w-[34rem]">
-              GESA (Global Emotional Support Alliance) connects you with a verified volunteer
-              therapist for free, culturally sensitive emotional support.
-            </p>
+            <p className="text-[20px] text-muted-fg leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
 
             <div className="flex flex-wrap gap-4 mt-6">
-              <Link href="/find-your-therapist" className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
-                Find your therapist <ArrowRight size={18} />
+              <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
+                {content.ctaPrimaryLabel} <ArrowRight size={18} />
               </Link>
-              <Link href="/support-groups" className="inline-flex items-center justify-center gap-2 bg-white text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
-                Explore support groups
+              <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-white text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
+                {content.ctaSecondaryLabel}
               </Link>
             </div>
 
@@ -98,7 +117,7 @@ export default function Hero() {
             <div className="absolute inset-0 bg-black/10 z-10"></div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://images.pexels.com/photos/7176305/pexels-photo-7176305.jpeg?auto=compress&cs=tinysrgb&w=1200"
+              src={content.backgroundImage}
               alt="A group therapy session"
               className="w-full h-full object-cover z-0 relative"
             />

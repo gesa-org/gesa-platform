@@ -960,4 +960,80 @@ git push
 ```
 
 ---
+
+## Phase 35 — Content Manager: a real CMS under the CRM dashboard
+
+Roy pasted an architecture spec for a "Content Manager" feature (tabs, editor fields, a 4-layer admin/DB/API/render architecture) and asked for it to be built for GESA under that same name in the CRM. The spec's example content ("VentVest Global," regional NZ/Australia/US/Philippines pages, "Career Jobs," "AI Sync") turned out to be copied from an unrelated software-dev-shop's own CMS docs, not anything GESA-specific — flagged this mismatch before building anything. Roy's scoping answers: build Pages (Home, About, Our Therapists, Support Groups, Blog, FAQ, Contact, and the 5 legal pages), Section Details, Images, Footer, Controls, and CTA buttons; skip Career Jobs and AI Sync entirely (not applicable to a therapy nonprofit).
+
+**Architecture decision — reused the existing table, no migration needed.** `public.site_content` (`key text unique, value jsonb`) already existed from Phase 3/7 with correct RLS (`site_content_admin_write`: admin-only ALL; `site_content_public_read`: public SELECT). Each editable page/section is one row; a `published: boolean` lives *inside* the JSON value rather than as a separate column, so the on/off switch is just one field in the same row the admin edits — no schema change on either Supabase project.
+
+**Important finding, handled carefully: a second, unrelated `gesa.site_content` table** exists in its own `gesa` schema on the Production project, with a completely different structure and stale content (video hero, a "preloader" bird animation, "178 therapists" pagination) that doesn't match this codebase at all. Confirmed via `information_schema.tables` that it's a separate table belonging to some other, unrelated tool sharing the same Supabase project. Not touched, read from, or referenced anywhere in this work.
+
+**Fallback contract:** `lib/content.ts` exports `getPageContent<T>(key, fallback)` — fetches the row, returns `fallback` if the row is missing, `published === false`, or the fetch throws; otherwise shallow-merges the row over the fallback (so an older row missing a newer field still renders something sane). This is the literal "Frontend Renderer & Fallback" layer from Roy's spec. Every fallback object is exactly today's live copy, and every new `site_content` key was seeded with `published: true` and those exact fallback values on both Supabase projects — so shipping this changed nothing visible until someone actually edits a field in the new admin UI.
+
+**Pages wired to be Content Manager-editable**, each via `getPageContent()` against its own key: Home hero (`page_home`), About hero (`page_about_hero`, shared with the general `Hero` component) and everything else on About — mission, how-it-works cards, founders, volunteer CTA, legal/tax blurb (`page_about_sections`), Our Therapists banner (`page_therapists`), Support Groups banner (`page_support_groups`), Contact banner (`page_contact`), FAQ banner (`page_faq`), Blog banner (`page_blog` — defined for the editor even though the live Blog page still just redirects per Phase 32), and the footer tagline (`page_footer`). FAQ's actual question list and the 5 legal pages were already DB-driven before this phase (`faqs` and `legal_pages` tables) — the Content Manager manages those tables directly instead of duplicating their content into `site_content`.
+
+**Client/Server boundary issue, solved:** `Footer.tsx` is rendered directly from `SiteFooterSlot.tsx`, which is a Client Component (needs `usePathname()`). A Client Component can't import the server-only Supabase query `getPageContent` uses without breaking the browser bundle, so `Footer` stays synchronous and takes `content` as a prop with a default fallback; the actual fetch happens once in `app/layout.tsx` (made `async`) and is passed down through `SiteFooterSlot`.
+
+**New file `lib/content.ts`** is the single source of truth for every content shape (`SimplePageContent`, `HomeContent`, `HeroContent`, `AboutSectionsContent`, `FooterContent`) and every fallback constant (`THERAPISTS_CONTENT_FALLBACK`, `SUPPORT_GROUPS_CONTENT_FALLBACK`, `BLOG_CONTENT_FALLBACK`, `FAQ_CONTENT_FALLBACK`, `CONTACT_CONTENT_FALLBACK`, `ABOUT_SECTIONS_FALLBACK`), plus `HOME_CONTENT_FALLBACK`/`HERO_CONTENT_FALLBACK`/`FOOTER_CONTENT_FALLBACK` re-exported from their respective components. Caught and fixed a naming collision before it shipped: the first pass exported an identically-named `CONTENT_FALLBACK` from four different route `page.tsx` files, which would collide the moment the admin editor needed to import all four at once — moved every fallback into `lib/content.ts` with unique names instead, with the page files and the new admin editor both importing from there.
+
+**New admin UI** at `/admin/content`, added to the CRM nav in `app/admin/layout.tsx` as "Content Manager." `app/admin/content/page.tsx` bulk-fetches every `site_content` key (via new `getSiteContentMap()` in `lib/queries.ts`) plus `getFaqs()` and the new `getAllLegalPages()`, merges each against its fallback, and hands everything to a client tab shell, `components/admin/content/ContentManagerApp.tsx` (tabs: Home, About, Our Therapists, Support Groups, Blog, FAQ, Contact, Legal Pages, Footer). Editors follow the existing admin pattern (`TherapistEditForm`'s style — client components writing straight to Supabase via the browser client, relying on RLS rather than API routes):
+- `SimplePageEditor` — one reusable eyebrow/title/description/published form, covers Our Therapists, Support Groups, Blog, Contact, and the FAQ banner.
+- `HomeEditor`, `HeroEditor` (with CTA label/link fields and a background-image URL + live preview), `FooterEditor` — small flat-field forms for their respective single rows.
+- `AboutSectionsEditor` — the biggest one; add/remove UI for mission paragraphs, how-it-works cards, and founder bios, plus the volunteer CTA and legal/tax blurb fields.
+- `FaqManager` — CRUD (add/edit/reorder/delete) directly over the existing `faqs` table.
+- `LegalPagesManager` — a 5-item picker over the existing `legal_pages` table, editing title/body per page.
+
+All site_content writes use `supabase.from("site_content").upsert({ key, value }, { onConflict: "key" })` rather than `update`, since some keys' rows didn't exist until this phase's seeding — `key` already has a unique constraint (`site_content_key_key`), confirmed before relying on it.
+
+**Seeding:** ran the exact seed (all 9 new keys, `published: true`, values matching `lib/content.ts` fallbacks verbatim, `on conflict (key) do nothing`) against both Production (`iddeoavrlnvwwfopsacy`) and Dev (`ggjvpfivyqartvanvhzq`). Confirmed via `select key from site_content` on each afterward. The older, unrelated `about_page`/`paths_section`/`home_hero_media`/`intake_config`/`our_specialists`/`preloader` keys from earlier phases are untouched and now fully orphaned (no code reads them) — left in place rather than deleted, since deleting rows wasn't asked for and there's no harm in them sitting unused; worth a decision from Roy on whether to clean them up.
+
+**Verification:** couldn't get a whole-project `npx tsc --noEmit` to finish inside this sandbox's command timeout (this repo has gotten large enough that a full run runs long regardless of retries or backgrounding attempts — process isolation between tool calls rules out backgrounding it across calls too). Built a scoped tsconfig instead, covering every new/changed file from this phase plus everything they import, and ran `tsc --noEmit` against that — clean, no errors. Also grepped every new/changed file for the unescaped-apostrophe-in-JSX pattern that's broken builds in earlier phases — no matches. A follow-up full `npx tsc --noEmit` from a normal terminal (outside this sandbox) before deploying is still worth doing as a final check, since the scoped check, while it covers this phase's actual changes, doesn't touch unrelated files elsewhere in the app.
+
+**Known gaps, honestly flagged:**
+- One stray file, `tsconfig.check.json`, was written to the project root while building the scoped type-check above and can't be removed by me (files already synced into the project folder can't be deleted without asking first) — it's inert (nothing in `package.json` or the build references it) but Roy may want to delete it manually, or ask me to and I'll confirm with him first.
+- The "Controls" item from Roy's scope answer is interpreted here as the per-page Published toggle and the admin form controls themselves, since nothing else in the spec maps to a distinct "Controls" surface — worth confirming that's what was meant.
+- Not screenshot-verified from this sandbox; worth a pass through `/admin/content` on a real browser after deploy to confirm every tab renders and saves as expected.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 35: add Content Manager CMS under the CRM dashboard"
+git push
+```
+
+---
+
+## Phase 35.1 — Content Manager round 2: Header, Footer, Home path cards, and directory microcopy
+
+Phase 35 built the Content Manager but hadn't been committed yet — from Roy's side, nothing had changed on the live site, which read as "not implemented." Confirmed via `git status` that every Phase 35 file was sitting as uncommitted/untracked changes in the project folder. Renamed the CRM nav entry and page heading from "Content Manager" to "Content Manager (Editing Details)" per Roy's exact wording, then asked what to expand before touching anything further, since "all interfaces, section fields, controls, buttons, text details" read as a possibly much larger scope than Phase 35 covered. Roy chose both offered options: fill in the remaining hardcoded pieces on the 6 named pages, *and* extend down to generic UI microcopy (search/filter labels, form placeholders) on Our Therapists and Support Groups. He also asked about Vercel — since I don't have deploy access, he'll check the Vercel deploy log himself after pushing; git commands are at the bottom of this entry as before.
+
+**What's newly editable this round**, all through the same `site_content` table and `getPageContent()` fallback contract as Phase 35 — no new tables, no schema change:
+
+- **Header** (new key `site_header`, new `HeaderContent` type) — the four nav labels (Home/About/Our Therapists/Support Groups) and the Donate button's label + link. Nav link *destinations* stay fixed; `Header.tsx` now takes a `content` prop fetched in `app/layout.tsx` alongside the footer content, the same pattern used for Footer since Header is also rendered inside the app-wide layout.
+- **Footer** (extended `page_footer` / `FooterContent`) — the Explore/Support/Legal column headings and every link's label text, plus the bottom bar's copyright line (supports a `{year}` token that's substituted at render time) and the "Made with care..." line. Link destinations stay fixed here too.
+- **Home** (extended `page_home` / `HomeContent`) — the three trust badges under the headline, the note beneath the path cards, and each of the three path cards' title, description, CTA label, and CTA link. Important caveat, surfaced directly in the admin editor: each card's *visible* headline and description are baked into the card's photo itself (per the Phase 19 comment in `Paths.tsx`) — editing title/description here only changes the screen-reader text, not what a sighted visitor sees. The CTA link is the one field per card with a real visible effect (where the card navigates on click). Didn't build a new image-upload flow for the cards since that wasn't asked for and would need new artwork either way.
+- **Our Therapists directory** (new key `component_therapists_directory`, new `TherapistsDirectoryContent` type) — every fixed label in the filter sidebar (search field, specialty/language/duration/gender labels and their "Any" options), the "Join us as a therapist" and "Apply filters" buttons, and the no-results message. The filter *options themselves* (actual specialties, languages, session lengths) stay data-driven from real therapist records, not editable text — only the static labels around them are.
+- **Support Groups** (new key `component_support_groups_directory`, new `SupportGroupsDirectoryContent` type) — the "no groups open" message, the Register button, the Confirm registration button, and the post-registration success heading. The group list itself (titles, schedules, facilitators) is untouched — still sourced from the `support_groups` table, not duplicated into `site_content`.
+
+**Admin UI:** added a new "Header" tab (first in the list) and folded the two new directory editors into the existing "Our Therapists" and "Support Groups" tabs as a second section below each page's banner editor. Wrote one generic `FlatFieldsEditor` component (`components/admin/content/FlatFieldsEditor.tsx`) that renders a published toggle plus a set of grouped text/textarea fields from a config array, rather than four more copies of the same boilerplate form — `HomeEditor`, `FooterEditor`, `HeaderEditor`, `TherapistsDirectoryEditor`, and `SupportGroupsDirectoryEditor` are now thin config wrappers around it. `HeroEditor` and `AboutSectionsEditor` stay bespoke since those shapes have real array/nested-object editing (add/remove founder cards, etc.) that a flat-fields form can't express.
+
+**Seeding:** updated the existing `page_home` and `page_footer` rows in place (full replace, not merge, so the stored row matches the new shape exactly rather than relying on the fallback-merge to paper over the gap) and inserted the three new keys (`site_header`, `component_therapists_directory`, `component_support_groups_directory`) with `on conflict (key) do nothing`, on both Production (`iddeoavrlnvwwfopsacy`) and Dev (`ggjvpfivyqartvanvhzq`). All values match current live copy exactly — confirmed via `select key from site_content` on each project afterward.
+
+**Verification:** same approach as Phase 35 — a whole-project `tsc --noEmit` still won't finish inside this sandbox's command timeout on a repo this size, so ran a scoped `tsc --noEmit` against a temporary tsconfig covering every file touched this round (plus everything they import) — clean, no errors. Grepped every changed file for the unescaped-apostrophe-in-JSX pattern that's broken past builds — no matches.
+
+**Known gaps, honestly flagged:**
+- Deep, code-adjacent UI strings were deliberately left out even under the "everything down to every button" scope: the Support Groups registration modal's field labels (Name/Email/Phone), its runtime status text ("Registering…", error message), and Header/Footer's icon choices. These are either negligible editorial value or tightly coupled to logic in a way that risks confusing an editor rather than helping one — flagging this rather than silently deciding it doesn't matter.
+- The footer's Legal column still shows hardcoded link labels ("Privacy Policy," etc.) rather than pulling live titles from the `legal_pages` table (which the Legal Pages tab already edits) — so renaming a legal page's title there won't update its footer link text. Worth a follow-up if that inconsistency matters to Roy.
+- Same stray `tsconfig.check.json` from Phase 35 is still sitting in the project root (can't delete it myself); a second scratch file, `tsconfig.check2.json`, was kept in `/tmp` in this sandbox only and never touched the project folder.
+- Not screenshot-verified from this sandbox — worth a pass through the Header, Home, Our Therapists, and Support Groups tabs on a real browser after deploy, and a look at each live page to confirm nothing broke.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 35.1: Content Manager round 2 - Header, Footer, Home path cards, directory microcopy"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -73,11 +73,34 @@ export async function getLegalPage(slug: string): Promise<Tables<"legal_pages"> 
   return data;
 }
 
+// Admin-only (Content Manager, Phase 35): lists every legal page row so the
+// admin UI can offer all of them for editing without knowing the slugs
+// ahead of time.
+export async function getAllLegalPages(): Promise<Tables<"legal_pages">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("legal_pages").select("*").order("title");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getSiteContent<T = unknown>(key: string): Promise<T | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("site_content").select("value").eq("key", key).maybeSingle();
   if (error) throw error;
   return (data?.value as T) ?? null;
+}
+
+// Admin-only (Content Manager, Phase 35): fetches every site_content row
+// keyed by the given list in one query, returned as a Map for O(1) lookup
+// by key in the admin UI. site_content's RLS is public-read regardless
+// (it's marketing copy, not sensitive data), so this doesn't need special
+// admin-only access — it's just a bulk version of getSiteContent() for
+// building the Content Manager's editor forms without N separate queries.
+export async function getSiteContentMap(keys: string[]): Promise<Map<string, unknown>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("site_content").select("key, value").in("key", keys);
+  if (error) throw error;
+  return new Map((data ?? []).map((row) => [row.key, row.value]));
 }
 
 export async function getActiveClinicLocations(): Promise<Tables<"clinic_locations">[]> {

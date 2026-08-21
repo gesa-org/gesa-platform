@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "lib/content.ts",
+    "lib/queries.ts",
+    "app/admin/content/page.tsx",
+    "components/admin/content/SimplePageEditor.tsx",
+    "components/admin/content/HomeEditor.tsx",
+    "components/admin/content/HeroEditor.tsx",
+    "components/admin/content/AboutSectionsEditor.tsx",
+    "components/admin/content/FooterEditor.tsx",
+    "components/admin/content/FaqManager.tsx",
+    "components/admin/content/LegalPagesManager.tsx",
+    "components/admin/content/ContentManagerApp.tsx",
+    "app/about/page.tsx",
+    "app/therapists/page.tsx",
+    "app/support-groups/page.tsx",
+    "app/contact/page.tsx",
+    "app/faq/page.tsx",
+    "app/layout.tsx",
+    "app/admin/layout.tsx",
+    "components/SiteFooterSlot.tsx",
+    "components/Footer.tsx",
+    "components/Hero.tsx",
+    "components/home/Paths.tsx",
+    "components/ui/HighlightedText.tsx"
+  ]
+}
