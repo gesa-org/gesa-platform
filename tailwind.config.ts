@@ -38,12 +38,15 @@ const config: Config = {
         },
         // Phase 36 — explicit names for two roles the existing tokens above
         // don't quite cover: a deep-contrast surface (footer, strong
-        // sections) and a plain-English alias for the dark gold/bronze
-        // accent that's already --amber under the hood. Additive only —
-        // nothing above changed shape, so no existing bg-primary/bg-accent/
-        // etc. usage anywhere in the app needed to change.
+        // sections) and a plain-English alias for the high-contrast --amber
+        // accent. Additive only — nothing above changed shape, so no
+        // existing bg-primary/bg-accent/etc. usage anywhere in the app
+        // needed to change. Phase 37 repointed --amber from bronze to a
+        // dark slate to match the new blue palette; kept this alias name
+        // "slate" rather than the stale "bronze" so it still describes what
+        // the color actually is.
         espresso: "var(--espresso)",
-        bronze: "var(--amber)",
+        slate: "var(--amber)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

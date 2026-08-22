@@ -27,7 +27,7 @@ export default function SignupPage() {
   return (
     <section className="flex min-h-[70vh] items-center justify-center px-6 py-16">
       <div className="w-full max-w-[400px] rounded-[var(--radius)] border border-border bg-card p-8 shadow-soft">
-        <Link href="/" className="mb-6 flex items-center gap-2.5 font-sans text-[17px] font-medium tracking-[0.25em] text-[#6f6d64]">
+        <Link href="/" className="mb-6 flex items-center gap-2.5 font-sans text-[17px] font-medium tracking-[0.25em] text-[#5c6470]">
           <Logo size={32} />
           GESA
         </Link>

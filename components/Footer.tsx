@@ -34,22 +34,22 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
 export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?: FooterContent }) {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-espresso text-[#d5d0c5] py-16 mt-10">
+    <footer className="bg-espresso text-[#c7d0de] py-16 mt-10">
       <div className="max-w-[1160px] mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
-            <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#c9c2b0]">
+            <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#b7c3d6]">
               <Logo size={34} />
               GESA
             </Link>
-            <p className="text-[#b3ab98] max-w-[260px] text-sm mt-3 leading-relaxed">{content.tagline}</p>
+            <p className="text-[#a8b4c8] max-w-[260px] text-sm mt-3 leading-relaxed">{content.tagline}</p>
           </div>
           <div>
-            <h4 className="text-[#f3f0e8] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.exploreHeading}</h4>
-            <ul className="flex flex-col gap-2 text-sm text-[#bdb6a4]">
-              <li><Link href="/about" className="hover:text-[#f3f0e8] transition-colors">{content.exploreAboutLabel}</Link></li>
-              <li><Link href="/therapists" className="hover:text-[#f3f0e8] transition-colors">{content.exploreTherapistsLabel}</Link></li>
-              <li><Link href="/support-groups" className="hover:text-[#f3f0e8] transition-colors">{content.exploreSupportGroupsLabel}</Link></li>
+            <h4 className="text-[#eef1f6] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.exploreHeading}</h4>
+            <ul className="flex flex-col gap-2 text-sm text-[#b0bbcc]">
+              <li><Link href="/about" className="hover:text-[#eef1f6] transition-colors">{content.exploreAboutLabel}</Link></li>
+              <li><Link href="/therapists" className="hover:text-[#eef1f6] transition-colors">{content.exploreTherapistsLabel}</Link></li>
+              <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.exploreSupportGroupsLabel}</Link></li>
               {/* Blog moved here from the main header nav — the page has no
                   posts to show yet, so it's a disabled, non-clickable label
                   rather than a dead link, until there's real content. */}
@@ -57,40 +57,40 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
                 <span
                   aria-disabled="true"
                   title="Coming soon — no posts published yet"
-                  className="inline-flex cursor-not-allowed items-center gap-1.5 text-[#8f886f]"
+                  className="inline-flex cursor-not-allowed items-center gap-1.5 text-[#6f7889]"
                 >
                   {content.exploreBlogLabel}
-                  <span className="rounded-full bg-[#f3f0e8]/10 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#b3ab98]">
+                  <span className="rounded-full bg-[#eef1f6]/10 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#a8b4c8]">
                     {content.exploreBlogBadge}
                   </span>
                 </span>
               </li>
-              <li><Link href="/faq" className="hover:text-[#f3f0e8] transition-colors">{content.exploreFaqLabel}</Link></li>
-              <li><Link href="/contact" className="hover:text-[#f3f0e8] transition-colors">{content.exploreContactLabel}</Link></li>
+              <li><Link href="/faq" className="hover:text-[#eef1f6] transition-colors">{content.exploreFaqLabel}</Link></li>
+              <li><Link href="/contact" className="hover:text-[#eef1f6] transition-colors">{content.exploreContactLabel}</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-[#f3f0e8] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.supportHeading}</h4>
-            <ul className="flex flex-col gap-2 text-sm text-[#bdb6a4]">
-              <li><Link href="/find-your-therapist" className="hover:text-[#f3f0e8] transition-colors">{content.supportFindTherapistLabel}</Link></li>
-              <li><Link href="/support-groups" className="hover:text-[#f3f0e8] transition-colors">{content.supportJoinGroupLabel}</Link></li>
-              <li><Link href="/contact?subject=Donation" className="hover:text-[#f3f0e8] transition-colors">{content.supportDonateLabel}</Link></li>
-              <li><Link href="/contact?subject=Volunteer" className="hover:text-[#f3f0e8] transition-colors">{content.supportVolunteerLabel}</Link></li>
-              <li><a href="tel:988" className="hover:text-[#f3f0e8] transition-colors">{content.supportEmergencyLabel}</a></li>
+            <h4 className="text-[#eef1f6] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.supportHeading}</h4>
+            <ul className="flex flex-col gap-2 text-sm text-[#b0bbcc]">
+              <li><Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">{content.supportFindTherapistLabel}</Link></li>
+              <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.supportJoinGroupLabel}</Link></li>
+              <li><Link href="/contact?subject=Donation" className="hover:text-[#eef1f6] transition-colors">{content.supportDonateLabel}</Link></li>
+              <li><Link href="/contact?subject=Volunteer" className="hover:text-[#eef1f6] transition-colors">{content.supportVolunteerLabel}</Link></li>
+              <li><a href="tel:988" className="hover:text-[#eef1f6] transition-colors">{content.supportEmergencyLabel}</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="text-[#f3f0e8] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.legalHeading}</h4>
-            <ul className="flex flex-col gap-2 text-sm text-[#bdb6a4]">
-              <li><Link href="/privacy-policy" className="hover:text-[#f3f0e8] transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/cookies-policy" className="hover:text-[#f3f0e8] transition-colors">Cookies Policy</Link></li>
-              <li><Link href="/legal-notice" className="hover:text-[#f3f0e8] transition-colors">Legal Notice</Link></li>
-              <li><Link href="/accessibility-statement" className="hover:text-[#f3f0e8] transition-colors">Accessibility Statement</Link></li>
-              <li><Link href="/terms-and-conditions" className="hover:text-[#f3f0e8] transition-colors">Terms & Conditions</Link></li>
+            <h4 className="text-[#eef1f6] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.legalHeading}</h4>
+            <ul className="flex flex-col gap-2 text-sm text-[#b0bbcc]">
+              <li><Link href="/privacy-policy" className="hover:text-[#eef1f6] transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/cookies-policy" className="hover:text-[#eef1f6] transition-colors">Cookies Policy</Link></li>
+              <li><Link href="/legal-notice" className="hover:text-[#eef1f6] transition-colors">Legal Notice</Link></li>
+              <li><Link href="/accessibility-statement" className="hover:text-[#eef1f6] transition-colors">Accessibility Statement</Link></li>
+              <li><Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">Terms & Conditions</Link></li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-[#f3f0e8]/10 mt-8 pt-5 text-[13px] text-[#b3ab98] flex flex-col md:flex-row justify-between gap-4">
+        <div className="border-t border-[#eef1f6]/10 mt-8 pt-5 text-[13px] text-[#a8b4c8] flex flex-col md:flex-row justify-between gap-4">
           <span>{content.copyrightLine.replace("{year}", String(year))}</span>
           <span>{content.madeWithLine}</span>
         </div>

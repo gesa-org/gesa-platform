@@ -1080,4 +1080,37 @@ git push
 ```
 
 ---
+
+## Phase 37 — Powder-blue theme, replacing Phase 36's warm/gold system
+
+Roy shared a second interior photo — a bathroom with a soft, dusty periwinkle-blue wall — and asked to extract that color and make it the new theme, replacing the Phase 36 warm-neutral/gold system entirely (his choice, offered as one of three options: full replacement, layer blue over the existing gold accents, or preview both first).
+
+**Approach:** same token architecture as Phase 36, so this was a full remap of the CSS variable values in `app/globals.css`, not a rebuild. Extracted the wall color as roughly `#B7C3D6` and built a full palette around it rather than just swapping one variable:
+- `--background` → Powder Ivory `#EEF1F6` (pale blue-white breathing space, same role Warm Ivory played)
+- `--foreground` / `--primary` → Deep Slate `#2B3140`; `--primary-600` → `#1D212B`; `--primary-fg` → Powder Ivory — primary buttons/headings are now dark slate with light blue-white text instead of charcoal/ivory
+- `--card` → Soft Mist `#E3E8EF` (light blue-gray, replacing Soft Linen)
+- `--secondary` / `--muted` → `#B7C3D6`, the extracted wall color itself — used for pills, ghost buttons, and section bands, so the site carries the actual photographed color, not just a tint of it
+- `--accent` → Muted Slate-Silver `#8C97A8`, `--clay` → a darker slate-blue `#7C8AA0`, `--amber` → dark slate `#4A5568` — **moved the accent family off gold entirely** rather than layering blue behind it, since gold reads as clashing/muddy against a blue field; these three tokens now form a cool pewter/slate accent system instead
+- `--muted-fg` → cool slate gray `#5C6470`; `--border` → soft blue-gray `#C7D0DE`; `--espresso` → deep slate navy `#1D212B` for the footer
+- `--destructive` left untouched (functional color, not decorative) — consistent with Phase 36's rule
+
+**Targeted hex fixes** (same set of files as Phase 36, since these never used CSS variables and needed hand updates both times): `Footer.tsx`'s hardcoded text/background colors (now blue-toned instead of warm-toned, footer bg is `bg-espresso` — automatically picked up the new deep-slate-navy value with no code change needed there), `Header.tsx`'s translucent bg tint and wordmark color, five hardcoded colors in `SupportGroupsInteractive.tsx`, and the login/signup page wordmarks. Also caught three more `bg-[#e7e2d8]/NN` translucent badges left over from Phase 36's `bg-white` sweep that I'd missed spot-checking individually then — `components/TherapistCard.tsx`, `app/therapists/[slug]/page.tsx`, and two spots in `components/Hero.tsx` — updated all four to the new `#e3e8ef` (Soft Mist) equivalent.
+
+**What didn't need touching, and why that matters:** the three buttons fixed in Phase 36 (Our Therapists' "Join us as a therapist" and "Apply filters", and `Button.tsx`'s `clay` variant) were converted from solid gold fills to token-based classes (`bg-primary`, `border-accent`, `bg-accent-soft`) specifically so they'd never need a manual re-fix if the accent color changed again — and that paid off here: they automatically picked up the new slate-blue tones with zero edits this phase. Same for the ~30 `bg-white` → `bg-card` conversions from Phase 36 — they now render Soft Mist instead of Soft Linen automatically.
+
+**Verification:** scoped `tsc --noEmit` across every touched file came back clean. Grepped the whole codebase for every Phase 36 warm/gold hex value (`#f3f0e8`, `#e7e2d8`, `#292a27`, `#34312b`, `#ccc9c0`, `#9a9163`, `#f1ecdd`, `#b5a36b`, `#f0ead6`, `#6f6d64`, `#d5d0c5`, `#6f6545`, `#e5dfc9`, plus the specific footer/header shades) — zero remaining after the TherapistCard/Hero/[slug] fixes above. No routes, copy, props, or data logic touched.
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified from this sandbox, same as every color phase so far — worth a real click-through after deploy, particularly checking contrast of Deep Slate text on the new lighter blue-gray surfaces, and the footer's readability on the deep slate-navy background.
+- The extracted wall hex (`#B7C3D6`) is a careful visual estimate from the photo, not a pixel-sampled value — close enough for a cohesive palette, but if Roy wants the literal pixel color, worth confirming with a color picker on the original photo file.
+- This fully replaced Phase 36 rather than keeping both as swappable themes — there's currently no way to switch back to the warm/gold palette except reverting this phase's `globals.css` change. If Roy wants both available (e.g. a future light/dark or seasonal toggle), that'd need a small refactor to support multiple token sets rather than one `:root` block.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 37: powder-blue theme extracted from reference photo, replacing warm/gold system"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

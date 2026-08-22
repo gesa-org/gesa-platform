@@ -121,7 +121,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               alt="A group therapy session"
               className="w-full h-full object-cover z-0 relative"
             />
-            <div className="absolute left-6 bottom-6 bg-[#e7e2d8]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
+            <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
               <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
                 <HeartHandshake size={20} />
               </div>
@@ -161,7 +161,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
         />
 
         {/* Trust Chip Overlay */}
-        <div className="absolute left-6 bottom-6 bg-[#e7e2d8]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
+        <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
           <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
             <HeartHandshake size={20} />
           </div>
