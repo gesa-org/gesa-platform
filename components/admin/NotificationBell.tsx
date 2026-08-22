@@ -262,7 +262,7 @@ export default function NotificationBell() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={newCount > 0 ? `${newCount} new notification${newCount === 1 ? "" : "s"}` : "Notifications"}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white transition-colors hover:bg-secondary"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary"
       >
         <Bell size={18} />
         {newCount > 0 && (
@@ -275,7 +275,7 @@ export default function NotificationBell() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-12 z-50 flex max-h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-xl"
+          className="absolute right-0 top-12 z-50 flex max-h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-[13px] font-semibold text-muted-fg">
@@ -359,7 +359,7 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-[440px] rounded-[var(--radius)] bg-white p-6 shadow-2xl"
+        className="w-full max-w-[440px] rounded-[var(--radius)] bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">

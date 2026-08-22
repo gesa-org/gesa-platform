@@ -34,7 +34,7 @@ export default function SessionBookingStatusSelect({ id, status }: { id: string;
         value={value}
         disabled={isPending}
         onChange={(e) => onChange(e.target.value as BookingStatus)}
-        className="rounded-full border border-border bg-white px-3 py-1.5 text-[13px] font-medium text-primary focus:outline-none disabled:opacity-60"
+        className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-primary focus:outline-none disabled:opacity-60"
       >
         {STATUSES.map((s) => (
           <option key={s} value={s}>

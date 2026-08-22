@@ -69,7 +69,7 @@ export default async function AdminOverviewPage() {
             {Object.entries(roleCounts).map(([role, count]) => (
               <span
                 key={role}
-                className="rounded-full border border-border bg-white px-3.5 py-1.5 text-[13px] font-medium text-muted-fg"
+                className="rounded-full border border-border bg-card px-3.5 py-1.5 text-[13px] font-medium text-muted-fg"
               >
                 {role}: <strong className="text-primary">{count}</strong>
               </span>

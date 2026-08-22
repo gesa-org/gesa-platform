@@ -48,7 +48,7 @@ export default function RoleSelect({
         disabled={isPending || isSelf}
         onChange={(e) => onChange(e.target.value as AppRole)}
         title={isSelf ? "You can't change your own role" : undefined}
-        className="rounded-full border border-border bg-white px-3 py-1.5 text-[13px] font-medium text-primary focus:outline-none disabled:opacity-60"
+        className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-primary focus:outline-none disabled:opacity-60"
       >
         {ROLES.map((r) => (
           <option key={r} value={r}>

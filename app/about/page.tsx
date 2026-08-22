@@ -113,7 +113,7 @@ export default async function AboutPage() {
           <div className="mt-5.5 mt-[22px] flex flex-wrap justify-center gap-3.5">
             <Link
               href={sections.volunteerPrimaryHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-[15px] font-semibold text-primary"
+              className="inline-flex items-center gap-2 rounded-full bg-card px-6 py-3.5 text-[15px] font-semibold text-primary"
             >
               {sections.volunteerPrimaryLabel} <ArrowRight size={16} />
             </Link>

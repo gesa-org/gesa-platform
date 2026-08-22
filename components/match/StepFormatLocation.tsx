@@ -36,7 +36,7 @@ export default function StepFormatLocation({
             className={`rounded-xl border p-4 text-left transition-colors ${
               sessionFormat === f.value
                 ? "border-primary bg-accent-soft"
-                : "border-border bg-white hover:border-primary-600"
+                : "border-border bg-card hover:border-primary-600"
             }`}
           >
             <div className="text-[15px] font-semibold text-foreground">{f.label}</div>
@@ -54,7 +54,7 @@ export default function StepFormatLocation({
             <select
               value={clinicLocationId ?? ""}
               onChange={(e) => onClinicLocationChange(e.target.value || null)}
-              className="w-full rounded-xl border border-border bg-white px-3.5 py-2.5 focus:border-primary focus:outline-none"
+              className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 focus:border-primary focus:outline-none"
             >
               <option value="">Select a location…</option>
               {clinicLocations.map((loc) => (

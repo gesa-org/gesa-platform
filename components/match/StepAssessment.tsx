@@ -33,7 +33,7 @@ export default function StepAssessment({
               className={`rounded-xl border px-4 py-3 text-left text-[14.5px] font-medium transition-colors ${
                 active
                   ? "border-primary bg-accent-soft text-primary"
-                  : "border-border bg-white text-foreground hover:border-primary-600"
+                  : "border-border bg-card text-foreground hover:border-primary-600"
               }`}
             >
               {symptom}

@@ -72,7 +72,7 @@ export default function BookingModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-[var(--radius)] bg-white p-6 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-[var(--radius)] bg-card p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">

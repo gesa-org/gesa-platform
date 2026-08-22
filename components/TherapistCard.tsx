@@ -30,7 +30,7 @@ export default function TherapistCard({ t }: { t: Tables<"therapists"> }) {
             </div>
           )}
           {t.is_verified && (
-            <span className="absolute right-2.5 top-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/90 text-primary shadow-soft">
+            <span className="absolute right-2.5 top-2.5 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#e7e2d8]/90 text-primary shadow-soft">
               <BadgeCheck size={17} />
             </span>
           )}
@@ -43,7 +43,7 @@ export default function TherapistCard({ t }: { t: Tables<"therapists"> }) {
             {t.languages.map((l) => (
               <span
                 key={l}
-                className="rounded-full border border-border bg-white px-2.5 py-1 text-[11.5px] font-medium text-muted-fg"
+                className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] font-medium text-muted-fg"
               >
                 {l}
               </span>

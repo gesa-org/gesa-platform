@@ -38,7 +38,7 @@ export default function CrisisButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-[70] flex items-center gap-2 rounded-full border border-border bg-white px-[17px] py-3 font-semibold text-primary shadow-lg transition-colors hover:bg-secondary"
+        className="fixed bottom-5 right-5 z-[70] flex items-center gap-2 rounded-full border border-border bg-card px-[17px] py-3 font-semibold text-primary shadow-lg transition-colors hover:bg-secondary"
       >
         <LifeBuoy size={18} className="text-clay" />
         In crisis? Get help

@@ -36,6 +36,14 @@ const config: Config = {
           DEFAULT: "var(--amber)",
           soft: "var(--amber-soft)",
         },
+        // Phase 36 — explicit names for two roles the existing tokens above
+        // don't quite cover: a deep-contrast surface (footer, strong
+        // sections) and a plain-English alias for the dark gold/bronze
+        // accent that's already --amber under the hood. Additive only —
+        // nothing above changed shape, so no existing bg-primary/bg-accent/
+        // etc. usage anywhere in the app needed to change.
+        espresso: "var(--espresso)",
+        bronze: "var(--amber)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

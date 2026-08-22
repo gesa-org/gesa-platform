@@ -46,7 +46,7 @@ export default function LanguageSelector() {
       <button
         onClick={() => setOpen((v) => !v)}
         title={`Language: ${current.name}`}
-        className="flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+        className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
         disabled={translating}
       >
         {translating ? <Loader2 size={16} className="animate-spin" /> : <span aria-hidden="true">{current.flag}</span>}
@@ -54,7 +54,7 @@ export default function LanguageSelector() {
         <ChevronDown size={14} className="text-muted-fg" />
       </button>
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-48 overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
+        <div className="absolute right-0 top-12 z-50 w-48 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}

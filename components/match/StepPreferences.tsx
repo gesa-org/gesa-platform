@@ -48,7 +48,7 @@ export default function StepPreferences({
             className={`rounded-xl border px-3 py-2.5 text-[14px] font-medium transition-colors ${
               genderPreference === g.value
                 ? "border-primary bg-accent-soft text-primary"
-                : "border-border bg-white text-foreground hover:border-primary-600"
+                : "border-border bg-card text-foreground hover:border-primary-600"
             }`}
           >
             {g.label}

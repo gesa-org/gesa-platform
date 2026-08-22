@@ -64,7 +64,7 @@ export default function AuthStatus() {
         <User size={16} /> Account <ChevronDown size={14} />
       </button>
       {open && (
-        <div className="absolute right-0 top-[52px] z-50 w-56 overflow-hidden rounded-2xl border border-border bg-white shadow-lg">
+        <div className="absolute right-0 top-[52px] z-50 w-56 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">
           <div className="truncate border-b border-border px-4 py-3 text-[12.5px] text-muted-fg" title={email}>
             {email}
           </div>

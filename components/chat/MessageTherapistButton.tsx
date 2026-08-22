@@ -30,7 +30,7 @@ export default function MessageTherapistButton({ therapistId }: { therapistId: s
         router.push(`/messages/${threadId}`);
       }}
       disabled={pending}
-      className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-border bg-white px-3 py-2 text-[13px] font-semibold text-primary transition-colors hover:bg-secondary disabled:opacity-60"
+      className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-border bg-card px-3 py-2 text-[13px] font-semibold text-primary transition-colors hover:bg-secondary disabled:opacity-60"
     >
       <MessageCircle size={14} /> {pending ? "Opening…" : "Message"}
     </button>

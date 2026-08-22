@@ -6,28 +6,43 @@
 
 @layer base {
   :root {
-    /* Phase 11 — real brand palette (Deep Tile Blue / Blue Gray / Warm Gold /
-       Sage Green / Warm Ivory), supplied by Roy. Replaces the earlier sage/
-       clay/amber placeholder set used since Phase 7. Only these values
-       change — every component still reads the same variable names, so no
-       component code or copy needed to change. */
-    --background: #f2efe6;
-    --foreground: #2b3238;
-    --card: #fffdfa;
-    --primary: #1f3a4d;
-    --primary-600: #16293a;
-    --primary-fg: #ffffff;
-    --secondary: #e9edef;
-    --accent: #8aa082;
-    --accent-soft: #e8ede6;
-    --clay: #c7a163;
-    --clay-soft: #f7efde;
-    --muted: #e9edef;
-    --muted-fg: #5f6f78;
-    --border: #dce3e6;
-    --destructive: #bb5138;
-    --amber: #c7a163;
-    --amber-soft: #f7efde;
+    /* Phase 36 — "quiet luxury" warm-neutral palette, replacing Phase 11's
+       Deep Tile Blue / Blue Gray / Sage Green set. Derived from a real
+       interior photo Roy shared (soft greige wall, aged-gold picture
+       frames, warm ivory, charcoal/brown contrast). Every component still
+       reads the same variable names — bg-primary, text-muted-fg,
+       border-border, bg-accent-soft, bg-clay, etc. — so this is a token
+       remap only, no component logic touched. Two things worth knowing:
+       (1) --accent and --clay both now live in the "muted gold" family
+       (accent = the primary, more-used Muted Antique Gold; clay = the
+       brighter, sparingly-used Champagne Gold) — matching how the code
+       already used both as small decorative accents (icons, thin hover
+       borders, badges, eyebrow labels), never as large fills. (2) --primary
+       moved from a deep blue to Warm Charcoal so primary buttons/headings
+       read as "premium charcoal + ivory text" instead of navy — this also
+       meant re-styling the handful of components that used to pair
+       --accent/--clay with a *solid* button fill (a solid gold button would
+       break the "gold is a thin accent, never a fill" rule) — see
+       TherapistsDirectory.tsx, IntakeBookingModal.tsx, and Button.tsx's
+       unused "clay" variant. */
+    --background: #f3f0e8; /* Warm Ivory */
+    --foreground: #292a27; /* Warm Charcoal */
+    --card: #e7e2d8; /* Soft Linen — cards read as paper/linen, not white */
+    --primary: #292a27; /* Warm Charcoal */
+    --primary-600: #34312b; /* Espresso Charcoal — primary hover/active */
+    --primary-fg: #f3f0e8; /* Warm Ivory text on charcoal */
+    --secondary: #ccc9c0; /* Soft Greige — pills, ghost buttons, section bands */
+    --accent: #9a9163; /* Muted Antique Gold — icons, thin hover borders */
+    --accent-soft: #f1ecdd; /* pale gold-ivory wash for badge/pill/glow backgrounds */
+    --clay: #b5a36b; /* Champagne Gold — secondary/brighter gold accent */
+    --clay-soft: #f0ead6; /* pale champagne wash */
+    --muted: #ccc9c0; /* Soft Greige, same role as --secondary */
+    --muted-fg: #6f6d64; /* Taupe Gray — secondary/supporting text */
+    --border: #d5d0c5; /* Warm Stone */
+    --destructive: #bb5138; /* unchanged — functional error/status color */
+    --amber: #6f6545; /* Dark Gold / Bronze — reserved for high-contrast gold accents */
+    --amber-soft: #e5dfc9;
+    --espresso: #34312b; /* Deep Contrast — footer, strong-contrast areas */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
     --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

@@ -165,7 +165,7 @@ export default function IntakeBookingModal({
               )}
               target="_blank"
               rel="noreferrer"
-              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-[15px] font-semibold text-white hover:-translate-y-px transition-all"
+              className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3 text-[15px] font-semibold text-white hover:-translate-y-px transition-all"
             >
               <MessageCircle size={17} /> Message on WhatsApp
             </a>

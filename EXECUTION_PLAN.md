@@ -1036,4 +1036,48 @@ git push
 ```
 
 ---
+
+## Phase 36 — Luxury warm-neutral color system, from a real interior photo
+
+Roy shared a photo of a bathroom wall — soft greige paint, a grid of small gold-framed watercolors, a dark wood toilet seat — as the color direction for the whole site, with an explicit 10-color palette (Soft Greige, Warm Ivory, Soft Linen, Muted Antique Gold, Champagne Gold, Dark Gold/Bronze, Warm Charcoal, Taupe Gray, Espresso Charcoal, Warm Stone), a 60/25/10/5 usage ratio, and a hard rule: visual refinement only, zero functional/content/routing changes, gold used as a thin accent line never a fill.
+
+**Why this was low-risk to do site-wide:** before touching anything, checked how the existing site is actually styled. `app/globals.css` already defines every brand color as a CSS custom property (`--primary`, `--accent`, `--card`, `--muted-fg`, etc.), and `tailwind.config.ts` wires each one straight into a Tailwind color name (`bg-primary`, `text-muted-fg`, `border-border`...). Roughly 200 call sites across 41 component files already use these semantic classes rather than one-off colors. That meant the palette swap for ~90% of the site was a single-file edit — change the 12 values at the top of `globals.css`, and every button, card, badge, and page background that already read `bg-primary`/`bg-card`/`text-muted-fg`/etc. picked up the new palette automatically, with no component logic touched.
+
+**Token mapping** (old → new, all in `globals.css :root`):
+- `--background` (dull ivory) → Warm Ivory `#F3F0E8`
+- `--foreground` (blue-charcoal) → Warm Charcoal `#292A27`
+- `--card` (near-white) → Soft Linen `#E7E2D8` — cards now read as paper/linen, not floating white rectangles
+- `--primary` (deep tile blue) → Warm Charcoal `#292A27`; `--primary-600` → Espresso Charcoal `#34312B`; `--primary-fg` (white) → Warm Ivory `#F3F0E8` — primary buttons are now charcoal-with-ivory-text instead of navy-with-white-text
+- `--secondary` / `--muted` (cool gray) → Soft Greige `#CCC9C0`
+- `--accent` (sage green) → Muted Antique Gold `#9A9163` — this is the token already wired to Card.tsx's `hover:border-accent` and the home page's trust-badge icons, so those two spots became the "thin gold line" and "small gold icon accent" the brief asked for, for free
+- `--accent-soft` (pale sage) → a pale gold-ivory wash `#F1ECDD`, used for hero glow blurs, eyebrow pill backgrounds, and icon chips — deliberately kept very light/desaturated rather than true gold, since this token appears far too often (every page hero) to carry a strong gold tone without breaking the "gold is 5%" rule
+- `--clay` (already a gold-tan, `#c7a163`) → Champagne Gold `#B5A36B`, the brief's "secondary, brighter" gold — used for the same small spots it already had (eyebrow label text, quote icons, filter radio-dot, hover borders)
+- `--clay-soft` → pale champagne wash `#F0EAD6`
+- `--muted-fg` (cool blue-gray, used for nearly all secondary/supporting text sitewide) → Taupe Gray `#6F6D64`
+- `--border` (cool gray) → Warm Stone `#D5D0C5`
+- `--destructive` (error/status red) → **left unchanged** — functional color, not decorative
+- `--amber` (unused duplicate of the old clay) → repurposed as Dark Gold/Bronze `#6F6545`, exposed as a new `bronze` Tailwind color; added a new `--espresso` / `espresso` token (`#34312B`) for deep-contrast surfaces like the footer
+
+**Where the automatic cascade wasn't enough — targeted edits:**
+- **Three solid-fill buttons would have become solid gold buttons** once `--clay`/`--accent` turned into real golds: Our Therapists' "Join us as a therapist" (`bg-clay`) and "Apply filters" (`bg-accent`), and the Home intake modal's WhatsApp-adjacent CTA (`bg-accent`). Restyled "Join us as a therapist" to the brief's primary pattern (charcoal bg, ivory text), "Apply filters" to the secondary pattern (champagne-gold border, charcoal text, transparent/ivory fill), and reworked the also-unused `clay` variant in `components/ui/Button.tsx` the same way, so it's correct if anyone reaches for it later. The IntakeBookingModal button turned out to be a "Message on WhatsApp" action — recolored it to the same recognizable WhatsApp green (`#25D366`) already used by the equivalent button in `match/BookingModal.tsx`, rather than gold or charcoal, since that's a brand/recognition color, not a decorative one.
+- **Footer and Header had their own hardcoded hex colors**, not CSS variables (a leftover from Phase 11's blue palette), so the global remap didn't reach them. Recolored both by hand: the footer's deep-navy background → `bg-espresso`, its blue-gray text/link colors → warm ivory/stone/taupe equivalents at matching lightness; the header's translucent background tint and wordmark color → the new ivory and taupe.
+- **`SupportGroupsInteractive.tsx`** had five more hardcoded blue-grays (inactive group card background, the video-call mockup's gradient and icon colors, the in-person panel background/text) — recolored each to its warm equivalent.
+- **~30 `bg-white` call sites** (modals, dropdowns, form inputs, admin status selects, small pill badges) across 22 files, including two admin pages and the login/signup wordmarks, were pure white per the brief's "avoid pure white as the dominant background" rule. Did a scripted, verified find-and-replace: plain `bg-white` → `bg-card` (Soft Linen); `bg-white/NN` translucent overlays → `bg-[#e7e2d8]/NN` rather than `bg-card/NN`, since Tailwind can't apply an opacity modifier to a color that's defined as a bare CSS-variable string (`var(--card)`) — only to a literal arbitrary hex value — so reusing the token name with a slash would have silently produced no transparency at all. Grepped afterward for stray `bg-card/` (would indicate the substitution order went wrong) and for any remaining `bg-white` — both came back empty.
+- Left `--destructive` (error/status red) and the WhatsApp green in both booking modals untouched, per the brief's own "don't blindly replace functional colors" rule.
+
+**Verification:** scoped `tsc --noEmit` across every touched file (plus what they import) came back clean. Manually grepped for every old hardcoded blue-gray hex (`#1f3a4d`, `#16293a`, `#2b3238`, `#8aa082`, `#8c9eae`, `#a9b9c4`, `#8fa2ae`, `#a9bcc3`, `#5f7480`, `#cdd8dd`, `#f2efe6`, `#e9edef`, `#f5f2ea`) across every `.tsx` file — zero remaining matches anywhere in the app. No component's props, JSX structure, routes, copy, or data logic changed in this phase — every edit was a class name or a CSS variable value.
+
+**Known gaps, honestly flagged:**
+- This was done from source inspection and the codebase's own token architecture, not a visual/screenshot pass — I can't render the live site from this sandbox. Worth a full click-through on desktop and mobile after deploy, specifically checking: contrast of the new Taupe Gray secondary text on Soft Greige backgrounds, the footer's readability on Espresso Charcoal, and whether the pale gold-ivory `accent-soft` wash reads as "warm" rather than "dingy" against real content.
+- The `.eyebrow` global CSS class and the trust-badge icons were already wired to `--clay`/`--accent` before this phase, so they picked up gold automatically — worth a visual check that having both tokens in the gold family doesn't make any single section look more "gold-heavy" than intended once several of these small accents appear near each other (e.g., the About page's founders section uses several `--primary` and `--accent-soft` touches close together).
+- Same stray `tsconfig.check.json`/`tsconfig.check2.json` situation as Phases 35/35.1 — another scoped `tsconfig.check3.json` was used for this phase's verification, kept in `/tmp` in this sandbox only, never written to the project folder.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 36: luxury warm-neutral color system (greige/ivory/linen/gold) from reference photo"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

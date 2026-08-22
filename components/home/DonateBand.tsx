@@ -11,7 +11,7 @@ export default function DonateBand() {
         </p>
         <Link
           href="/contact?subject=Donation"
-          className="mt-5.5 mt-[22px] inline-flex items-center rounded-full bg-white px-6 py-3.5 text-[15px] font-semibold text-primary transition-transform hover:-translate-y-px"
+          className="mt-5.5 mt-[22px] inline-flex items-center rounded-full bg-card px-6 py-3.5 text-[15px] font-semibold text-primary transition-transform hover:-translate-y-px"
         >
           Donate to GESA
         </Link>

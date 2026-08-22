@@ -7,13 +7,20 @@ type Size = "sm" | "md";
 const base =
   "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 whitespace-nowrap";
 
+// Phase 36 — "clay" used to be a solid gold-tan fill with white text, which
+// reads as a gold button once --clay became a real gold token (see
+// globals.css). Restyled to the palette's other approved CTA pattern
+// instead — champagne-gold border, charcoal text, ivory surface — so a
+// premium secondary action still reads as gold-accented without ever
+// filling a whole button with gold. "outline" moved off pure white to the
+// warm ivory background for the same "no dominant pure white" reason.
 const variants: Record<Variant, string> = {
   primary:
     "bg-primary text-primary-fg hover:bg-primary-600 shadow-[0_10px_24px_-14px_rgba(74,64,44,.6)] hover:-translate-y-px",
   outline:
-    "bg-white text-primary border border-border hover:border-primary-600 hover:bg-accent-soft hover:-translate-y-px",
+    "bg-background text-primary border border-border hover:border-primary-600 hover:bg-accent-soft hover:-translate-y-px",
   ghost: "bg-secondary text-foreground hover:bg-muted",
-  clay: "bg-clay text-white hover:bg-[#a8813f] hover:-translate-y-px",
+  clay: "bg-background text-primary border border-clay hover:bg-clay-soft hover:-translate-y-px",
 };
 
 const sizes: Record<Size, string> = {

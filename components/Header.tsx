@@ -25,9 +25,9 @@ export const HEADER_CONTENT_FALLBACK: HeaderContent = {
 // does: content is fetched once in app/layout.tsx and passed down.
 export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?: HeaderContent }) {
   return (
-    <header className="sticky top-0 z-40 bg-[#f2efe6d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
+    <header className="sticky top-0 z-40 bg-[#f3f0e8d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
       <div className="max-w-[1160px] mx-auto px-6 flex items-center h-[74px] gap-5">
-        <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#8c9eae]">
+        <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#6f6d64]">
           <Logo size={34} />
           GESA
         </Link>

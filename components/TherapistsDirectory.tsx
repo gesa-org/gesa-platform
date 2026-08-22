@@ -96,7 +96,7 @@ export default function TherapistsDirectory({
             placeholder={content.searchPlaceholder}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-full border border-border bg-white py-3 pl-10 pr-4 text-[15px] focus:border-primary focus:outline-none"
+            className="w-full rounded-full border border-border bg-card py-3 pl-10 pr-4 text-[15px] focus:border-primary focus:outline-none"
           />
         </div>
 
@@ -137,7 +137,7 @@ export default function TherapistsDirectory({
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
-            className="w-full appearance-none rounded-2xl border border-border bg-white px-3.5 py-3 pr-9 text-[15px] focus:border-primary focus:outline-none"
+            className="w-full appearance-none rounded-2xl border border-border bg-card px-3.5 py-3 pr-9 text-[15px] focus:border-primary focus:outline-none"
           >
             <option value="">{content.anyLanguageLabel}</option>
             {langs.map((l) => (
@@ -203,14 +203,14 @@ export default function TherapistsDirectory({
         <div className="flex flex-col gap-2.5">
           <a
             href="/contact?subject=Volunteer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-clay px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#a8813f]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-fg transition-colors hover:bg-primary-600"
           >
             <Users size={16} /> {content.joinAsTherapistLabel}
           </a>
           <button
             type="button"
             onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 lg:hidden"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-accent bg-transparent px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-accent-soft lg:hidden"
           >
             <Filter size={15} /> {content.applyFiltersLabel}
           </button>

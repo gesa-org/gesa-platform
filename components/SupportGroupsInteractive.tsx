@@ -48,12 +48,12 @@ export default function SupportGroupsInteractive({
               className={`relative rounded-2xl border p-5 text-left outline-none transition-all duration-300 ${
                 isOn
                   ? "border-primary bg-primary text-white shadow-lg"
-                  : "border-border bg-[#f5f2ea] hover:border-accent hover:shadow-soft"
+                  : "border-border bg-[#f3f0e8] hover:border-accent hover:shadow-soft"
               }`}
             >
               <span
                 className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                  isOn ? "border-white/30 bg-white/15 text-white" : "border-border bg-white text-muted-fg"
+                  isOn ? "border-white/30 bg-[#e7e2d8]/15 text-white" : "border-border bg-card text-muted-fg"
                 }`}
               >
                 {g.format === "online" ? <Video size={12} /> : <MapPin size={12} />}
@@ -83,11 +83,11 @@ export default function SupportGroupsInteractive({
 
       <div className="flex min-h-[420px] items-center justify-center">
         <div className="w-full max-w-[420px] rounded-[26px] bg-gradient-to-br from-primary to-accent p-1.5 shadow-lg">
-          <div className="flex min-h-[380px] flex-col overflow-hidden rounded-[20px] bg-white">
+          <div className="flex min-h-[380px] flex-col overflow-hidden rounded-[20px] bg-card">
             {active.format === "online" ? (
-              <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#4a6578] to-primary p-6 text-white">
+              <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#4a453a] to-primary p-6 text-white">
                 <div className="text-center text-sm opacity-90">{active.title}</div>
-                <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/35 bg-white/15 font-serif text-3xl">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/35 bg-[#e7e2d8]/15 font-serif text-3xl">
                   {(active.facilitator_name ?? "?")
                     .split(" ")
                     .map((w) => w[0])
@@ -98,7 +98,7 @@ export default function SupportGroupsInteractive({
                     <span
                       key={k}
                       className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                        k === "end" ? "bg-destructive text-white" : "bg-white/90 text-[#1f3a4d]"
+                        k === "end" ? "bg-destructive text-white" : "bg-[#e7e2d8]/90 text-[#292a27]"
                       }`}
                     >
                       {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
@@ -107,11 +107,11 @@ export default function SupportGroupsInteractive({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-1 flex-col bg-[#e9edef] p-6">
-                <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-white/70 text-primary">
+              <div className="flex flex-1 flex-col bg-[#e7e2d8] p-6">
+                <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-[#e7e2d8]/70 text-primary">
                   <MapPin size={30} />
                 </div>
-                <div className="text-sm text-[#3d4a52]">
+                <div className="text-sm text-[#4a453d]">
                   <div className="flex items-center gap-2 py-1">
                     <MapPin size={14} /> {active.location}
                   </div>
