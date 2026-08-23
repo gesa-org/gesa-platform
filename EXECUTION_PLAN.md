@@ -1416,4 +1416,32 @@ git push
 ```
 
 ---
+
+## Phase 49 — Support Groups: cards as a 2-column grid, details open as a drawer
+
+Roy sent the same mockup again with two corrections to how Phase 48 read it: the group cards should be a 2-column grid (Phase 48 kept them as a single stacked list, just recolored), and clicking a card should open its details "in the right field" as a modal — i.e. the details panel should be hidden until a card is clicked, not always visible. He also repeated that the mockup's "Secure Phone Verification"/"Phone Modal" boxes should be removed and that slot filled with the matching real UI instead.
+
+**`components/SupportGroupsInteractive.tsx` — rebuilt around a drawer, not an inline column:**
+- The group cards are now `grid gap-4 sm:grid-cols-2` instead of a stacked `flex flex-col` list — matches the mockup's 2-up layout.
+- Added one new, minimal piece of state, `previewOpen` (boolean, starts `false`). Clicking a card now does what it did before (`setActiveId`) plus `setPreviewOpen(true)`. This is a small, necessary addition to support the interaction Roy explicitly described ("once it is click one of the cards... it show in the right field a modal") — there was no way to express "hidden until clicked, open on click, closeable" without some open/closed state, since the previous behavior was "always visible, content swaps on click." Nothing about the registration flow's own state (`registerOpen`, `registerState`) changed.
+- The details panel is now a genuine slide-in drawer: a semi-transparent backdrop (click to close) plus a fixed right-edge panel that animates in from `x: "100%"` to `x: 0` via framer-motion, with its own close (X) button — built as its own independent element, not a reuse or modification of `components/ui/Modal.tsx` (still shared, still untouched, still used as-is for the registration form).
+- **Removed, not built:** the "Secure Phone Verification" boxes on every card and the "Phone Modal" box in the panel — confirmed again that neither is a real feature anywhere in this app. The visual slot they occupied in the drawer is filled with the actual, already-existing content instead: the real online-call mockup (mic/video/end icons) or in-person details, plus a clean meta block (facilitator, schedule, capacity, and location for in-person groups) — the exact same fields as before, just laid out to fill that space meaningfully instead of leaving it either empty or filled with an invented control.
+- Register button inside the drawer opens the exact same registration `Modal` with the exact same form/validation/Supabase insert/confirmation-email call as every phase before this one.
+
+**Verification:** scoped `tsc --noEmit` on the changed component and page — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Checked z-index stacking by hand: backdrop `z-[70]`, drawer `z-[80]`, and the shared `Modal.tsx`'s own overlay `z-[90]` — so opening Register while the drawer is open correctly layers the registration form on top of the drawer rather than behind it.
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified from this sandbox — this phase specifically should get a real click-through: opening the drawer from a card, switching to a different card while it's open (confirms the crossfade + no stale content), and closing it both via the X and via clicking the backdrop.
+- On narrow/mobile widths the drawer is `w-full max-w-[420px]`, meaning it fills the whole screen below ~420px wide — that reads as a full-screen takeover rather than a side panel on phones, which seems like the right call (there's no room for a partial side panel on a phone) but wasn't explicitly specified in the mockup, which is a desktop-width image.
+- Same `.git/index.lock` situation as the last four phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 49: Support Groups cards as a 2-column grid, details open as a right-side drawer"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

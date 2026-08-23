@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Video, MapPin, Users, Clock, User } from "lucide-react";
+import { Video, MapPin, Users, Clock, User, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Tables } from "@/lib/database.types";
 import Modal from "@/components/ui/Modal";
@@ -22,32 +22,38 @@ export const SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK: SupportGroupsDirectoryCo
 // Phase 46 — Roy flagged that the Support Groups page read as effectively
 // unanimated compared to Home/About. This is the actual main content of
 // that page (the group-picker list and its live preview card), so it's
-// the highest-leverage place to add motion here: the group list gets the
-// same staggered card entrance used everywhere else, and — the bigger,
-// more "advanced" addition — the preview card on the right now crossfades
-// its content when a different group is selected instead of snapping
-// instantly, via AnimatePresence keyed on the active group's id. No
-// change to the selection logic, the registration flow, the modal, or any
-// copy — purely how the already-existing state transition is presented.
+// the highest-leverage place to add motion here.
 //
-// Phase 48 — Roy sent a reference mockup restyling this same content as
-// dark charcoal-navy cards with gold serif headings and gold-bordered
-// pills (see `.charcoal-marble` in app/globals.css). Every piece of real
-// data below — g.title, g.format, g.description, g.facilitator_name,
-// g.schedule, g.capacity, the online/in-person preview layouts, the
-// Register button, the registration form's fields and submit logic — is
-// unchanged; only colors/backgrounds/borders changed. The mockup also
-// showed a "Secure Phone Verification" element with a progress bar on
-// each card and inside a "Phone Modal" — that isn't a real feature
-// anywhere in this app (there's no phone-verification step in the
-// registration flow, just the existing optional phone number field), so
-// it wasn't added; inventing a fake control here would contradict Roy's
-// own instruction not to change this page's controls or logic, only its
-// UI. The registration modal's own panel chrome (backdrop, close button)
-// comes from the shared components/ui/Modal.tsx, used by other flows
-// (booking, intake) too — left that file untouched and only restyled the
-// content Modal renders here (the form itself), so this page's redesign
-// doesn't bleed into unrelated modals elsewhere on the site.
+// Phase 48 — restyled the group cards and preview panel as dark
+// charcoal-navy with gold accents (see `.charcoal-marble` in
+// app/globals.css), per Roy's reference mockup.
+//
+// Phase 49 — Roy clarified the mockup's interaction model: clicking a
+// group card should open its details "in the right field" as a modal —
+// i.e. a slide-in drawer, not an always-visible inline column. Rebuilt
+// around that: the cards are now a 2-column grid (matching the mockup's
+// layout), and clicking one opens a right-side drawer (own backdrop,
+// own close button, slides in via framer-motion) showing that group's
+// details and the Register button. Closing the drawer doesn't clear
+// `activeId` — the drawer just hides — so reopening any card immediately
+// shows the right content with no flash of stale data.
+//
+// Also per Roy's explicit correction: the mockup's "Secure Phone
+// Verification" boxes (on every card) and the "Phone Modal" box (in the
+// side panel) aren't real features anywhere in this app — registration
+// only ever had a plain optional phone *number* field, never a
+// verification step. Removed instead of built, and that visual slot in
+// the drawer is filled with the actual existing content instead: the
+// real online-call preview or in-person location details, exactly as
+// implemented since Phase 30/42, just relocated into the drawer.
+//
+// Every piece of real data (g.title, g.format, g.description,
+// g.facilitator_name, g.schedule, g.capacity, g.location), the
+// registration form's fields/validation/Supabase insert/email call, and
+// the shared components/ui/Modal.tsx (used by other flows) are all
+// unchanged — only the container/interaction around the group details
+// (inline column -> drawer) and the removed fake fields are different
+// from Phase 48.
 export default function SupportGroupsInteractive({
   groups,
   content = SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK,
@@ -57,6 +63,7 @@ export default function SupportGroupsInteractive({
 }) {
   const [activeId, setActiveId] = useState(groups[0]?.id);
   const active = groups.find((g) => g.id === activeId) ?? groups[0];
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [registerState, setRegisterState] = useState<"idle" | "pending" | "done" | "error">("idle");
 
@@ -69,14 +76,17 @@ export default function SupportGroupsInteractive({
   }
 
   return (
-    <div className="mt-11 mt-[44px] grid gap-11 gap-[44px] lg:grid-cols-[1fr_0.92fr] lg:items-center">
-      <StaggerGroup className="flex flex-col gap-3.5">
+    <div className="mt-11 mt-[44px]">
+      <StaggerGroup className="grid gap-4 sm:grid-cols-2">
         {groups.map((g) => {
           const isOn = g.id === activeId;
           return (
             <StaggerItem key={g.id}>
               <button
-                onClick={() => setActiveId(g.id)}
+                onClick={() => {
+                  setActiveId(g.id);
+                  setPreviewOpen(true);
+                }}
                 className={`gold-card-hover relative w-full overflow-hidden rounded-2xl border p-5 text-left text-white outline-none transition-all duration-300 charcoal-marble ${
                   isOn ? "border-clay shadow-lg shadow-black/40" : "border-white/10 hover:border-clay/60"
                 }`}
@@ -86,17 +96,6 @@ export default function SupportGroupsInteractive({
                   {g.format === "online" ? "Online" : "In person"}
                 </span>
                 <h3 className="relative z-10 font-serif text-[19px] text-[#e8c874]">{g.title}</h3>
-                {/* Phase 48 — Roy's mockup shows every card's description
-                    and meta row visible at once, not just the selected
-                    one. Previously this block only rendered `{isOn &&
-                    ...}` (Phase 30 behavior: only the active card
-                    expanded). Matching the reference image's information
-                    density — same text, same fields, just no longer
-                    gated behind selection — since the mockup was the
-                    explicit brief for "the UI in the section." The
-                    selection/registration/preview-panel logic itself is
-                    unchanged; `isOn` still drives the border highlight and
-                    which group the right-hand preview panel shows. */}
                 <div className="relative z-10">
                   <p className="mt-1.5 text-sm leading-relaxed text-white/80">{g.description}</p>
                   <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-white/65">
@@ -117,9 +116,40 @@ export default function SupportGroupsInteractive({
         })}
       </StaggerGroup>
 
-      <div className="flex min-h-[420px] items-center justify-center">
-        <div className="w-full max-w-[420px] rounded-[26px] bg-gradient-to-br from-clay to-amber p-1.5 shadow-lg">
-          <div className="charcoal-marble flex min-h-[380px] flex-col overflow-hidden rounded-[20px]">
+      {/* Phase 49 — the group-details drawer. Own backdrop + own close
+          control, independent of components/ui/Modal.tsx (kept untouched
+          since that's shared with the booking/intake flows). */}
+      <AnimatePresence>
+        {previewOpen && (
+          <motion.div
+            key="preview-backdrop"
+            className="fixed inset-0 z-[70] bg-black/45"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: MOTION_DURATION.micro }}
+            onClick={() => setPreviewOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {previewOpen && (
+          <motion.div
+            key="preview-drawer"
+            className="charcoal-marble fixed inset-y-0 right-0 z-[80] flex w-full max-w-[420px] flex-col overflow-y-auto border-l border-clay/40 shadow-2xl"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: MOTION_DURATION.reveal, ease: MOTION_EASE }}
+          >
+            <button
+              onClick={() => setPreviewOpen(false)}
+              aria-label="Close"
+              className="absolute right-5 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/25 text-white transition-colors hover:bg-black/40"
+            >
+              <X size={18} />
+            </button>
+
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={active.id}
@@ -127,64 +157,73 @@ export default function SupportGroupsInteractive({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: MOTION_DURATION.reveal, ease: MOTION_EASE }}
-                className="flex flex-1 flex-col"
+                className="flex flex-1 flex-col items-center gap-4 p-8 pt-16 text-center"
               >
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-clay/50 bg-black/20 font-serif text-2xl text-[#e8c874]">
+                  {(active.facilitator_name ?? "?")
+                    .split(" ")
+                    .map((w) => w[0])
+                    .join("")}
+                </div>
+                <h3 className="font-serif text-2xl text-[#e8c874]">{active.title}</h3>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-clay/50 bg-black/25 px-3 py-1 text-[12px] font-semibold text-[#e8c874]">
+                  {active.format === "online" ? <Video size={13} /> : <MapPin size={13} />}
+                  {active.format === "online" ? "Online" : "In person"}
+                </span>
+
+                {/* The real, existing per-format details — same content
+                    that used to sit in the always-visible inline panel
+                    before Phase 49, just relocated into the drawer. */}
                 {active.format === "online" ? (
-                  <div className="flex flex-1 flex-col items-center justify-end gap-4 p-6 text-white">
-                    <div className="text-center font-serif text-sm text-[#e8c874]">{active.title}</div>
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-clay/50 bg-black/20 font-serif text-3xl text-[#e8c874]">
-                      {(active.facilitator_name ?? "?")
-                        .split(" ")
-                        .map((w) => w[0])
-                        .join("")}
-                    </div>
-                    <div className="mb-2 flex gap-4">
-                      {["mic", "video", "end"].map((k) => (
-                        <span
-                          key={k}
-                          className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                            k === "end" ? "bg-destructive text-white" : "bg-[#e8c874]/90 text-[#241b06]"
-                          }`}
-                        >
-                          {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="mb-2 flex gap-4">
+                    {["mic", "video", "end"].map((k) => (
+                      <span
+                        key={k}
+                        className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                          k === "end" ? "bg-destructive text-white" : "bg-[#e8c874]/90 text-[#241b06]"
+                        }`}
+                      >
+                        {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
+                      </span>
+                    ))}
                   </div>
                 ) : (
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="mb-3 flex h-32 items-center justify-center rounded-xl border border-clay/30 bg-black/15 text-[#e8c874]">
-                      <MapPin size={30} />
-                    </div>
-                    <div className="text-sm text-white/75">
-                      <div className="flex items-center gap-2 py-1">
-                        <MapPin size={14} /> {active.location}
-                      </div>
-                      <div className="flex items-center gap-2 py-1">
-                        <Clock size={14} /> {active.schedule}
-                      </div>
-                      <div className="flex items-center gap-2 py-1">
-                        <Users size={14} /> {active.capacity} seats
-                      </div>
-                    </div>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-clay/30 bg-black/15 text-[#e8c874]">
+                    <MapPin size={26} />
                   </div>
                 )}
+
+                <div className="w-full rounded-2xl border border-white/10 bg-black/15 p-4 text-left text-sm text-white/75">
+                  {active.format !== "online" && (
+                    <div className="flex items-center gap-2 py-1">
+                      <MapPin size={14} /> {active.location}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 py-1">
+                    <User size={14} /> {active.facilitator_name}
+                  </div>
+                  <div className="flex items-center gap-2 py-1">
+                    <Clock size={14} /> {active.schedule}
+                  </div>
+                  <div className="flex items-center gap-2 py-1">
+                    <Users size={14} /> {active.capacity} seats
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setRegisterState("idle");
+                    setRegisterOpen(true);
+                  }}
+                  className="mt-2 w-full rounded-xl bg-gradient-to-r from-clay to-amber py-3 text-sm font-bold text-[#241b06] shadow-md transition-transform hover:-translate-y-px"
+                >
+                  {content.registerButtonLabel}
+                </button>
               </motion.div>
             </AnimatePresence>
-            <div className="flex-none p-4">
-              <button
-                onClick={() => {
-                  setRegisterState("idle");
-                  setRegisterOpen(true);
-                }}
-                className="w-full rounded-xl bg-gradient-to-r from-clay to-amber py-3 text-sm font-bold text-[#241b06] shadow-md transition-transform hover:-translate-y-px"
-              >
-                {content.registerButtonLabel}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Modal open={registerOpen} onClose={() => setRegisterOpen(false)}>
         {registerState === "done" ? (
