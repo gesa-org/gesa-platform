@@ -1173,4 +1173,27 @@ git push
 ```
 
 ---
+
+## Phase 41 — New artwork for the "Two clicks to a therapist" path cards
+
+Roy wanted the three Home page path cards (Crisis / Veterans / Seeking Support) to use new commissioned artwork instead of the existing photography: a mixed-media piece (dark hand pouring into a nest cradling a small tree, in a black/gold frame) for Crisis, a boots-and-compass still life (green matting) for Veterans, and a hands-reaching-through-water piece (blue matting) for Seeking Support.
+
+**Getting the actual files was the hard part, worth documenting since it'll come up again.** Images pasted directly into the chat don't reach this sandbox's file system as full-resolution files — they land as small (~370–395px wide) screenshot-quality PNGs regardless of how many times they were re-sent, seemingly a limitation of the chat's inline-paste path rather than anything fixable on my end. Confirmed this by checking file size/dimensions after two separate paste attempts — identical both times. The fix that worked: Roy dragged the files directly into a new `Three path images` folder inside the project directory (a real file-system copy, not a chat paste), which I could then read normally. Asked Roy whether to chase higher-resolution originals or proceed with what came through; he chose to proceed as-is.
+
+**What changed:** copied the three files into `public/images/paths/` as `crisis-artwork.png`, `veterans-artwork.png`, and `seeking-support-artwork.png` (kept as PNG, the source format, rather than re-encoding to JPEG — these are small illustrative pieces, not photos, so JPEG's compression advantage doesn't really apply). Updated the `PATH_IMAGES` array in `components/home/Paths.tsx` to point at the three new files, in the same crisis/veteran/general order the rest of that file already uses. No other change to `Paths.tsx` — the cards still render as one full-bleed `object-cover` image per card, same treatment as before, so this was a pure asset swap.
+
+**Old files** (`crisis-optimized.jpg`, `veterans-composed.jpg`, `seeking-support-optimized.jpg`) are now unused but left in `public/images/paths/` — can't delete synced project files without confirming first.
+
+**Known gap, honestly flagged:** the new images are noticeably lower resolution than what they replaced (previous images were resized to a 1400px-wide max; these are ~370–395px wide, roughly a quarter the linear resolution). At the card's rendered size (up to ~420px tall, full card width on mobile) they'll look visibly softer, possibly a little pixelated on larger screens. Roy was told this directly and chose to proceed rather than chase down the full-resolution originals — worth revisiting if he gets access to better exports of this artwork later, since swapping in cleaner files later is just repeating this same three-file swap.
+
+**Verification:** scoped `tsc --noEmit` on `components/home/Paths.tsx` and `app/page.tsx` came back clean. Confirmed all three new files exist on disk at their referenced paths.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 41: replace path card images with new Crisis/Veterans/Seeking Support artwork"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

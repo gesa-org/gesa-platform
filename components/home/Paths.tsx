@@ -88,14 +88,27 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
 // badge style and trust-badge row Hero used to show (verified/free/global),
 // sized the heading like a real landing headline, and gave the section
 // hero-level top spacing instead of a plain mid-page section's padding.
+// Phase 41 — Roy replaced all three card photos with new artwork (a mixed-
+// media piece for Crisis, a boots-and-compass still life for Veterans, a
+// hands-in-water piece for Seeking Support), sent as photos of the framed
+// pieces rather than clean digital exports. The files that actually made it
+// through chat attachment were screenshot-resolution (~370–395px wide) —
+// confirmed with Roy that no higher-resolution originals were available
+// through this channel, and he opted to proceed with what we had rather
+// than wait. They'll render softer than the previous 1400px photography at
+// large card sizes; worth swapping in cleaner exports later if Roy gets
+// access to the originals. Kept as .png (source format) rather than
+// re-encoding to .jpg, since these are small illustrative/mixed-media
+// images rather than photos where JPEG's compression would help file size.
+//
 // The card photo (fixed by position, not editable — see the Phase 19
 // comment block above) is the only thing here that stays code-managed.
 // Everything else per card now comes from `content` (Content Manager key
 // "page_home").
 const PATH_IMAGES = [
-  "/images/paths/crisis-optimized.jpg",
-  "/images/paths/veterans-composed.jpg",
-  "/images/paths/seeking-support-optimized.jpg",
+  "/images/paths/crisis-artwork.png",
+  "/images/paths/veterans-artwork.png",
+  "/images/paths/seeking-support-artwork.png",
 ];
 
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
