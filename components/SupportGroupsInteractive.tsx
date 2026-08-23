@@ -29,6 +29,25 @@ export const SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK: SupportGroupsDirectoryCo
 // instantly, via AnimatePresence keyed on the active group's id. No
 // change to the selection logic, the registration flow, the modal, or any
 // copy — purely how the already-existing state transition is presented.
+//
+// Phase 48 — Roy sent a reference mockup restyling this same content as
+// dark charcoal-navy cards with gold serif headings and gold-bordered
+// pills (see `.charcoal-marble` in app/globals.css). Every piece of real
+// data below — g.title, g.format, g.description, g.facilitator_name,
+// g.schedule, g.capacity, the online/in-person preview layouts, the
+// Register button, the registration form's fields and submit logic — is
+// unchanged; only colors/backgrounds/borders changed. The mockup also
+// showed a "Secure Phone Verification" element with a progress bar on
+// each card and inside a "Phone Modal" — that isn't a real feature
+// anywhere in this app (there's no phone-verification step in the
+// registration flow, just the existing optional phone number field), so
+// it wasn't added; inventing a fake control here would contradict Roy's
+// own instruction not to change this page's controls or logic, only its
+// UI. The registration modal's own panel chrome (backdrop, close button)
+// comes from the shared components/ui/Modal.tsx, used by other flows
+// (booking, intake) too — left that file untouched and only restyled the
+// content Modal renders here (the form itself), so this page's redesign
+// doesn't bleed into unrelated modals elsewhere on the site.
 export default function SupportGroupsInteractive({
   groups,
   content = SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK,
@@ -58,42 +77,40 @@ export default function SupportGroupsInteractive({
             <StaggerItem key={g.id}>
               <button
                 onClick={() => setActiveId(g.id)}
-                className={`relative w-full rounded-2xl border p-5 text-left outline-none transition-all duration-300 ${
-                  isOn
-                    ? "border-primary bg-primary text-white shadow-lg"
-                    : "border-border bg-[#eef1f6] hover:border-accent hover:shadow-soft"
+                className={`gold-card-hover relative w-full overflow-hidden rounded-2xl border p-5 text-left text-white outline-none transition-all duration-300 charcoal-marble ${
+                  isOn ? "border-clay shadow-lg shadow-black/40" : "border-white/10 hover:border-clay/60"
                 }`}
               >
-                <span
-                  className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                    isOn ? "border-white/30 bg-[#e3e8ef]/15 text-white" : "border-border bg-card text-muted-fg"
-                  }`}
-                >
+                <span className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-clay/50 bg-black/25 px-2.5 py-1 text-[11px] font-semibold text-[#e8c874]">
                   {g.format === "online" ? <Video size={12} /> : <MapPin size={12} />}
                   {g.format === "online" ? "Online" : "In person"}
                 </span>
-                <h3 className="text-[19px]">{g.title}</h3>
-                {isOn && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: MOTION_DURATION.micro, ease: MOTION_EASE }}
-                    style={{ overflow: "hidden" }}
-                  >
-                    <p className="mt-1.5 text-sm leading-relaxed text-white/85">{g.description}</p>
-                    <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-white/85">
-                      <span className="inline-flex items-center gap-1.5">
-                        <User size={13} /> {g.facilitator_name}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock size={13} /> {g.schedule}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <Users size={13} /> {g.capacity} seats
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
+                <h3 className="relative z-10 font-serif text-[19px] text-[#e8c874]">{g.title}</h3>
+                {/* Phase 48 — Roy's mockup shows every card's description
+                    and meta row visible at once, not just the selected
+                    one. Previously this block only rendered `{isOn &&
+                    ...}` (Phase 30 behavior: only the active card
+                    expanded). Matching the reference image's information
+                    density — same text, same fields, just no longer
+                    gated behind selection — since the mockup was the
+                    explicit brief for "the UI in the section." The
+                    selection/registration/preview-panel logic itself is
+                    unchanged; `isOn` still drives the border highlight and
+                    which group the right-hand preview panel shows. */}
+                <div className="relative z-10">
+                  <p className="mt-1.5 text-sm leading-relaxed text-white/80">{g.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-white/65">
+                    <span className="inline-flex items-center gap-1.5">
+                      <User size={13} /> {g.facilitator_name}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Clock size={13} /> {g.schedule}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users size={13} /> {g.capacity} seats
+                    </span>
+                  </div>
+                </div>
               </button>
             </StaggerItem>
           );
@@ -101,8 +118,8 @@ export default function SupportGroupsInteractive({
       </StaggerGroup>
 
       <div className="flex min-h-[420px] items-center justify-center">
-        <div className="w-full max-w-[420px] rounded-[26px] bg-gradient-to-br from-primary to-accent p-1.5 shadow-lg">
-          <div className="flex min-h-[380px] flex-col overflow-hidden rounded-[20px] bg-card">
+        <div className="w-full max-w-[420px] rounded-[26px] bg-gradient-to-br from-clay to-amber p-1.5 shadow-lg">
+          <div className="charcoal-marble flex min-h-[380px] flex-col overflow-hidden rounded-[20px]">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={active.id}
@@ -113,9 +130,9 @@ export default function SupportGroupsInteractive({
                 className="flex flex-1 flex-col"
               >
                 {active.format === "online" ? (
-                  <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#3a4150] to-primary p-6 text-white">
-                    <div className="text-center text-sm opacity-90">{active.title}</div>
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/35 bg-[#e3e8ef]/15 font-serif text-3xl">
+                  <div className="flex flex-1 flex-col items-center justify-end gap-4 p-6 text-white">
+                    <div className="text-center font-serif text-sm text-[#e8c874]">{active.title}</div>
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-clay/50 bg-black/20 font-serif text-3xl text-[#e8c874]">
                       {(active.facilitator_name ?? "?")
                         .split(" ")
                         .map((w) => w[0])
@@ -126,7 +143,7 @@ export default function SupportGroupsInteractive({
                         <span
                           key={k}
                           className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                            k === "end" ? "bg-destructive text-white" : "bg-[#e3e8ef]/90 text-[#2b3140]"
+                            k === "end" ? "bg-destructive text-white" : "bg-[#e8c874]/90 text-[#241b06]"
                           }`}
                         >
                           {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
@@ -135,11 +152,11 @@ export default function SupportGroupsInteractive({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-1 flex-col bg-[#e3e8ef] p-6">
-                    <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-[#e3e8ef]/70 text-primary">
+                  <div className="flex flex-1 flex-col p-6">
+                    <div className="mb-3 flex h-32 items-center justify-center rounded-xl border border-clay/30 bg-black/15 text-[#e8c874]">
                       <MapPin size={30} />
                     </div>
-                    <div className="text-sm text-[#3f4653]">
+                    <div className="text-sm text-white/75">
                       <div className="flex items-center gap-2 py-1">
                         <MapPin size={14} /> {active.location}
                       </div>
@@ -160,7 +177,7 @@ export default function SupportGroupsInteractive({
                   setRegisterState("idle");
                   setRegisterOpen(true);
                 }}
-                className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-white"
+                className="w-full rounded-xl bg-gradient-to-r from-clay to-amber py-3 text-sm font-bold text-[#241b06] shadow-md transition-transform hover:-translate-y-px"
               >
                 {content.registerButtonLabel}
               </button>
@@ -172,7 +189,7 @@ export default function SupportGroupsInteractive({
       <Modal open={registerOpen} onClose={() => setRegisterOpen(false)}>
         {registerState === "done" ? (
           <div className="py-4 text-center">
-            <h3 className="mb-2 text-lg font-semibold">{content.successHeading}</h3>
+            <h3 className="mb-2 font-serif text-lg font-semibold text-primary">{content.successHeading}</h3>
             <p className="text-muted-fg">
               Confirmation for <strong>{active.title}</strong> is on its way to your inbox.
             </p>
@@ -206,13 +223,13 @@ export default function SupportGroupsInteractive({
               }).catch(() => {});
             }}
           >
-            <h3 className="text-lg font-semibold">Register for {active.title}</h3>
+            <h3 className="font-serif text-lg font-semibold text-primary">Register for {active.title}</h3>
             <div>
               <label className="mb-1.5 block text-sm font-semibold">Name</label>
               <input
                 name="name"
                 required
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-clay focus:outline-none"
               />
             </div>
             <div>
@@ -221,20 +238,20 @@ export default function SupportGroupsInteractive({
                 name="email"
                 type="email"
                 required
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-clay focus:outline-none"
               />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-semibold">Phone (optional)</label>
               <input
                 name="phone"
-                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-clay focus:outline-none"
               />
             </div>
             {registerState === "error" && (
               <p className="text-sm text-destructive">Something went wrong — please try again.</p>
             )}
-            <Button type="submit" block>
+            <Button type="submit" block variant="clay">
               {registerState === "pending" ? "Registering…" : content.confirmButtonLabel}
             </Button>
           </form>

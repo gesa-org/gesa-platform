@@ -1385,4 +1385,35 @@ git push
 ```
 
 ---
+
+## Phase 48 — Support Groups: dark charcoal-and-gold card redesign
+
+Roy sent a reference mockup for the Support Groups page specifically: the group-picker cards and the live preview panel restyled as dark charcoal-navy surfaces with thin gold veining, gold serif headings, and gold-bordered pills, replacing the light cards from before. Explicit instruction: don't change any controls, logic, or text — UI only.
+
+**`app/globals.css` — one new reusable class**, `.charcoal-marble`: a dark base color with two layered low-opacity gradients (a diagonal warm-gold tint, a faint diagonal sheen) approximating a "dark stone with a gold vein" surface without an actual texture image — none exists or was provided, and generating one wasn't an available option in this sandbox. Scoped as page-specific (only referenced from `components/SupportGroupsInteractive.tsx`), not added as a global card variant elsewhere on the site.
+
+**`components/SupportGroupsInteractive.tsx`** — restyled, with every piece of real data and every control left exactly as it was:
+- Group-picker cards: `.charcoal-marble` background, gold serif title, gold-bordered format pill, `.gold-card-hover` (from Phase 47) for the same golden sweep-on-hover effect Roy asked for on Home's cards.
+- One deliberate content-visibility change, called out here rather than buried in the diff: the reference mockup shows every card's description and meta row (facilitator/schedule/seats) visible at once, where the previous behavior only expanded that block for the selected card. Matched the mockup's information density since that was the explicit brief — the text itself didn't change, and the selection state (`isOn`) still drives the border highlight and which group the right-hand preview panel shows; only which cards render their already-existing description block changed.
+- The live preview panel (online-call mockup / in-person info, whichever the selected group's format is) and the Register button both restyled to the same dark/gold treatment — same conditional logic, same fields, same button behavior.
+- The registration modal's own content (heading, labels, inputs, submit button) got matching gold accents (gold focus-border on inputs, the existing `Button` component's already-defined `clay` — gold-bordered outline — variant for submit) — but the modal's shared chrome (backdrop, panel, close button, portal) in `components/ui/Modal.tsx` was deliberately left untouched, since that file is also used by the booking and intake flows elsewhere on the site; changing it would have redesigned modals Roy didn't ask about.
+- **Not implemented:** the mockup showed a "Secure Phone Verification" element with a progress bar on each card, and a "Phone Modal" panel — neither corresponds to any real feature in this app (registration only ever had an optional phone *number* field, never a verification step). Building that would have been inventing a new control, which directly contradicts "don't change any current controls, logic" — flagging this explicitly rather than silently ignoring part of the reference image.
+
+**Verification:** scoped `tsc --noEmit` on the changed component and page — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Attempted to run the Tailwind CLI directly to sanity-check the new CSS compiles, but it failed on an unrelated, pre-existing sandbox issue (a broken `sucrase`/`ts-interface-checker` module resolution in `node_modules`, not something this phase's CSS caused) — manually reviewed the new `.charcoal-marble` block for balanced braces/valid syntax instead. No test file exists for `SupportGroupsInteractive.tsx`, so there's no automated suite to re-run for this component specifically.
+
+**Known gaps, honestly flagged:**
+- The Tailwind CLI failure above is worth a real `npm run build` (or `npm run dev`) check locally to confirm nothing in `node_modules` is actually broken — this sandbox's `node_modules` lives on a network-mounted drive, which has caused unrelated tooling issues before (see `jest.config.js`'s own comment about SWC crashing for the same reason).
+- The card-expansion behavior change (every card now shows its full description, not just the selected one) is a real, if minor, information-display change — flagging clearly in case Roy specifically wanted the old collapse/expand behavior kept and only the colors changed.
+- Not screenshot-verified from this sandbox — worth a real look at the group cards, the preview panel in both online and in-person states, and the registration modal.
+- Same `.git/index.lock` situation as the last three phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 48: dark charcoal-and-gold redesign for Support Groups cards and preview panel"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

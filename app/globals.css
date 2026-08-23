@@ -170,6 +170,22 @@
   }
 }
 
+/* Phase 48 — Roy sent a reference mockup for the Support Groups page's
+   group cards and preview panel: a dark charcoal-navy "marbled" surface
+   with thin gold veins, gold serif headings, and gold-bordered pills,
+   instead of the page's previous light cards. No actual marble texture
+   image exists (or was requested) — this approximates the look with two
+   layered low-opacity gradients (a diagonal gold tint, a faint diagonal
+   sheen) over a dark base, which reads as "dark stone with a warm vein"
+   at a glance without needing a new image asset. Used only in
+   components/SupportGroupsInteractive.tsx — this is a page-specific
+   surface, not added as a global card variant elsewhere. */
+.charcoal-marble {
+  background-color: #1c202b;
+  background-image: linear-gradient(135deg, rgba(191, 160, 70, 0.12) 0%, transparent 35%, transparent 60%, rgba(191, 160, 70, 0.09) 100%),
+    linear-gradient(25deg, transparent 40%, rgba(255, 255, 255, 0.04) 50%, transparent 60%);
+}
+
 @layer components {
   /* Shared page-layout classes used across About, Therapists, Support Groups,
      Blog, FAQ, Contact, legal pages, and Messages. These were referenced in
