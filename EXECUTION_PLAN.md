@@ -1196,4 +1196,28 @@ git push
 ```
 
 ---
+
+## Phase 42 — Path cards: restore visible text, stop cropping the new artwork
+
+Roy flagged two real problems right after Phase 41 shipped: the cards looked blank (no text at all), and the new artwork looked cropped/oversized, like it was being cut off rather than shown in full.
+
+**Root cause of both:** the card design from Phase 19 assumed one specific kind of source image — a photo with a heading/description/button already baked into the picture itself, cropped to exactly fill a `h-[420px]` box via `object-cover`. That design had two consequences that were fine for the old photography but broke for the new artwork: (1) since the *photo* carried the visible text, the card never rendered any real DOM text — `content.card1Title` etc. existed (added in Phase 35 round 2) but were only ever used for the invisible `aria-label`, never shown on screen; (2) `object-cover` on a fixed-height box crops whatever doesn't fit that exact box shape — fine when the photo was pre-cropped to match, not fine for framed-artwork photos with a completely different aspect ratio, which were having their edges (including the picture frame itself) cut off to force-fill the box.
+
+**Fix:** rebuilt each card in `components/home/Paths.tsx` as a normal image-then-content layout instead of one full-bleed photo:
+- The artwork now sits in a fixed-height (`h-[200px]`) frame using `object-contain` instead of `object-cover`, on a soft `bg-secondary` background with padding — the whole piece is always visible, letterboxed on the shorter axis rather than cropped, so nothing gets cut off regardless of its aspect ratio.
+- Title, description, and a real "Reach out now" button (styled `bg-primary`/`text-primary-fg`, matching the site's primary CTA pattern) now render as actual visible text and a clickable element below the image, reading straight from `content.card1Title`/`card1Description`/`card1CtaLabel`/`card1CtaLink` (and card2/card3) — the same Content Manager-editable fields from Phase 35 round 2, now finally shown rather than hidden in an aria-label.
+- The whole card is no longer one giant `<Link>` — only the CTA button is a link now, which is also a better semantic/accessibility structure than the previous "invisible aria-label carries all the information" approach.
+
+**Verification:** scoped `tsc --noEmit` on `components/home/Paths.tsx` and `app/page.tsx` came back clean; grepped the file for the unescaped-apostrophe-in-JSX pattern — no matches.
+
+**Known gap, unchanged from Phase 41:** the artwork itself is still the ~370–395px screenshot-resolution files — `object-contain` means it's no longer cropped, but it's also not being scaled up, so at a 200px-tall frame it should look reasonably sharp; a wider frame would start to show the same softness flagged before. Still worth swapping in full-resolution originals if Roy gets access to them.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 42: show path card text and stop cropping the new artwork"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

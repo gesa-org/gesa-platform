@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkle, ShieldCheck, HeartHandshake, Users } from "lucide-react";
+import { Sparkle, ShieldCheck, HeartHandshake, Users, ArrowRight } from "lucide-react";
 import HighlightedText from "@/components/ui/HighlightedText";
 import type { HomeContent } from "@/lib/content";
 
@@ -117,10 +117,23 @@ const PATH_IMAGES = [
 // an admin actually edits them.
 //
 // Phase 35 (round 2) — the trust badges, the closing note, and the three
-// path cards' title/description/CTA/link are now editable too. The cards'
-// visible on-photo text still can't change without new artwork (see
-// HOME_CONTENT_FALLBACK's comment) — only the CTA link genuinely changes
-// what a visitor sees happen when they click.
+// path cards' title/description/CTA/link are now editable too.
+//
+// Phase 42 — the Phase 19-era design (one full-bleed photo per card, no
+// visible text, since the badge/heading/description/button were baked
+// into the photo itself) no longer holds once the photos became the
+// Phase 41 artwork, which has no text baked in and isn't the same
+// portrait/landscape shape the old full-bleed crop was tuned for. Two
+// problems Roy flagged: the cards read as blank/textless, and object-cover
+// on a fixed h-[420px] box was cropping the new artwork (especially the
+// frame edges) to fill that shape. Rebuilt the card as a normal
+// image-then-content layout: the artwork sits in a fixed-height frame with
+// object-contain (so the whole piece is always visible, letterboxed rather
+// than cropped, on a soft background instead of a hard photo edge), and
+// title/description/CTA now render as real, visible text below it —
+// exactly the content already stored in `content.card1Title` etc., which
+// existed since Phase 35 round 2 but was previously only used for the
+// aria-label, never actually shown.
 export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: HomeContent }) {
   const cards = [
     { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink },
@@ -161,19 +174,29 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {cards.map((p, i) => (
-            <Link
+            <div
               key={i}
-              href={p.ctaLink}
-              aria-label={`${p.ctaLabel} — ${p.title}: ${p.description}`}
-              className="group relative block h-[420px] overflow-hidden rounded-[24px] shadow-lg transition-shadow hover:shadow-2xl"
+              className="group flex flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-lg transition-shadow hover:shadow-2xl"
             >
-              <Image
-                src={PATH_IMAGES[i]}
-                alt={`${p.title} — ${p.description}`}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </Link>
+              <div className="relative h-[200px] flex-none bg-secondary">
+                <Image
+                  src={PATH_IMAGES[i]}
+                  alt={`${p.title} artwork`}
+                  fill
+                  className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-6">
+                <h3 className="text-[19px]">{p.title}</h3>
+                <p className="mt-2 flex-1 text-[14.5px] text-muted-fg">{p.description}</p>
+                <Link
+                  href={p.ctaLink}
+                  className="mt-5 inline-flex items-center justify-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
+                >
+                  {p.ctaLabel} <ArrowRight size={15} />
+                </Link>
+              </div>
+            </div>
           ))}
         </div>
 
