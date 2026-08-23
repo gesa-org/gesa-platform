@@ -2,6 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Sparkle, ShieldCheck, HeartHandshake, Users, ArrowRight } from "lucide-react";
 import HighlightedText from "@/components/ui/HighlightedText";
+import Reveal from "@/components/motion/Reveal";
+import ScrollText from "@/components/motion/ScrollText";
+import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { HomeContent } from "@/lib/content";
 
 export const HOME_CONTENT_FALLBACK: HomeContent = {
@@ -134,6 +137,15 @@ const PATH_IMAGES = [
 // exactly the content already stored in `content.card1Title` etc., which
 // existed since Phase 35 round 2 but was previously only used for the
 // aria-label, never actually shown.
+// Phase 45 — layered in the site-wide scroll-motion system here: the
+// eyebrow/headline/subtitle/badges fade+rise in with a short stagger (spec
+// section 3's "Section heading -> Description -> ... -> CTA" timing), the
+// headline itself also gets the subtle scroll-linked drift from
+// ScrollText (one of the few "selected major statements" this is applied
+// to, per spec section 5), and the three cards use the same
+// StaggerGroup/StaggerItem entrance as spec section 7. No content, links,
+// or card images changed — this is animation only, layered on the exact
+// markup from Phase 42.
 export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: HomeContent }) {
   const cards = [
     { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink },
@@ -149,58 +161,71 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
 
       <div className="wrap relative z-10">
         <div className="text-center">
-          <span className="relative mb-5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-4 py-1.5 text-[13px] font-semibold text-primary">
-            <Sparkle size={13} /> {content.eyebrow}
-          </span>
-          <h1
-            id="paths-heading"
-            className="mx-auto mb-4 max-w-[820px] font-serif text-[clamp(32px,4.6vw,50px)] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground"
-          >
-            <HighlightedText text={content.title} highlight={content.highlight} />
-          </h1>
-          <p className="mx-auto max-w-[620px] text-[17px] leading-[1.55] text-muted-fg">{content.subtitle}</p>
-          <div className="mt-7 flex flex-wrap justify-center gap-6 text-[14px] font-medium text-muted-fg">
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="text-accent" size={18} /> {content.badge1Label}
+          <Reveal type="fade-up" distance="sm" duration={0.5}>
+            <span className="relative mb-5 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-4 py-1.5 text-[13px] font-semibold text-primary">
+              <Sparkle size={13} /> {content.eyebrow}
             </span>
-            <span className="flex items-center gap-2">
-              <HeartHandshake className="text-accent" size={18} /> {content.badge2Label}
-            </span>
-            <span className="flex items-center gap-2">
-              <Users className="text-accent" size={18} /> {content.badge3Label}
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {cards.map((p, i) => (
-            <div
-              key={i}
-              className="group flex flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-lg transition-shadow hover:shadow-2xl"
+          </Reveal>
+          <ScrollText distance={20}>
+            <h1
+              id="paths-heading"
+              className="mx-auto mb-4 max-w-[820px] font-serif text-[clamp(32px,4.6vw,50px)] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground"
             >
-              <div className="relative h-[200px] flex-none bg-secondary">
-                <Image
-                  src={PATH_IMAGES[i]}
-                  alt={`${p.title} artwork`}
-                  fill
-                  className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-              <div className="flex flex-1 flex-col p-6">
-                <h3 className="text-[19px]">{p.title}</h3>
-                <p className="mt-2 flex-1 text-[14.5px] text-muted-fg">{p.description}</p>
-                <Link
-                  href={p.ctaLink}
-                  className="mt-5 inline-flex items-center justify-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
-                >
-                  {p.ctaLabel} <ArrowRight size={15} />
-                </Link>
-              </div>
-            </div>
-          ))}
+              <HighlightedText text={content.title} highlight={content.highlight} />
+            </h1>
+          </ScrollText>
+          <Reveal type="fade-up" delay={0.08}>
+            <p className="mx-auto max-w-[620px] text-[17px] leading-[1.55] text-muted-fg">{content.subtitle}</p>
+          </Reveal>
+          <StaggerGroup className="mt-7 flex flex-wrap justify-center gap-6 text-[14px] font-medium text-muted-fg">
+            <StaggerItem className="inline-block">
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="text-accent" size={18} /> {content.badge1Label}
+              </span>
+            </StaggerItem>
+            <StaggerItem className="inline-block">
+              <span className="flex items-center gap-2">
+                <HeartHandshake className="text-accent" size={18} /> {content.badge2Label}
+              </span>
+            </StaggerItem>
+            <StaggerItem className="inline-block">
+              <span className="flex items-center gap-2">
+                <Users className="text-accent" size={18} /> {content.badge3Label}
+              </span>
+            </StaggerItem>
+          </StaggerGroup>
         </div>
 
-        <p className="mt-8 text-center text-[13px] text-muted-fg">{content.footerNote}</p>
+        <StaggerGroup className="mt-12 grid gap-6 md:grid-cols-3">
+          {cards.map((p, i) => (
+            <StaggerItem key={i}>
+              <div className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-lg transition-shadow hover:shadow-2xl">
+                <div className="relative h-[200px] flex-none bg-secondary">
+                  <Image
+                    src={PATH_IMAGES[i]}
+                    alt={`${p.title} artwork`}
+                    fill
+                    className="object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="text-[19px]">{p.title}</h3>
+                  <p className="mt-2 flex-1 text-[14.5px] text-muted-fg">{p.description}</p>
+                  <Link
+                    href={p.ctaLink}
+                    className="mt-5 inline-flex items-center justify-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
+                  >
+                    {p.ctaLabel} <ArrowRight size={15} />
+                  </Link>
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
+        </StaggerGroup>
+
+        <Reveal type="fade">
+          <p className="mt-8 text-center text-[13px] text-muted-fg">{content.footerNote}</p>
+        </Reveal>
       </div>
     </section>
   );

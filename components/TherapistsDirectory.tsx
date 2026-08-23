@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
+import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { Tables } from "@/lib/database.types";
 import type { TherapistsDirectoryContent } from "@/lib/content";
 
@@ -246,11 +247,13 @@ export default function TherapistsDirectory({
           {filtered.length ? `Showing ${filtered.length} of ${therapists.length} therapists` : ""}
         </div>
         {filtered.length ? (
-          <div className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
             {filtered.map((t) => (
-              <TherapistCard key={t.id} t={t} />
+              <StaggerItem key={t.id}>
+                <TherapistCard t={t} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         ) : (
           <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">{content.noResultsMessage}</div>
         )}

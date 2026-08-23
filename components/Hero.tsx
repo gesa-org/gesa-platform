@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle, Globe2, Link2 } from 'lucide-react';
 import HighlightedText from '@/components/ui/HighlightedText';
+import Reveal from '@/components/motion/Reveal';
+import ScrollText from '@/components/motion/ScrollText';
+import ParallaxMedia from '@/components/motion/ParallaxMedia';
+import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
 
 export const HERO_CONTENT_FALLBACK: HeroContent = {
@@ -72,6 +76,16 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // 1600px wide. Hosted locally rather than as an external URL, unlike the
 // two Pexels photos this field held before, since this is now a real
 // project asset rather than a stock-site reference.
+//
+// Phase 45 — layered in the site-wide scroll-motion system: text block
+// gets a short staggered fade+rise entrance (eyebrow -> headline -> body
+// -> CTAs -> badges, spec section 3's timing), the headline itself gets
+// the same subtle ScrollText drift as Home's headline (one of the two
+// biggest statements on the site), and both hero photo/painting elements
+// get the restrained scale+drift ParallaxMedia effect from spec section 4
+// — this is exactly the kind of "major image section" that spec calls
+// out, unlike the small path-card thumbnails on Home which were left
+// static. No copy, links, or layout structure changed.
 export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
     <section className="relative bg-background border-b border-border pt-16 pb-20">
@@ -96,35 +110,51 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12 items-center">
           {/* Text Content */}
           <div className="max-w-2xl relative">
-            <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
-              <Sparkle size={13} /> {content.eyebrow}
-            </span>
-            <h1 className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
-              <HighlightedText text={content.title} highlight={content.highlight} />
-            </h1>
-            <p className="text-[20px] text-muted-fg leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
+            <Reveal type="fade-up" distance="sm" duration={0.5}>
+              <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
+                <Sparkle size={13} /> {content.eyebrow}
+              </span>
+            </Reveal>
+            <ScrollText distance={22}>
+              <h1 className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
+                <HighlightedText text={content.title} highlight={content.highlight} />
+              </h1>
+            </ScrollText>
+            <Reveal type="fade-up" delay={0.08}>
+              <p className="text-[20px] text-muted-fg leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
+            </Reveal>
 
-            <div className="flex flex-wrap gap-4 mt-6">
-              <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
-                {content.ctaPrimaryLabel} <ArrowRight size={18} />
-              </Link>
-              <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-card text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
-                {content.ctaSecondaryLabel}
-              </Link>
-            </div>
+            <StaggerGroup className="flex flex-wrap gap-4 mt-6">
+              <StaggerItem className="inline-block">
+                <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
+                  {content.ctaPrimaryLabel} <ArrowRight size={18} />
+                </Link>
+              </StaggerItem>
+              <StaggerItem className="inline-block">
+                <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-card text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
+                  {content.ctaSecondaryLabel}
+                </Link>
+              </StaggerItem>
+            </StaggerGroup>
 
             {/* Badges */}
-            <div className="flex flex-wrap gap-6 mt-10 text-muted-fg text-[14px] font-medium">
-              <span className="flex items-center gap-2">
-                <ShieldCheck className="text-accent" size={18} /> Verified Professionals
-              </span>
-              <span className="flex items-center gap-2">
-                <HeartHandshake className="text-accent" size={18} /> 100% Free Sessions
-              </span>
-              <span className="flex items-center gap-2">
-                <Users className="text-accent" size={18} /> Global Community
-              </span>
-            </div>
+            <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-muted-fg text-[14px] font-medium">
+              <StaggerItem className="inline-block">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="text-accent" size={18} /> Verified Professionals
+                </span>
+              </StaggerItem>
+              <StaggerItem className="inline-block">
+                <span className="flex items-center gap-2">
+                  <HeartHandshake className="text-accent" size={18} /> 100% Free Sessions
+                </span>
+              </StaggerItem>
+              <StaggerItem className="inline-block">
+                <span className="flex items-center gap-2">
+                  <Users className="text-accent" size={18} /> Global Community
+                </span>
+              </StaggerItem>
+            </StaggerGroup>
           </div>
 
           {/* Hero Image / Media — contained card on mobile/tablet, and on large
@@ -133,12 +163,14 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               rendering the media twice. */}
           <div className="relative rounded-[26px] overflow-hidden shadow-2xl aspect-[9/10] bg-gradient-to-br from-primary to-accent lg:hidden">
             <div className="absolute inset-0 bg-black/10 z-10"></div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={content.backgroundImage}
-              alt="A painting of hands cradling a glowing form within layered leaves"
-              className="w-full h-full object-cover z-0 relative"
-            />
+            <ParallaxMedia intensity={14} scale={1.05} className="absolute inset-0 z-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={content.backgroundImage}
+                alt="A painting of hands cradling a glowing form within layered leaves"
+                className="w-full h-full object-cover relative"
+              />
+            </ParallaxMedia>
             <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
               <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
                 <HeartHandshake size={20} />
@@ -177,12 +209,14 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
             Content Manager wouldn't have updated this large-screen version.
             Fixed to read the same field, and replaced the photo itself (real
             people's faces) with a painting for the reason described below. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={content.backgroundImage}
-          alt="A painting of hands cradling a glowing form within layered leaves"
-          className="w-full h-full object-cover z-0 relative"
-        />
+        <ParallaxMedia intensity={22} scale={1.06} className="absolute inset-0 z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={content.backgroundImage}
+            alt="A painting of hands cradling a glowing form within layered leaves"
+            className="w-full h-full object-cover relative"
+          />
+        </ParallaxMedia>
 
         {/* Trust Chip Overlay */}
         <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">

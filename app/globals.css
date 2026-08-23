@@ -4,6 +4,21 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&display=swap');
 
+/* Phase 45 — global smooth scrolling (motion spec section 1). Native
+   `scroll-behavior`, not a scroll-hijacking JS library — see the long
+   comment in components/motion/SmoothScroll.tsx for why: this codebase's
+   fixed footer-reveal layer and sticky header/sidebar depend on real
+   browser scroll, which a transform-based smooth-scroll library would
+   break. This only affects programmatic/anchor scrolls (e.g. "skip to
+   results" jumps); normal wheel/touch scrolling is untouched either way.
+   Gated behind prefers-reduced-motion: reduce, matching every other
+   motion feature added this phase. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @layer base {
   :root {
     /* Phase 38 — same powder-blue base as Phase 37 (background, primary,

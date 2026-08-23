@@ -58,21 +58,21 @@ describe("TherapistsDirectory", () => {
 
   it("filters by name search", async () => {
     render(<TherapistsDirectory therapists={therapists} />);
-    await userEvent.type(screen.getByPlaceholderText("Search…"), "amir");
+    await userEvent.type(screen.getByPlaceholderText("Find therapist…"), "amir");
     expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument();
     expect(screen.getByText("Amir Cohen")).toBeInTheDocument();
   });
 
   it("filters by language", async () => {
     render(<TherapistsDirectory therapists={therapists} />);
-    await userEvent.selectOptions(screen.getByText("Language").nextElementSibling as HTMLElement, "Hebrew");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "Hebrew");
     expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument();
     expect(screen.getByText("Amir Cohen")).toBeInTheDocument();
   });
 
   it("shows an empty state when no therapist matches the filters", async () => {
     render(<TherapistsDirectory therapists={therapists} />);
-    await userEvent.type(screen.getByPlaceholderText("Search…"), "nonexistent-name");
+    await userEvent.type(screen.getByPlaceholderText("Find therapist…"), "nonexistent-name");
     expect(
       screen.getByText(/No therapists match your search right now/i)
     ).toBeInTheDocument();

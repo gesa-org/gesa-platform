@@ -5,6 +5,7 @@ import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
 import SiteFooterSlot from "@/components/SiteFooterSlot";
 import CrisisButton from "@/components/CrisisButton";
 import TranslationProvider from "@/components/TranslationProvider";
+import SmoothScroll from "@/components/motion/SmoothScroll";
 import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
 import { getPageContent } from "@/lib/content";
 
@@ -30,12 +31,20 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
-        <TranslationProvider>
-          <Header content={headerContent} />
-          <main className="flex-1">{children}</main>
-          <SiteFooterSlot footerContent={footerContent} />
-          <CrisisButton />
-        </TranslationProvider>
+        {/* Phase 45 — SmoothScroll only provides a spring-smoothed scroll-
+            progress value via React context (see the long comment in
+            components/motion/SmoothScroll.tsx for why it deliberately
+            doesn't hijack real scrolling); it renders no wrapping element
+            of its own, so it can't affect the sticky Header, the fixed
+            footer-reveal layer, or any existing layout math below. */}
+        <SmoothScroll>
+          <TranslationProvider>
+            <Header content={headerContent} />
+            <main className="flex-1">{children}</main>
+            <SiteFooterSlot footerContent={footerContent} />
+            <CrisisButton />
+          </TranslationProvider>
+        </SmoothScroll>
       </body>
     </html>
   );

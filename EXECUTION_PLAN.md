@@ -1268,4 +1268,55 @@ git push
 ```
 
 ---
+
+## Phase 45 — Site-wide scroll-driven motion layer
+
+Roy sent a spec PDF ("GESA Scroll-Driven Interaction System") asking for a premium scroll-motion enhancement layer across the site — smooth scrolling, viewport reveals, staggered entrances, cinematic media parallax, scroll-linked text, a horizontal scroll-linked statement, card entrances, a metrics count-up, and better accordion transitions — explicitly as an *enhancement layer*, with the document's own top-priority rule being to preserve every existing route, control, CTA, database behavior, and piece of content untouched.
+
+**Library choice, and one deliberate deviation from the spec's literal diagram:** installed `framer-motion` (`^11.18.2`) — no other animation library existed in the project before this. The spec's "Global Smooth Scrolling" diagram (raw scroll -> smooth interpolation -> normalized progress) is the exact pattern used by scroll-hijacking libraries like Lenis, which replace native scrolling with a `transform`-driven wrapper div. This codebase's footer-reveal effect (`SiteFooterSlot`/`useRevealHeight`, `.reveal-page__footer-layer` in `app/globals.css`) and its sticky header and sticky filter sidebar (`TherapistsDirectory`) all depend on real `position: fixed`/`sticky` behavior relative to the actual viewport — a transformed scroll container breaks that (fixed/sticky children become fixed relative to the transformed ancestor instead of the viewport). Since "preserve all existing GESA functionality" is the spec's own stated top-priority rule, real page scrolling was deliberately left 100% native. `html { scroll-behavior: smooth }` (added in `app/globals.css`, gated behind `prefers-reduced-motion: no-preference`) covers programmatic/anchor jumps; a new `SmoothScroll` provider (`components/motion/SmoothScroll.tsx`, wrapping everything in `app/layout.tsx`) exposes a spring-smoothed 0-1 scroll-progress value via React context for any component that wants it, without ever touching real scroll input. This is the one place this phase diverges from the spec's literal architecture, and it's explained at length in that file's own comment.
+
+**Reusable motion primitives** (`components/motion/`), all respecting `prefers-reduced-motion` and all animating only `transform`/`opacity` (never layout properties), per the spec's own performance and accessibility sections:
+- `config.ts` — shared timing (micro/reveal/large/stagger durations), a single calm easing curve (no bounce/elastic, per spec section 11), and distance/scale constants, so the whole site's motion feel is tunable from one file.
+- `Reveal.tsx` — general viewport-entrance primitive (`fade` / `fade-up` / `fade-scale` / `horizontal` / `image`).
+- `StaggerReveal.tsx` (`StaggerGroup` + `StaggerItem`) — staggered group/card entrances.
+- `ParallaxMedia.tsx` — restrained cinematic scale+drift for major images (spec's own 1.05->1.00 example range).
+- `ScrollText.tsx` — subtle scroll-linked drift for selected major headlines only.
+- `HorizontalScroll.tsx` — horizontal scroll-linked word/concept row, auto-disables its own JS movement on mobile in favor of plain touch scrolling.
+- `AnimatedCounter.tsx` — count-up for numeric stats, gracefully renders non-numeric values (e.g. "Global") statically instead of animating.
+- `useViewportScale.ts` — desktop/tablet/mobile bucket for scaling distances down on smaller screens per spec section 13.
+
+**Where it's wired in**, content/links/functionality unchanged everywhere:
+- `app/layout.tsx` — global `SmoothScroll` provider.
+- `components/home/Paths.tsx` (Home) — staggered eyebrow/headline/subtitle/badges, `ScrollText` on the headline, staggered card entrance for the three path cards.
+- `components/Hero.tsx` (About) — same staggered text entrance, `ScrollText` headline, `ParallaxMedia` on both the mobile/tablet and large-screen hero images.
+- `components/ui/PageHero.tsx` — staggered eyebrow/title/description entrance, which by itself brings consistent motion to nearly every secondary page (Our Therapists, Support Groups, FAQ, Contact, legal pages) since they all share this one banner component.
+- `components/home/Stats.tsx` — staggered columns + `AnimatedCounter` on each value.
+- `components/home/Testimonials.tsx`, `components/TherapistsDirectory.tsx` — staggered card-grid entrance (testimonials, therapist results).
+- `app/about/page.tsx` — `Reveal` on section headings, staggered card entrance for the how-it-works and founders grids.
+- `app/page.tsx` (Home) — added the horizontal scroll-linked statement between the path cards and the stats band, built entirely from this page's own existing copy (the three trust badges + three path titles) rather than any new text.
+- `components/FaqAccordion.tsx` — **investigated, then deliberately left unchanged.** Tried adding the spec's accordion open/close height+opacity transition; it broke `tests/unit/FaqAccordion.test.tsx`, which asserts both the default-open and a just-clicked-open answer are synchronously `toBeVisible()` with no `waitFor` anywhere in the file — any real transition duration reads as "not yet visible" at the exact instant those assertions run. Confirmed this by actually running the test suite, not just reasoning about it. The spec's own top-priority preservation rule outranks this one polish item, so this file's diff is just an explanatory comment; the chevron's existing rotate transition is unchanged and was already smooth.
+
+**Testing fallout, all resolved:**
+- Adding `whileInView` (via `Reveal`/`StaggerGroup`) crashed every test that renders `TherapistsDirectory` with `ReferenceError: IntersectionObserver is not defined` — jsdom has no real `IntersectionObserver`. Fixed with a minimal stub added to `jest.setup.ts` (never fires a real intersection callback, which is fine since no test asserts anything about scroll-triggered animation state).
+- Found and fixed **three pre-existing, unrelated test bugs** in `tests/unit/TherapistsDirectory.test.tsx` while getting the suite green again — confirmed via `git show HEAD` that these were already broken before this phase touched anything: the search input's placeholder text had drifted to `"Find therapist…"` at some earlier phase while the test still expected the old `"Search…"`, and the language `<select>` picked up a wrapping `<div>` (for the custom chevron icon) at some earlier phase, so `getByText("Language").nextElementSibling` no longer resolved to the actual `<select>`. Fixed both to match current reality (`getByRole("combobox")` for the language select, the correct placeholder string) rather than leaving a broken safety net in place.
+- Ran the full unit suite after all fixes: **19/19 passing.**
+
+**Verification:** scoped `tsc --noEmit` across every new/changed file (all seven motion primitives, every component/page touched, `jest.setup.ts`) — clean. Grepped everything for the unescaped-apostrophe-in-JSX pattern — no matches. Could not get a whole-project `next build` to finish inside this sandbox's ~178-second command timeout (same long-standing limitation as the whole-project `tsc --noEmit` issue noted in earlier phases) — relying on the scoped type-check plus the full, now-passing unit test suite instead. A real `npm run build` from a normal terminal (or letting Vercel's own build run) before/during deploy is worth doing as this phase's final check, same caveat as several earlier phases.
+
+**Known gaps, honestly flagged:**
+- `next build` itself was never run to completion in this sandbox — see above. Nothing in the scoped type-check or test suite suggests a build-time problem, but this is genuinely unverified.
+- Not screenshot- or browser-verified from this sandbox — worth a real scroll-through of Home, About, Our Therapists, Support Groups, and FAQ after deploy to confirm the motion feels like the "calm, intentional, refined" result the spec asks for and not something more aggressive, plus a check with the OS-level "reduce motion" setting turned on.
+- The horizontal scroll-linked statement was only added to the Home page (between the path cards and stats). The spec doesn't specify where it should live, and adding it to more than one spot risked violating its own "visual restraint" section — happy to add it elsewhere if Roy wants it in a specific spot.
+- SupportGroupsInteractive's group list and the match-wizard flow were left untouched — they're interactive/stateful flows rather than static content reveals, and the spec's card-entrance/reveal guidance is aimed at content sections, not multi-step forms; flagging in case Roy specifically wanted motion there too.
+- A stray `.git/index.lock` file was left behind by a failed `git stash` attempt during this phase's testing (the sandbox couldn't remove it — same file-permission constraint as the stray `tsconfig.check*.json` files from earlier phases). It didn't affect any of the actual work, but **Roy should delete `.git/index.lock` by hand before running the git commands below**, or a real `git commit` will fail with "Another git process seems to be running."
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 45: add site-wide scroll-driven motion layer (framer-motion)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
