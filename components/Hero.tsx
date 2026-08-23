@@ -14,7 +14,7 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   ctaPrimaryHref: "/find-your-therapist",
   ctaSecondaryLabel: "Explore support groups",
   ctaSecondaryHref: "/support-groups",
-  backgroundImage: "https://images.pexels.com/photos/3518623/pexels-photo-3518623.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  backgroundImage: "/images/about/hero-painting.jpg",
 };
 
 // Phase 17 — Roy shared a mockup (built with Claude Design) asking to bring
@@ -59,14 +59,19 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // group therapy session, i.e. real people's faces sourced from a stock
 // site) to be replaced by a painting instead, on privacy grounds: GESA
 // doesn't want to put real, scraped/stock human faces on the site at all,
-// even in a generic illustrative spot like this one. Swapped in a blue-
-// toned abstract painting (Pexels photo 3518623, matching the site's own
-// blue/gold brand palette from Phases 37-38) rather than a figurative
-// painting of people, since any painted depiction of specific real faces
-// would reintroduce the same identity concern in a different medium. This
-// field is Content Manager-editable, so a different painting (figurative
-// or abstract) can be swapped in later from /admin/content without a code
-// change.
+// even in a generic illustrative spot like this one. Initially swapped in
+// a generic blue-toned abstract stock painting as a placeholder.
+//
+// Phase 44 — Roy then sent the actual painting he wanted here: a teal-and-
+// gold piece of layered hands cradling a glowing form inside leaves —
+// thematically a much better fit (care, protection, many hands supporting
+// one center) than the generic placeholder, and no real faces are
+// depicted. It arrived as a full-page mockup screenshot rather than a bare
+// image file, so the image itself (public/images/about/hero-painting.jpg)
+// is cropped from that screenshot down to just the painting, re-saved at
+// 1600px wide. Hosted locally rather than as an external URL, unlike the
+// two Pexels photos this field held before, since this is now a real
+// project asset rather than a stock-site reference.
 export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
     <section className="relative bg-background border-b border-border pt-16 pb-20">
@@ -131,7 +136,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={content.backgroundImage}
-              alt="An abstract painting in GESA's brand colors"
+              alt="A painting of hands cradling a glowing form within layered leaves"
               className="w-full h-full object-cover z-0 relative"
             />
             <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
@@ -175,7 +180,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={content.backgroundImage}
-          alt="An abstract painting in GESA's brand colors"
+          alt="A painting of hands cradling a glowing form within layered leaves"
           className="w-full h-full object-cover z-0 relative"
         />
 

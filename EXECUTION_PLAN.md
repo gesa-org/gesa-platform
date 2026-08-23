@@ -1247,4 +1247,25 @@ git push
 ```
 
 ---
+
+## Phase 44 — the actual About page painting, replacing the Phase 43 placeholder
+
+Phase 43's abstract painting was a placeholder pick, honestly flagged as such since it no longer carried the "people supporting each other" meaning the old photo did. Roy immediately followed up with the real painting he wanted: a teal-and-gold piece of layered hands cradling a glowing form inside leaves — care and protection expressed through many hands around one center, with no real faces depicted at all, which fits both the emotional theme and the privacy rationale from Phase 43 better than a generic abstract piece.
+
+**Getting the actual image:** Roy sent a full-page mockup screenshot (nav bar, headline, buttons — the painting was just the right-hand hero card within it) rather than a bare image file. Cropped the mockup down to just the painting itself using the coordinate mapping given with the image, trimming the bottom edge further to exclude the "Over 5,000+ Sessions Completed" chip overlay that was bleeding into the crop (that chip is real, code-rendered UI, not part of the source image, and would have been visible twice — once real, once painted into the background — if left in). Resized the crop to 1600px wide and saved it as `public/images/about/hero-painting.jpg` (256KB).
+
+**What changed:** `HERO_CONTENT_FALLBACK.backgroundImage` in `components/Hero.tsx` now points at this local file (`/images/about/hero-painting.jpg`) instead of the Phase 43 placeholder's external Pexels URL — this is the first time this field has held a real project asset rather than a stock-site reference. Updated both `<img>` alt text strings to describe the actual painting. Patched the live `page_about_hero` row on both Production and Dev Supabase projects with the new path, same as Phase 43's image swap required.
+
+**Verification:** re-ran the same scoped `tsc --noEmit` from Phase 43 (covers `Hero.tsx`) — clean. Grepped `Hero.tsx` for the unescaped-apostrophe-in-JSX pattern — no matches.
+
+**Known gap:** not screenshot-verified from this sandbox — worth a look at the About page hero on a real browser after deploy to confirm the crop reads well at the actual card sizes (the small mobile/tablet card and the large full-height desktop bleed card use the same file, and the desktop version in particular crops much more aggressively via `object-cover`).
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 44: use Roy's actual painting for the About hero image"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
