@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
+import ParallaxLayer from "@/components/motion/ParallaxLayer";
 
 interface PageHeroProps {
   icon?: LucideIcon;
@@ -27,6 +28,12 @@ interface PageHeroProps {
 // the single highest-leverage way to make the scroll-motion system feel
 // consistent site-wide rather than only on the two pages with a bespoke
 // Hero component.
+//
+// Phase 46 — added the same ParallaxLayer background drift used on
+// Home/About to this component's decorative blob too, which — since
+// nearly every secondary page shares this one banner — means Our
+// Therapists, Support Groups, FAQ, and Contact all picked up that depth
+// cue from one file, not three separate integrations.
 export default function PageHero({
   icon: Icon,
   eyebrow,
@@ -39,9 +46,9 @@ export default function PageHero({
 }: PageHeroProps) {
   return (
     <section className={`hero relative overflow-hidden ${className}`}>
-      <div className="pointer-events-none absolute inset-0 z-0">
+      <ParallaxLayer speed={30} className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/4 translate-x-1/3 rounded-full bg-accent-soft opacity-60 blur-[100px]" />
-      </div>
+      </ParallaxLayer>
       <StaggerGroup
         className={`relative z-10 text-center ${narrow ? "narrow" : "wrap"}`}
         style={maxWidth ? { maxWidth } : undefined}

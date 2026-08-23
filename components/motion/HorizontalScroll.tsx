@@ -39,7 +39,7 @@ export default function HorizontalScroll({
   // The track travels from just off the right edge to just off the left
   // edge — the exact distance depends on content length/viewport, so this
   // uses a percentage-based transform rather than a fixed pixel distance.
-  const x = useTransform(scrollYProgress, [0, 1], ["8%", "-45%"]);
+  const x = useTransform(scrollYProgress, [0, 1], ["15%", "-60%"]);
 
   const track = (
     <div className="flex items-center gap-10 whitespace-nowrap text-[clamp(28px,6vw,64px)] font-serif font-semibold text-foreground">

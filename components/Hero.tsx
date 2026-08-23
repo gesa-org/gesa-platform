@@ -4,6 +4,7 @@ import HighlightedText from '@/components/ui/HighlightedText';
 import Reveal from '@/components/motion/Reveal';
 import ScrollText from '@/components/motion/ScrollText';
 import ParallaxMedia from '@/components/motion/ParallaxMedia';
+import ParallaxLayer from '@/components/motion/ParallaxLayer';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
 
@@ -94,16 +95,23 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
           while the media card below is free to bleed past the section's own
           top edge and tuck under the sticky header. */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-accent-soft rounded-full blur-[100px] opacity-60 translate-x-1/3 -translate-y-1/4"></div>
+        {/* Phase 46 — wrapped in ParallaxLayer for the same background-layer
+            drift added to Home's glow blob; the existing translate-x/y
+            utility classes on the blob itself are untouched, since the
+            parallax transform is applied one level up on the wrapper
+            rather than fighting with those Tailwind transforms directly. */}
+        <ParallaxLayer speed={35} className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-accent-soft rounded-full blur-[100px] opacity-60 translate-x-1/3 -translate-y-1/4"></div>
 
-        {/* Faint line-art doodles for texture, matching the reference mockup */}
-        <Globe2 className="absolute left-[6%] top-[38%] h-24 w-24 text-foreground opacity-[0.05]" strokeWidth={1} />
-        <Globe2 className="absolute left-[28%] top-[6%] h-14 w-14 text-foreground opacity-[0.05]" strokeWidth={1} />
-        <Link2 className="absolute left-[2%] top-[10%] h-16 w-16 -rotate-12 text-foreground opacity-[0.05]" strokeWidth={1} />
-        <Link2 className="absolute left-[22%] top-[70%] h-12 w-12 rotate-45 text-foreground opacity-[0.05]" strokeWidth={1} />
+          {/* Faint line-art doodles for texture, matching the reference mockup */}
+          <Globe2 className="absolute left-[6%] top-[38%] h-24 w-24 text-foreground opacity-[0.05]" strokeWidth={1} />
+          <Globe2 className="absolute left-[28%] top-[6%] h-14 w-14 text-foreground opacity-[0.05]" strokeWidth={1} />
+          <Link2 className="absolute left-[2%] top-[10%] h-16 w-16 -rotate-12 text-foreground opacity-[0.05]" strokeWidth={1} />
+          <Link2 className="absolute left-[22%] top-[70%] h-12 w-12 rotate-45 text-foreground opacity-[0.05]" strokeWidth={1} />
 
-        {/* Soft multi-color glow behind the headline */}
-        <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--clay)_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />
+          {/* Soft multi-color glow behind the headline */}
+          <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--clay)_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />
+        </ParallaxLayer>
       </div>
 
       <div className="max-w-[1160px] mx-auto px-6 relative z-10">
@@ -163,7 +171,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               rendering the media twice. */}
           <div className="relative rounded-[26px] overflow-hidden shadow-2xl aspect-[9/10] bg-gradient-to-br from-primary to-accent lg:hidden">
             <div className="absolute inset-0 bg-black/10 z-10"></div>
-            <ParallaxMedia intensity={14} scale={1.05} className="absolute inset-0 z-0">
+            <ParallaxMedia intensity={20} scale={1.07} className="absolute inset-0 z-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={content.backgroundImage}
@@ -209,7 +217,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
             Content Manager wouldn't have updated this large-screen version.
             Fixed to read the same field, and replaced the photo itself (real
             people's faces) with a painting for the reason described below. */}
-        <ParallaxMedia intensity={22} scale={1.06} className="absolute inset-0 z-0">
+        <ParallaxMedia intensity={32} scale={1.08} className="absolute inset-0 z-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={content.backgroundImage}

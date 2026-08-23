@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { Video, MapPin, Users, Clock, User } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Tables } from "@/lib/database.types";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 import type { SupportGroupsDirectoryContent } from "@/lib/content";
+import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
+import { MOTION_DURATION, MOTION_EASE } from "@/components/motion/config";
 
 export const SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK: SupportGroupsDirectoryContent = {
   published: true,
@@ -16,6 +19,16 @@ export const SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK: SupportGroupsDirectoryCo
   successHeading: "You're registered",
 };
 
+// Phase 46 — Roy flagged that the Support Groups page read as effectively
+// unanimated compared to Home/About. This is the actual main content of
+// that page (the group-picker list and its live preview card), so it's
+// the highest-leverage place to add motion here: the group list gets the
+// same staggered card entrance used everywhere else, and — the bigger,
+// more "advanced" addition — the preview card on the right now crossfades
+// its content when a different group is selected instead of snapping
+// instantly, via AnimatePresence keyed on the active group's id. No
+// change to the selection logic, the registration flow, the modal, or any
+// copy — purely how the already-existing state transition is presented.
 export default function SupportGroupsInteractive({
   groups,
   content = SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK,
@@ -38,92 +51,109 @@ export default function SupportGroupsInteractive({
 
   return (
     <div className="mt-11 mt-[44px] grid gap-11 gap-[44px] lg:grid-cols-[1fr_0.92fr] lg:items-center">
-      <div className="flex flex-col gap-3.5">
+      <StaggerGroup className="flex flex-col gap-3.5">
         {groups.map((g) => {
           const isOn = g.id === activeId;
           return (
-            <button
-              key={g.id}
-              onClick={() => setActiveId(g.id)}
-              className={`relative rounded-2xl border p-5 text-left outline-none transition-all duration-300 ${
-                isOn
-                  ? "border-primary bg-primary text-white shadow-lg"
-                  : "border-border bg-[#eef1f6] hover:border-accent hover:shadow-soft"
-              }`}
-            >
-              <span
-                className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                  isOn ? "border-white/30 bg-[#e3e8ef]/15 text-white" : "border-border bg-card text-muted-fg"
+            <StaggerItem key={g.id}>
+              <button
+                onClick={() => setActiveId(g.id)}
+                className={`relative w-full rounded-2xl border p-5 text-left outline-none transition-all duration-300 ${
+                  isOn
+                    ? "border-primary bg-primary text-white shadow-lg"
+                    : "border-border bg-[#eef1f6] hover:border-accent hover:shadow-soft"
                 }`}
               >
-                {g.format === "online" ? <Video size={12} /> : <MapPin size={12} />}
-                {g.format === "online" ? "Online" : "In person"}
-              </span>
-              <h3 className="text-[19px]">{g.title}</h3>
-              {isOn && (
-                <>
-                  <p className="mt-1.5 text-sm leading-relaxed text-white/85">{g.description}</p>
-                  <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-white/85">
-                    <span className="inline-flex items-center gap-1.5">
-                      <User size={13} /> {g.facilitator_name}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock size={13} /> {g.schedule}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Users size={13} /> {g.capacity} seats
-                    </span>
-                  </div>
-                </>
-              )}
-            </button>
+                <span
+                  className={`absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                    isOn ? "border-white/30 bg-[#e3e8ef]/15 text-white" : "border-border bg-card text-muted-fg"
+                  }`}
+                >
+                  {g.format === "online" ? <Video size={12} /> : <MapPin size={12} />}
+                  {g.format === "online" ? "Online" : "In person"}
+                </span>
+                <h3 className="text-[19px]">{g.title}</h3>
+                {isOn && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: MOTION_DURATION.micro, ease: MOTION_EASE }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <p className="mt-1.5 text-sm leading-relaxed text-white/85">{g.description}</p>
+                    <div className="mt-2 flex flex-wrap gap-x-3.5 gap-y-1.5 text-[12.5px] text-white/85">
+                      <span className="inline-flex items-center gap-1.5">
+                        <User size={13} /> {g.facilitator_name}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock size={13} /> {g.schedule}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Users size={13} /> {g.capacity} seats
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </button>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerGroup>
 
       <div className="flex min-h-[420px] items-center justify-center">
         <div className="w-full max-w-[420px] rounded-[26px] bg-gradient-to-br from-primary to-accent p-1.5 shadow-lg">
           <div className="flex min-h-[380px] flex-col overflow-hidden rounded-[20px] bg-card">
-            {active.format === "online" ? (
-              <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#3a4150] to-primary p-6 text-white">
-                <div className="text-center text-sm opacity-90">{active.title}</div>
-                <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/35 bg-[#e3e8ef]/15 font-serif text-3xl">
-                  {(active.facilitator_name ?? "?")
-                    .split(" ")
-                    .map((w) => w[0])
-                    .join("")}
-                </div>
-                <div className="mb-2 flex gap-4">
-                  {["mic", "video", "end"].map((k) => (
-                    <span
-                      key={k}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                        k === "end" ? "bg-destructive text-white" : "bg-[#e3e8ef]/90 text-[#2b3140]"
-                      }`}
-                    >
-                      {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-1 flex-col bg-[#e3e8ef] p-6">
-                <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-[#e3e8ef]/70 text-primary">
-                  <MapPin size={30} />
-                </div>
-                <div className="text-sm text-[#3f4653]">
-                  <div className="flex items-center gap-2 py-1">
-                    <MapPin size={14} /> {active.location}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: MOTION_DURATION.reveal, ease: MOTION_EASE }}
+                className="flex flex-1 flex-col"
+              >
+                {active.format === "online" ? (
+                  <div className="flex flex-1 flex-col items-center justify-end gap-4 bg-gradient-to-br from-[#3a4150] to-primary p-6 text-white">
+                    <div className="text-center text-sm opacity-90">{active.title}</div>
+                    <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-white/35 bg-[#e3e8ef]/15 font-serif text-3xl">
+                      {(active.facilitator_name ?? "?")
+                        .split(" ")
+                        .map((w) => w[0])
+                        .join("")}
+                    </div>
+                    <div className="mb-2 flex gap-4">
+                      {["mic", "video", "end"].map((k) => (
+                        <span
+                          key={k}
+                          className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                            k === "end" ? "bg-destructive text-white" : "bg-[#e3e8ef]/90 text-[#2b3140]"
+                          }`}
+                        >
+                          {k === "video" ? <Video size={18} /> : k === "end" ? "×" : "•"}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 py-1">
-                    <Clock size={14} /> {active.schedule}
+                ) : (
+                  <div className="flex flex-1 flex-col bg-[#e3e8ef] p-6">
+                    <div className="mb-3 flex h-32 items-center justify-center rounded-xl bg-[#e3e8ef]/70 text-primary">
+                      <MapPin size={30} />
+                    </div>
+                    <div className="text-sm text-[#3f4653]">
+                      <div className="flex items-center gap-2 py-1">
+                        <MapPin size={14} /> {active.location}
+                      </div>
+                      <div className="flex items-center gap-2 py-1">
+                        <Clock size={14} /> {active.schedule}
+                      </div>
+                      <div className="flex items-center gap-2 py-1">
+                        <Users size={14} /> {active.capacity} seats
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 py-1">
-                    <Users size={14} /> {active.capacity} seats
-                  </div>
-                </div>
-              </div>
-            )}
+                )}
+              </motion.div>
+            </AnimatePresence>
             <div className="flex-none p-4">
               <button
                 onClick={() => {

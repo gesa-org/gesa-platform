@@ -4,6 +4,7 @@ import { Sparkle, ShieldCheck, HeartHandshake, Users, ArrowRight } from "lucide-
 import HighlightedText from "@/components/ui/HighlightedText";
 import Reveal from "@/components/motion/Reveal";
 import ScrollText from "@/components/motion/ScrollText";
+import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { HomeContent } from "@/lib/content";
 
@@ -146,6 +147,11 @@ const PATH_IMAGES = [
 // StaggerGroup/StaggerItem entrance as spec section 7. No content, links,
 // or card images changed — this is animation only, layered on the exact
 // markup from Phase 42.
+//
+// Phase 46 — the decorative glow blob behind the headline now drifts
+// slightly on scroll via ParallaxLayer (spec section 10's "background
+// layer, subtle parallax," separate from the content layer's own reveal
+// above it) — a purely cosmetic depth cue, no layout or content change.
 export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: HomeContent }) {
   const cards = [
     { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink },
@@ -155,9 +161,9 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
 
   return (
     <section aria-labelledby="paths-heading" className="relative overflow-hidden pt-16 pb-16 md:pt-20">
-      <div className="pointer-events-none absolute inset-0 z-0">
+      <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute left-1/2 top-0 h-[420px] w-[720px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-accent-soft opacity-50 blur-[110px]" />
-      </div>
+      </ParallaxLayer>
 
       <div className="wrap relative z-10">
         <div className="text-center">

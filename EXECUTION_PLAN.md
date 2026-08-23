@@ -1319,4 +1319,37 @@ git push
 ```
 
 ---
+
+## Phase 46 — Advancing the motion layer: Modal, Support Groups, background depth
+
+Roy's feedback on Phase 45: it read as too static, and Support Groups specifically didn't feel touched at all. Both were fair — Phase 45 deliberately skipped the two biggest interactive surfaces on the site (the modal system, and Support Groups' own group-picker/preview panel) as out of scope for "content reveals," and the reveal distances/durations were tuned conservatively toward the spec's "refinement, not spectacle" end. This phase addresses both without changing any structure, copy, controls, routes, or database behavior — same rule as every phase before it.
+
+**`components/ui/Modal.tsx` — the single most-reused interactive surface site-wide** (booking, intake, and Support Groups registration all share this one component), previously had zero transition: a modal existed at full opacity or didn't exist, with nothing in between. Wrapped it in `AnimatePresence` — backdrop fades, the panel itself does a small scale+fade+rise on open and reverses on close. Same portal target, same escape-key handler, same backdrop-click-to-close, same everything except the transition. This one file change means every modal on the site now animates.
+
+**`components/SupportGroupsInteractive.tsx` — this page's actual main content**, previously fully static: the group-picker list now uses the same `StaggerGroup`/`StaggerItem` entrance as every other card list on the site, and — the more substantial addition — the live preview panel on the right now crossfades its content (via `AnimatePresence mode="wait"`, keyed on the selected group's id) instead of snapping instantly when switching between groups. No change to the selection state, the registration flow, or the modal it opens.
+
+**`components/motion/ParallaxLayer.tsx`** — a new primitive specifically for the decorative background glow/blob elements that already sat behind content on Home, About, and every secondary page's `PageHero` banner (spec section 10's "background layer, subtle parallax," distinct from `ParallaxMedia` which is built for real media inside a clipped frame). Wired into:
+- `components/home/Paths.tsx` (Home) — the blob behind the headline.
+- `components/Hero.tsx` (About) — the whole decorative doodle/glow layer.
+- `components/ui/PageHero.tsx` — since nearly every secondary page (Our Therapists, Support Groups, FAQ, Contact, legal pages) shares this one banner component, this single change gave all of them the same background depth cue at once.
+
+**Turned up the amplitude** in `components/motion/config.ts` — the one file every primitive reads its timing/distance from — since Roy's core complaint was that the existing motion was hard to notice: reveal duration 0.6s -> 0.65s, large 0.85s -> 0.9s, stagger 0.1s -> 0.12s, and fade/rise distances up roughly 25-30% (still inside the spec's own stated ranges, nothing pushed into "spectacle" territory). Also widened the About hero's `ParallaxMedia` intensity/scale on both images, and widened the Home horizontal-scroll statement's travel range, for a more noticeably "cinematic" feel on the two most visible image/motion moments.
+
+**Verification:** scoped `tsc --noEmit` across every new/changed file — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Ran the full unit suite in two batches (sandbox timeout constraints, not a real issue) — **19/19 passing**, including the two suites that actually exercise these motion primitives (`FaqAccordion`, `TherapistsDirectory`).
+
+**Known gaps, honestly flagged:**
+- Still no `next build` run to completion in this sandbox (same ~178-second command-timeout ceiling as every earlier phase that tried) — scoped type-check and the full passing test suite are the available signal; a real `npm run build` locally or via Vercel's own build is worth doing before/at deploy.
+- Deliberately did not add parallax to the small path-card thumbnails on Home (200px-tall, `object-contain` frames) — tried reasoning through it and concluded the payoff was marginal against the spec's own "visual restraint" section for secondary visuals; flagging in case Roy wants it added anyway now that the rest of the site is more animated.
+- Not screenshot- or browser-verified from this sandbox — this phase specifically should get a real look at Support Groups (the group picker + preview crossfade) and a modal opening (Book a Session, or the Support Groups registration flow) after deploy, since those are the two changes with no automated test coverage backing them.
+- Same `.git/index.lock` issue from Phase 45 — still present, still can't be removed from this sandbox; the `del` command below is included again as a reminder.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 46: animate the modal system and Support Groups, add background parallax depth"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
