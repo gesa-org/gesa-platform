@@ -41,12 +41,12 @@ const config: Config = {
         // sections) and a plain-English alias for the high-contrast --amber
         // accent. Additive only — nothing above changed shape, so no
         // existing bg-primary/bg-accent/etc. usage anywhere in the app
-        // needed to change. Phase 37 repointed --amber from bronze to a
-        // dark slate to match the new blue palette; kept this alias name
-        // "slate" rather than the stale "bronze" so it still describes what
-        // the color actually is.
+        // needed to change. --amber went bronze (36) → dark slate (37) →
+        // dark bronze-gold again (38); renamed this alias back to "bronze"
+        // to match what it currently is rather than leaving the stale
+        // Phase 37 name "slate" in place.
         espresso: "var(--espresso)",
-        slate: "var(--amber)",
+        bronze: "var(--amber)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],

@@ -1113,4 +1113,64 @@ git push
 ```
 
 ---
+
+## Phase 38 — Sage-green + gold-line accents, layered onto the blue base
+
+Roy sent the same bathroom photo again and asked to also pull the picture frames' colors — the sage/olive mat green and the thin gold pinstripe between the mat and the frame — into the site. Asked one clarifying question first: layer these on top of the Phase 37 blue theme, or replace blue again with a green+gold system. Roy chose to layer — blue stays the base (background, primary, cards, borders, footer all untouched), only the accent family changes.
+
+**What changed, in `app/globals.css` only:**
+- `--accent` → `#9BA283`, a muted sage/olive green pulled from the picture mats. This is the token already wired to `components/ui/Card.tsx`'s `hover:border-accent` and the Home page's trust-badge icons, so — same as the last two phases — those two spots automatically became "green mat" accents with zero component edits.
+- `--accent-soft` → `#EAF0E4`, a pale sage wash for the same hero-glow-blur and eyebrow-pill backgrounds that have carried this role since Phase 11.
+- `--clay` → `#BFA046`, the thin gold pinstripe color, matching the frames closely — this is the token driving `.eyebrow` label text, the quote icon, the Our Therapists filter's selected radio-dot and hover border, and `Button.tsx`'s `clay` variant border. All of those are already exactly "thin gold line" use cases, so this reads as intended without new code.
+- `--amber` → `#8C6F1F`, a deeper bronze-gold for higher-contrast accent needs than `--clay`. Renamed its Tailwind alias in `tailwind.config.ts` from Phase 37's `slate` back to `bronze` since that's what it is again (confirmed nothing in the app actually used the `slate` class before renaming it — safe).
+- `--background`, `--foreground`, `--card`, `--primary`, `--primary-600`, `--primary-fg`, `--secondary`, `--muted`, `--muted-fg`, `--border`, `--espresso`, `--destructive` — **all unchanged** from Phase 37. The wall blue is still the base everywhere it was.
+
+**Deliberately left out:** the dark wood/black frame color itself. Everything "dark" on the site already has a home in `--primary`/`--espresso` (deep slate), and layering in a third dark tone (a brown) risked muddying the blue base rather than accenting it — flagged this rather than guessing. Happy to add a dedicated frame-brown token if Roy wants it for something specific (e.g., a border treatment) rather than adding it speculatively.
+
+**Verification:** scoped `tsc --noEmit` across every file touched since Phase 36 (this phase only touched two files — `globals.css` and `tailwind.config.ts`, no component logic) came back clean. Grepped for the old Phase 37 slate-blue accent hex values (`#8c97a8`, `#7c8aa0`, `#4a5568`) — the token remap in `globals.css` is the only place they lived, and that's exactly what changed, so no leftover stale hex anywhere else in the app (unlike Phase 36→37, this transition didn't touch any hardcoded component hex, since Footer/Header/SupportGroupsInteractive's hardcoded colors are still the Phase 37 blue tones and weren't part of what Roy asked to change this time).
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified from this sandbox, as with every color phase — worth checking in a browser that the sage green and gold don't feel disconnected from each other where they appear close together (e.g., a card's gold eyebrow label sitting above a green-bordered hover state).
+- Both extracted colors (`#9BA283` sage, `#BFA046` gold) are visual estimates from the photo, not pixel-sampled — same caveat as the wall blue in Phase 37.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 38: layer sage-green and gold-line frame accents onto the blue theme"
+git push
+```
+
+---
+
+## Phase 39 — Remove "Stories of Healing" testimonials section from Home
+
+Roy asked to remove the testimonials section ("Stories of Healing" / "In their words") from the Home page. Removed the `<Testimonials>` usage, its import, and the `getTestimonials()` data fetch from `app/page.tsx` — Home now renders just `Paths` (the landing hero) and `Stats`. `components/home/Testimonials.tsx` wasn't deleted since files already synced into the project folder can't be removed without confirming first; it's just unused now. `lib/queries.ts`'s `getTestimonials()` and the underlying `testimonials` table are untouched in case this section is wanted back later.
+
+**Verification:** scoped `tsc --noEmit` on `app/page.tsx` and its imports came back clean.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 39: remove Stories of Healing testimonials section from Home"
+git push
+```
+
+---
+
+## Phase 40 — Move "Stories of Healing" testimonials to Support Groups
+
+Completes the move started in Phase 39: Roy sent a screenshot of the testimonials section and asked to place it on the Support Groups page instead of just removing it. Added `getTestimonials()` to the `Promise.all` fetch in `app/support-groups/page.tsx` and rendered `<Testimonials testimonials={testimonials} />` right after the group registration interactive section, inside the same `reveal-page__main` wrapper the rest of the page uses.
+
+`components/home/Testimonials.tsx` itself wasn't moved or modified — it's a generic, self-contained component (props in, no Home-specific logic), so importing it from the Support Groups page works regardless of which folder it physically lives in. The folder name is a little stale now that it's not Home-only, but renaming/relocating it would mean deleting the original file, which isn't allowed without confirming with Roy first — flagged rather than worked around.
+
+**Verification:** scoped `tsc --noEmit` on `app/support-groups/page.tsx`, `app/page.tsx`, `components/home/Testimonials.tsx`, and `lib/queries.ts` came back clean.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 40: move Stories of Healing testimonials to Support Groups page"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

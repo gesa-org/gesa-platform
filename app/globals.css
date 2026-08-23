@@ -6,18 +6,25 @@
 
 @layer base {
   :root {
-    /* Phase 37 — soft powder-blue palette, replacing Phase 36's warm
-       greige/gold system. Extracted from a second interior photo Roy
-       shared (a dusty periwinkle-blue bathroom wall). Same token
-       architecture as Phase 36 — every component still reads bg-primary,
-       text-muted-fg, border-border, bg-accent-soft, bg-clay, etc., so this
-       is a full remap of the *values* only, no component logic touched.
-       Roy asked for a full replacement rather than layering blue on top of
-       the gold system, since gold accents don't read well against blue —
-       so --accent/--clay/--amber moved from the gold family to a
-       cool slate/pewter family instead of just changing hue. --secondary/
-       --muted carry the actual extracted wall color (#b7c3d6) so the site
-       gets a real dose of that photo's color, not just a tint of it. */
+    /* Phase 38 — same powder-blue base as Phase 37 (background, primary,
+       card, muted-fg, border, secondary/muted, espresso all unchanged —
+       Roy asked to layer on top, not replace again). What changed: the
+       accent family (--accent/--accent-soft/--clay/--clay-soft/--amber/
+       --amber-soft) moved from cool slate-blue to the sage-green mat color
+       and thin gold line trim seen in the picture frames in the same photo
+       the blue wall came from. --accent = the mat's muted sage/olive green
+       (the most-used small accent — Card.tsx's hover border, Home's trust
+       badge icons — so hovering a card or looking at those icons now reads
+       as "green mat," same sparing role slate played in Phase 37 and gold
+       played in Phase 36). --clay = the thin gold pinstripe between the
+       mat and the frame (eyebrow labels, quote icons, filter radio-dot/
+       hover-border, and the Button.tsx "clay" variant's border — literally
+       a thin gold line, matching the reference). --amber = a deeper bronze
+       gold for higher-contrast accents than --clay. The dark wood/black
+       frame color itself wasn't pulled in as a new token — everything dark
+       already has a home in --primary/--espresso (deep slate), and adding
+       a third dark tone risked muddying the blue base rather than
+       accenting it; can add a dedicated frame-brown token later if wanted. */
     --background: #eef1f6; /* Powder Ivory — pale blue-white, primary breathing space */
     --foreground: #2b3140; /* Deep Slate — dark blue-charcoal text */
     --card: #e3e8ef; /* Soft Mist — card/surface color */
@@ -25,16 +32,16 @@
     --primary-600: #1d212b; /* darker slate — primary hover/active */
     --primary-fg: #eef1f6; /* Powder Ivory text on primary */
     --secondary: #b7c3d6; /* the extracted wall color — pills, ghost buttons, section bands */
-    --accent: #8c97a8; /* Muted Slate-Silver — icons, thin hover borders (replaces gold) */
-    --accent-soft: #e9ecf2; /* pale blue-silver wash for badge/pill/glow backgrounds */
-    --clay: #7c8aa0; /* darker slate-blue — secondary accent (replaces champagne gold) */
-    --clay-soft: #dce2ea; /* pale slate-blue wash */
+    --accent: #9ba283; /* Sage/Olive Green (picture-mat color) — icons, thin hover borders */
+    --accent-soft: #eaf0e4; /* pale sage wash for badge/pill/glow backgrounds */
+    --clay: #bfa046; /* Muted Gold (frame pinstripe) — eyebrow labels, thin borders, badges */
+    --clay-soft: #f5eeda; /* pale gold wash */
     --muted: #b7c3d6; /* same as --secondary — the extracted wall color */
     --muted-fg: #5c6470; /* cool slate gray — secondary/supporting text */
     --border: #c7d0de; /* soft blue-gray border */
     --destructive: #bb5138; /* unchanged — functional error/status color */
-    --amber: #4a5568; /* dark slate — reserved for high-contrast accents (replaces bronze) */
-    --amber-soft: #dde3ec;
+    --amber: #8c6f1f; /* Dark Bronze Gold — reserved for high-contrast accents */
+    --amber-soft: #ede2c0;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
