@@ -24,6 +24,7 @@ export default function TherapistsDirectoryEditor({ initial }: { initial: Therap
             { key: "maleLabel", label: "Male option label" },
             { key: "femaleLabel", label: "Female option label" },
             { key: "nonbinaryLabel", label: "Non-binary option label" },
+            { key: "noPreferenceLabel", label: "No preference option label" },
           ],
         },
         {

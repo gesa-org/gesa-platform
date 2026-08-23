@@ -1220,4 +1220,31 @@ git push
 ```
 
 ---
+
+## Phase 43 — Duration/gender filter options, and a privacy-motivated image swap on About
+
+Roy asked for three things in one message: add 45 and 30 min as Meeting Duration filter options on Our Therapists, add a "No preference" option to the Gender filter, and replace the About page's "human group" photo with a painting, on the grounds that GESA shouldn't be using real, scraped/stock human faces anywhere on the site — paintings should fill that role instead.
+
+**Meeting duration filter (`components/TherapistsDirectory.tsx`):** this filter was fully data-driven — it only ever showed whatever `session_lengths` values existed across current therapist records, which is why it showed a single "60 min" pill (the only value seeded so far). Rather than seed fake data to force 30/45 to appear, added a fixed `STANDARD_DURATIONS = ["30", "45", "60"]` list that's unioned with whatever the real data contains (so a future 90-min offering would still show up automatically) and sorted numerically. The filter itself still works exactly as before — selecting a duration filters therapists whose `session_lengths` includes it — it just always offers the three standard options now instead of only what happens to be populated.
+
+**Gender filter — "No preference":** the `gender_type` Postgres enum already includes `no_preference` (confirmed in `lib/database.types.ts`), but the UI only ever exposed 3 of its 4 values as buttons. Added a fourth segmented button (widened the grid from 3 to 4 columns) filtering `t.gender === "no_preference"` — the therapist's own stated gender field, not the separate, unrelated `gender_preference` field used elsewhere for client match requests. Added `noPreferenceLabel` to `TherapistsDirectoryContent` (`lib/content.ts`) and its admin editor (`TherapistsDirectoryEditor.tsx`) so the new button's text is Content Manager-editable like the other three. Patched the existing `component_therapists_directory` row on both Production and Dev Supabase projects with `noPreferenceLabel: "No preference"` — `getPageContent()` shallow-merges over the fallback so this wasn't strictly required for the field not to break, but keeps the saved row's shape in sync with the type for when an admin next opens that editor tab.
+
+**About page image (`components/Hero.tsx`, which is what actually renders the About page's top section since Phase 30):** the only human-photo image on this page is the Hero's `backgroundImage` — a Pexels stock photo of a group therapy session, i.e. real people's faces sourced from a stock site. Replaced it with a blue-toned abstract painting (Pexels photo 3518623, chosen to match the site's own blue/gold brand palette from Phases 37-38) rather than a figurative painting of people, since a painted depiction of specific real faces would just reintroduce the same identity concern in a different medium. Updated `HERO_CONTENT_FALLBACK.backgroundImage` and the alt text on both `<img>` tags in `Hero.tsx` (the mobile/tablet card and the large-screen bleed card). Found and fixed a real bug while in there: the large-screen `<img>` had its `src` hardcoded to the old Pexels URL directly instead of reading `content.backgroundImage` like its mobile/tablet twin — meaning a future Content Manager edit to this field would only have updated half the page. Both now read from `content`. Patched the existing `page_about_hero` row on both Supabase projects (it was a real published row with the old URL, so the code fallback alone wouldn't have taken effect on the live site). This field stays Content Manager-editable, so Roy can swap in a different painting later from `/admin/content` without needing a code change.
+
+**Verification:** scoped `tsc --noEmit` covering `TherapistsDirectory.tsx`, `Hero.tsx`, `TherapistsDirectoryEditor.tsx`, `FlatFieldsEditor.tsx`, `content.ts`, `database.types.ts`, and the About/Our Therapists pages — clean, no errors. Grepped the same files for the unescaped-apostrophe-in-JSX pattern — no matches.
+
+**Known gaps, honestly flagged:**
+- The new painting is abstract rather than figurative, so it no longer visually implies "a group of people supporting each other" the way the old photo did — it's a deliberate trade (any figurative painting of specific faces would reintroduce the identity concern), but worth flagging in case Roy wants a different kind of image (e.g. a painting of hands, or a more symbolic/illustrative piece) instead of pure abstract art.
+- Couldn't reach Wikimedia Commons or similar sources from this sandbox to source a public-domain figurative painting (e.g. Van Gogh's *The Good Samaritan*, which would have fit the "helping someone in need" theme well) — this sandbox's network only allows a fixed set of domains, and Wikimedia wasn't reachable. Went with a Pexels image instead since that domain is already used elsewhere in this codebase for the same purpose.
+- Same stray `tsconfig.check.json`/`tsconfig.check2.json` files from earlier phases are still sitting in the project root — still can't remove them without confirming with Roy first.
+- Not screenshot-verified from this sandbox — worth a look at Our Therapists' filter sidebar and the About page hero on a real browser after deploy.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git add -A
+git commit -m "Phase 43: add 30/45 min and No preference filter options, swap About hero photo for a painting"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -19,6 +19,7 @@ export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent =
   maleLabel: "Male",
   femaleLabel: "Female",
   nonbinaryLabel: "Non-binary",
+  noPreferenceLabel: "No preference",
   joinAsTherapistLabel: "Join us as a therapist",
   applyFiltersLabel: "Apply filters",
   noResultsMessage:
@@ -28,6 +29,16 @@ export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent =
 function unique(values: string[]) {
   return Array.from(new Set(values)).sort();
 }
+
+// Phase 43 — the "Meeting duration" filter used to be built purely from
+// whatever session_lengths values happened to exist across current
+// therapist records, so with only 60-minute sessions seeded it showed a
+// single "60 min" pill. Roy asked for 45 and 30 min to be selectable too.
+// Rather than filter on live data alone (which would silently drop back to
+// one option again if the data changed), the pills are now this fixed,
+// standard set — unioned with any other real value the data happens to
+// contain (so a future 90-min offering still shows up automatically).
+const STANDARD_DURATIONS = ["30", "45", "60"];
 
 // Shared pill styling for the radio-style "Definition" list and the
 // segmented "Duration"/"Gender" button grids — kept as one function so the
@@ -68,10 +79,12 @@ export default function TherapistsDirectory({
 
   const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties)), [therapists]);
   const langs = useMemo(() => unique(therapists.flatMap((t) => t.languages)), [therapists]);
-  const durations = useMemo(
-    () => unique(therapists.flatMap((t) => t.session_lengths)),
-    [therapists]
-  );
+  const durations = useMemo(() => {
+    const fromData = therapists.flatMap((t) => t.session_lengths);
+    return Array.from(new Set([...STANDARD_DURATIONS, ...fromData])).sort(
+      (a, b) => Number(a) - Number(b)
+    );
+  }, [therapists]);
 
   const filtered = therapists.filter(
     (t) =>
@@ -167,13 +180,16 @@ export default function TherapistsDirectory({
           ))}
         </div>
 
-        {/* Gender — same segmented style, three options (the third,
-            non-binary, already had a label defined in this file but no UI
-            to select it before now). */}
+        {/* Gender — same segmented style. Phase 43 added a fourth option,
+            "No preference" (gender === "no_preference"), which the
+            underlying gender_type enum already supported but no button
+            here ever exposed — this is a client's own stated gender, not
+            the separate "gender_preference" field used elsewhere for match
+            requests. */}
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted-fg">
           {content.genderLabel}
         </label>
-        <div className="mb-5 grid grid-cols-3 gap-2">
+        <div className="mb-5 grid grid-cols-4 gap-2">
           <button
             type="button"
             onClick={() => setGender(gender === "man" ? "" : "man")}
@@ -197,6 +213,14 @@ export default function TherapistsDirectory({
           >
             <span className="text-[17px] leading-none">⊖</span>
             <span className="text-[11px] leading-tight">{content.nonbinaryLabel}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setGender(gender === "no_preference" ? "" : "no_preference")}
+            className={optionClass(gender === "no_preference", "flex flex-col items-center gap-1 py-2.5")}
+          >
+            <span className="text-[17px] leading-none">✦</span>
+            <span className="text-[11px] leading-tight">{content.noPreferenceLabel}</span>
           </button>
         </div>
 

@@ -14,7 +14,7 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   ctaPrimaryHref: "/find-your-therapist",
   ctaSecondaryLabel: "Explore support groups",
   ctaSecondaryHref: "/support-groups",
-  backgroundImage: "https://images.pexels.com/photos/7176305/pexels-photo-7176305.jpeg?auto=compress&cs=tinysrgb&w=1200",
+  backgroundImage: "https://images.pexels.com/photos/3518623/pexels-photo-3518623.jpeg?auto=compress&cs=tinysrgb&w=1200",
 };
 
 // Phase 17 — Roy shared a mockup (built with Claude Design) asking to bring
@@ -54,6 +54,19 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // via site_content key "page_about_hero". The literals in
 // HERO_CONTENT_FALLBACK above are exactly today's live copy, so publishing
 // the seeded row changes nothing visually until an admin actually edits it.
+//
+// Phase 43 — Roy asked for this section's photo (a real Pexels photo of a
+// group therapy session, i.e. real people's faces sourced from a stock
+// site) to be replaced by a painting instead, on privacy grounds: GESA
+// doesn't want to put real, scraped/stock human faces on the site at all,
+// even in a generic illustrative spot like this one. Swapped in a blue-
+// toned abstract painting (Pexels photo 3518623, matching the site's own
+// blue/gold brand palette from Phases 37-38) rather than a figurative
+// painting of people, since any painted depiction of specific real faces
+// would reintroduce the same identity concern in a different medium. This
+// field is Content Manager-editable, so a different painting (figurative
+// or abstract) can be swapped in later from /admin/content without a code
+// change.
 export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
     <section className="relative bg-background border-b border-border pt-16 pb-20">
@@ -118,7 +131,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={content.backgroundImage}
-              alt="A group therapy session"
+              alt="An abstract painting in GESA's brand colors"
               className="w-full h-full object-cover z-0 relative"
             />
             <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
@@ -152,11 +165,17 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
         {/* Phase 18 — swapped the looping video back for a static photo. Roy's
             reference mockup showed a still image, not motion, and asked for an
             exact match — a playing video is a real, meaningful difference from
-            a static mockup, so a still photo fits the ask better here. */}
+            a static mockup, so a still photo fits the ask better here.
+            Phase 43 — this <img> was still hardcoded to the old Pexels photo
+            URL directly rather than reading `content.backgroundImage` like
+            its mobile/tablet twin above did, so swapping the image via the
+            Content Manager wouldn't have updated this large-screen version.
+            Fixed to read the same field, and replaced the photo itself (real
+            people's faces) with a painting for the reason described below. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://images.pexels.com/photos/7176305/pexels-photo-7176305.jpeg?auto=compress&cs=tinysrgb&w=1200"
-          alt="A group therapy session"
+          src={content.backgroundImage}
+          alt="An abstract painting in GESA's brand colors"
           className="w-full h-full object-cover z-0 relative"
         />
 

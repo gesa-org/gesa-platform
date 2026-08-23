@@ -169,6 +169,7 @@ export type TherapistsDirectoryContent = {
   maleLabel: string;
   femaleLabel: string;
   nonbinaryLabel: string;
+  noPreferenceLabel: string;
   joinAsTherapistLabel: string;
   applyFiltersLabel: string;
   noResultsMessage: string;
