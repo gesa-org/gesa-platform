@@ -19,6 +19,8 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   badge2Label: "100% Free Sessions",
   badge3Label: "Global Community",
   footerNote: "Free, confidential sessions · verified volunteer therapists · secure communication",
+  purposeTicker:
+    "Because no one should face emotional pain alone\nVerified volunteer therapists, giving their time freely\nUp to six free sessions — cost is never why someone goes without care\nA global community of care, across borders and languages\nConfidential, dignified support, always free at the point of need",
   card1Title: "In crisis right now",
   card1Description:
     "For anyone shaken by war, terror, or disaster. Fast, gentle help when you can't wait — approximately six free sessions to start.",

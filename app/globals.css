@@ -170,6 +170,38 @@
   }
 }
 
+/* Phase 51 — continuous "news line" ticker on Home (components/motion/
+   NewsTicker.tsx), replacing the old scroll-linked badge/card repeat.
+   The component renders the item list twice back-to-back inside this
+   track and this flat, linear, infinitely-looping -50% translate makes
+   the seam between the two identical halves invisible. Paused on hover/
+   focus (so a reader can finish a phrase) via the sibling selector, and
+   fully disabled under prefers-reduced-motion — NewsTicker itself never
+   renders the animated markup in that case, but the reduce-motion rule
+   is kept here too as a defense-in-depth belt-and-suspenders guard. */
+.news-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: news-ticker-scroll 34s linear infinite;
+}
+.news-ticker:hover .news-ticker-track,
+.news-ticker:focus-within .news-ticker-track {
+  animation-play-state: paused;
+}
+@keyframes news-ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-ticker-track {
+    animation: none;
+  }
+}
+
 /* Phase 48 — Roy sent a reference mockup for the Support Groups page's
    group cards and preview panel: a dark charcoal-navy "marbled" surface
    with thin gold veins, gold serif headings, and gold-bordered pills,

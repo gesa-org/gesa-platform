@@ -1,6 +1,6 @@
 import Paths, { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import Stats from "@/components/home/Stats";
-import HorizontalScroll from "@/components/motion/HorizontalScroll";
+import NewsTicker from "@/components/motion/NewsTicker";
 import { getPageContent } from "@/lib/content";
 
 export const revalidate = 300;
@@ -25,30 +25,29 @@ export const revalidate = 300;
 // it since nothing on this page reads it anymore; the "testimonials" table
 // and lib/queries.ts's getTestimonials() are untouched in case they're
 // wanted again later.
-// Phase 45 — added the reusable horizontal scroll-linked statement here
-// (spec section 6), between the path cards and the stats band. Its words
-// are pulled directly from this page's own existing, already-published
-// copy (the three trust badges + the three path titles from `homeContent`
-// — see components/home/Paths.tsx) rather than any new or invented text,
-// per the spec's "must come from GESA's existing content or approved GESA
-// copy" rule. Disables its own scroll-linked movement on mobile
-// automatically (see components/motion/HorizontalScroll.tsx).
+// Phase 45 added a scroll-linked statement row here (spec section 6),
+// between the path cards and the stats band, built from this page's own
+// trust-badge and path-card labels.
+//
+// Phase 51 — Roy flagged that row as redundant: it just repeated text
+// already visible a few pixels away (the badges in the hero, the card
+// titles below), which read as filler rather than a real design element.
+// Replaced it with NewsTicker, a genuinely continuous "news line" marquee
+// carrying its own, distinct copy about GESA's purpose/mission
+// (`homeContent.purposeTicker` — see the fallback in
+// components/home/Paths.tsx, distilled from the About page's existing
+// mission/how-it-works copy, not invented). The old HorizontalScroll
+// primitive (components/motion/HorizontalScroll.tsx) is left in place,
+// unused, since it's a valid general-purpose scroll-linked effect that
+// might fit somewhere else later — not deleted per the standing rule on
+// removing files from the synced project folder without confirming first.
 export default async function Home() {
   const homeContent = await getPageContent("page_home", HOME_CONTENT_FALLBACK);
-
-  const horizontalStatement = [
-    homeContent.badge1Label,
-    homeContent.badge2Label,
-    homeContent.badge3Label,
-    homeContent.card1Title,
-    homeContent.card2Title,
-    homeContent.card3Title,
-  ];
 
   return (
     <div className="reveal-page__main flex flex-col">
       <Paths content={homeContent} />
-      <HorizontalScroll items={horizontalStatement} className="border-y border-border bg-muted py-10 md:py-14" />
+      <NewsTicker items={homeContent.purposeTicker.split("\n")} className="border-y border-border bg-muted py-5" />
       <Stats />
     </div>
   );

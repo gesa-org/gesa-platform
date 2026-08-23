@@ -1474,4 +1474,33 @@ git push
 ```
 
 ---
+
+## Phase 51 — Home: redundant badge/card-repeat row replaced with a real news ticker
+
+Roy flagged the scroll-linked row between Home's path cards and stats band (Phase 45's `HorizontalScroll`, showing the three trust badges + three card titles with arrows between them) as redundant — it just repeated text already visible a few pixels away — and asked for it to become a genuinely continuous "news line" ticker about GESA's purpose/goal instead, with its own distinct copy.
+
+**New component, `components/motion/NewsTicker.tsx`:** a real infinite marquee, not a scroll-linked drift — the item list renders twice back-to-back in a track that loops a flat `-50%` `translateX` on a CSS animation (`.news-ticker-track` in `app/globals.css`), so with both halves identical the loop seam is invisible. The second copy is `aria-hidden` so screen readers hear each phrase once. Pauses on hover/focus, and — matching every other motion primitive in this codebase — drops to a plain, real-touch-scrollable static row under `prefers-reduced-motion` rather than trying to animate a reduced-motion-safe version of a marquee.
+
+**New copy, not a repeat of nearby UI text:** added a `purposeTicker` field to `HomeContent` (`lib/content.ts`) — a single newline-separated string, split into items at render time. Its fallback value (in `components/home/Paths.tsx`) is five short phrases distilled from GESA's own existing, already-published mission copy (the About page's mission paragraphs and how-it-works points, and Home's own footer note) — "Because no one should face emotional pain alone," "Verified volunteer therapists, giving their time freely," "Up to six free sessions — cost is never why someone goes without care," "A global community of care, across borders and languages," "Confidential, dignified support, always free at the point of need." Real GESA claims already made elsewhere on the site, not new invented copy.
+
+**`app/page.tsx`:** swapped `HorizontalScroll` (fed by badge/card labels) for `NewsTicker` (fed by `homeContent.purposeTicker`). `components/motion/HorizontalScroll.tsx` itself is left in place, unused — it's still a valid general-purpose primitive, not deleted per the standing rule on removing files from the synced project folder without confirming first.
+
+**`components/admin/content/HomeEditor.tsx`:** added a "News ticker" field group (one multiline field, "one phrase per line") so the ticker's copy stays Content Manager-editable, matching every other field on this page since Phase 35.
+
+**Verification:** scoped `tsc --noEmit` across `lib/content.ts`, `components/home/Paths.tsx`, `components/motion/NewsTicker.tsx`, `app/page.tsx`, and `components/admin/content/HomeEditor.tsx` — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Confirmed `getPageContent`'s shallow-merge means the already-published `page_home` row (which predates this field) still resolves `purposeTicker` from the fallback correctly with no Supabase update required — verified by reading `lib/content.ts`'s merge logic directly rather than assuming.
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified from this sandbox — worth watching the actual loop/pause-on-hover timing and confirming the phrase length/speed feels like a comfortable read, not too fast.
+- The published `page_home` Supabase row (prod + dev) doesn't have an explicit `purposeTicker` value yet — it doesn't need one for the fallback to work correctly, but the first save from the new "News ticker" editor field will persist whatever's showing (the fallback text) as the real stored value from then on.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 51: replace Home's redundant badge/card-repeat row with a continuous purpose-ticker marquee"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

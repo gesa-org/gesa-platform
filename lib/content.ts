@@ -60,6 +60,11 @@ export type HomeContent = {
   badge2Label: string;
   badge3Label: string;
   footerNote: string;
+  // Phase 51 — the continuous "news line" ticker below the hero. One
+  // phrase per line (split on "\n" wherever this is read), distinct from
+  // the trust badges/card titles above rather than repeating them — see
+  // components/motion/NewsTicker.tsx.
+  purposeTicker: string;
   card1Title: string;
   card1Description: string;
   card1CtaLabel: string;

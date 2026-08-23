@@ -60,6 +60,17 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
           heading: "Closing note",
           fields: [{ key: "footerNote", label: "Note under the path cards" }],
         },
+        {
+          heading: "News ticker",
+          fields: [
+            {
+              key: "purposeTicker",
+              label: "Ticker phrases",
+              multiline: true,
+              help: "One phrase per line — each becomes a separate item in the continuously-scrolling ticker below the hero.",
+            },
+          ],
+        },
       ]}
     />
   );
