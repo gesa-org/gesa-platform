@@ -19,7 +19,7 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   ctaPrimaryHref: "/find-your-therapist",
   ctaSecondaryLabel: "Explore support groups",
   ctaSecondaryHref: "/support-groups",
-  backgroundImage: "/images/about/hero-painting.jpg",
+  backgroundImage: "/images/about/hero-painting-v2.jpg",
 };
 
 // Phase 17 — Roy shared a mockup (built with Claude Design) asking to bring
@@ -98,10 +98,12 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
     <section className="gold-banner relative border-b border-border pt-16 pb-20">
-      {/* Decorative Background — overflow-hidden lives here rather than on the
-          section itself, so the glow/doodle layer stays clipped to the hero
-          while the media card below is free to bleed past the section's own
-          top edge and tuck under the sticky header. */}
+      {/* Decorative Background — kept as its own absolutely-positioned,
+          overflow-hidden layer (rather than putting overflow-hidden on the
+          section itself) purely so this glow/doodle texture stays clipped
+          to the hero bounds. Phase 50 removed the old media panel that used
+          to bleed past the section's top edge, but this layer's own
+          structure didn't need to change either way. */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Phase 46 — wrapped in ParallaxLayer for the same background-layer
             drift added to Home's glow blob; the existing translate-x/y
@@ -173,21 +175,32 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
             </StaggerGroup>
           </div>
 
-          {/* Hero Image / Media — contained card on mobile/tablet, and on large
-              screens (see the twin block below) replaced by a version that
-              bleeds to the viewport's right edge. Hidden at lg+ to avoid
-              rendering the media twice. */}
-          <div className="relative rounded-[26px] overflow-hidden shadow-2xl aspect-[9/10] bg-gradient-to-br from-primary to-accent lg:hidden">
+          {/* Hero Image / Media — Phase 50: Roy sent a reference screenshot
+              showing this painting displayed much smaller and fully
+              contained (a modest square box beside the text) rather than
+              the large asymmetric panel this used to bleed to the viewport
+              edge as. Replaced the old two-block setup (a contained
+              mobile/tablet card plus a separate absolute, edge-bleeding
+              lg+ panel) with one unified, in-flow square card that's used
+              at every breakpoint, capped at 460px so it stays a compact
+              square even on wide screens instead of stretching. No text,
+              links, or the trust-chip overlay's copy changed — only the
+              media container's size/positioning and the image itself
+              (the new painting Roy provided, which folds the same hands/
+              light motif together with a boot, a seated figure, and a
+              small group — echoing the veteran/crisis/community paths
+              elsewhere on the site). */}
+          <div className="relative mx-auto lg:mx-0 lg:ml-auto w-full max-w-[460px] aspect-square rounded-[26px] overflow-hidden shadow-2xl bg-gradient-to-br from-primary to-accent">
             <div className="absolute inset-0 bg-black/10 z-10"></div>
             <ParallaxMedia intensity={20} scale={1.07} className="absolute inset-0 z-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={content.backgroundImage}
-                alt="A painting of hands cradling a glowing form within layered leaves"
+                alt="A painting of hands cradling a glowing light, with a boot, a seated figure, and a small group woven into the surrounding leaves"
                 className="w-full h-full object-cover relative"
               />
             </ParallaxMedia>
-            <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
+            <div className="absolute left-5 bottom-5 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
               <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
                 <HeartHandshake size={20} />
               </div>
@@ -196,52 +209,6 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
                 Sessions Completed
               </div>
             </div>
-          </div>
-          {/* Spacer to reserve the second grid track's width so the text column
-              doesn't stretch full-width once the real media card (below,
-              positioned relative to the section rather than this max-width
-              wrapper) bleeds off to the side. */}
-          <div className="hidden lg:block" aria-hidden="true" />
-        </div>
-      </div>
-
-      {/* Hero Image / Media, large screens only — bleeds to the right edge of
-          the viewport and tucks slightly under the sticky header, matching
-          the editorial "breaking the frame" look from the reference. It's
-          positioned relative to this full-width <section>, not the max-width
-          wrapper above, which is what lets it reach the actual browser edge
-          instead of stopping at the 1160px content boundary. The header's
-          z-index (40) sits above this block's (10), so the overlap at the
-          top resolves cleanly with no stacking bug. */}
-      <div className="hidden lg:block absolute right-0 top-[-56px] bottom-0 z-10 w-[48vw] max-w-[760px] min-h-[560px] overflow-hidden rounded-l-[26px] shadow-2xl bg-gradient-to-br from-primary to-accent">
-        <div className="absolute inset-0 bg-black/10 z-10"></div>
-        {/* Phase 18 — swapped the looping video back for a static photo. Roy's
-            reference mockup showed a still image, not motion, and asked for an
-            exact match — a playing video is a real, meaningful difference from
-            a static mockup, so a still photo fits the ask better here.
-            Phase 43 — this <img> was still hardcoded to the old Pexels photo
-            URL directly rather than reading `content.backgroundImage` like
-            its mobile/tablet twin above did, so swapping the image via the
-            Content Manager wouldn't have updated this large-screen version.
-            Fixed to read the same field, and replaced the photo itself (real
-            people's faces) with a painting for the reason described below. */}
-        <ParallaxMedia intensity={32} scale={1.08} className="absolute inset-0 z-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={content.backgroundImage}
-            alt="A painting of hands cradling a glowing form within layered leaves"
-            className="w-full h-full object-cover relative"
-          />
-        </ParallaxMedia>
-
-        {/* Trust Chip Overlay */}
-        <div className="absolute left-6 bottom-6 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
-          <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
-            <HeartHandshake size={20} />
-          </div>
-          <div className="text-[13px] font-semibold text-foreground">
-            Over <span className="text-primary font-bold">5,000+</span><br/>
-            Sessions Completed
           </div>
         </div>
       </div>
