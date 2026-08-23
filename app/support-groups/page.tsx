@@ -23,6 +23,9 @@ export const revalidate = 60;
 // self-contained component either way — importing it from here works fine
 // regardless of which folder it physically sits in). No changes to the
 // component itself or to the testimonials data/table.
+//
+// Phase 47 — banner now uses the gold background treatment (`gold` prop
+// on PageHero) per Roy's request; copy/labels/registration flow unchanged.
 export default async function SupportGroupsPage() {
   const [groups, content, directoryContent, testimonials] = await Promise.all([
     getSupportGroups(),
@@ -33,7 +36,7 @@ export default async function SupportGroupsPage() {
 
   return (
     <div className="reveal-page__main">
-      <PageHero icon={Users2} eyebrow={content.eyebrow} title={content.title} description={content.description} />
+      <PageHero gold icon={Users2} eyebrow={content.eyebrow} title={content.title} description={content.description} />
       <section className="section wrap pt-0">
         <SupportGroupsInteractive groups={groups} content={directoryContent} />
       </section>

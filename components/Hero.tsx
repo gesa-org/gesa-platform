@@ -87,9 +87,17 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // — this is exactly the kind of "major image section" that spec calls
 // out, unlike the small path-card thumbnails on Home which were left
 // static. No copy, links, or layout structure changed.
+//
+// Phase 47 — swapped the section's plain `bg-background` for the same
+// `.gold-banner` treatment added to Home's hero (app/globals.css), per
+// Roy's request to bring that gold background to the About page too.
+// Adjusted only the text colors that would otherwise have low contrast on
+// gold (the eyebrow chip's background, and the subtitle/badges' color,
+// both previously tuned for a pale background) — no copy, links, CTAs, or
+// the painting/media panel changed.
 export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
-    <section className="relative bg-background border-b border-border pt-16 pb-20">
+    <section className="gold-banner relative border-b border-border pt-16 pb-20">
       {/* Decorative Background — overflow-hidden lives here rather than on the
           section itself, so the glow/doodle layer stays clipped to the hero
           while the media card below is free to bleed past the section's own
@@ -119,7 +127,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
           {/* Text Content */}
           <div className="max-w-2xl relative">
             <Reveal type="fade-up" distance="sm" duration={0.5}>
-              <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-accent-soft rounded-full px-4 py-1.5 mb-5">
+              <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-[#fff8ea]/85 shadow-sm rounded-full px-4 py-1.5 mb-5">
                 <Sparkle size={13} /> {content.eyebrow}
               </span>
             </Reveal>
@@ -129,7 +137,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               </h1>
             </ScrollText>
             <Reveal type="fade-up" delay={0.08}>
-              <p className="text-[20px] text-muted-fg leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
+              <p className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
             </Reveal>
 
             <StaggerGroup className="flex flex-wrap gap-4 mt-6">
@@ -146,7 +154,7 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
             </StaggerGroup>
 
             {/* Badges */}
-            <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-muted-fg text-[14px] font-medium">
+            <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-primary/85 text-[14px] font-medium">
               <StaggerItem className="inline-block">
                 <span className="flex items-center gap-2">
                   <ShieldCheck className="text-accent" size={18} /> Verified Professionals

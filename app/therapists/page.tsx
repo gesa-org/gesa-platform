@@ -13,6 +13,9 @@ export const revalidate = 60;
 // Phase 35 — the banner text is Content Manager-editable via site_content
 // key "page_therapists". Round 2 — the filter sidebar's labels are editable
 // too, via key "component_therapists_directory".
+//
+// Phase 47 — banner now uses the gold background treatment (`gold` prop
+// on PageHero) per Roy's request; copy/labels/filters unchanged.
 export default async function TherapistsPage() {
   const [therapists, content, directoryContent] = await Promise.all([
     getActiveTherapists(),
@@ -22,7 +25,7 @@ export default async function TherapistsPage() {
 
   return (
     <div className="reveal-page__main">
-      <PageHero icon={Users} eyebrow={content.eyebrow} title={content.title} description={content.description} />
+      <PageHero gold icon={Users} eyebrow={content.eyebrow} title={content.title} description={content.description} />
       <section className="section wrap pt-0">
         <TherapistsDirectory therapists={therapists} content={directoryContent} />
       </section>

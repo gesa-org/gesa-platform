@@ -1352,4 +1352,37 @@ git push
 ```
 
 ---
+
+## Phase 47 — Gold banner redesign, Home gallery hero, golden card hover
+
+Roy sent a reference mockup and asked for: the Home landing page rebuilt to match it (a warm gold hero band with a gallery-wall of framed artwork, cards floating over the seam below), the same gold background applied to About, Our Therapists, and Support Groups, and a "golden hover" effect on the three path cards specifically.
+
+**`app/globals.css` — two new reusable classes**, built from the site's existing gold-family tokens (`--clay`, `--amber`, `--clay-soft`) rather than new colors, so this reads as "more of this palette," not a different brand:
+- `.gold-banner` — the brushed-gold gradient background, with a slow diagonal sheen sweep (disabled under `prefers-reduced-motion: reduce`, same rule as every motion effect since Phase 45).
+- `.gold-card-hover` — the golden hover effect Roy asked for on the three path cards: a one-shot diagonal gold-light sweep across the card plus a soft gold glow shadow, both on hover/focus, both reset cleanly so re-hovering always replays the same clean sweep.
+
+**`components/home/Paths.tsx` (Home)** — rebuilt to match the mockup: the hero band now uses `.gold-banner`, the headline/subtitle/badges moved to a two-column layout (text left, on large screens) with a decorative "gallery wall" of the three existing path-artwork files on the right — three overlapping picture-frame boxes (white mat, dark espresso frame, gold-toned frame) at slight rotations, purely decorative (`aria-hidden`, empty `alt`, since the same three images already carry real, meaningful alt text in the cards below). The three cards themselves now sit in a plain section below with a small `-mt` pull so they visually float up over the gold/light seam, each card's artwork now sits in its own small white-matted frame instead of a bare `object-contain` box, and each card got `.gold-card-hover`. Text color on the gold band adjusted for contrast (subtitle/badges from `text-muted-fg` to `text-primary/80`, eyebrow chip to a cream background) — every `content.*` field, every link destination, and every card's title/description/CTA is exactly what it was before; only the visual presentation changed.
+
+**`components/Hero.tsx` (About)** — swapped the section's plain background for `.gold-banner`, with the same contrast adjustments as Home (eyebrow chip, subtitle, badges). The painting/media panel, both CTAs, and all copy are unchanged.
+
+**`components/ui/PageHero.tsx`** — added an opt-in `gold` boolean prop (default `false`) rather than making this the new default for every page that uses this shared banner. When `gold` is passed, the section gets `.gold-banner` and the eyebrow chip/description colors adjust for contrast; when it's not, the component renders exactly as before. Passed `gold` from `app/therapists/page.tsx` and `app/support-groups/page.tsx` only — Roy named these two plus About specifically, not FAQ, Contact, or the legal pages, which also render through `PageHero` and were deliberately left on their existing light banner.
+
+**Verification:** scoped `tsc --noEmit` across every changed file — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. `components/TherapistsDirectory.tsx` and `components/FaqAccordion.tsx` — the two components with real automated test coverage that exercises the motion primitives — were not touched at all this phase (confirmed via `git status`), so the full-suite re-run from Phase 46 still stands; spot-checked the test runner itself still works cleanly against an unrelated file.
+
+**Known gaps, honestly flagged:**
+- The gallery-wall frame positions/rotations are a tasteful approximation of the mockup, not a pixel-measured recreation — no image-editing tool available in this sandbox to match the reference exactly; worth a look on a real screen to confirm the overlap/spacing reads well at actual browser widths.
+- The three path-artwork files are still the ~370-395px screenshot-resolution originals from Phase 41 — now displayed twice per page (once in the gallery, once in each card), which doubles their exposure at a size where their softness is more likely to be visible than before. Same standing offer as every phase since 41: swap in cleaner exports whenever they're available.
+- Not screenshot-verified from this sandbox — this phase specifically should get a real look at Home (the gallery layout, especially at tablet widths where it's hidden below `lg`), and a hover over each path card to see the actual gold sweep timing/intensity.
+- `border-b border-border` on About's Hero section (a cool blue-gray border) was left as-is against the new gold background rather than retuned to a warmer tone — a minor, easy-to-miss detail, not touched since it wasn't called out and the effect is subtle either way.
+- Same `.git/index.lock` situation as Phases 45-46 — still can't remove it from this sandbox.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 47: gold banner redesign for Home/About/Our Therapists/Support Groups, golden card hover"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

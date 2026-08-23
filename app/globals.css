@@ -64,6 +64,112 @@
   }
 }
 
+/* Phase 47 — Roy sent a reference mockup for the Home landing page: a
+   warm brushed-gold hero band (instead of the plain light background the
+   hero previously used) behind the headline/gallery, and asked for the
+   same gold treatment on About, Our Therapists, and Support Groups'
+   banners too. Built from the existing gold-family tokens (--clay,
+   --amber, --clay-soft) rather than inventing new colors, so it reads as
+   "more of this site's own palette," not a different brand. `.gold-banner`
+   is the reusable background; its `::before` sheen sweep is a slow,
+   subtle diagonal highlight (like light catching a brushed-metal or
+   gold-leaf surface) rather than anything flashy — disabled entirely
+   under prefers-reduced-motion, same as every other motion effect added
+   in Phases 45-46. Applied to: Home's hero band (components/home/Paths.tsx),
+   About's Hero (components/Hero.tsx), and PageHero.tsx's shared banner —
+   but only when a page explicitly opts in via a `gold` prop, so FAQ,
+   Contact, and the legal pages (which also use PageHero) keep their
+   existing light banner exactly as before. */
+@layer components {
+  .gold-banner {
+    position: relative;
+    background: linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%);
+    overflow: hidden;
+  }
+  .gold-banner::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.4) 45%, transparent 60%);
+    background-size: 250% 250%;
+    background-position: -60% -60%;
+    animation: gold-sheen 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gold-banner::before {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  /* Golden hover shimmer for the three "path" cards (spec-independent —
+     this is Roy's own direct request, not from the motion PDF). A single
+     one-shot diagonal light sweep plays across the card on hover/focus,
+     plus a soft gold glow shadow; both fully reset when the pointer
+     leaves so re-hovering always replays the same clean sweep. */
+  .gold-card-hover {
+    position: relative;
+    isolation: isolate;
+    transition: box-shadow 0.4s ease;
+  }
+  .gold-card-hover:hover,
+  .gold-card-hover:focus-within {
+    box-shadow: 0 18px 44px -18px rgba(191, 160, 70, 0.55);
+  }
+  .gold-card-hover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: linear-gradient(
+      120deg,
+      transparent 35%,
+      rgba(237, 226, 192, 0.55) 47%,
+      rgba(255, 250, 235, 0.85) 50%,
+      rgba(237, 226, 192, 0.55) 53%,
+      transparent 65%
+    );
+    background-size: 250% 250%;
+    background-position: -120% -120%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .gold-card-hover:hover::after,
+  .gold-card-hover:focus-within::after {
+    opacity: 1;
+    animation: gold-sweep 1.1s ease-out 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gold-card-hover::after {
+      animation: none !important;
+      opacity: 0 !important;
+    }
+  }
+}
+
+@keyframes gold-sheen {
+  0% {
+    background-position: -60% -60%;
+  }
+  50% {
+    background-position: 160% 160%;
+  }
+  100% {
+    background-position: -60% -60%;
+  }
+}
+
+@keyframes gold-sweep {
+  from {
+    background-position: -120% -120%;
+  }
+  to {
+    background-position: 120% 120%;
+  }
+}
+
 @layer components {
   /* Shared page-layout classes used across About, Therapists, Support Groups,
      Blog, FAQ, Contact, legal pages, and Messages. These were referenced in
