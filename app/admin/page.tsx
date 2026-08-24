@@ -17,9 +17,21 @@ export const dynamic = "force-dynamic";
 // same admin queries the rest of /admin already uses (lib/queries.ts) —
 // nothing is placeholder data, including the trend chart and the calendar,
 // which are both built from each item's real created_at/session_date.
+//
+// Phase 61 — Roy flagged the Phase 60 cards as too tall/empty (the grids
+// were stretching every card in a row to match the tallest one — e.g. the
+// short "Requests"/"Community" panels stretching to Scheduling Overview's
+// full calendar height) and asked for a scrollable "User Activity" list
+// (it will only grow over time) plus a "Scheduling Overview" that reflects
+// every real date-bearing source on the site — sessions, Find Your
+// Therapist requests, booking requests, contact inquiries, and group
+// registrations — not just confirmed sessions.
 
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const TREND_MONTHS = 6;
+// Phase 61 — recent-activity list is now scrollable rather than a hard cutoff
+// at 7 items, so it can afford to show a lot more before truncating.
+const ACTIVITY_FEED_LIMIT = 40;
 
 type ActivityItem = {
   type: string;
@@ -29,6 +41,27 @@ type ActivityItem = {
   createdAt: string;
   isNew: boolean;
 };
+
+// Phase 61 — one calendar-event shape for every date-bearing source on the
+// site. `dateIso` is each source's best real date: session_bookings has an
+// actual scheduled session_date; match_requests has a client-preferred_date
+// when one was given; booking requests, inquiries, and group registrations
+// have no appointment date of their own in the schema, only created_at (when
+// it was submitted) — used here rather than invented, and labeled as such.
+type CalendarEvent = {
+  kind: "session" | "match" | "booking" | "inquiry" | "registration";
+  dateIso: string;
+  label: string;
+  dotClass: string;
+};
+
+const EVENT_LEGEND: { kind: CalendarEvent["kind"]; label: string; dotClass: string }[] = [
+  { kind: "session", label: "Sessions", dotClass: "bg-amber" },
+  { kind: "match", label: "Find Your Therapist", dotClass: "bg-clay" },
+  { kind: "booking", label: "Booking requests", dotClass: "bg-accent" },
+  { kind: "inquiry", label: "Inquiries", dotClass: "bg-primary/70" },
+  { kind: "registration", label: "Group registrations", dotClass: "bg-primary-600" },
+];
 
 function initials(name: string) {
   return name
@@ -72,8 +105,8 @@ function buildMonthlyTrend(items: ActivityItem[]) {
 // this doesn't need one: it's one static, server-rendered polyline.
 function TrendChart({ points }: { points: { label: string; count: number }[] }) {
   const width = 640;
-  const height = 200;
-  const padding = 24;
+  const height = 130;
+  const padding = 20;
   const max = Math.max(1, ...points.map((p) => p.count));
   const step = (width - padding * 2) / Math.max(1, points.length - 1);
 
@@ -213,26 +246,63 @@ export default async function AdminOverviewPage() {
   activity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const trend = buildMonthlyTrend(activity);
-  const recentActivity = activity.slice(0, 7);
+  const recentActivity = activity.slice(0, ACTIVITY_FEED_LIMIT);
 
-  // Phase 60 — Scheduling Overview calendar: real session_bookings placed
-  // on a real month grid by session_date, not sample data. Shows the
-  // current calendar month.
+  // Phase 61 — Scheduling Overview now merges every real date-bearing
+  // source on the site, not just confirmed sessions: session_bookings
+  // (session_date), match_requests (preferred_date, when the client gave
+  // one — otherwise created_at), booking_requests/inquiries/group
+  // registrations (created_at — the schema has no separate appointment
+  // date for these, so the date they were submitted is the honest date to
+  // show). Shows the current calendar month.
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   const monthLabel = `${MONTH_LABELS[today.getMonth()]} ${today.getFullYear()}`;
 
-  const sessionsByDate = new Map<string, typeof sessionBookings>();
-  for (const s of sessionBookings) {
-    const list = sessionsByDate.get(s.session_date) ?? [];
-    list.push(s);
-    sessionsByDate.set(s.session_date, list);
+  const calendarEvents: CalendarEvent[] = [
+    ...sessionBookings.map((s) => ({
+      kind: "session" as const,
+      dateIso: s.session_date,
+      label: `${s.session_time.slice(0, 5)} session with ${s.therapist?.full_name ?? "a therapist"} (${s.status})`,
+      dotClass: s.status === "confirmed" ? "bg-amber" : "bg-muted-fg",
+    })),
+    ...matchRequests.map((m) => ({
+      kind: "match" as const,
+      dateIso: m.preferred_date ?? m.created_at.slice(0, 10),
+      label: `Find Your Therapist request${m.preferred_date ? "" : " (submitted)"} — ${m.email}`,
+      dotClass: "bg-clay",
+    })),
+    ...bookings.map((b) => ({
+      kind: "booking" as const,
+      dateIso: b.created_at.slice(0, 10),
+      label: `Booking request (submitted) — ${b.email}`,
+      dotClass: "bg-accent",
+    })),
+    ...inquiries.map((i) => ({
+      kind: "inquiry" as const,
+      dateIso: i.created_at.slice(0, 10),
+      label: `Inquiry (submitted) — ${i.email ?? "no email on file"}`,
+      dotClass: "bg-primary/70",
+    })),
+    ...registrations.map((r) => ({
+      kind: "registration" as const,
+      dateIso: r.created_at.slice(0, 10),
+      label: `Group registration (submitted) — ${r.email}`,
+      dotClass: "bg-primary-600",
+    })),
+  ];
+
+  const eventsByDate = new Map<string, CalendarEvent[]>();
+  for (const e of calendarEvents) {
+    const list = eventsByDate.get(e.dateIso) ?? [];
+    list.push(e);
+    eventsByDate.set(e.dateIso, list);
   }
-  const thisMonthSessions = sessionBookings.filter((s) => {
-    const d = new Date(s.session_date);
+  const thisMonthEventCount = calendarEvents.filter((e) => {
+    const d = new Date(e.dateIso);
     return d >= monthStart && d <= monthEnd;
-  });
+  }).length;
 
   const calendarCells: { date: Date | null; iso: string | null }[] = [];
   for (let i = 0; i < monthStart.getDay(); i++) calendarCells.push({ date: null, iso: null });
@@ -249,58 +319,70 @@ export default async function AdminOverviewPage() {
   const requestMax = Math.max(1, ...requestBars.map((b) => b.value));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* KPI tiles — same three the reference highlights up top. Contact
           inquiries / Group registrations / Registered users moved into the
           "Requests"/"Community" panels below rather than duplicated here. */}
       <div className="grid gap-4 sm:grid-cols-3">
         {kpiTiles.map((t) => (
           <Link key={t.label} href={t.href} className="block">
-            <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft transition-transform hover:-translate-y-0.5">
-              <div className="text-[12px] font-bold uppercase tracking-wide text-muted-fg">{t.label}</div>
-              <div className="mt-1.5 text-[32px] font-serif font-semibold text-primary">{t.value}</div>
-              <div className="mt-0.5 text-[13px] text-clay">{t.sub}</div>
+            <div className="rounded-[var(--radius)] border border-white/50 bg-card p-4 shadow-soft transition-transform hover:-translate-y-0.5">
+              <div className="text-[11.5px] font-bold uppercase tracking-wide text-muted-fg">{t.label}</div>
+              <div className="mt-1 text-[26px] font-serif font-semibold text-primary">{t.value}</div>
+              <div className="mt-0.5 text-[12.5px] text-clay">{t.sub}</div>
             </div>
           </Link>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+      {/* Phase 61 — `items-start` on every row below: Phase 60's grids had
+          no alignment set, so `items-stretch` (the default) forced every
+          card in a row to match the tallest one — the reason the shorter
+          cards (Trend, Requests, Community) rendered with a lot of empty
+          space beneath their real content. Each card now sizes to its own
+          content instead. */}
+      <div className="grid items-start gap-5 lg:grid-cols-[1.2fr_1fr]">
         {/* Trend */}
-        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-6 shadow-soft">
-          <h2 className="mb-4 text-lg text-primary">Trend</h2>
+        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft">
+          <h2 className="mb-3 text-base text-primary">Trend</h2>
           <TrendChart points={trend} />
-          <p className="mt-2 text-[12.5px] text-muted-fg">
+          <p className="mt-2 text-[11.5px] text-muted-fg">
             All submissions (sessions, Find Your Therapist, bookings, inquiries, group registrations) by month.
           </p>
         </div>
 
-        {/* User Activity */}
-        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-6 shadow-soft">
-          <h2 className="mb-4 text-lg text-primary">User Activity</h2>
-          <div className="space-y-3">
+        {/* User Activity — Phase 61: fixed-height + scrollable rather than
+            a static list, since this will only keep growing. Shows up to
+            ACTIVITY_FEED_LIMIT items inside the scroll area instead of the
+            old hard cutoff at 7. */}
+        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-base text-primary">User Activity</h2>
+            <span className="text-[11.5px] text-muted-fg">{activity.length} total</span>
+          </div>
+          <div className="max-h-[360px] space-y-1 overflow-y-auto pr-1">
             {recentActivity.map((item, i) => (
               <Link
                 key={`${item.type}-${item.createdAt}-${i}`}
                 href={item.href}
-                className="flex items-center gap-3 rounded-xl px-1.5 py-1.5 transition-colors hover:bg-clay-soft/60"
+                className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-clay-soft/60"
               >
-                <div className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-clay-soft text-[11px] font-semibold text-primary">
+                <div className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-clay-soft text-[10.5px] font-semibold text-primary">
                   {initials(item.email ?? item.type)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-medium text-primary">{item.label}</div>
-                  <div className="truncate text-[12px] text-muted-fg">{item.email ?? "No email on file"}</div>
+                  <div className="truncate text-[13px] font-medium text-primary">{item.label}</div>
+                  <div className="truncate text-[11.5px] text-muted-fg">{item.email ?? "No email on file"}</div>
                 </div>
-                <div className="flex flex-none flex-col items-end gap-1">
+                <div className="flex flex-none flex-col items-end gap-0.5">
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                       item.isNew ? "bg-amber-soft text-amber" : "bg-secondary text-muted-fg"
                     }`}
                   >
                     {item.isNew ? "New" : "Seen"}
                   </span>
-                  <span className="text-[11px] text-muted-fg">{timeAgo(item.createdAt)}</span>
+                  <span className="text-[10.5px] text-muted-fg">{timeAgo(item.createdAt)}</span>
                 </div>
               </Link>
             ))}
@@ -309,80 +391,90 @@ export default async function AdminOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        {/* Key Metrics */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-[var(--radius)] border border-white/50 bg-card p-6 shadow-soft">
-            <h2 className="mb-4 text-lg text-primary">Requests</h2>
-            <div className="space-y-4">
-              {requestBars.map((b) => (
-                <MetricBar key={b.label} label={b.label} value={b.value} max={requestMax} href={b.href} />
-              ))}
-            </div>
-          </div>
-          <div className="rounded-[var(--radius)] border border-white/50 bg-card p-6 shadow-soft">
-            <h2 className="mb-4 text-lg text-primary">Community</h2>
-            <div className="mb-3">
-              <div className="text-[13px] font-semibold uppercase tracking-wide text-muted-fg">Registered users</div>
-              <div className="mt-1 text-[28px] font-serif font-semibold text-primary">{profiles.length}</div>
-              <div className="mt-0.5 text-[13px] text-clay">{newProfilesThisWeek} new this week</div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(roleCounts).map(([role, count]) => (
-                <span
-                  key={role}
-                  className="rounded-full border border-border bg-clay-soft/60 px-3 py-1 text-[12.5px] font-medium text-primary/80"
-                >
-                  {role}: <strong className="text-primary">{count}</strong>
-                </span>
-              ))}
-            </div>
+      {/* Requests / Community / Scheduling Overview — one row of three,
+          matching the reference layout, each sized to its own content. */}
+      <div className="grid items-start gap-5 lg:grid-cols-3">
+        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft">
+          <h2 className="mb-3 text-base text-primary">Requests</h2>
+          <div className="space-y-3">
+            {requestBars.map((b) => (
+              <MetricBar key={b.label} label={b.label} value={b.value} max={requestMax} href={b.href} />
+            ))}
           </div>
         </div>
 
-        {/* Scheduling Overview */}
-        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-6 shadow-soft">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg text-primary">Scheduling Overview</h2>
-            <span className="text-[13px] text-muted-fg">{monthLabel}</span>
+        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft">
+          <h2 className="mb-3 text-base text-primary">Community</h2>
+          <div className="mb-2.5">
+            <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-fg">Registered users</div>
+            <div className="mt-0.5 text-[24px] font-serif font-semibold text-primary">{profiles.length}</div>
+            <div className="mt-0.5 text-[12.5px] text-clay">{newProfilesThisWeek} new this week</div>
           </div>
-          <div className="mb-4">
-            <div className="text-[13px] font-semibold uppercase tracking-wide text-muted-fg">Session bookings this month</div>
-            <div className="mt-1 text-[26px] font-serif font-semibold text-primary">{thisMonthSessions.length}</div>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(roleCounts).map(([role, count]) => (
+              <span
+                key={role}
+                className="rounded-full border border-border bg-clay-soft/60 px-2.5 py-1 text-[12px] font-medium text-primary/80"
+              >
+                {role}: <strong className="text-primary">{count}</strong>
+              </span>
+            ))}
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[10.5px] font-semibold uppercase text-muted-fg">
+        </div>
+
+        {/* Scheduling Overview — Phase 61: now merges every real
+            date-bearing source (sessions, Find Your Therapist, booking
+            requests, inquiries, group registrations), not just confirmed
+            sessions. Each day shows a small colored dot per source present
+            (see EVENT_LEGEND) plus a count badge if there's more than one
+            event that day; hover a dot row for the real details via the
+            native title tooltip. */}
+        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-base text-primary">Scheduling Overview</h2>
+            <span className="text-[12px] text-muted-fg">{monthLabel}</span>
+          </div>
+          <div className="mb-2.5">
+            <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-fg">Logged this month</div>
+            <div className="mt-0.5 text-[22px] font-serif font-semibold text-primary">{thisMonthEventCount}</div>
+          </div>
+          <div className="mb-2 flex flex-wrap gap-x-2.5 gap-y-1">
+            {EVENT_LEGEND.map((l) => (
+              <span key={l.kind} className="flex items-center gap-1 text-[10px] text-muted-fg">
+                <span className={`h-1.5 w-1.5 rounded-full ${l.dotClass}`} />
+                {l.label}
+              </span>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-semibold uppercase text-muted-fg">
             {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
               <div key={`${d}-${i}`}>{d}</div>
             ))}
           </div>
-          <div className="mt-1 grid grid-cols-7 gap-1">
+          <div className="mt-1 grid grid-cols-7 gap-0.5">
             {calendarCells.map((cell, i) => {
-              const dayBookings = cell.iso ? sessionsByDate.get(cell.iso) ?? [] : [];
+              const dayEvents = cell.iso ? eventsByDate.get(cell.iso) ?? [] : [];
+              const presentKinds = EVENT_LEGEND.filter((l) => dayEvents.some((e) => e.kind === l.kind));
               const isToday = cell.iso === today.toISOString().slice(0, 10);
+              const title = dayEvents.map((e) => e.label).join("\n");
               return (
                 <div
                   key={i}
-                  className={`flex min-h-[46px] flex-col items-center rounded-lg p-1 text-[11px] ${
+                  title={title || undefined}
+                  className={`flex min-h-[30px] flex-col items-center justify-center gap-0.5 rounded p-0.5 text-[10px] ${
                     cell.date ? (isToday ? "bg-clay-soft" : "bg-secondary/40") : ""
                   }`}
                 >
                   {cell.date && (
                     <>
-                      <span className={`mb-0.5 ${isToday ? "font-bold text-primary" : "text-muted-fg"}`}>
-                        {cell.date.getDate()}
-                      </span>
-                      {dayBookings.slice(0, 1).map((s) => (
-                        <span
-                          key={s.id}
-                          className={`w-full truncate rounded px-1 text-[9.5px] ${
-                            s.status === "confirmed" ? "bg-amber-soft text-amber" : "bg-secondary text-muted-fg line-through"
-                          }`}
-                        >
-                          {s.session_time.slice(0, 5)}
+                      <span className={isToday ? "font-bold text-primary" : "text-muted-fg"}>{cell.date.getDate()}</span>
+                      {presentKinds.length > 0 && (
+                        <span className="flex flex-wrap items-center justify-center gap-0.5">
+                          {presentKinds.map((k) => (
+                            <span key={k.kind} className={`h-1.5 w-1.5 rounded-full ${k.dotClass}`} />
+                          ))}
+                          {dayEvents.length > 1 && <span className="text-[9px] text-clay">{dayEvents.length}</span>}
                         </span>
-                      ))}
-                      {dayBookings.length > 1 && (
-                        <span className="text-[9.5px] text-clay">+{dayBookings.length - 1} more</span>
                       )}
                     </>
                   )}

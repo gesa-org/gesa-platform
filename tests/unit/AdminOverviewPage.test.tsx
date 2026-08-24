@@ -83,12 +83,12 @@ describe("AdminOverviewPage", () => {
     const jsx = await AdminOverviewPage();
     render(jsx);
 
-    // KPI tiles — "Booking requests" appears twice (the KPI tile and the
-    // Key Metrics "Requests" bar below), so that one is checked with
-    // getAllByText rather than assuming a single match.
+    // KPI tiles — "Booking requests" and "Find Your Therapist" each appear
+    // more than once now (KPI tile + Requests bar / calendar legend), so
+    // those are checked with getAllByText rather than assuming one match.
     expect(screen.getByText("Session bookings")).toBeInTheDocument();
-    expect(screen.getByText("Find Your Therapist")).toBeInTheDocument();
-    expect(screen.getAllByText("Booking requests").length).toBe(2);
+    expect(screen.getAllByText("Find Your Therapist").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Booking requests").length).toBeGreaterThanOrEqual(2);
 
     // Trend chart renders as an accessible SVG with real month buckets
     expect(screen.getByRole("img", { name: "Monthly activity trend" })).toBeInTheDocument();
@@ -101,7 +101,8 @@ describe("AdminOverviewPage", () => {
     // Key Metrics — Requests bars
     expect(screen.getByText("Requests")).toBeInTheDocument();
     expect(screen.getByText("Contact inquiries")).toBeInTheDocument();
-    expect(screen.getByText("Group registrations")).toBeInTheDocument();
+    // "Group registrations" now also appears as a calendar legend label.
+    expect(screen.getAllByText("Group registrations").length).toBeGreaterThanOrEqual(2);
 
     // Key Metrics — Community panel, real counts from the mocked profiles
     expect(screen.getByText("Community")).toBeInTheDocument();
@@ -114,10 +115,30 @@ describe("AdminOverviewPage", () => {
     expect(screen.getByText(/admin:/)).toBeInTheDocument();
     expect(screen.getByText(/client:/)).toBeInTheDocument();
 
-    // Scheduling Overview — the mocked session is dated in the current
-    // month, so it should count toward "this month" and appear on the grid.
+    // Scheduling Overview — Phase 61: merges every real date-bearing source
+    // (session, match request, booking request, inquiry, group
+    // registration). All five mocked items fall in the current month
+    // (Aug 2026), so "Logged this month" should read 5 — checked scoped to
+    // its own label's sibling rather than the bare page, since a lone "5"
+    // also matches a calendar day number elsewhere on the grid.
     expect(screen.getByText("Scheduling Overview")).toBeInTheDocument();
-    expect(screen.getByText("Session bookings this month")).toBeInTheDocument();
-    expect(screen.getByText("10:00")).toBeInTheDocument();
+    const loggedThisMonthLabel = screen.getByText("Logged this month");
+    expect(loggedThisMonthLabel.parentElement?.textContent).toContain("5");
+
+    // The calendar cell for the mocked session's real date (Aug 15) carries
+    // a title tooltip with the real event details — confirms the merge
+    // actually reached the calendar, not just the month total above.
+    expect(document.querySelector('[title*="Dr. Therapist"]')).not.toBeNull();
+
+    // User Activity is now a fixed-height, scrollable container (Phase 61)
+    // rather than a static list, since it will only keep growing.
+    const activityHeading = screen.getByText("User Activity");
+    // The heading sits in its own flex row (heading + "N total" count),
+    // itself a sibling of the scrollable list — go up to that shared card
+    // container before looking for the scroll area.
+    const activityCard = activityHeading.parentElement?.parentElement;
+    const scrollContainer = activityCard?.querySelector(".overflow-y-auto");
+    expect(scrollContainer).not.toBeNull();
+    expect(scrollContainer?.className).toContain("max-h-");
   });
 });

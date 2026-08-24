@@ -1847,4 +1847,33 @@ git push
 ```
 
 ---
+
+## Phase 61 — CRM Dashboard sizing fix + scrollable activity + full Scheduling Overview merge
+
+Roy sent a screenshot of the live Phase 60 dashboard: every card in a row had a lot of dead empty space beneath its real content (Trend's chart card was much taller than the chart itself; Requests/Community were stretched to Scheduling Overview's full height), asked for all of that minimized, asked for "User Activity" to be scrollable rather than static since it'll only keep growing, and asked "Scheduling Overview" to reflect every date-bearing source on the site (inquiries, bookings, registrations, sessions), not just confirmed sessions.
+
+**Root cause of the oversized cards:** the two-row grids in `app/admin/page.tsx` (`grid gap-6 lg:grid-cols-[1.3fr_1fr]`) had no alignment set, so Tailwind's default `items-stretch` forced every card in a row to match the height of the tallest one in that row — Scheduling Overview's calendar stretching the much shorter Requests/Community panels next to it, and User Activity (whatever height its list happened to be) stretching Trend's compact chart card. Fixed by adding `items-start` to every row grid, so each card now sizes to its own content. Also tightened padding/font sizes across every card (`p-6`→`p-5`, `p-5`→`p-4` on KPI tiles, smaller headings/numbers, tighter internal spacing) and shrank the trend chart's SVG height (200px → 130px) — real reductions, not just alignment.
+
+**Layout also reshuffled to match the reference more literally:** Requests, Community, and Scheduling Overview are now one `lg:grid-cols-3` row of three (they were a nested 2-col pair + a separate column before), matching Roy's screenshot instead of Phase 60's slightly different grouping.
+
+**User Activity is now scrollable (`app/admin/page.tsx`):** the list sits in a `max-h-[360px] overflow-y-auto` container instead of a hard `.slice(0, 7)` cutoff with no scroll — raised the cap to 40 items (`ACTIVITY_FEED_LIMIT`) since a fixed-height scroll area can afford to hold a lot more than a static list could, and added a small "`N` total" count next to the heading so the real total is visible even though the list itself is capped.
+
+**Scheduling Overview now merges every real date-bearing source, not just sessions.** A new `CalendarEvent` shape normalizes all five: `session_bookings` (real `session_date`), `match_requests` (`preferred_date` when the client gave one, otherwise `created_at`), and `booking_requests`/`inquiries`/`group_registrations` (`created_at` — the schema has no separate appointment date for these three, so the date something was actually submitted is the honest date shown, and each one's tooltip label says "(submitted)" so it's not confused with a scheduled appointment). Each calendar day now shows a small colored dot per source type present (a legend under the month total spells out the five colors) plus a count badge when there's more than one event that day, and a native `title` tooltip with the real per-event details on hover — no new client-side interactivity added, still a plain Server Component. The "Session bookings this month" stat became "Logged this month," counting every source's events in the current month rather than only confirmed sessions.
+
+**Verification:** scoped `tsc --noEmit` on `app/admin/page.tsx` — clean. Updated `tests/unit/AdminOverviewPage.test.tsx` for the new markup (the renamed "Logged this month" stat, the merged-calendar tooltip, the scrollable container, and several labels — "Find Your Therapist," "Booking requests," "Group registrations" — that now legitimately appear more than once thanks to the new calendar legend) and ran it for real — passed. `tests/unit/AdminNav.test.tsx` re-run alongside it to confirm no regression there — passed (3/3 total across both suites).
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified in a browser — the render test confirms the scroll container, the merged calendar data, and every real number, but not the pixel-level "does it actually look right-sized now" result Roy will be judging.
+- `booking_requests`/`inquiries`/`group_registrations` showing their submission date rather than a true appointment date is a real schema limitation, not a workaround — flagged in the code comments too, in case a future phase adds a real scheduled-date column to any of them.
+- The calendar's day cells cap out at 5 possible dot colors (one per source type) with a numeric overflow badge for multiple events of the same day — still readable at the sizes tested here, but worth a look if any single day ever gets a lot busier than today's real data.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 61: resize CRM dashboard cards, scrollable User Activity, merge all sources into Scheduling Overview"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
