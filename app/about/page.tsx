@@ -96,38 +96,47 @@ export default async function AboutPage() {
           same pale-gold-wash token the gold-banner era already introduced
           in app/globals.css) rather than changing --background globally,
           since the ask was specifically about this section and Our
-          Therapists' directory section, not every page site-wide. */}
-      <section className="section wrap max-w-[820px] bg-clay-soft">
-        <Reveal type="fade-up" className="block text-center">
-          <span className="eyebrow">{sections.foundersHeading}</span>
-          <h2 className="my-2.5 text-[30px]">{sections.foundersHeading}</h2>
-          <p className="mx-auto max-w-[600px] text-muted-fg">{sections.foundersIntro}</p>
-        </Reveal>
-        <StaggerGroup className="mt-8.5 mt-[34px] grid gap-[22px] sm:grid-cols-2">
-          {sections.founders.map((p) => (
-            <StaggerItem key={p.name}>
-              <Card className="flex items-start gap-5">
-                <div className="flex h-[112px] w-24 flex-none items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-primary-600 text-[26px] font-serif font-semibold text-white">
-                  {initials(p.name)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="m-0 text-xl">{p.name}</h3>
-                  <div className="my-0.5 mb-2.5 text-sm font-semibold text-primary">{p.roleTitle}</div>
-                  <p className="mb-2.5 text-[14.5px] text-muted-fg">{p.shortBio}</p>
-                  <a
-                    href={`mailto:${p.email}`}
-                    className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary"
-                  >
-                    <Mail size={15} /> {p.email}
-                  </a>
-                </div>
-              </Card>
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
-        <p className="mt-5 text-center text-[13px] text-muted-fg">
-          More of our team, advisory board, and volunteer network will be introduced here soon.
-        </p>
+          Therapists' directory section, not every page site-wide.
+          Phase 55 follow-up — the background color was first put on the
+          same element as `wrap max-w-[820px]`, which made it fill only
+          that narrow centered box instead of the full viewport width —
+          exactly the "cut / certain area only" Roy flagged. Fixed by
+          moving `bg-clay-soft` to this outer, full-width <section>, with
+          `wrap max-w-[820px]` now on its own inner <div> that only
+          constrains the *content's* width, not the color. */}
+      <section className="section bg-clay-soft">
+        <div className="wrap max-w-[820px]">
+          <Reveal type="fade-up" className="block text-center">
+            <span className="eyebrow">{sections.foundersHeading}</span>
+            <h2 className="my-2.5 text-[30px]">{sections.foundersHeading}</h2>
+            <p className="mx-auto max-w-[600px] text-muted-fg">{sections.foundersIntro}</p>
+          </Reveal>
+          <StaggerGroup className="mt-8.5 mt-[34px] grid gap-[22px] sm:grid-cols-2">
+            {sections.founders.map((p) => (
+              <StaggerItem key={p.name}>
+                <Card className="flex items-start gap-5">
+                  <div className="flex h-[112px] w-24 flex-none items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-primary-600 text-[26px] font-serif font-semibold text-white">
+                    {initials(p.name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="m-0 text-xl">{p.name}</h3>
+                    <div className="my-0.5 mb-2.5 text-sm font-semibold text-primary">{p.roleTitle}</div>
+                    <p className="mb-2.5 text-[14.5px] text-muted-fg">{p.shortBio}</p>
+                    <a
+                      href={`mailto:${p.email}`}
+                      className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary"
+                    >
+                      <Mail size={15} /> {p.email}
+                    </a>
+                  </div>
+                </Card>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+          <p className="mt-5 text-center text-[13px] text-muted-fg">
+            More of our team, advisory board, and volunteer network will be introduced here soon.
+          </p>
+        </div>
       </section>
 
       <section className="section bg-gradient-to-br from-primary to-primary-600">

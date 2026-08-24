@@ -1620,4 +1620,26 @@ git push
 ```
 
 ---
+
+## Phase 55 follow-up — fixed the background to actually span full width
+
+Roy correctly flagged that the cream background from Phase 55 only covered "a certain area," not the whole section. The bug: `bg-clay-soft` had been added to the same `<section>` element that also carried `wrap` (and, on About, `max-w-[820px]`) — those classes cap that element at 1160px/820px and center it, so the background color was centered and boxed exactly like the content, instead of bleeding to the page edges like the reference screenshots.
+
+**Fix, both `app/therapists/page.tsx` and `app/about/page.tsx`:** split each into an outer, unconstrained `<section className="section bg-clay-soft">` (this is what now actually spans full width) wrapping an inner `<div className="wrap ...">` that keeps the *content* at its original constrained width — same pattern already used everywhere else on the site (e.g. Support Groups' page.tsx `<section className="section wrap pt-0">`, which was never the issue there since it had no separate background color competing with `wrap`).
+
+**Verification:** re-ran the same scoped `tsc --noEmit` on both files — clean. Re-grepped for the unescaped-apostrophe-in-JSX pattern — no matches.
+
+**Known gaps, honestly flagged:**
+- Still not screenshot-verified from this sandbox — this is exactly the kind of layout bug that's obvious in a browser and easy to miss by reading JSX alone, so worth a real look this time before considering it done.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 55 follow-up: fix cream background to span full section width, not just the centered content box"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

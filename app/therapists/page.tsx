@@ -32,9 +32,18 @@ export default async function TherapistsPage() {
           same pale-gold-wash token the gold-banner era already introduced
           in app/globals.css) rather than changing --background globally,
           since the ask was specifically about this section and About's
-          founders section, not every page site-wide. */}
-      <section className="section wrap pt-0 bg-clay-soft">
-        <TherapistsDirectory therapists={therapists} content={directoryContent} />
+          founders section, not every page site-wide.
+          Phase 55 follow-up — the background color was first put on the
+          same element as `wrap` (max-width 1160px, centered), which made
+          it fill only that centered box instead of the full viewport width
+          — exactly the "cut / certain area only" Roy flagged. Fixed by
+          moving `bg-clay-soft` to this outer, full-width <section>, with
+          `wrap` now on its own inner <div> that only constrains the
+          *content's* width, not the color. */}
+      <section className="section pt-0 bg-clay-soft">
+        <div className="wrap">
+          <TherapistsDirectory therapists={therapists} content={directoryContent} />
+        </div>
       </section>
     </div>
   );
