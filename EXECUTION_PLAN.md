@@ -1669,4 +1669,30 @@ git push
 ```
 
 ---
+
+## Phase 56 — Reverted
+
+Roy reported the Phase 56 footer redesign broke the footer on the live site and asked to roll it back to the previous design rather than debug it in place.
+
+**What was reverted:** `components/Footer.tsx`, `components/admin/content/FooterEditor.tsx`, and the `FooterContent` type in `lib/content.ts` were restored to their exact state from the commit immediately before Phase 56 (`ba5f1cd~1`), undoing the Connect column, social links row, accreditations row, "Join Our Global Network" CTA, and the non-profit status line — all of it, cleanly, with no partial leftovers. Confirmed via `git diff --stat` that the revert is a pure subtraction (138/61/32 lines removed from the three files, 0 unexpected additions) and via grep that no other file anywhere in the codebase still references any of the removed fields (`connectHeading`, `accreditation1Label`, `joinNetworkHref`, `socialLinkedinHref`, `nonprofitStatusLine`, etc.) — so nothing was left half-wired.
+
+Files were restored by reading their exact prior content with `git show` and rewriting them directly (rather than `git checkout`, which failed in this sandbox with "unable to unlink" — this project folder blocks unlinking files synced into it, the same restriction documented since Phase 45's `.git/index.lock` situation).
+
+Because Phase 51 (the Home news-ticker's `purposeTicker` field) also touched `lib/content.ts` and landed *before* Phase 56, reverting to the pre-Phase-56 commit correctly kept Phase 51's addition intact — this isn't a revert of everything back to Phase 37, just of Phase 56 specifically.
+
+**Verification:** scoped `tsc --noEmit` on all three restored files — clean.
+
+**What wasn't touched:** `session_bookings` schema changes from Phase 54, the language/translation work from Phases 52-53, and every other prior phase are unaffected — this revert was scoped to exactly the four files Phase 56's own commit changed (including `EXECUTION_PLAN.md`, which naturally keeps growing rather than being reverted, so this history stays honest instead of erasing the record of what was tried).
+
+If the goal is to eventually revisit a footer redesign, worth screenshot-testing any future attempt in a real browser before considering it done — Phase 56 wasn't verified that way, which is likely how the breakage got through.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Revert Phase 56: footer redesign broke the live footer, restored previous design"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

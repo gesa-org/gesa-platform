@@ -139,38 +139,6 @@ export type FooterContent = {
   legalHeading: string;
   copyrightLine: string;
   madeWithLine: string;
-  // Phase 56 — Roy sent a reference redesign adding a fifth nav column, a
-  // social-links row, an "Accreditations & Partners" row, and a closing
-  // CTA. Unlike the four columns above (where only label *text* is
-  // editable — destinations stay fixed, real site routes), these are new
-  // fields with no existing "correct" destination, so both label and href
-  // are editable here. Social hrefs default to "" — Footer.tsx only
-  // renders an icon if its href is actually set, so an unfilled-in social
-  // link never becomes a dead "#" link on the live site.
-  connectHeading: string;
-  connectNewsletterLabel: string;
-  connectNewsletterHref: string;
-  connectPressLabel: string;
-  connectPressHref: string;
-  connectPartnershipsLabel: string;
-  connectPartnershipsHref: string;
-  connectBlogLabel: string;
-  socialFollowLabel: string;
-  socialLinkedinHref: string;
-  socialTwitterHref: string;
-  socialFacebookHref: string;
-  // Roy confirmed these three are real, existing GESA accreditations/
-  // partnerships (not invented for this redesign) — text labels only,
-  // since no actual logo image files exist for them yet.
-  accreditationsHeading: string;
-  accreditation1Label: string;
-  accreditation2Label: string;
-  accreditation3Label: string;
-  joinNetworkLabel: string;
-  joinNetworkHref: string;
-  // Roy asked for this to be Content Manager-editable specifically so he
-  // (not this codebase) owns and can correct the exact legal wording.
-  nonprofitStatusLine: string;
 };
 
 // New this round — the global header nav (components/Header.tsx) was fully
