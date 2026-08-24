@@ -3,6 +3,7 @@ import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } f
 import Card from "@/components/ui/Card";
 import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import Reveal from "@/components/motion/Reveal";
+import ParallaxMedia from "@/components/motion/ParallaxMedia";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
 
@@ -55,15 +56,52 @@ export default async function AboutPage() {
     <div className="reveal-page__main">
       <Hero content={heroContent} />
 
-      <section className="section wrap max-w-[760px]">
+      {/* Phase 58 — Roy sent a reference video (a different practice's
+          "About" page) and asked to borrow its editorial structure/pacing
+          for GESA's own About page, without changing any existing copy,
+          section, or color. One of that reference's clearest structural
+          devices was a full-bleed photographic "breather" band between the
+          intro and the mission statement — a pure pacing/whitespace device,
+          not a new content section. Reused here with `hero-painting.jpg`,
+          the original About painting that's been sitting unused in
+          public/images/about since Phase 50 swapped the Hero itself over to
+          hero-painting-v2.jpg — giving it a real purpose again rather than
+          leaving it orphaned, and keeping this consistent with GESA's
+          existing no-real-human-photography policy (Phase 43) rather than
+          introducing new stock photography the way the reference does. */}
+      <section className="relative h-[300px] overflow-hidden sm:h-[380px] lg:h-[440px]">
+        <ParallaxMedia intensity={26} scale={1.08} className="absolute inset-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/about/hero-painting.jpg"
+            alt="A painting of hands cradling a glowing form within layered leaves"
+            className="h-full w-full object-cover"
+          />
+        </ParallaxMedia>
+        <div className="absolute inset-0 bg-primary/15" />
+      </section>
+
+      <section className="section wrap max-w-[820px]">
+        {/* Phase 58 — the reference's other structural device: a large,
+            prominent opening statement followed by a smaller, secondary
+            paragraph set apart with generous whitespace and offset toward
+            the trailing edge, rather than every paragraph stacked in one
+            uniform block. Applied purely as layout/typography — the actual
+            copy is still exactly `sections.missionParagraphs`, unedited,
+            and still fully Content Manager-driven (an admin adding a third
+            paragraph later just adds another offset secondary paragraph
+            below the second, nothing hardcoded to "exactly two"). */}
         <Reveal type="fade-up">
-          <h2 className="text-[30px]">{sections.missionHeading}</h2>
-          {sections.missionParagraphs.map((p, i) => (
-            <p key={i} className="text-muted-fg text-[15.5px]">
-              {p}
-            </p>
-          ))}
+          <span className="eyebrow">{sections.missionHeading}</span>
+          <h2 className="max-w-[680px] font-serif text-[26px] leading-[1.35] text-foreground sm:text-[30px]">
+            {sections.missionParagraphs[0]}
+          </h2>
         </Reveal>
+        {sections.missionParagraphs.slice(1).map((p, i) => (
+          <Reveal key={i} type="fade-up" delay={0.1} className="mt-8 flex justify-end sm:mt-12">
+            <p className="max-w-[380px] text-[15px] leading-relaxed text-muted-fg sm:text-right">{p}</p>
+          </Reveal>
+        ))}
       </section>
 
       <section className="section bg-muted">

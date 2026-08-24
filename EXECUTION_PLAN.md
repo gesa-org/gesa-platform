@@ -1724,4 +1724,35 @@ git push
 ```
 
 ---
+
+## Phase 58 — About page: full-bleed image band + asymmetric mission layout, borrowed from a reference video
+
+Roy sent a screen recording of a different therapy practice's own About page and asked to borrow its structure/pacing/design for GESA's About page — explicitly not its content, colors, or copy, and without changing anything currently on the page. The video is a third-party Wix-template site, unrelated to GESA; what mattered was two structural devices in how it paces the page, not its literal photos or palette.
+
+**Two devices identified and ported into `app/about/page.tsx`:**
+
+1. **Full-bleed photographic "breather" band** between the hero and the mission statement — a pure pacing device, no new copy. Implemented as a `relative h-[300px] sm:h-[380px] lg:h-[440px] overflow-hidden` section wrapping the existing `ParallaxMedia` primitive (same one already used in the Hero, `intensity={26} scale={1.08}`) around an `<img>`, plus a light `bg-primary/15` tint overlay to keep it from competing visually with the page. Reused `hero-painting.jpg` — the *original* About painting that's been sitting unused in `public/images/about` since Phase 50 swapped the Hero itself over to `hero-painting-v2.jpg`. Deliberately did not introduce any new photography: GESA's site-wide no-real-human-photography policy (Phase 43) stays intact, and this reuses an existing asset rather than adding a new one.
+
+2. **Large-statement-then-offset-secondary-paragraph** layout in the mission section, replacing the old flat `.map` over every paragraph in one uniform block. `sections.missionParagraphs[0]` now renders as a large serif `<h2>` (26px/30px depending on breakpoint) inside a `Reveal`; every paragraph after that (`.slice(1)`) renders as its own smaller, right-aligned, offset-right `<p>` in a separate `Reveal` with a delay, `mt-8`/`mt-12` spacing, and `max-w-[380px] sm:text-right`. The copy itself is untouched — still exactly `sections.missionParagraphs`, still fully Content Manager-driven, and an admin adding a third paragraph later just adds another offset paragraph below the second rather than breaking anything hardcoded to "exactly two." The section's wrapper widened slightly from `max-w-[760px]` to `max-w-[820px]` to give the offset layout room to breathe.
+
+**Nothing else on the page changed** — no other section, no color token, no existing copy. Both devices are additive: a new section inserted between two existing ones, and a layout change scoped to the mission section's internals only.
+
+**New: `tests/unit/AboutPage.test.tsx`.** About had no prior test file. Since Phase 57 established that `tsc --noEmit` alone doesn't catch real rendering breaks, this phase adds a render test for the page itself — mocks `getPageContent` to resolve with the fallback content (About is an async Server Component, so the test awaits `AboutPage()` directly before rendering the result, the same way Next resolves it on the server) and asserts: every pre-existing section still renders (how-it-works heading, founders intro, volunteer body), the new image band renders with its alt text and the correct `hero-painting.jpg` src, the first mission paragraph renders as the big `<h2>` statement, and every remaining mission paragraph renders as its own offset `<p>`.
+
+**Verification:** scoped `tsc --noEmit` covering `app/about/page.tsx`, `ParallaxMedia.tsx`, `Hero.tsx`, and `lib/content.ts` — clean. Grepped the changed file for both the unescaped-apostrophe-in-JSX and backslash-escaped-quote-in-JSX-attribute patterns that broke Phase 56 — no matches (the apostrophes present are all inside plain JS strings/comments, not the pattern that caused that bug). Ran the new Jest test (`timeout 550 npx jest tests/unit/AboutPage.test.tsx --runInBand --no-coverage`) — **passed** (127.8s).
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified in an actual browser — the Jest test confirms the component renders without throwing and contains the right elements/text/attributes, but not the pixel-level visual result (parallax feel, exact spacing at each breakpoint, how the offset paragraphs wrap on narrow screens).
+- The reference video's site also used different photography/colors throughout; only the two structural devices were ported, per Roy's explicit instruction not to touch existing structure, details, or color palette otherwise.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 58: About page — full-bleed image breather band + asymmetric mission statement layout"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
