@@ -1755,4 +1755,31 @@ git push
 ```
 
 ---
+
+## Phase 58 — Reverted
+
+Roy reported Phase 58 broke the About page on the live site and asked to roll it back to the previous design rather than debug it in place — same call made for Phase 56's footer.
+
+**What was reverted:** `app/about/page.tsx` was restored to its exact pre-Phase-58 state (the version at commit `d432ad4`, immediately before Phase 58's commit `41fd966`): the `ParallaxMedia` import and the full-bleed image band section are gone, and the mission section is back to the original flat layout — `<h2>{sections.missionHeading}</h2>` followed by a plain `.map` over every paragraph in one `text-muted-fg text-[15.5px]` block, wrapper back to `max-w-[760px]`. Confirmed via `diff` against the pre-Phase-58 file that this is an exact restoration, not a partial or re-authored one.
+
+`tests/unit/AboutPage.test.tsx` (added in Phase 58 to test the now-removed layout) is removed as part of this revert — it has nothing left to test.
+
+Files were restored the same way as Phase 56's revert: reading the exact prior content with `git show d432ad4:app/about/page.tsx` and overwriting the file directly, since `git checkout`/`rm` fail in this sandbox with "unable to unlink" on files already synced into the project folder. The test file's removal is included in the git commands below via `git rm`, which deletes normally on Roy's own machine (that unlink restriction is specific to this sandbox, not his filesystem).
+
+**What wasn't touched:** every other phase, including Phase 57's footer and everything before it, is unaffected — this revert is scoped to exactly the three files Phase 58's own commit changed.
+
+**Verification:** scoped `tsc --noEmit` on the restored `app/about/page.tsx` — clean.
+
+If the goal is to revisit this kind of structural change later, worth getting an actual screenshot/visual check in a real browser before calling it done — same lesson as Phase 56, and one Phase 58 didn't get either, despite the added render test. A passing render test only proves the elements exist and don't throw; it doesn't prove the page looks right, which is apparently where this one broke.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git rm tests/unit/AboutPage.test.tsx
+git commit -m "Revert Phase 58: About page redesign broke the live page, restored previous design"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
