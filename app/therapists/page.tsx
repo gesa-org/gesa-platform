@@ -26,7 +26,14 @@ export default async function TherapistsPage() {
   return (
     <div className="reveal-page__main">
       <PageHero gold icon={Users} eyebrow={content.eyebrow} title={content.title} description={content.description} />
-      <section className="section wrap pt-0">
+      {/* Phase 55 — Roy sent a reference screenshot showing this section on
+          a warm cream background instead of the page's usual cool ivory
+          (--background). Scoped to just this section (bg-clay-soft, the
+          same pale-gold-wash token the gold-banner era already introduced
+          in app/globals.css) rather than changing --background globally,
+          since the ask was specifically about this section and About's
+          founders section, not every page site-wide. */}
+      <section className="section wrap pt-0 bg-clay-soft">
         <TherapistsDirectory therapists={therapists} content={directoryContent} />
       </section>
     </div>

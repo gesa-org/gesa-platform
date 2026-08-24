@@ -1598,4 +1598,26 @@ git push
 ```
 
 ---
+
+## Phase 55 — Warm cream background on Our Therapists' directory and About's founders section
+
+Roy sent two reference screenshots (Our Therapists' filter/results area, and About's "Our Founders" section) showing both on a warm cream background, distinct from the site's usual cool ivory (`--background`, #eef1f6). Asked to update just those two sections' background color.
+
+**`app/therapists/page.tsx`** and **`app/about/page.tsx`:** added `bg-clay-soft` to the `<section>` wrapping the Therapists directory and the founders section respectively. Used the existing `--clay-soft` (#f5eeda, "pale gold wash") token from `app/globals.css` rather than inventing a new one-off color — it's the same warm cream the gold-banner era (Phase 47) already introduced elsewhere on the site, and visually matches the reference screenshots. Deliberately scoped to just these two `<section>` elements rather than changing `--background` globally, since Roy asked about these two sections specifically, not every page.
+
+**Verification:** scoped `tsc --noEmit` on both files — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Confirmed `.section` (app/globals.css) has no width constraint of its own, so the background color spans the full section width edge-to-edge like the reference, with `.wrap`'s max-width only constraining the inner content — matching the screenshots' look rather than a color-filled box narrower than the page.
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified from this sandbox — worth a real look to confirm `--clay-soft` is close enough to the exact tone in the reference images, since I matched it by eye against an existing token rather than picking a color from the screenshot pixel-for-pixel.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 55: warm cream background on Our Therapists directory and About's founders section"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

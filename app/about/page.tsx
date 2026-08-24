@@ -90,7 +90,14 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="section wrap max-w-[820px]">
+      {/* Phase 55 — Roy sent a reference screenshot showing this section on
+          a warm cream background instead of the page's usual cool ivory
+          (--background). Scoped to just this section (bg-clay-soft, the
+          same pale-gold-wash token the gold-banner era already introduced
+          in app/globals.css) rather than changing --background globally,
+          since the ask was specifically about this section and Our
+          Therapists' directory section, not every page site-wide. */}
+      <section className="section wrap max-w-[820px] bg-clay-soft">
         <Reveal type="fade-up" className="block text-center">
           <span className="eyebrow">{sections.foundersHeading}</span>
           <h2 className="my-2.5 text-[30px]">{sections.foundersHeading}</h2>
