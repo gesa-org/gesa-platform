@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LANGUAGES, RTL_LANGUAGES } from "@/lib/languages";
+import { lookupHeDictionary } from "@/lib/translations/he";
 
 const SUPPORTED_LANGS = new Set(LANGUAGES.map((l) => l.code));
 
@@ -163,32 +164,55 @@ export default function TranslationProvider({ children }: { children: React.Reac
       const uniqueTexts = Array.from(new Set(nodes.map((n) => n.textContent || "")));
       if (uniqueTexts.length === 0) return;
 
-      const chunks: string[][] = [];
-      for (let i = 0; i < uniqueTexts.length; i += BATCH_SIZE) {
-        chunks.push(uniqueTexts.slice(i, i + BATCH_SIZE));
+      // Phase 53 — check the bundled dictionary (lib/translations/he.ts)
+      // first, entirely client-side, before touching the network. This is
+      // what makes Hebrew actually work with no Google Translate API key
+      // configured: the dictionary covers the static marketing copy that
+      // makes up most of the site, so those strings translate instantly
+      // and for free, and only whatever's left over (dynamic/DB content,
+      // or copy the dictionary doesn't happen to cover yet) goes to
+      // /api/translate — which itself still no-ops to the original text
+      // if there's genuinely no API key set, exactly as before.
+      const translatedMap = new Map<string, string>();
+      const remaining: string[] = [];
+      if (lang === "he") {
+        uniqueTexts.forEach((text) => {
+          const dictHit = lookupHeDictionary(text);
+          if (dictHit !== undefined) translatedMap.set(text, dictHit);
+          else remaining.push(text);
+        });
+      } else {
+        remaining.push(...uniqueTexts);
       }
 
-      // Fire all batches in parallel rather than awaiting them one at a
-      // time — each batch is an independent request, so there's no reason
-      // to serialize them. On a large page (many unique strings) this cuts
-      // total wait time from N sequential round trips down to roughly one.
-      const translatedMap = new Map<string, string>();
-      await Promise.all(
-        chunks.map(async (chunk) => {
-          try {
-            const res = await fetch("/api/translate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ texts: chunk, targetLang: lang }),
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            chunk.forEach((original, idx) => translatedMap.set(original, data.translated?.[idx] ?? original));
-          } catch {
-            // Skip this chunk — the rest of the page can still translate.
-          }
-        })
-      );
+      if (remaining.length > 0) {
+        const chunks: string[][] = [];
+        for (let i = 0; i < remaining.length; i += BATCH_SIZE) {
+          chunks.push(remaining.slice(i, i + BATCH_SIZE));
+        }
+
+        // Fire all batches in parallel rather than awaiting them one at a
+        // time — each batch is an independent request, so there's no
+        // reason to serialize them. On a large page (many unique strings)
+        // this cuts total wait time from N sequential round trips down to
+        // roughly one.
+        await Promise.all(
+          chunks.map(async (chunk) => {
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ texts: chunk, targetLang: lang }),
+              });
+              if (!res.ok) return;
+              const data = await res.json();
+              chunk.forEach((original, idx) => translatedMap.set(original, data.translated?.[idx] ?? original));
+            } catch {
+              // Skip this chunk — the rest of the page can still translate.
+            }
+          })
+        );
+      }
 
       nodes.forEach((node) => {
         const translated = translatedMap.get(node.textContent || "");

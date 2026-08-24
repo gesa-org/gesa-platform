@@ -1536,4 +1536,34 @@ git push
 ```
 
 ---
+
+## Phase 53 — Language switcher: fixed the actual root cause (no API key) + flag-icon dropdown
+
+Roy reported that Phase 52's language-switch work produced no visible change at all, and re-sent the same reference video with two explicit asks: when Hebrew is chosen, "all the text details, field with wordings" must actually turn into Hebrew (not stay English), and the dropdown should become a clear icon-based picker with recognizable flags for English/Hebrew.
+
+**Root cause, found by reading the actual translation code rather than guessing:** `lib/translate.ts`'s `translateBatch` requires `GOOGLE_TRANSLATE_API_KEY`, and — checked directly in both `.env.local` and `.env.example` — that variable has never been set in this project. Per that file's own existing fallback logic, a missing key makes it log a warning and silently return the original English text as if it were "translated." So the whole feature was working exactly as coded — RTL flip, no-reload switch, dropdown, everything from Phases 33/52 — except every single string came back unchanged, which reads as "nothing happened."
+
+**`lib/translations/he.ts` (new) — a bundled English→Hebrew dictionary,** checked client-side before any network call. Getting a real, billed Google Cloud Translation API key set up is still worth doing eventually (it's the only way dynamic, per-record content like therapist bios ever gets translated), but that requires Roy's own Google Cloud account/billing — not something obtainable from inside this sandbox. This dictionary makes the feature actually work today, at zero cost, for the static marketing copy that's the vast majority of what a visitor reads: every string in the header, footer, Home (hero, badges, path cards, the Phase 51 ticker), About's Hero and mission/how-it-works/founders/volunteer sections, Our Therapists' hero and filter sidebar, Support Groups' hero and registration flow, FAQ, Contact, Blog's fallback copy, and the Stats row — about 85 entries, hand-translated, verified by script that every one of ~100 live English strings pulled directly from those files' own fallback objects appears verbatim in the dictionary. One templated entry (`copyrightLine`, which contains a live `{year}`) is handled generically — any 4-digit year in the source text is swapped for a literal `{year}` token before the dictionary lookup and restored after, so it doesn't need a new entry every January.
+
+**`components/TranslationProvider.tsx`:** `translatePage` now checks `lookupHeDictionary()` for every unique string on the page before ever calling `/api/translate`; anything the dictionary doesn't cover (dynamic DB content, or copy not yet added here) still falls through to the real API exactly as before — which will start actually working the moment a real key is set, with zero further code changes needed.
+
+**`components/FlagIcon.tsx` (new) + `components/LanguageSelector.tsx`:** the picker used to show Unicode flag emoji (🇺🇸/🇮🇱), which is very likely why Roy couldn't see "clear flags" — Windows is a well-known case where the OS doesn't ship the actual flag glyph for those codepoints and instead renders the plain two-letter region code as text, regardless of what the browser or this app does. Replaced with real inline SVG flags (a simplified but recognizable US flag and Israeli flag with its Star of David) that render identically on every OS. Restyled the trigger to lead with the flag icon (dropping the language name below the `sm` breakpoint, so it reads as a true icon dropdown on mobile), and the open menu shows flag + name per row.
+
+**Verification:** scoped `tsc --noEmit` across all four changed/new files — clean. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Wrote a small Node script pulling ~100 live English strings straight out of `lib/content.ts`, `components/home/Paths.tsx`, `components/Hero.tsx`, `components/Header.tsx`, `components/Footer.tsx`, `components/TherapistsDirectory.tsx`, `components/SupportGroupsInteractive.tsx`, and `components/home/Stats.tsx`, and confirmed every one of them has a matching entry in the new dictionary file — not just eyeballed.
+
+**Known gaps, honestly flagged:**
+- Not click-through-verified from this sandbox — worth a real test: switch to Hebrew on Home, About, Our Therapists, and Support Groups and confirm the visible copy is actually Hebrew now, then switch back to English and confirm it cleanly restores.
+- Content that isn't in the dictionary (therapist bios, any blog posts, admin-entered Content Manager text that differs from the fallback copy above) still depends on a real `GOOGLE_TRANSLATE_API_KEY` to translate — worth getting one set up in Vercel's env vars if full coverage matters, since this dictionary intentionally only covers the fixed marketing copy, not arbitrary database content.
+- If any of the fallback copy above gets edited later (directly in code, not through the Content Manager), its dictionary entry needs a matching update or that specific string will silently stop translating (falls through to the still-unconfigured API, i.e. stays English) — not a crash, just a quiet gap.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 53: bundled EN-to-HE dictionary (fixes translation with no API key), flag-icon language dropdown"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
