@@ -1695,4 +1695,33 @@ git push
 ```
 
 ---
+
+## Phase 57 — Footer redesign, take two: "Connect with Us" + "Our Trusted Partners"
+
+After Phase 56 was reverted, Roy sent a simpler reference: same four existing columns (no fifth column, no CTA button this time), plus a "Connect with Us" social-icon row (now four icons — LinkedIn, Twitter/X, Instagram, Facebook) and an "Our Trusted Partners" row with the same three accreditations confirmed real during Phase 56, plus the non-profit status line in the bottom bar.
+
+**`lib/content.ts` (`FooterContent`):** added `connectWithUsLabel`, four social href fields, `trustedPartnersHeading`, three partner label fields, and `nonprofitStatusLine`. Deliberate change from Phase 56: social hrefs now default to `"#"` instead of `""`. Phase 56 hid each icon entirely until a real URL was set, which meant all four icons were simply missing out of the box — a very plausible part of why that footer "looked broken." Defaulting to `"#"` means every icon always renders and matches the reference visually right away; Roy replaces `"#"` with real profile URLs via the Content Manager whenever he has them.
+
+**`components/Footer.tsx`:** no change to the four-column grid (matches the simpler reference exactly). Added the social row and partners row between the columns and the bottom bar, and extended the bottom bar with the non-profit status line, same pattern as before.
+
+**`components/admin/content/FooterEditor.tsx`:** added matching field groups. Wrote the note text this time using single quotes for inline emphasis instead of backslash-escaped double quotes inside a JSX attribute — that exact pattern is what broke Phase 56's admin editor (a `note="...\"...\"..."` JSX attribute doesn't support backslash-escaping the way a normal JS string does), so this phase deliberately avoided it rather than repeating it.
+
+**New: `tests/unit/Footer.test.tsx`.** Phase 56 was only ever verified with `tsc --noEmit`, which can't catch a real rendering problem — that gap is very likely how a "broken footer" shipped without being caught first. This phase adds a real smoke test that renders `<Footer />` with its default content and asserts the four columns, all four social links, all three partner labels, and the bottom bar's new line are actually present in the rendered output — then actually ran it rather than just writing it.
+
+**Verification:** scoped `tsc --noEmit` on all three changed files — clean. Grepped for both the unescaped-apostrophe-in-JSX pattern and the specific backslash-escaped-quote-in-JSX-attribute pattern that broke Phase 56 — no matches, either pattern. Ran the new Jest test directly (`npx jest tests/unit/Footer.test.tsx`, needed `timeout 550` and `--runInBand` to get past this sandbox's usual ~170s ceiling) — **passed**, confirming the component actually renders without throwing, not just that it type-checks. One unrelated, pre-existing console warning appeared (`fetchPriority` prop on Next's `<Image>` inside `Logo.tsx`, nothing to do with this phase's changes).
+
+**Known gaps, honestly flagged:**
+- Still not screenshot-verified in an actual browser — the new Jest test proves the component renders without errors and contains the right text/links, which is a real step up from Phase 56's tsc-only check, but it doesn't confirm the *visual* layout matches the reference pixel-for-pixel (spacing, wrapping at each breakpoint, etc.).
+- Social URLs are still `"#"` placeholders — nothing will actually navigate anywhere useful until real profile URLs are set via the Content Manager.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 57: footer redesign v2 — Connect with Us social row, Our Trusted Partners row, non-profit status line"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -8,7 +8,7 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
     <FlatFieldsEditor<FooterContent>
       contentKey="page_footer"
       initial={initial}
-      note="Link destinations (About, Our Therapists, legal pages, etc.) stay fixed — only the visible label text below is editable, so the site's navigation structure can't be broken from here."
+      note="Link destinations for the four main columns (About, Our Therapists, legal pages, etc.) stay fixed — only their visible label text is editable. The social links, trusted partners, and non-profit status line below (Phase 57) have no fixed destination/wording of their own, so both label and URL/text are editable there."
       groups={[
         {
           heading: "Tagline",
@@ -43,12 +43,40 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
           fields: [{ key: "legalHeading", label: "Column heading" }],
         },
         {
+          heading: "Connect with Us (social links)",
+          fields: [
+            { key: "connectWithUsLabel", label: "Row label" },
+            {
+              key: "socialLinkedinHref",
+              label: "LinkedIn URL",
+              help: "Defaults to # — replace with your real profile URL when you have one.",
+            },
+            { key: "socialTwitterHref", label: "Twitter / X URL", help: "Defaults to #." },
+            { key: "socialInstagramHref", label: "Instagram URL", help: "Defaults to #." },
+            { key: "socialFacebookHref", label: "Facebook URL", help: "Defaults to #." },
+          ],
+        },
+        {
+          heading: "Our Trusted Partners",
+          fields: [
+            { key: "trustedPartnersHeading", label: "Row heading" },
+            { key: "partner1Label", label: "Partner / accreditation 1" },
+            { key: "partner2Label", label: "Partner / accreditation 2" },
+            { key: "partner3Label", label: "Partner / accreditation 3" },
+          ],
+        },
+        {
           heading: "Bottom bar",
           fields: [
             {
               key: "copyrightLine",
               label: "Copyright line",
               help: "Use {year} anywhere you want the current year inserted automatically.",
+            },
+            {
+              key: "nonprofitStatusLine",
+              label: "Non-profit status line",
+              help: "Roy owns the exact legal wording here — this codebase doesn't verify or assert it.",
             },
             { key: "madeWithLine", label: "Second line" },
           ],

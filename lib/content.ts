@@ -139,6 +139,26 @@ export type FooterContent = {
   legalHeading: string;
   copyrightLine: string;
   madeWithLine: string;
+  // Phase 57 — Roy sent a simpler reference than Phase 56 (which was
+  // reverted for breaking the live footer): no fifth column, no CTA
+  // button, just a "Connect with Us" social-icon row and a "Our Trusted
+  // Partners" row, both below the existing four columns. Social hrefs
+  // default to "#" (not "") deliberately this time — Phase 56's icons
+  // defaulted to "" and only rendered when set, which likely contributed
+  // to "looks broken" since none of the four icons showed up out of the
+  // box. Defaulting to "#" means every icon always renders, matching the
+  // reference visually immediately; Roy replaces "#" with real profile
+  // URLs via the Content Manager whenever he has them.
+  connectWithUsLabel: string;
+  socialLinkedinHref: string;
+  socialTwitterHref: string;
+  socialInstagramHref: string;
+  socialFacebookHref: string;
+  trustedPartnersHeading: string;
+  partner1Label: string;
+  partner2Label: string;
+  partner3Label: string;
+  nonprofitStatusLine: string;
 };
 
 // New this round — the global header nav (components/Header.tsx) was fully
