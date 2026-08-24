@@ -25,6 +25,10 @@ export async function POST(request: Request) {
   const name = (body?.name as string | undefined) ?? "";
   const email = (body?.email as string | undefined) ?? "";
   const phone = (body?.phone as string | undefined) ?? null;
+  const city = (body?.city as string | undefined) ?? null;
+  const birthYear = body?.birthYear as number | undefined;
+  const agreedTerms = body?.agreedTerms === true;
+  const agreedPrivacy = body?.agreedPrivacy === true;
   const therapistId = body?.therapistId as string | undefined;
   const therapistName = (body?.therapistName as string | undefined) ?? "your matched therapist";
   const sessionDate = body?.sessionDate as string | undefined;
@@ -43,6 +47,23 @@ export async function POST(request: Request) {
   }
   const contactChannel = contactChannelRaw as ContactChannel;
 
+  // Phase 54 — re-validate age and both consent checkboxes server-side too.
+  // The modal already disables submit and blocks the request client-side
+  // (components/intake/IntakeBookingModal.tsx), but that's only a UX
+  // convenience — anyone could otherwise call this endpoint directly and
+  // skip both checks, which matters here since one of them is a real legal
+  // consent, not just a nice-to-have field.
+  const currentYear = new Date().getFullYear();
+  if (!birthYear || !Number.isInteger(birthYear) || birthYear < currentYear - 100 || birthYear > currentYear) {
+    return NextResponse.json({ error: "a valid year of birth is required" }, { status: 400 });
+  }
+  if (birthYear > currentYear - 18) {
+    return NextResponse.json({ error: "you must be at least 18 years old to book a session" }, { status: 400 });
+  }
+  if (!agreedTerms || !agreedPrivacy) {
+    return NextResponse.json({ error: "agreement to the terms and the privacy policy is required" }, { status: 400 });
+  }
+
   const supabase = await createClient();
 
   // Defense in depth: re-check the slot is still free right before inserting,
@@ -58,11 +79,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const consentTimestamp = new Date().toISOString();
   const { error: insertError } = await supabase.from("session_bookings").insert({
     therapist_id: therapistId,
     client_name: name,
     client_email: email,
     client_phone: phone,
+    client_city: city,
+    client_birth_year: birthYear,
+    // Storing *when* consent was given, not just a boolean — both are
+    // already guaranteed true by the validation above, so this is purely
+    // about keeping a real timestamped compliance record.
+    agreed_terms_at: consentTimestamp,
+    agreed_privacy_at: consentTimestamp,
     session_date: sessionDate,
     session_time: sessionTime,
     contact_channel: contactChannel,

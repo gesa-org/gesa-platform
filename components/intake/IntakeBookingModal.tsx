@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Mail, MessageCircle, Video, ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
+import { Mail, MessageCircle, Video, ArrowLeft, CalendarDays, CalendarCheck2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import type { ContactChannel, Tables } from "@/lib/database.types";
+
+const CURRENT_YEAR = new Date().getFullYear();
+const MIN_BIRTH_YEAR = CURRENT_YEAR - 100;
+// A person turns 18 the year they were born + 18 — using year alone (no
+// month/day) is a deliberate simplification, same granularity as the "I
+// confirm I'm over 18" checkbox itself, not a precise birthdate check.
+const MAX_BIRTH_YEAR_FOR_18 = CURRENT_YEAR - 18;
 
 function whatsappLink(phone: string, message: string) {
   const digits = phone.replace(/[^\d+]/g, "").replace(/^\+/, "");
@@ -62,6 +69,10 @@ export default function IntakeBookingModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [city, setCity] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +126,19 @@ export default function IntakeBookingModal({
       setError("This therapist doesn't have WhatsApp connected yet — please choose Email or Zoom.");
       return;
     }
+    const birthYearNum = Number(birthYear);
+    if (!birthYear || !Number.isInteger(birthYearNum) || birthYearNum < MIN_BIRTH_YEAR || birthYearNum > CURRENT_YEAR) {
+      setError("Please enter a valid year of birth.");
+      return;
+    }
+    if (birthYearNum > MAX_BIRTH_YEAR_FOR_18) {
+      setError("You must be at least 18 years old to book a session.");
+      return;
+    }
+    if (!agreedTerms || !agreedPrivacy) {
+      setError("Please agree to the terms and conditions and the privacy policy to continue.");
+      return;
+    }
     setPending(true);
     setError(null);
     try {
@@ -125,6 +149,10 @@ export default function IntakeBookingModal({
           name,
           email,
           phone: phone || null,
+          city: city || null,
+          birthYear: birthYearNum,
+          agreedTerms,
+          agreedPrivacy,
           therapistId: therapist.id,
           therapistName: therapist.full_name,
           sessionDate: date,
@@ -286,23 +314,89 @@ export default function IntakeBookingModal({
             />
           </div>
         </div>
-        {channel === "whatsapp" && (
+        <div className="grid gap-3.5 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Your phone (for WhatsApp)</label>
+            <label className="mb-1.5 block text-sm font-semibold">
+              Phone {channel === "whatsapp" ? "(for WhatsApp)" : "(optional)"}
+            </label>
             <input
-              required
+              required={channel === "whatsapp"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+1 555 123 4567"
               className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
             />
           </div>
-        )}
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">City</label>
+            <input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Year of birth</label>
+          <input
+            type="number"
+            required
+            inputMode="numeric"
+            min={MIN_BIRTH_YEAR}
+            max={CURRENT_YEAR}
+            placeholder="e.g. 1990"
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
+            className="w-full max-w-[160px] rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        {/* Phase 54 — Roy's provided spec for this modal included two consent
+            checkboxes (age/terms, and privacy policy) that didn't exist here
+            before. Both are required — the submit button stays disabled
+            until they're checked, and the API route re-validates both
+            server-side too (a direct API call could otherwise skip a
+            client-only check), storing the moment consent was given
+            (session_bookings.agreed_terms_at / agreed_privacy_at) rather
+            than just a boolean, for a real compliance record. */}
+        <div className="flex flex-col gap-2.5">
+          <label className="flex items-start gap-2.5 text-[13px] text-muted-fg">
+            <input
+              type="checkbox"
+              required
+              checked={agreedTerms}
+              onChange={(e) => setAgreedTerms(e.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-none"
+            />
+            <span>
+              I confirm that I am over 18 years old and agree to the website&apos;s{" "}
+              <a href="/terms-and-conditions" target="_blank" rel="noreferrer" className="font-semibold text-primary underline">
+                terms and conditions
+              </a>
+            </span>
+          </label>
+          <label className="flex items-start gap-2.5 text-[13px] text-muted-fg">
+            <input
+              type="checkbox"
+              required
+              checked={agreedPrivacy}
+              onChange={(e) => setAgreedPrivacy(e.target.checked)}
+              className="mt-0.5 h-4 w-4 flex-none"
+            />
+            <span>
+              I have read and understood the{" "}
+              <a href="/privacy-policy" target="_blank" rel="noreferrer" className="font-semibold text-primary underline">
+                privacy policy
+              </a>
+            </span>
+          </label>
+        </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <Button type="submit" block disabled={pending || !selectedTime}>
-          {pending ? "Booking…" : "Confirm booking"} <ArrowRight size={16} />
+        <Button type="submit" block disabled={pending || !selectedTime || !agreedTerms || !agreedPrivacy}>
+          <CalendarCheck2 size={16} /> {pending ? "Booking…" : "Book a Support Meeting"}
         </Button>
         <p className="text-center text-[13px] text-muted-fg">
           This slot is reserved the moment you confirm — no one else can take it.

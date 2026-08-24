@@ -1566,4 +1566,36 @@ git push
 ```
 
 ---
+
+## Phase 54 — Book a Session modal: City, year of birth, terms/privacy consent
+
+Roy sent an HTML spec for the "Book a Session" modal on Our Therapists, asking for several new fields. First identified which component is actually rendered there: the directory's "Book a Session" button (`components/therapists/BookSessionButton.tsx`) opens `components/intake/IntakeBookingModal.tsx` — the real, conflict-free scheduling flow — not `components/match/BookingModal.tsx` (that one's the separate Find-Your-Therapist wizard's confirmation step, untouched here). Most of the spec's fields already existed and matched almost exactly (back link, "Book with {name}" heading, subtitle, Email/WhatsApp/Zoom method cards, date picker, real time-slot chips, Name/Email) — the genuinely new pieces were City, Year of birth, and two consent checkboxes (age/terms, and privacy policy), which didn't exist before.
+
+**Schema (`session_bookings`, both `iddeoavrlnvwwfopsacy` prod and `ggjvpfivyqartvanvhzq` dev):** added `client_city text`, `client_birth_year integer`, `agreed_terms_at timestamptz`, `agreed_privacy_at timestamptz`. Consent is stored as *when* it was given rather than a plain boolean — a real timestamped record, not just a checkbox flag, given one of these is an actual legal consent. `lib/database.types.ts`'s `SessionBookingRow` updated to match (its `Insert` type is already `Partial<...>` plus a handful of required fields, so no further type changes needed there).
+
+**`components/intake/IntakeBookingModal.tsx`:**
+- Added City (optional) and Year of birth (required) fields; Phone changed from "only shown when WhatsApp is selected" to always visible (required only for WhatsApp, same as before, just no longer hidden for the other two channels — matching the spec's always-present Phone field).
+- Added the two required consent checkboxes (age + terms, and privacy policy), each linking to the real, already-existing `/terms-and-conditions` and `/privacy-policy` pages.
+- Client-side validation: year of birth must produce an age of 18+ (year-level granularity, matching the checkbox's own "over 18" wording, not a precise birthdate check), and both checkboxes must be checked, before submit is even enabled.
+- Submit button relabeled "Book a Support Meeting" (from "Confirm booking") with a calendar-check icon, matching the spec's button text/intent — swapped the emoji "🗓️" for a lucide icon to stay consistent with this codebase's existing icon convention (no other button anywhere uses raw emoji).
+
+**`app/api/intake-booking/route.ts`:** re-validates the year-of-birth/age check and both consent flags server-side too — the modal's client-side checks are a UX convenience, not a security boundary, since anyone could otherwise call this endpoint directly and skip them, and one of these checks is a real legal consent. Inserts the four new columns; consent timestamps are set together at submit time.
+
+**Verification:** scoped `tsc --noEmit` on the modal, the button, and `database.types.ts` — clean. The API route's own scoped check hit a pre-existing, unrelated sandbox issue (`lib/email/resend.ts`'s import of the `resend` package fails to resolve in isolation here — a package.json `exports`/`types` resolution quirk specific to running `tsc` standalone outside the full Next.js build, in the same family as the Tailwind CLI failure noted back in Phase 48); confirmed it's pre-existing by checking `resend.ts` itself is untouched by this phase and the error is purely in third-party type resolution, not in any code I wrote. Manually re-read the route's diff for correctness instead. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Extended `lib/translations/he.ts` (Phase 53) with ~24 new entries for this modal's fully-static strings, so the added fields stay translatable — the two consent-checkbox sentences are deliberately left out of the dictionary since each splits across multiple DOM text nodes around an embedded link and I can't verify the exact node boundaries without a live browser, so a wrong partial dictionary match seemed worse than falling through to the (still unconfigured) live API for just those two sentences.
+
+**Known gaps, honestly flagged:**
+- Not click-through-verified from this sandbox — worth a real run-through: open the modal, try submitting with an under-18 birth year (should block with the age message), try submitting with checkboxes unchecked (button should stay disabled), then complete a real booking and confirm the new fields actually land in `session_bookings`.
+- The confirmation/notification emails (`lib/email/templates.ts`) weren't updated to mention city/birth year — the team notification email still only shows what it showed before this phase. Worth adding if that data should be visible to admins without a database query.
+- `components/match/BookingModal.tsx` (the separate wizard flow's own booking step) was deliberately left untouched — Roy's request was specifically about the Our Therapists page's modal.
+- Same `.git/index.lock` situation as prior phases — also blocked a `git stash` I tried while investigating the resend.ts error, confirmed harmless (stash aborted cleanly before touching anything, verified the modal/route edits were still intact afterward).
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 54: add City, year of birth, and terms/privacy consent to the Book a Session modal"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

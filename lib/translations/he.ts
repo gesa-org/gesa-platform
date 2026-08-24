@@ -168,6 +168,40 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Updates from GESA, and resources from our network of volunteer therapists.":
     "עדכונים מ-GESA, ומשאבים מרשת המטפלים המתנדבים שלנו.",
 
+  // --- Book a Session modal (components/intake/IntakeBookingModal.tsx,
+  // Phase 54). Only the fully-static, single-text-node strings are listed
+  // here — the two consent-checkbox sentences each split across multiple
+  // DOM text nodes around an embedded link, so exact-match dictionary
+  // lookup isn't reliable for those without live-browser verification of
+  // how the text actually nodes out; they fall through to the (still
+  // unconfigured) live API for now rather than risk a wrong partial match.
+  "Choose a different therapist": "בחרו מטפל אחר",
+  "Pick how you'd like to connect and a time that works.": "בחרו איך תרצו להתחבר ומועד שמתאים לכם.",
+  "How should we connect you?": "איך נחבר אתכם?",
+  "We'll confirm and follow up at your email.": "נאשר ונחזור אליכם באימייל.",
+  "Message your therapist directly.": "שלחו הודעה ישירות למטפל שלכם.",
+  "We'll email you a Zoom link before your session.": "נשלח לכם קישור לזום באימייל לפני הפגישה.",
+  Date: "תאריך",
+  Name: "שם",
+  Email: "אימייל",
+  City: "עיר",
+  "Year of birth": "שנת לידה",
+  "Checking availability…": "בודק זמינות…",
+  "No open times this day — try another date.": "אין זמנים פנויים ביום זה — נסו תאריך אחר.",
+  "Please choose a time.": "בחרו שעה.",
+  "This therapist doesn't have WhatsApp connected yet — please choose Email or Zoom.":
+    "למטפל הזה אין עדיין וואטסאפ מחובר — בחרו אימייל או זום.",
+  "Please enter a valid year of birth.": "הזינו שנת לידה תקינה.",
+  "You must be at least 18 years old to book a session.": "עליכם להיות מעל גיל 18 כדי לקבוע פגישה.",
+  "Please agree to the terms and conditions and the privacy policy to continue.":
+    "אנא אשרו את תנאי השימוש ומדיניות הפרטיות כדי להמשיך.",
+  "Something went wrong. Please try again.": "משהו השתבש. נסו שוב.",
+  "Booking…": "מבצע הזמנה…",
+  "Book a Support Meeting": "קבעו פגישת תמיכה",
+  "This slot is reserved the moment you confirm — no one else can take it.":
+    "המקום משוריין ברגע האישור — אף אחד אחר לא יכול לתפוס אותו.",
+  "Book a Session": "קביעת פגישה",
+
   // --- Stats (components/home/Stats.tsx) ---
   "Verified therapists": "מטפלים מאושרים",
   "Free sessions each": "פגישות חינמיות לכל אחד",

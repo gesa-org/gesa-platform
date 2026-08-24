@@ -229,6 +229,16 @@ export type SessionBookingRow = {
   client_name: string;
   client_email: string;
   client_phone: string | null;
+  // Phase 54 — added alongside the "Book a Session" modal's new City,
+  // Year of birth, and terms/privacy consent fields (components/intake/
+  // IntakeBookingModal.tsx). Consent is stored as *when* it was given
+  // (nullable — always set together, always non-null on any row inserted
+  // after this phase) rather than a plain boolean, for a real timestamped
+  // compliance record.
+  client_city: string | null;
+  client_birth_year: number | null;
+  agreed_terms_at: string | null;
+  agreed_privacy_at: string | null;
   session_date: string; // "YYYY-MM-DD"
   session_time: string; // "HH:MM:SS"
   contact_channel: ContactChannel;
