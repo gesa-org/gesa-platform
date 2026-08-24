@@ -1642,4 +1642,31 @@ git push
 ```
 
 ---
+
+## Phase 56 — Footer redesign: Connect column, socials, accreditations, closing CTA
+
+Roy sent a reference screenshot of a redesigned footer with a fifth "Connect" column, a social-links row, an "Accreditations & Partners" row naming three specific organizations, and a "Join Our Global Network" CTA. Before building anything, flagged two real concerns and asked Roy directly: (1) the three named accreditations/partners are specific, checkable claims about GESA's credentials — Roy confirmed they're real, so they're implemented as given; (2) the social icons and a new "GESA is a registered 501(c)(3) non-profit in the United States" line both needed either real URLs/verified wording from Roy, or to be left out — Roy asked for these to be Content Manager-editable instead of hardcoded, so he owns and can correct them himself.
+
+**`lib/content.ts` (`FooterContent`):** added connect-column fields (heading + label/href pairs for Newsletter Signup, Press Inquiries, Partnerships, plus a Blog label), social fields (a "follow our journey" label + three social URLs, all defaulting to `""`), accreditation fields (a heading + three label slots), a Join Our Global Network label/href pair, and `nonprofitStatusLine`. Unlike the four existing columns (label editable, destination fixed to a real route) these new href fields are themselves editable — there's no existing "correct" destination for a newsletter signup or a social profile, so Roy needs to be able to set them directly.
+
+**`components/Footer.tsx`:** grid widened to 5 columns; new Connect column added (Newsletter/Press/Partnerships route to the existing real Contact form with a subject query param, same pattern Donate/Volunteer already use — Blog reuses the same disabled "coming soon" treatment as the Explore column's Blog, rather than a second, differently-behaving Blog link). New row below the columns: social icons (LinkedIn/Twitter/Facebook, each rendered only if its URL is actually set, so an unfilled social link never becomes a dead "#" link on the live site) plus the "follow our journey" text (also only shown if at least one URL is set), the three confirmed accreditations/partners as icon+label pairs (no real logo image files exist for them, so these are simple lucide icons + text, matching the reference's minimalist style rather than fabricating logo graphics), and the "Join Our Global Network" button (routes to `/contact?subject=Volunteer`, the closest existing real flow). Bottom bar extended to a second copyright-area line for the non-profit status line.
+
+**`components/admin/content/FooterEditor.tsx`:** added matching field groups for all of the above, with explicit help text flagging which destinations are placeholders pending real values (Newsletter Signup) and which line's legal wording Roy owns and this codebase doesn't verify (the 501(c)(3) line).
+
+**Verification:** scoped `tsc --noEmit` on `lib/content.ts`, `components/Footer.tsx`, and `components/admin/content/FooterEditor.tsx` — caught and fixed one real bug along the way: a backslash-escaped quote inside a JSX string *attribute* (`note="...\"correct\"..."`) isn't valid the way it would be inside a normal JS string literal, which broke parsing; fixed by using single quotes for the inner emphasis instead. Re-ran clean after. Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. No existing test file covers `Footer.tsx`.
+
+**Known gaps, honestly flagged:**
+- Social URLs still default to empty (no icons will show until Roy fills them in via the Content Manager) and the "Join Our Global Network" destination is a reasonable guess (`/contact?subject=Volunteer`), not something specified — worth confirming that's the right place to send people who click it, or pointing it somewhere more specific if one exists.
+- Not screenshot-verified from this sandbox — worth a real look at how the new row wraps at tablet/mobile widths, since it now holds three logical groups (socials, accreditations, CTA) that could get cramped on a narrower screen.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 56: footer redesign — Connect column, social links, accreditations row, Join Our Global Network CTA"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
