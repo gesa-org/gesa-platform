@@ -1503,4 +1503,37 @@ git push
 ```
 
 ---
+
+## Phase 52 — Language switcher: reload-free EN/HE transition + RTL icon mirroring
+
+Roy sent a screen recording of another org's site (a Google-Translate-widget-powered switcher) to spec out a language-switch feature, walking through the exact UX: click the header language selector, pick Hebrew, the whole page translates and flips to RTL instantly, then picking English again reverts smoothly "without requiring a hard page reload." Checked first before building anything: GESA already has essentially this whole feature (`components/TranslationProvider.tsx` + `components/LanguageSelector.tsx`, from Phase 33) — a header selector offering English/Hebrew, DOM-level translation via `/api/translate` (Google Cloud Translation, cached), automatic `dir="rtl"` flipping, and localStorage/profile persistence. The one real, deliberate gap: switching languages always did a full `window.location.reload()`, specifically to avoid the fragility of undoing in-place DOM mutations — the opposite of the reload-free experience in Roy's reference.
+
+**`components/TranslationProvider.tsx` — removed the reload, made both directions work in place:**
+- Added `originalTextRef`, a `Map<Text, string>` that caches each text node's real English content the first time it's translated.
+- `translatePage("en")` is no longer a no-op — it now restores every still-connected cached node's original English text and clears the cache, instead of relying on a reload to get back to clean English DOM.
+- The pathname/language effect that triggers `translatePage` used to `return` early for `language === "en"`; now it runs for both languages, so switching back to English actually invokes the new revert branch.
+- `setLanguage` just calls `setLanguageState(code)` now — no `window.location.reload()`. The existing effect picks up the state change and calls `translatePage` automatically.
+- `LanguageSelector.tsx` and `AccountForm.tsx` needed no changes — the former just calls into `setLanguage` as before, and the latter's local `language` state is an unrelated profile-form field, not the translation context.
+
+**`app/globals.css` — new global rule mirroring directional icons under RTL:** lucide-react auto-applies a `lucide-{kebab-name}` class to every icon (confirmed by reading its `createLucideIcon.js`), so one small rule (`[dir="rtl"] .lucide-arrow-right, .lucide-arrow-left, .lucide-chevron-right, .lucide-chevron-left { transform: scaleX(-1); }`) flips every arrow/chevron's drawn direction site-wide with no per-component changes — e.g. "Find your therapist →" now correctly points left in Hebrew, matching the reference video. Their *position* in a button already auto-mirrors under `dir="rtl"` per the CSS flexbox spec for plain `flex` rows with no direction override, so this only needed to fix the glyph itself.
+
+**Known, deliberately out of scope for this phase:** true pixel-for-pixel structural mirroring (margins, padding, absolute left/right positioning) would require converting every directional Tailwind utility (`ml-`/`mr-`/`pl-`/`pr-`/absolute `left-`/`right-`) to logical properties (`ms-`/`me-`, etc.) across the whole codebase — a real, much larger follow-up, not something attempted silently here. What ships this phase (instant reload-free switching, correct RTL text direction, and mirrored icon glyphs) covers the specific UX gap Roy's video called out; multi-column/absolutely-positioned sections may still read visually LTR-ish in a few spots.
+
+**Verification:** scoped `tsc --noEmit` on `components/TranslationProvider.tsx` — clean (had to switch a `for...of` over the `Map` to `.forEach`, since this project's `tsconfig.json` has no explicit `target`, which defaults low enough that direct Map iteration needs `--downlevelIteration`). Grepped for the unescaped-apostrophe-in-JSX pattern — no matches. Confirmed `setLanguage` has exactly two callers (`LanguageSelector.tsx`, and an unrelated same-named local state setter in `AccountForm.tsx`) so nothing else depends on the old reload behavior. No existing test file covers `TranslationProvider`/`LanguageSelector`, so there's no automated suite to re-run for this specifically.
+
+**Known gaps, honestly flagged:**
+- Not screenshot/click-through-verified from this sandbox — worth a real run-through: switch to Hebrew, confirm instant translation + RTL flip + mirrored arrows with no reload, switch back to English, confirm the original text actually restores cleanly rather than staying half-translated anywhere.
+- The DOM-rewrite approach's pre-existing limitation stands: content that appears after an in-page fetch (e.g. AI match results) won't be auto-translated until the next navigation.
+- `originalTextRef`'s cache is never proactively pruned for nodes from pages navigated away from — harmless (skipped via `isConnected` on revert) but grows for the life of the tab; not expected to be a real memory concern for a normal session.
+- Same `.git/index.lock` situation as prior phases.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 52: reload-free EN/HE language switch, RTL icon mirroring"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

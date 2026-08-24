@@ -31,14 +31,23 @@ const BATCH_SIZE = 100;
 // deliberately a DOM-rewrite approach rather than a full i18n rewrite of
 // every page/component — it's the only way to hit "translate everything,
 // including dynamic DB content like bios and blog posts" without months of
-// work, at the cost of two known limitations:
-//   1. Content that appears *after* an in-page fetch (e.g. the AI match
-//      results in the Find Your Therapist wizard) won't be caught until the
-//      next navigation, since there's no MutationObserver here.
-//   2. Switching languages always does a full page reload rather than a
-//      seamless SPA transition, so we always start from clean, original
-//      English DOM before translating — trying to "undo" in-place text
-//      mutations across arbitrary React re-renders is far more fragile.
+// work, at the cost of one known limitation:
+//   Content that appears *after* an in-page fetch (e.g. the AI match
+//   results in the Find Your Therapist wizard) won't be caught until the
+//   next navigation, since there's no MutationObserver here.
+//
+// Phase 52 — switching languages used to always force a full page reload
+// (`window.location.reload()`), specifically to avoid having to "undo"
+// in-place text mutations across arbitrary React re-renders. Roy sent a
+// reference video of another org's site where the switch is instant and
+// reload-free in both directions, so this now does that: `originalTextRef`
+// (a Map<Text, string>) records each text node's real English content the
+// first time it's translated, and switching back to English just restores
+// those cached originals in place — no reload, no re-fetch. Switching to
+// Hebrew still calls /api/translate exactly as before. The one edge this
+// doesn't cover: if a node that was translated gets unmounted/replaced by
+// an unrelated React re-render before you switch back, its cache entry is
+// simply skipped (`node.isConnected` check) rather than erroring.
 function collectTextNodes(root: Node): Text[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -66,6 +75,11 @@ export default function TranslationProvider({ children }: { children: React.Reac
   const [translating, setTranslating] = useState(false);
   const pathname = usePathname();
   const appliedKey = useRef<string | null>(null);
+  // Phase 52 — records each text node's real English content the first
+  // time it gets translated, so switching back to English can restore it
+  // in place instead of reloading. Cleared out (not just left stale) once
+  // a revert actually happens — see translatePage's "en" branch below.
+  const originalTextRef = useRef<Map<Text, string>>(new Map());
 
   useEffect(() => {
     // Phase 33 — the picker only offers English and Hebrew now, but
@@ -102,22 +116,50 @@ export default function TranslationProvider({ children }: { children: React.Reac
   // renders in a left-to-right document, which breaks alignment, punctuation
   // placement, and the browser's own bidi handling of mixed Hebrew/Latin
   // text (names, emails, numbers). This flips the whole document's base
-  // direction and updates the lang attribute; components built with
-  // directional Tailwind utilities (ml-/mr-, text-left, etc.) don't
-  // automatically mirror their layout, so complex multi-column sections may
-  // still read visually LTR even once the text itself is Hebrew and
-  // RTL-aligned — a real, known limitation of retrofitting RTL onto an
-  // LTR-only layout rather than something this fixes silently.
+  // direction and updates the lang attribute. Flexbox rows built with plain
+  // `flex` (no explicit direction override) do auto-mirror under `dir="rtl"`
+  // per the CSS spec — e.g. a "label, then icon" row visually becomes
+  // "icon, then label" reading right-to-left, no extra work needed — and
+  // Phase 52 added a global rule (app/globals.css, targeting lucide's
+  // auto-applied `.lucide-arrow-*`/`.lucide-chevron-*` classes) that mirrors
+  // directional arrow/chevron icons themselves so they point the correct
+  // way. What's still a real, known limitation: components using directional
+  // Tailwind utilities (ml-/mr-, pl-/pr-, text-left, absolute left-*/right-*
+  // positioning) rather than logical properties don't auto-mirror, so some
+  // multi-column or absolutely-positioned sections may still read visually
+  // LTR-ish even once the text itself is Hebrew and RTL-aligned. Converting
+  // every such utility site-wide to logical properties (ms-/me-, etc.) is a
+  // real, larger follow-up, not something this phase silently attempted.
   useEffect(() => {
     document.documentElement.dir = RTL_LANGUAGES.has(language) ? "rtl" : "ltr";
     document.documentElement.lang = language;
   }, [language]);
 
   const translatePage = useCallback(async (lang: string) => {
-    if (lang === "en") return;
+    if (lang === "en") {
+      // Phase 52 — revert in place: restore whatever original English text
+      // was cached for each node still actually in the DOM (a node from a
+      // page/section that's since unmounted is just skipped, not an
+      // error), then clear the cache so the next forward translation
+      // starts clean.
+      originalTextRef.current.forEach((original, node) => {
+        if (node.isConnected) node.textContent = original;
+      });
+      originalTextRef.current.clear();
+      return;
+    }
     setTranslating(true);
     try {
       const nodes = collectTextNodes(document.body);
+      // Cache each node's real English text before anything gets mutated —
+      // only the first time we see a given node, so re-translating (e.g.
+      // switching he -> en -> he again) doesn't overwrite the cached
+      // original with already-translated text.
+      nodes.forEach((node) => {
+        if (!originalTextRef.current.has(node)) {
+          originalTextRef.current.set(node, node.textContent || "");
+        }
+      });
       const uniqueTexts = Array.from(new Set(nodes.map((n) => n.textContent || "")));
       if (uniqueTexts.length === 0) return;
 
@@ -158,7 +200,6 @@ export default function TranslationProvider({ children }: { children: React.Reac
   }, []);
 
   useEffect(() => {
-    if (language === "en") return;
     // The admin panel is internal-only and not part of the public-facing
     // translation feature. Walking its (often large) tables and firing
     // /api/translate batches on every navigation was making admin pages
@@ -168,16 +209,20 @@ export default function TranslationProvider({ children }: { children: React.Reac
     const key = `${pathname}:${language}`;
     if (appliedKey.current === key) return;
     appliedKey.current = key;
-    // Let the new route's content finish painting before scanning the DOM.
+    // Runs for "en" too now (Phase 52), so switching back to English
+    // actually triggers translatePage's revert branch above instead of
+    // being skipped entirely. Still let the route's content finish
+    // painting before touching the DOM either way.
     const id = setTimeout(() => translatePage(language), 150);
     return () => clearTimeout(id);
   }, [pathname, language, translatePage]);
 
   const setLanguage = useCallback((code: string) => {
     localStorage.setItem(STORAGE_KEY, code);
-    // Always reload — see the note above on why we don't try to translate
-    // or restore in place.
-    window.location.reload();
+    // Phase 52 — no more reload. The effect above picks up the state
+    // change and calls translatePage, which now handles both directions
+    // (translate to Hebrew, or restore cached original English) in place.
+    setLanguageState(code);
   }, []);
 
   return (

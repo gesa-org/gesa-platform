@@ -202,6 +202,25 @@
   }
 }
 
+/* Phase 52 — mirror directional arrow/chevron icons under RTL (Hebrew).
+   lucide-react automatically adds a `lucide-{kebab-icon-name}` class to
+   every icon it renders (see node_modules/lucide-react's
+   createLucideIcon.js), so this reaches every ArrowRight/ArrowLeft/
+   ChevronRight/ChevronLeft in the app without touching each component
+   individually — e.g. a "Find your therapist →" button's arrow now
+   correctly points left once the page is in Hebrew, matching the
+   reference video Roy sent. Flexbox rows built with plain `flex` (no
+   direction override) already reorder their children automatically under
+   `dir="rtl"` per the CSS spec, so the icon's *position* in a button
+   already mirrors correctly on its own — this only needed to fix the
+   glyph's own drawn direction. */
+[dir="rtl"] .lucide-arrow-right,
+[dir="rtl"] .lucide-arrow-left,
+[dir="rtl"] .lucide-chevron-right,
+[dir="rtl"] .lucide-chevron-left {
+  transform: scaleX(-1);
+}
+
 /* Phase 48 — Roy sent a reference mockup for the Support Groups page's
    group cards and preview panel: a dark charcoal-navy "marbled" surface
    with thin gold veins, gold serif headings, and gold-bordered pills,
