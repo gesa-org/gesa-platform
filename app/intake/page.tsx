@@ -53,11 +53,11 @@ export default async function IntakePage({
 
   const therapists = await getActiveTherapists();
   const hint = PATH_MATCH_HINT[pathKey];
-  const results =
+  const outcome =
     therapists.length > 0
       ? await matchTherapists({ symptoms: hint.symptoms, treatmentType: hint.treatmentType, genderPreference: "no_preference" }, therapists)
-      : [];
-  const matches = results
+      : { matches: [], genderPreferenceHonored: true };
+  const matches = outcome.matches
     .map((r) => {
       const therapist = therapists.find((t) => t.id === r.therapistId);
       return therapist ? { therapist, reasoning: r.reasoning } : null;

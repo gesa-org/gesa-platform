@@ -1782,4 +1782,37 @@ git push
 ```
 
 ---
+
+## Phase 59 — Fix gender preference not actually filtering the Find Your Therapist matches
+
+Roy reported that choosing "Male" (or Female) still surfaced therapists of the wrong gender in the therapist-selection flows across the site.
+
+**Root cause, found in `lib/ai/matchTherapists.ts`:** the "Find Your Therapist" wizard's matching function only ever treated `genderPreference` as a *soft* signal — the rule-based fallback gave a matching gender a small +2 score bonus (easily outweighed by keyword overlap), and the AI system prompt explicitly told the model "Treat the gender preference as a soft preference, not a hard filter... include your best matches regardless." So a client choosing Male could still see female therapists ranked above male ones, or shown at all. The static "Our Therapists" directory page (`components/TherapistsDirectory.tsx`) was already a correct hard filter (`t.gender === gender`) — that part was not the bug.
+
+**Fix:** `matchTherapists()` now hard-filters the candidate pool by `genderPreference` *before* any scoring or AI call, for both the rule-based fallback and the AI path (the AI now only ever sees a pre-filtered roster, so its prompt no longer needs — or gets — a "soft preference" instruction). If that filter would leave zero candidates (see data gap below), it falls back to the unfiltered pool rather than returning nothing, per this function's existing "never leave a client with zero matches" principle — but now returns a new `genderPreferenceHonored: boolean` flag so callers can tell the difference and say so honestly instead of silently showing a mismatch.
+
+**Treatment-type matching also strengthened:** `ruleBasedMatch`'s old scoring split every symptom/treatment word into a flat keyword-overlap count, so a specific treatment ask (e.g. "CBT") carried the same weight as an incidental word match. `TREATMENT_TYPES` values map 1:1 onto real `specialties` strings, so an exact specialty match now adds +6 (vs. +1 for a generic keyword hit, +2 for a substring hit) — a stated treatment need now reliably outranks loosely related results. The AI prompt was updated with the same instruction ("weight the preferred treatment type heavily... over ones that only share a loosely related keyword").
+
+**UI transparency, `components/match/StepMatches.tsx`:** added a visible chip row above the results summarizing the preferences actually applied (gender + treatment type), each therapist card now shows their gender and top specialties plainly instead of asking the client to trust the reasoning text alone, and — when `genderPreferenceHonored` is false — an explicit notice explaining that no active therapist of the requested gender is currently available and these are the closest fit on treatment/focus areas instead, with a link to contact the team directly. `TherapistMatch.therapist` (`components/match/types.ts`) gained the `gender` field so the UI has it to display.
+
+**A caller bug caught along the way:** `app/intake/page.tsx` called `matchTherapists()` and used the result as a plain array (`results.map(...)`) — now that it returns `{ matches, genderPreferenceHonored }`, that would have silently thrown at runtime. Fixed to destructure `outcome.matches`. Caught by the scoped `tsc --noEmit` check below, not by inspection — a good reminder to always grep for every call site before changing a shared function's return type.
+
+**Underlying data gap, flagged for Roy directly (not a code fix, and not something to guess at):** checked the live production database — all three currently active, verified therapists (Karin Horen, Karin Sugar, Katia Weissberg Glazman) have `gender = "no_preference"` on file, meaning it was never actually set for them. That means even the directory's already-correct hard filter returns zero results for both "Male" and "Female" today, and it's also why Phase 59's new fallback path (`genderPreferenceHonored: false`) will trigger on live data right now rather than a true hard-filtered match. This needs a real value set per therapist — Roy will need to either tell me each therapist's actual gender so I can update the `gender` column via Supabase directly, or set it through the database. I did not guess or infer this from names, since gender is exactly the kind of attribute that shouldn't be assumed.
+
+**Verification:** scoped `tsc --noEmit` across all five changed/checked files (`matchTherapists.ts`, `app/api/match/route.ts`, `app/intake/page.tsx`, `StepMatches.tsx`, `types.ts`, `constants.ts`) — clean, and this is exactly what caught the `app/intake/page.tsx` caller bug above. New `tests/unit/matchTherapists.test.ts` — four real, run (not just written) Jest tests against the rule-based fallback path: gender is hard-filtered when candidates of that gender exist; falls back to the full pool (flagged) when none do, mirroring today's real roster; is skipped entirely for "no preference"; and an exact treatment/specialty match outranks an unrelated therapist. All four passed. (The AI-path prompt wording change itself isn't independently tested — it can't be, without a real API call — but the pool it now receives is provably pre-filtered by the same test coverage.)
+
+**Known gaps, honestly flagged:**
+- The live data gap above means, until Roy sets real gender values, every gender-preference request will hit the "not honored" fallback path rather than a true match — the code fix is correct and tested, but its real-world effect is currently limited by the data.
+- Not screenshot-verified in a browser — the new chip row/notice/card details are covered by the fix's logic and existing component patterns, not a visual check.
+- The AI-matching path (when `ANTHROPIC_API_KEY` is set) relies on the model actually honoring the updated system prompt; there's no way to unit test that deterministically, only the pre-filtering it now receives.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 59: hard-filter therapist gender preference in matching, strengthen treatment-type weighting, add match transparency UI"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

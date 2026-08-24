@@ -18,6 +18,7 @@ export type TherapistMatch = {
     | "specialties"
     | "short_summary"
     | "languages"
+    | "gender"
     | "is_verified"
     | "contact_phone"
   >;

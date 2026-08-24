@@ -29,7 +29,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ matches: [] });
   }
 
-  const results = await matchTherapists({ symptoms, treatmentType, genderPreference }, therapists);
+  const { matches: results, genderPreferenceHonored } = await matchTherapists(
+    { symptoms, treatmentType, genderPreference },
+    therapists
+  );
 
   const matches = results
     .map((r) => {
@@ -39,5 +42,5 @@ export async function POST(request: Request) {
     })
     .filter((m): m is { therapist: (typeof therapists)[number]; reasoning: string } => m !== null);
 
-  return NextResponse.json({ matches });
+  return NextResponse.json({ matches, genderPreferenceHonored });
 }
