@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import AdminNav from "@/components/admin/AdminNav";
 
 const NAV = [
   { href: "/admin", label: "Overview" },
@@ -21,27 +21,27 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const profile = await requireAdmin();
 
   return (
-    <div className="min-h-[70vh] bg-secondary/40">
+    // Phase 60 — full-page brushed-gold background per Roy's reference
+    // mockup (see .admin-gold-bg in globals.css). Nav labels/hrefs below are
+    // unchanged from before this phase — only the visual chrome changed.
+    <div className="admin-gold-bg min-h-[70vh]">
       <div className="wrap py-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="eyebrow">Admin</span>
-            <h1 className="text-[26px]">CRM Dashboard</h1>
+            {/* Not `.eyebrow` here — that class renders in --clay gold,
+                which disappears against this page's own gold background.
+                A plain dark-slate label keeps it legible. */}
+            <span className="mb-2 inline-block text-[12px] font-bold uppercase tracking-[0.14em] text-primary">
+              Admin
+            </span>
+            <h1 className="text-[26px] text-primary">CRM Dashboard</h1>
           </div>
-          <div className="text-sm text-muted-fg">Signed in as {profile.full_name || profile.email}</div>
+          <div className="rounded-full bg-card/70 px-4 py-2 text-sm text-primary shadow-soft backdrop-blur-sm">
+            Signed in as {profile.full_name || profile.email}
+          </div>
         </div>
         <div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:items-start">
-          <nav className="flex gap-2 overflow-x-auto rounded-[var(--radius)] border border-border bg-card p-3 lg:flex-col lg:overflow-visible">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-medium text-muted-fg transition-colors hover:bg-secondary hover:text-primary lg:whitespace-normal"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <AdminNav items={NAV} />
           <div className="min-w-0">{children}</div>
         </div>
       </div>

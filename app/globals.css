@@ -103,6 +103,18 @@
     }
   }
 
+  /* Phase 60 — Roy sent a reference CRM dashboard mockup with a full-page
+     brushed-gold background behind every card, and asked for the admin
+     dashboard to match. Same gold family as `.gold-banner` above
+     (--clay/--amber), but a plain static gradient with no animated sheen —
+     `.gold-banner`'s slow moving highlight is a nice one-time flourish
+     behind a hero headline, but distracting behind a dense data screen an
+     admin is actually reading every day. `.admin-gold-bg` is that
+     calmer, always-on variant, scoped to the /admin layout only. */
+  .admin-gold-bg {
+    background: linear-gradient(160deg, #ecd48f 0%, var(--clay) 50%, var(--amber) 100%);
+  }
+
   /* Golden hover shimmer for the three "path" cards (spec-independent —
      this is Roy's own direct request, not from the motion PDF). A single
      one-shot diagonal light sweep plays across the card on hover/focus,

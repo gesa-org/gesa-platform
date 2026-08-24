@@ -1815,4 +1815,36 @@ git push
 ```
 
 ---
+
+## Phase 60 — CRM Dashboard redesign: gold background, trend chart, activity feed, key metrics, scheduling calendar
+
+Roy sent a reference CRM dashboard mockup (full-page brushed-gold background, three KPI cards, a monthly trend chart, a "User Activity" table, two "Key Metrics" panels, a "Users by role" summary, and a scheduling calendar) and asked for `/admin` to match it "with the same architecture." Asked upfront whether the gold treatment should cover the whole page or just a header band, given this is a data-dense screen an admin reads daily, not a marketing page — Roy chose the full-page gold background, matching the reference exactly.
+
+**Visual chrome (`app/globals.css`, `app/admin/layout.tsx`):** added `.admin-gold-bg`, a static gradient built from the same `--clay`/`--amber` tokens `.gold-banner` already uses elsewhere on the site (Home/About/Support Groups banners) — deliberately without `.gold-banner`'s animated sheen sweep, since a slow moving highlight is a nice one-time flourish behind a hero headline but would be a distracting animation behind a screen someone is actually trying to read numbers off of all day. The "Admin" label switched off the shared `.eyebrow` class (which renders in `--clay` gold — invisible against this page's own gold background) to a plain dark-slate label instead. Sidebar nav and the "Signed in as" pill got a translucent cream/glass treatment (`bg-clay-soft/80`, `backdrop-blur-sm`) to read clearly over the gradient.
+
+**New: `components/admin/AdminNav.tsx`.** The reference highlights the current section ("Overview") in the sidebar. `app/admin/layout.tsx` is a Server Component and can't call `usePathname()` itself, so the nav list was split into its own small Client Component that does — `/admin` needs an exact-path match (it's a URL prefix of every other admin route, so a naive prefix check would light it up everywhere), every other item is a normal prefix match so a nested route like `/admin/therapists/[id]` still highlights "Therapists." Nav items/hrefs/labels themselves are unchanged from before this phase.
+
+**`app/admin/page.tsx` — full rebuild, all from real data (`lib/queries.ts`), nothing sample/placeholder:**
+- **KPI tiles:** kept to the three the reference calls out (Session bookings, Find Your Therapist, Booking requests); Contact inquiries/Group registrations/Registered users moved into the Key Metrics panels below instead of being duplicated as tiles too.
+- **Trend:** a single normalized activity feed across all five submission types (session bookings, match requests, booking requests, inquiries, group registrations) bucketed by real `created_at` month, rendered as one static server-rendered inline SVG area/line chart — no charting library added, this project has none installed and didn't need one for a single static series.
+- **User Activity:** the 7 most recent items from that same combined feed, each showing an initials avatar, what it is, the submitter's email, a New/Seen pill, and a real relative "X hours/days ago." Inquiries have no `status` column of their own, so the New/Seen pill uses a 3-day recency window uniformly across every item type rather than mixing two different signals.
+- **Key Metrics:** two panels — "Requests" (Booking requests / Contact inquiries / Group registrations as proportional bars against their own max) and "Community" (Registered users total + a real "N new this week" count from `profiles.created_at`, plus the existing Users-by-role pills moved in here rather than as a separate card).
+- **Scheduling Overview:** a real current-month calendar grid built from `session_bookings.session_date`, each day showing its first booking's time (confirmed vs. cancelled styled differently) and a "+N more" chip if there's more than one, plus a real count of this month's total session bookings.
+
+**Verification:** scoped `tsc --noEmit` across every changed file (`app/admin/page.tsx`, `app/admin/layout.tsx`, `components/admin/AdminNav.tsx`, `lib/queries.ts`) — clean. Three new, actually-run (not just written) Jest suites: `tests/unit/AdminOverviewPage.test.tsx` mocks `lib/queries` with realistic fixture data (mirroring the Phase 58 pattern for async Server Components) and asserts the KPI tiles, the trend chart's accessible SVG, the activity feed's real emails, both Key Metrics panels' real numbers, and the scheduling calendar's real booking time all render — passed. `tests/unit/AdminNav.test.tsx` asserts the active-route highlighting logic, including the nested-route case — passed (2/2).
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified in a browser — the render tests confirm every real number and section renders correctly, not the pixel-level gold-background/glass-card look.
+- The reference mockup's own text was largely garbled/unreadable placeholder copy (e.g. "Ke ring Metrics", "adrax ly role") — this phase matched its structure and visual treatment, not that literal text, and used real English labels throughout.
+- The activity feed's "New" vs "Seen" pill uses a 3-day recency window for the two item types without their own status field (inquiries, and the recency-based ones); it's a reasonable stand-in, not a real per-item read/unread flag, since none exists in the schema.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 60: CRM dashboard redesign — gold background, trend chart, activity feed, key metrics, scheduling calendar"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
