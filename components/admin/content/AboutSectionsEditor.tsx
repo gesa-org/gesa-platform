@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
+import ImageUploadField from "@/components/admin/content/ImageUploadField";
 import type { AboutSectionsContent } from "@/lib/content";
 
 type Point = AboutSectionsContent["howItWorksPoints"][number];
@@ -201,7 +202,14 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
                 <Trash2 size={15} />
               </button>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
+            <ImageUploadField
+              label="Photo"
+              value={f.photoUrl ?? ""}
+              onChange={(url) => updateFounder(i, "photoUrl", url)}
+              pathPrefix={`founders/${i}`}
+              help="Shown on the About page in place of their initials. Optional — leave empty to keep showing initials."
+            />
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <input
                 value={f.name}
                 onChange={(e) => updateFounder(i, "name", e.target.value)}
@@ -232,7 +240,7 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
         ))}
         <button
           type="button"
-          onClick={() => setFounders((fs) => [...fs, { name: "", roleTitle: "", email: "", shortBio: "" }])}
+          onClick={() => setFounders((fs) => [...fs, { name: "", roleTitle: "", email: "", shortBio: "", photoUrl: "" }])}
           className="inline-flex w-fit items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-[13px] font-medium text-primary hover:bg-secondary"
         >
           <Plus size={14} /> Add founder

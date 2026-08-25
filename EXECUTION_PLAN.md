@@ -1876,4 +1876,35 @@ git push
 ```
 
 ---
+
+## Phase 62 — Content Manager: real image uploads, starting with Our Founders' photos
+
+Roy sent a screenshot of the About page's "Our Founders" section (both founders showing initials-only placeholder blocks) and asked for the Content Manager to let an admin actually attach a picture wherever a section has an image field, calling out Founders specifically, and asked me to find every other section that needed the same capability.
+
+**Audit result:** across every `site_content` shape in `lib/content.ts`, exactly one image field existed before this phase — `HeroContent.backgroundImage` — and even that one was a plain URL text input in `HeroEditor.tsx` (an admin had to already have the image hosted somewhere else and paste its address in; there was no real upload button anywhere in the Content Manager, only in the separate, unrelated Therapists admin form). "Our Founders" had no image field of any kind — `AboutSectionsContent["founders"]` was `{ name, roleTitle, email, shortBio }`, which is why the About page only ever had initials to show.
+
+**New shared storage + upload control:** created a `site-content-images` public-read Supabase Storage bucket (in both the production and dev projects), with insert/update/delete gated to admins via the same `auth_role() = 'admin'` policy pattern the existing `therapist-photos` bucket already uses — so this reuses a proven, already-audited access pattern rather than inventing a new one. New `components/admin/content/ImageUploadField.tsx` is the one shared control every Content Manager image field now uses: shows a preview thumbnail, an Upload/Replace button, a Remove control, and handles the actual file upload + public URL round-trip — modeled directly on `TherapistEditForm.tsx`'s existing (and already working) photo-upload flow, just generalized with a `pathPrefix` prop so different fields' uploads don't collide in the shared bucket.
+
+**Our Founders:** `AboutSectionsContent["founders"]` gained `photoUrl: string` (Phase 61-style empty-string default, not required, so existing published rows without it don't break — they just keep showing initials). `AboutSectionsEditor.tsx` gained a per-founder `ImageUploadField`. `app/about/page.tsx`'s founder cards now show the uploaded photo when `photoUrl` is set, falling back to exactly the same initials block as before when it isn't — nothing breaks for a founder nobody has uploaded a picture for yet, including both of today's real founders (Ilana, Karin), who don't have one on file right now.
+
+**Hero background image, upgraded too:** `HeroEditor.tsx`'s plain URL-paste field was replaced with the same shared `ImageUploadField`, so that field gets real upload capability as well, not just Founders.
+
+**A note on why this doesn't conflict with GESA's no-stock-photography policy (Phase 43):** that policy is specifically about not using generic/anonymous stock photography of unrelated people for decorative purposes, for client privacy reasons. A founder's own photo of themselves, deliberately uploaded by an admin for their own bio, is an ordinary and different thing — most nonprofits show their real founders' faces — so this is a distinct, legitimate use case, not an exception carved into that policy. Left a code comment on this distinction so it isn't second-guessed or reverted by mistake later.
+
+**Verification:** scoped `tsc --noEmit` across every changed/touched file (`lib/content.ts`, `ImageUploadField.tsx`, `AboutSectionsEditor.tsx`, `HeroEditor.tsx`, `app/about/page.tsx`, plus the Content Manager shell files that reference these types) — clean. New `tests/unit/ImageUploadField.test.tsx` (3 tests: empty state, a real mocked upload round-trip confirming the path is scoped under the given prefix and the public URL is reported back, and the Remove control) — all passed. New `tests/unit/AboutPage.test.tsx` (2 tests: today's real content still renders initials for both founders, and a founder with a `photoUrl` set renders the photo instead while the other founder still falls back to initials) — both passed. Re-ran the Phase 60/61 admin dashboard and nav tests alongside these to confirm no regression — all 8 tests across the four suites passed together.
+
+**Known gaps, honestly flagged:**
+- Neither of today's two real founders has an actual photo uploaded yet — that's an action for Roy to take in the live Content Manager, not something I can or should do for them (I don't have their photos, and wouldn't upload a stand-in).
+- Not screenshot-verified in a real browser — the tests confirm the upload flow, the fallback logic, and the storage policies are correctly wired, not the pixel-level card layout with a real photo in place.
+- The `site-content-images` bucket is shared across every Content Manager image field going forward (Hero + Founders today); if a future field needs different retention/access rules than "admin write, public read," it should get its own bucket rather than reusing this one.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 62: Content Manager image uploads — Our Founders photos + Hero background upgraded from URL-paste to real upload"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

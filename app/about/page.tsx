@@ -115,9 +115,20 @@ export default async function AboutPage() {
             {sections.founders.map((p) => (
               <StaggerItem key={p.name}>
                 <Card className="flex items-start gap-5">
-                  <div className="flex h-[112px] w-24 flex-none items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-primary-600 text-[26px] font-serif font-semibold text-white">
-                    {initials(p.name)}
-                  </div>
+                  {/* Phase 62 — founders can now have a real photo attached
+                      via the Content Manager; falls back to the initials
+                      block exactly as before for any founder nobody has
+                      uploaded one for yet. */}
+                  {p.photoUrl ? (
+                    <div className="relative h-[112px] w-24 flex-none overflow-hidden rounded-[14px]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.photoUrl} alt={p.name} className="h-full w-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="flex h-[112px] w-24 flex-none items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-primary-600 text-[26px] font-serif font-semibold text-white">
+                      {initials(p.name)}
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <h3 className="m-0 text-xl">{p.name}</h3>
                     <div className="my-0.5 mb-2.5 text-sm font-semibold text-primary">{p.roleTitle}</div>

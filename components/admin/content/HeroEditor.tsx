@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
+import ImageUploadField from "@/components/admin/content/ImageUploadField";
 import type { HeroContent } from "@/lib/content";
 
 // Full hero editor — currently only used on About (components/Hero.tsx),
@@ -124,20 +125,17 @@ export default function HeroEditor({ contentKey, initial }: { contentKey: string
         </div>
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-sm font-semibold">Background image URL</label>
-        <input
-          value={backgroundImage}
-          onChange={(e) => setBackgroundImage(e.target.value)}
-          className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-        />
-        {backgroundImage && (
-          <div className="mt-2 h-28 w-full overflow-hidden rounded-xl bg-secondary">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={backgroundImage} alt="Background preview" className="h-full w-full object-cover" />
-          </div>
-        )}
-      </div>
+      {/* Phase 62 — was a plain URL text input with a manual preview; an
+          admin had to already have the image hosted somewhere else and
+          paste its address in. Now uses the shared Content Manager upload
+          control (same one added to Founders) so a real file can be
+          attached directly. */}
+      <ImageUploadField
+        label="Background image"
+        value={backgroundImage}
+        onChange={setBackgroundImage}
+        pathPrefix="hero"
+      />
 
       <div className="flex items-center gap-4 border-t border-border pt-4">
         <Button type="submit" disabled={pending}>

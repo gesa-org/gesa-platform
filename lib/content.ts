@@ -103,7 +103,12 @@ export type AboutSectionsContent = {
   howItWorksPoints: { title: string; body: string }[];
   foundersHeading: string;
   foundersIntro: string;
-  founders: { name: string; roleTitle: string; email: string; shortBio: string }[];
+  // Phase 62 — photoUrl is optional/empty-string-default rather than
+  // required: existing founder rows published before this phase won't have
+  // one yet, and the About page falls back to the initials block it always
+  // used when there's no photo, so nothing breaks for founders nobody has
+  // uploaded a picture for.
+  founders: { name: string; roleTitle: string; email: string; shortBio: string; photoUrl: string }[];
   volunteerHeading: string;
   volunteerBody: string;
   volunteerPrimaryLabel: string;
@@ -291,6 +296,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
       email: "ilana@gesa.org",
       shortBio:
         "Ilana helped establish GESA out of a conviction that no one should face emotional pain alone or be priced out of care. She guides the alliance's mission of warm, accessible support and its growing worldwide community of volunteer therapists.",
+      photoUrl: "",
     },
     {
       name: "Karin Horen",
@@ -298,6 +304,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
       email: "karin@gesa.org",
       shortBio:
         "Karin co-founded GESA to connect skilled, compassionate therapists with people carrying the weight of war, displacement, and antisemitism. She leads the community and partnerships that keep six sessions free for everyone who reaches out.",
+      photoUrl: "",
     },
   ],
   volunteerHeading: "Join us as a caregiver",
