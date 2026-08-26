@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import AdminOverviewPage from "@/app/admin/page";
 
 // Phase 60 — Roy's reference CRM dashboard mockup replaced the plain tile
@@ -125,10 +125,13 @@ describe("AdminOverviewPage", () => {
     const loggedThisMonthLabel = screen.getByText("Logged this month");
     expect(loggedThisMonthLabel.parentElement?.textContent).toContain("5");
 
-    // The calendar cell for the mocked session's real date (Aug 15) carries
-    // a title tooltip with the real event details — confirms the merge
-    // actually reached the calendar, not just the month total above.
-    expect(document.querySelector('[title*="Dr. Therapist"]')).not.toBeNull();
+    // Phase 63 — the calendar day cell no longer carries the event details
+    // directly in its title tooltip; clicking it opens a day-view modal
+    // instead (Google-Calendar-style). Clicking the mocked session's real
+    // date (Aug 15) should surface its real details there.
+    fireEvent.click(screen.getByRole("button", { name: "15" }));
+    expect(screen.getByText(/Client One with Dr\. Therapist/)).toBeInTheDocument();
+    expect(screen.getByText("10:00 AM")).toBeInTheDocument();
 
     // User Activity is now a fixed-height, scrollable container (Phase 61)
     // rather than a static list, since it will only keep growing.

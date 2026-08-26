@@ -325,6 +325,19 @@ export async function getChatThreadForAdmin(
   };
 }
 
+// Phase 63 — admin-only read for the volunteer therapist application flow
+// (therapist_applications), gated by the same *_admin_read RLS policy
+// pattern (admin/reviewer) as every other admin-only read in this file.
+export async function getAllTherapistApplications(): Promise<Tables<"therapist_applications">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapist_applications")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getAllProfiles(): Promise<Tables<"profiles">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

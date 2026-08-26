@@ -247,6 +247,28 @@ export type SessionBookingRow = {
   created_at: string;
 }
 
+// Phase 63 — a real, structured intake for the "become a volunteer
+// therapist" flow (see components/volunteer/VolunteerApplicationModal.tsx),
+// replacing what used to just be the generic Contact form's "Volunteer"
+// subject option. `status` mirrors the simple string-status convention
+// already used by booking_requests/match_requests ("new", etc.) rather than
+// a DB enum, for the same reason those use plain strings.
+export type TherapistApplicationRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  credentials_proof: string;
+  specialties: string[];
+  languages: string[];
+  bio: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+}
+
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.15" };
   public: {
@@ -320,6 +342,20 @@ export type Database = {
       site_content: { Row: SiteContentRow; Insert: Partial<SiteContentRow> & Pick<SiteContentRow, "key">; Update: Partial<SiteContentRow>; Relationships: [] };
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };
+      therapist_applications: {
+        Row: TherapistApplicationRow;
+        Insert: Partial<TherapistApplicationRow> & Pick<TherapistApplicationRow, "full_name" | "email" | "credentials_proof" | "bio">;
+        Update: Partial<TherapistApplicationRow>;
+        Relationships: [
+          {
+            foreignKeyName: "therapist_applications_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       therapists: { Row: TherapistRow; Insert: Partial<TherapistRow> & Pick<TherapistRow, "full_name" | "slug">; Update: Partial<TherapistRow>; Relationships: [] };
       therapist_weekly_hours: {
         Row: TherapistWeeklyHoursRow;

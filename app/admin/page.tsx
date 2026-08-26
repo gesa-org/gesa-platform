@@ -7,6 +7,8 @@ import {
   getAllProfiles,
   getAllSessionBookings,
 } from "@/lib/queries";
+import SchedulingCalendar from "@/components/admin/SchedulingCalendar";
+import type { CalendarEvent } from "@/lib/adminSchedule";
 
 export const dynamic = "force-dynamic";
 
@@ -41,27 +43,6 @@ type ActivityItem = {
   createdAt: string;
   isNew: boolean;
 };
-
-// Phase 61 — one calendar-event shape for every date-bearing source on the
-// site. `dateIso` is each source's best real date: session_bookings has an
-// actual scheduled session_date; match_requests has a client-preferred_date
-// when one was given; booking requests, inquiries, and group registrations
-// have no appointment date of their own in the schema, only created_at (when
-// it was submitted) — used here rather than invented, and labeled as such.
-type CalendarEvent = {
-  kind: "session" | "match" | "booking" | "inquiry" | "registration";
-  dateIso: string;
-  label: string;
-  dotClass: string;
-};
-
-const EVENT_LEGEND: { kind: CalendarEvent["kind"]; label: string; dotClass: string }[] = [
-  { kind: "session", label: "Sessions", dotClass: "bg-amber" },
-  { kind: "match", label: "Find Your Therapist", dotClass: "bg-clay" },
-  { kind: "booking", label: "Booking requests", dotClass: "bg-accent" },
-  { kind: "inquiry", label: "Inquiries", dotClass: "bg-primary/70" },
-  { kind: "registration", label: "Group registrations", dotClass: "bg-primary-600" },
-];
 
 function initials(name: string) {
   return name
@@ -259,57 +240,79 @@ export default async function AdminOverviewPage() {
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   const monthLabel = `${MONTH_LABELS[today.getMonth()]} ${today.getFullYear()}`;
+  const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
   const calendarEvents: CalendarEvent[] = [
     ...sessionBookings.map((s) => ({
       kind: "session" as const,
       dateIso: s.session_date,
-      label: `${s.session_time.slice(0, 5)} session with ${s.therapist?.full_name ?? "a therapist"} (${s.status})`,
+      time: s.session_time.slice(0, 5),
+      personLabel: `${s.client_name} with ${s.therapist?.full_name ?? "a therapist"}`,
+      statusLabel: s.status,
       dotClass: s.status === "confirmed" ? "bg-amber" : "bg-muted-fg",
     })),
     ...matchRequests.map((m) => ({
       kind: "match" as const,
       dateIso: m.preferred_date ?? m.created_at.slice(0, 10),
-      label: `Find Your Therapist request${m.preferred_date ? "" : " (submitted)"} — ${m.email}`,
+      time: m.preferred_date ? m.preferred_time ?? null : null,
+      personLabel: `${m.name} (${m.email})`,
+      statusLabel: m.preferred_date ? m.status : `${m.status}, submitted`,
       dotClass: "bg-clay",
     })),
     ...bookings.map((b) => ({
       kind: "booking" as const,
       dateIso: b.created_at.slice(0, 10),
-      label: `Booking request (submitted) — ${b.email}`,
+      time: null,
+      personLabel: `${b.name} (${b.email})`,
+      statusLabel: `${b.status}, submitted`,
       dotClass: "bg-accent",
     })),
     ...inquiries.map((i) => ({
       kind: "inquiry" as const,
       dateIso: i.created_at.slice(0, 10),
-      label: `Inquiry (submitted) — ${i.email ?? "no email on file"}`,
+      time: null,
+      personLabel: `${i.name ?? "Unknown"} (${i.email ?? "no email on file"})`,
+      statusLabel: i.type ? `${i.type}, submitted` : "submitted",
       dotClass: "bg-primary/70",
     })),
     ...registrations.map((r) => ({
       kind: "registration" as const,
       dateIso: r.created_at.slice(0, 10),
-      label: `Group registration (submitted) — ${r.email}`,
+      time: null,
+      personLabel: `${r.name} (${r.email})`,
+      statusLabel: "submitted",
       dotClass: "bg-primary-600",
     })),
   ];
 
-  const eventsByDate = new Map<string, CalendarEvent[]>();
+  const eventsByDate: Record<string, CalendarEvent[]> = {};
   for (const e of calendarEvents) {
-    const list = eventsByDate.get(e.dateIso) ?? [];
-    list.push(e);
-    eventsByDate.set(e.dateIso, list);
+    (eventsByDate[e.dateIso] ??= []).push(e);
   }
-  const thisMonthEventCount = calendarEvents.filter((e) => {
-    const d = new Date(e.dateIso);
-    return d >= monthStart && d <= monthEnd;
-  }).length;
+  // Phase 63 fix — this used to compare `new Date(e.dateIso)` (parsed as
+  // UTC midnight) against `monthStart`/`monthEnd` (local-midnight Date
+  // objects), which is off by a day in any timezone behind UTC — the same
+  // bug that made the calendar's day cells land on the wrong date (caught
+  // by the new day-view test below actually opening a day and finding
+  // yesterday's date in the heading). Every `dateIso` here is already a
+  // plain "YYYY-MM-DD" string, so comparing its year-month prefix directly
+  // avoids Date/timezone conversion entirely.
+  const thisMonthEventCount = calendarEvents.filter((e) => e.dateIso.slice(0, 7) === currentYearMonth).length;
 
-  const calendarCells: { date: Date | null; iso: string | null }[] = [];
-  for (let i = 0; i < monthStart.getDay(); i++) calendarCells.push({ date: null, iso: null });
+  // Plain { dayNumber, iso } cells rather than Date objects — this crosses
+  // into a Client Component (SchedulingCalendar) below, and a Date isn't a
+  // value worth risking on RSC's serialization boundary when a number and
+  // an ISO string say the same thing and are unambiguously safe. `iso` is
+  // built directly from the same local Y/M/D as `dayNumber` (not via
+  // `Date#toISOString`, which converts to UTC and can land on the wrong
+  // calendar day) so it lines up exactly with session_date/created_at
+  // strings, which are never run through a local Date object either.
+  const calendarCells: { dayNumber: number | null; iso: string | null }[] = [];
+  for (let i = 0; i < monthStart.getDay(); i++) calendarCells.push({ dayNumber: null, iso: null });
   for (let day = 1; day <= monthEnd.getDate(); day++) {
-    const d = new Date(today.getFullYear(), today.getMonth(), day);
-    calendarCells.push({ date: d, iso: d.toISOString().slice(0, 10) });
+    calendarCells.push({ dayNumber: day, iso: `${currentYearMonth}-${String(day).padStart(2, "0")}` });
   }
+  const todayIso = `${currentYearMonth}-${String(today.getDate()).padStart(2, "0")}`;
 
   const requestBars = [
     { label: "Booking requests", value: bookings.length, href: "/admin/bookings" },
@@ -422,67 +425,20 @@ export default async function AdminOverviewPage() {
           </div>
         </div>
 
-        {/* Scheduling Overview — Phase 61: now merges every real
-            date-bearing source (sessions, Find Your Therapist, booking
-            requests, inquiries, group registrations), not just confirmed
-            sessions. Each day shows a small colored dot per source present
-            (see EVENT_LEGEND) plus a count badge if there's more than one
-            event that day; hover a dot row for the real details via the
-            native title tooltip. */}
-        <div className="rounded-[var(--radius)] border border-white/50 bg-card p-5 shadow-soft">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-base text-primary">Scheduling Overview</h2>
-            <span className="text-[12px] text-muted-fg">{monthLabel}</span>
-          </div>
-          <div className="mb-2.5">
-            <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-fg">Logged this month</div>
-            <div className="mt-0.5 text-[22px] font-serif font-semibold text-primary">{thisMonthEventCount}</div>
-          </div>
-          <div className="mb-2 flex flex-wrap gap-x-2.5 gap-y-1">
-            {EVENT_LEGEND.map((l) => (
-              <span key={l.kind} className="flex items-center gap-1 text-[10px] text-muted-fg">
-                <span className={`h-1.5 w-1.5 rounded-full ${l.dotClass}`} />
-                {l.label}
-              </span>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-semibold uppercase text-muted-fg">
-            {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-              <div key={`${d}-${i}`}>{d}</div>
-            ))}
-          </div>
-          <div className="mt-1 grid grid-cols-7 gap-0.5">
-            {calendarCells.map((cell, i) => {
-              const dayEvents = cell.iso ? eventsByDate.get(cell.iso) ?? [] : [];
-              const presentKinds = EVENT_LEGEND.filter((l) => dayEvents.some((e) => e.kind === l.kind));
-              const isToday = cell.iso === today.toISOString().slice(0, 10);
-              const title = dayEvents.map((e) => e.label).join("\n");
-              return (
-                <div
-                  key={i}
-                  title={title || undefined}
-                  className={`flex min-h-[30px] flex-col items-center justify-center gap-0.5 rounded p-0.5 text-[10px] ${
-                    cell.date ? (isToday ? "bg-clay-soft" : "bg-secondary/40") : ""
-                  }`}
-                >
-                  {cell.date && (
-                    <>
-                      <span className={isToday ? "font-bold text-primary" : "text-muted-fg"}>{cell.date.getDate()}</span>
-                      {presentKinds.length > 0 && (
-                        <span className="flex flex-wrap items-center justify-center gap-0.5">
-                          {presentKinds.map((k) => (
-                            <span key={k.kind} className={`h-1.5 w-1.5 rounded-full ${k.dotClass}`} />
-                          ))}
-                          {dayEvents.length > 1 && <span className="text-[9px] text-clay">{dayEvents.length}</span>}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* Scheduling Overview — Phase 61 merged every real date-bearing
+            source (sessions, Find Your Therapist, booking requests,
+            inquiries, group registrations) onto the calendar. Phase 63:
+            clicking a day now opens a full Google-Calendar-style day view
+            (time, type, status, who) instead of only a hover tooltip — see
+            SchedulingCalendar, a Client Component since it owns the
+            "which day is open" state. */}
+        <SchedulingCalendar
+          monthLabel={monthLabel}
+          todayIso={todayIso}
+          thisMonthEventCount={thisMonthEventCount}
+          calendarCells={calendarCells}
+          eventsByDate={eventsByDate}
+        />
       </div>
     </div>
   );

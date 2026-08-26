@@ -3,6 +3,7 @@ import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } f
 import Card from "@/components/ui/Card";
 import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import Reveal from "@/components/motion/Reveal";
+import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
 
@@ -155,12 +156,16 @@ export default async function AboutPage() {
           <h2 className="mb-2.5 text-[30px] text-white">{sections.volunteerHeading}</h2>
           <p className="mx-auto text-white/90">{sections.volunteerBody}</p>
           <div className="mt-5.5 mt-[22px] flex flex-wrap justify-center gap-3.5">
-            <Link
+            {/* Phase 63 — opens the real volunteer application modal when
+                this is still pointed at its original default; otherwise
+                stays a normal link, so an admin who's deliberately
+                repointed this via the Content Manager isn't overridden. */}
+            <VolunteerPrimaryCta
               href={sections.volunteerPrimaryHref}
               className="inline-flex items-center gap-2 rounded-full bg-card px-6 py-3.5 text-[15px] font-semibold text-primary"
             >
               {sections.volunteerPrimaryLabel} <ArrowRight size={16} />
-            </Link>
+            </VolunteerPrimaryCta>
             <Link
               href={sections.volunteerSecondaryHref}
               className="inline-flex items-center rounded-full border border-white/60 px-6 py-3.5 text-[15px] font-semibold text-white"

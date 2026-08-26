@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck } from 'lucide-react';
 import Logo from '@/components/Logo';
+import VolunteerApplyButton from '@/components/volunteer/VolunteerApplyButton';
 import type { FooterContent } from '@/lib/content';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
@@ -91,7 +92,13 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
               <li><Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">{content.supportFindTherapistLabel}</Link></li>
               <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.supportJoinGroupLabel}</Link></li>
               <li><Link href="/contact?subject=Donation" className="hover:text-[#eef1f6] transition-colors">{content.supportDonateLabel}</Link></li>
-              <li><Link href="/contact?subject=Volunteer" className="hover:text-[#eef1f6] transition-colors">{content.supportVolunteerLabel}</Link></li>
+              {/* Phase 63 — was a plain Link to the generic Contact form;
+                  now opens the real volunteer therapist application. */}
+              <li>
+                <VolunteerApplyButton className="text-left hover:text-[#eef1f6] transition-colors">
+                  {content.supportVolunteerLabel}
+                </VolunteerApplyButton>
+              </li>
               <li><a href="tel:988" className="hover:text-[#eef1f6] transition-colors">{content.supportEmergencyLabel}</a></li>
             </ul>
           </div>

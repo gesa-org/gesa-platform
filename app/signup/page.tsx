@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Logo from "@/components/Logo";
+import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -34,10 +35,7 @@ export default function SignupPage() {
         <h1 className="mb-1 text-2xl">Create your account</h1>
         <p className="mb-6 text-sm text-muted-fg">
           For clients tracking sessions and chat. Therapists apply via{" "}
-          <Link href="/contact?subject=Volunteer" className="font-semibold text-primary">
-            volunteer application
-          </Link>
-          .
+          <VolunteerApplyButton className="font-semibold text-primary">volunteer application</VolunteerApplyButton>.
         </p>
         <form
           className="flex flex-col gap-3.5"

@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
+import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { Tables } from "@/lib/database.types";
 import type { TherapistsDirectoryContent } from "@/lib/content";
@@ -226,12 +227,11 @@ export default function TherapistsDirectory({
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <a
-            href="/contact?subject=Volunteer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-fg transition-colors hover:bg-primary-600"
-          >
+          {/* Phase 63 — was a plain link to the generic Contact form; now
+              opens the real volunteer therapist application. */}
+          <VolunteerApplyButton className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-fg transition-colors hover:bg-primary-600">
             <Users size={16} /> {content.joinAsTherapistLabel}
-          </a>
+          </VolunteerApplyButton>
           <button
             type="button"
             onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}

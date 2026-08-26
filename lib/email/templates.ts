@@ -50,6 +50,44 @@ export function contactNotificationEmail(name: string, email: string, subject: s
   `);
 }
 
+// Phase 63 — sent when someone submits the new volunteer therapist
+// application (components/volunteer/VolunteerApplicationModal.tsx),
+// replacing the old generic contact-form "Volunteer" subject option.
+export function volunteerApplicationReceivedEmail(fullName: string) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Thanks for applying, ${fullName || "friend"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      We've received your application to volunteer as a therapist with GESA. Our team reviews every
+      application by hand, including the credentials you shared, and will follow up at this email
+      address once we have.
+    </p>
+  `);
+}
+
+export function volunteerApplicationNotificationEmail(app: {
+  fullName: string;
+  email: string;
+  phone: string | null;
+  credentialsProof: string;
+  specialties: string[];
+  languages: string[];
+  bio: string;
+}) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New volunteer therapist application</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Name:</strong> ${app.fullName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Email:</strong> ${app.email}</p>
+    ${app.phone ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Phone:</strong> ${app.phone}</p>` : ""}
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Specialties:</strong> ${app.specialties.join(", ")}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Languages:</strong> ${app.languages.join(", ")}</p>
+    <p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Proof of license / credentials:</strong></p>
+    <p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${app.credentialsProof}</p>
+    <p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Bio:</strong></p>
+    <p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${app.bio}</p>
+    <p style="color:#33352d;line-height:1.6;margin-top:14px;">Review in the CRM at /admin/volunteer-applications.</p>
+  `);
+}
+
 export function bookingConfirmationEmail(name: string, therapistName: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're matched, ${name || "friend"}</h1>
