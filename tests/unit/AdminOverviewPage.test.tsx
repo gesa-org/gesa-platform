@@ -66,6 +66,27 @@ jest.mock("@/lib/queries", () => ({
       therapist: { id: "t1", full_name: "Dr. Therapist", contact_email: "t@example.com" },
     },
   ]),
+  // Phase 69 — previously missing from this mock entirely, meaning
+  // AdminOverviewPage() would have thrown calling an undefined function
+  // the moment volunteer applications were wired into the dashboard.
+  getAllTherapistApplications: jest.fn(async () => [
+    {
+      id: "v1",
+      created_at: "2026-08-19T00:00:00Z",
+      full_name: "Volunteer One",
+      email: "volunteer@example.com",
+      phone: null,
+      credentials_proof: "LMFT #999",
+      specialties: ["CBT"],
+      languages: ["English"],
+      meeting_duration: "45",
+      bio: "Ten years of practice.",
+      status: "new",
+      notes: null,
+      reviewed_at: null,
+      reviewed_by: null,
+    },
+  ]),
 }));
 
 describe("AdminOverviewPage", () => {
@@ -89,6 +110,10 @@ describe("AdminOverviewPage", () => {
     expect(screen.getByText("Session bookings")).toBeInTheDocument();
     expect(screen.getAllByText("Find Your Therapist").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("Booking requests").length).toBeGreaterThanOrEqual(2);
+    // Phase 69 — new 4th KPI tile; also appears in the Requests panel and
+    // the calendar legend, so >=2 rather than exactly 1.
+    expect(screen.getAllByText("Volunteer applicants").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("volunteer@example.com")).toBeInTheDocument();
 
     // Trend chart renders as an accessible SVG with real month buckets
     expect(screen.getByRole("img", { name: "Monthly activity trend" })).toBeInTheDocument();
@@ -115,15 +140,16 @@ describe("AdminOverviewPage", () => {
     expect(screen.getByText(/admin:/)).toBeInTheDocument();
     expect(screen.getByText(/client:/)).toBeInTheDocument();
 
-    // Scheduling Overview — Phase 61: merges every real date-bearing source
+    // Scheduling Overview — Phase 61 merged every real date-bearing source
     // (session, match request, booking request, inquiry, group
-    // registration). All five mocked items fall in the current month
-    // (Aug 2026), so "Logged this month" should read 5 — checked scoped to
-    // its own label's sibling rather than the bare page, since a lone "5"
-    // also matches a calendar day number elsewhere on the grid.
+    // registration); Phase 69 added volunteer applications as a 6th. All
+    // six mocked items fall in the current month (Aug 2026), so "Logged
+    // this month" should read 6 — checked scoped to its own label's
+    // sibling rather than the bare page, since a lone "6" could otherwise
+    // also match a calendar day number elsewhere on the grid.
     expect(screen.getByText("Scheduling Overview")).toBeInTheDocument();
     const loggedThisMonthLabel = screen.getByText("Logged this month");
-    expect(loggedThisMonthLabel.parentElement?.textContent).toContain("5");
+    expect(loggedThisMonthLabel.parentElement?.textContent).toContain("6");
 
     // Phase 63 — the calendar day cell no longer carries the event details
     // directly in its title tooltip; clicking it opens a day-view modal
@@ -143,5 +169,61 @@ describe("AdminOverviewPage", () => {
     const scrollContainer = activityCard?.querySelector(".overflow-y-auto");
     expect(scrollContainer).not.toBeNull();
     expect(scrollContainer?.className).toContain("max-h-");
+  });
+});
+
+// Phase 69 — the email-config health check reads process.env directly
+// (server-only; the actual key/inbox values are never rendered, only
+// whether they're present), so these tests manipulate process.env around
+// each case rather than mocking anything.
+describe("AdminOverviewPage — email delivery config warning", () => {
+  const originalNow = Date.now;
+  const originalEnv = { ...process.env };
+
+  beforeAll(() => {
+    Date.now = () => NOW.getTime();
+  });
+
+  afterAll(() => {
+    Date.now = originalNow;
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it("warns when RESEND_API_KEY is missing", async () => {
+    delete process.env.RESEND_API_KEY;
+    delete process.env.GESA_CONTACT_INBOX;
+
+    const jsx = await AdminOverviewPage();
+    render(jsx);
+
+    expect(screen.getByText("Email delivery isn't fully configured")).toBeInTheDocument();
+    expect(screen.getByText(/RESEND_API_KEY is not set/)).toBeInTheDocument();
+    // Only the RESEND_API_KEY warning shows — the inbox-fallback warning is
+    // conditional on the key already being set, so it shouldn't double up.
+    expect(screen.queryByText(/GESA_CONTACT_INBOX is not set/)).not.toBeInTheDocument();
+  });
+
+  it("warns about the placeholder inbox when the key is set but the inbox isn't", async () => {
+    process.env.RESEND_API_KEY = "re_test_key";
+    delete process.env.GESA_CONTACT_INBOX;
+
+    const jsx = await AdminOverviewPage();
+    render(jsx);
+
+    expect(screen.getByText(/GESA_CONTACT_INBOX is not set/)).toBeInTheDocument();
+    expect(screen.queryByText(/RESEND_API_KEY is not set/)).not.toBeInTheDocument();
+  });
+
+  it("shows no warning at all once both are configured", async () => {
+    process.env.RESEND_API_KEY = "re_test_key";
+    process.env.GESA_CONTACT_INBOX = "hello@realaddress.org";
+
+    const jsx = await AdminOverviewPage();
+    render(jsx);
+
+    expect(screen.queryByText("Email delivery isn't fully configured")).not.toBeInTheDocument();
   });
 });

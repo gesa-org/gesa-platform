@@ -8,8 +8,13 @@
 // Component's own file, even just a type or a constant, drags that whole
 // file's imports along with it; keeping this data in its own leaf module
 // avoids that entirely.
+// Phase 69 — added "volunteer" (therapist_applications): Roy pointed out
+// volunteer applications never showed up anywhere on the CRM Dashboard
+// overview (no KPI tile, no activity feed entry, no calendar event) even
+// though they've had their own admin review page since Phase 63 — a real
+// visibility gap, not just a missing nice-to-have.
 export type CalendarEvent = {
-  kind: "session" | "match" | "booking" | "inquiry" | "registration";
+  kind: "session" | "match" | "booking" | "inquiry" | "registration" | "volunteer";
   dateIso: string;
   time: string | null;
   personLabel: string;
@@ -23,6 +28,7 @@ export const EVENT_LEGEND: { kind: CalendarEvent["kind"]; label: string; dotClas
   { kind: "booking", label: "Booking requests", dotClass: "bg-accent" },
   { kind: "inquiry", label: "Inquiries", dotClass: "bg-primary/70" },
   { kind: "registration", label: "Group registrations", dotClass: "bg-primary-600" },
+  { kind: "volunteer", label: "Volunteer applicants", dotClass: "bg-destructive/70" },
 ];
 
 export const KIND_LABELS: Record<CalendarEvent["kind"], string> = {
@@ -31,4 +37,5 @@ export const KIND_LABELS: Record<CalendarEvent["kind"], string> = {
   booking: "Booking request",
   inquiry: "Inquiry",
   registration: "Group registration",
+  volunteer: "Volunteer application",
 };

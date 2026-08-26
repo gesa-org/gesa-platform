@@ -2078,4 +2078,44 @@ git push
 ```
 
 ---
+
+## Phase 69: CRM completeness audit — volunteer apps in dashboard, notification bell coverage, booking-conflict warnings, email health check
+
+**Roy's request:** verify every admin-facing button and flow (Session bookings, Find Your Therapist, Booking requests, Volunteer Applicants, Inquiries, Group Registrations, Emails, Zoom, Notification, Email Feedback, Messages) actually works and captures data, and make sure the calendar can't show a double booking for the same therapist/time.
+
+**Audit first, then implement.** Two parallel read-only subagents plus direct verification (queried `pg_policies` in production, grepped every `/api` route for email-sending calls) confirmed almost everything Roy listed was already correctly built: real Supabase inserts and admin list pages for all submission types, live public-insert RLS policies on all 6 core tables, and matched client-confirmation + admin-notification email pairs already wired for session bookings, match requests, and legacy booking requests. Four concrete gaps were found and fixed:
+
+1. **Volunteer applications missing from the CRM Dashboard overview.** The review page has existed since Phase 63, but the dashboard itself showed no KPI, activity-feed entries, calendar events, or trend-chart inclusion for it.
+   - `lib/adminSchedule.ts`: added `"volunteer"` to `CalendarEvent["kind"]`, `EVENT_LEGEND`, `KIND_LABELS`.
+   - `app/admin/page.tsx`: fetches `getAllTherapistApplications()` alongside the others; new 4th KPI tile ("Volunteer applicants", grid now `sm:grid-cols-2 lg:grid-cols-4`); added to the activity feed, `calendarEvents`, and `requestBars`; trend caption updated.
+
+2. **NotificationBell missing two entire submission types.** It covered match/booking/inquiry/session-booking but never queried `therapist_applications` or `group_registrations`.
+   - `components/admin/NotificationBell.tsx`: added both Supabase queries, `volunteer`/`groupRegistration` entries in `NotificationKind` and `KIND_STYLE`, normalized feed entries, and detail-modal rows for specialties/languages/meeting_duration/group_id.
+
+3. **No conflict-awareness on "Find Your Therapist" requests.** Real `session_bookings` already can't double-book (unique DB constraint + `get_booked_slots` RPC), but a match request's `preferred_date`/`preferred_time` was just a preference — nothing flagged it if that slot was already a confirmed session for that therapist, or if two pending requests were eyeing the same therapist+slot.
+   - `app/admin/match-requests/page.tsx`: fetches `getAllSessionBookings()` alongside match requests; new `findConflict()` checks both cases and renders an inline warning badge (red for "already booked," clay for "also requested by N others") next to the preferred-time cell.
+
+4. **No visibility when email delivery is silently broken.** `sendEmailSafely` deliberately never blocks the underlying DB write when `RESEND_API_KEY` is missing — correct behavior, but it meant a misconfigured env var would fail silently forever with no admin-visible signal.
+   - `app/admin/page.tsx`: server-only boolean presence-checks (`process.env.RESEND_API_KEY`, `process.env.GESA_CONTACT_INBOX` — values never exposed, only whether they're set) render a warning banner at the top of the dashboard when either is missing.
+
+**Judgment calls made proceeding on "Okay proceed to the implementation" without direct answers to my 3 clarifying questions — flagging honestly:**
+- Zoom stays manual-only. Treated as an already-correct, intentional prior decision, not reopened.
+- I can't verify from this sandbox whether `RESEND_API_KEY` / `GESA_CONTACT_INBOX` actually have real values set in Vercel production — only their *presence* can now be surfaced to Roy via the new dashboard banner. **Roy should check the live dashboard after deploying** to confirm no warning is showing.
+- Conflict-checking was only added to `match_requests`, not `booking_requests` — the latter's schema (`entry_route`, `matched_therapist_id`, `name`, `email`, `status`, `created_at`) has no date/time fields at all to check for a collision.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for every touched file.
+- `tests/unit/AdminOverviewPage.test.tsx` (updated: volunteer KPI/feed assertions, email-warning-banner describe block) — 4/4 passed.
+- `tests/unit/NotificationBell.test.tsx` (new) — 3/3 passed (needed `--forceExit`; the component's live 60s polling `setInterval` was keeping Jest alive past test completion, not a bug).
+- `tests/unit/AdminMatchRequestsPage.test.tsx` (new) — 3/3 passed, covering a real-booking collision, two pending requests on the same slot, and confirming no false positives across different therapists/times/no-time.
+- Combined regression run of AdminOverviewPage + AdminMatchRequestsPage — 7/7 passed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 69: volunteer apps in CRM dashboard, notification bell coverage, booking-conflict warnings, email health check"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

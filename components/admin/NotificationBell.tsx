@@ -2,10 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, X, Mail, CalendarClock, Users2, CalendarCheck2 } from "lucide-react";
+import { Bell, X, Mail, CalendarClock, Users2, CalendarCheck2, HeartHandshake, UsersRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-type NotificationKind = "match" | "booking" | "inquiry" | "session" | "sessionBooking";
+// Phase 69 — "volunteer" (therapist_applications) and "groupRegistration"
+// (group_registrations) were both missing from this feed entirely, even
+// though group registrations already show up on the CRM Dashboard's own
+// activity feed/calendar and volunteer applications have had a dedicated
+// admin review page since Phase 63. Roy asked to confirm "Volunteer
+// Applicants" and "Group Registrations" are "really working... captured"
+// — this closes the one place they weren't: the notification bell every
+// other admin submission type already appears in.
+type NotificationKind = "match" | "booking" | "inquiry" | "session" | "sessionBooking" | "volunteer" | "groupRegistration";
 
 type NotificationItem = {
   id: string;
@@ -42,6 +50,8 @@ const KIND_STYLE: Record<NotificationKind, { icon: typeof Mail; bg: string; fg: 
   booking: { icon: Users2, bg: "bg-accent-soft", fg: "text-primary" },
   sessionBooking: { icon: CalendarCheck2, bg: "bg-primary/10", fg: "text-primary" },
   session: { icon: CalendarClock, bg: "bg-accent-soft", fg: "text-primary" },
+  volunteer: { icon: HeartHandshake, bg: "bg-clay-soft", fg: "text-clay" },
+  groupRegistration: { icon: UsersRound, bg: "bg-secondary", fg: "text-muted-fg" },
 };
 
 const LAST_SEEN_KEY = "gesa-admin-notifications-last-seen";
@@ -96,7 +106,7 @@ export default function NotificationBell() {
 
       if (profile?.role === "admin") {
         setRole("admin");
-        const [matches, bookings, inquiries, sessionBookings] = await Promise.all([
+        const [matches, bookings, inquiries, sessionBookings, volunteerApplications, groupRegistrations] = await Promise.all([
           supabase
             .from("match_requests")
             .select("id, name, email, session_format, status, created_at, selected_therapist:therapists(full_name)")
@@ -120,6 +130,17 @@ export default function NotificationBell() {
             .select(
               "id, client_name, client_email, session_date, session_time, contact_channel, path, status, created_at, therapist:therapists(full_name)"
             )
+            .order("created_at", { ascending: false })
+            .limit(8),
+          // Phase 69 — previously missing from this feed entirely.
+          supabase
+            .from("therapist_applications")
+            .select("id, full_name, email, specialties, languages, meeting_duration, status, created_at")
+            .order("created_at", { ascending: false })
+            .limit(8),
+          supabase
+            .from("group_registrations")
+            .select("id, name, email, group_id, created_at")
             .order("created_at", { ascending: false })
             .limit(8),
         ]);
@@ -168,6 +189,25 @@ export default function NotificationBell() {
               detail: s as unknown as Record<string, unknown>,
             };
           }),
+          // Phase 69 — previously missing from this feed entirely.
+          ...(volunteerApplications.data ?? []).map((v) => ({
+            id: `volunteer-${v.id}`,
+            kind: "volunteer" as const,
+            title: `New volunteer application — ${v.full_name}`,
+            subtitle: [v.specialties?.[0], v.meeting_duration ? `${v.meeting_duration} min` : null]
+              .filter(Boolean)
+              .join(" · ") || "Volunteer therapist",
+            createdAt: v.created_at,
+            detail: v as unknown as Record<string, unknown>,
+          })),
+          ...(groupRegistrations.data ?? []).map((g) => ({
+            id: `groupRegistration-${g.id}`,
+            kind: "groupRegistration" as const,
+            title: `New group registration — ${g.name}`,
+            subtitle: "Support group",
+            createdAt: g.created_at,
+            detail: g as unknown as Record<string, unknown>,
+          })),
         ].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
 
         if (!cancelled) {
@@ -374,10 +414,10 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
             <span className="font-semibold">Received: </span>
             {new Date(item.createdAt).toLocaleString()}
           </div>
-          {(typeof d.name === "string" || typeof d.client_name === "string") && (
+          {(typeof d.name === "string" || typeof d.client_name === "string" || typeof d.full_name === "string") && (
             <div>
               <span className="font-semibold">Name: </span>
-              {(d.name as string) ?? (d.client_name as string)}
+              {(d.name as string) ?? (d.client_name as string) ?? (d.full_name as string)}
             </div>
           )}
           {(typeof d.email === "string" || typeof d.client_email === "string") && (
@@ -435,6 +475,32 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
             <div>
               <span className="font-semibold">Therapist: </span>
               {d.selected_therapist?.full_name ?? d.matched_therapist?.full_name ?? d.therapist?.full_name}
+            </div>
+          )}
+          {/* Phase 69 — volunteer-application-specific fields. */}
+          {Array.isArray(d.specialties) && d.specialties.length > 0 && (
+            <div>
+              <span className="font-semibold">Specialties: </span>
+              {(d.specialties as string[]).join(", ")}
+            </div>
+          )}
+          {Array.isArray(d.languages) && d.languages.length > 0 && (
+            <div>
+              <span className="font-semibold">Languages: </span>
+              {(d.languages as string[]).join(", ")}
+            </div>
+          )}
+          {typeof d.meeting_duration === "string" && (
+            <div>
+              <span className="font-semibold">Meeting duration: </span>
+              {d.meeting_duration}
+            </div>
+          )}
+          {/* Phase 69 — group-registration-specific field. */}
+          {typeof d.group_id === "string" && (
+            <div>
+              <span className="font-semibold">Group: </span>
+              {d.group_id}
             </div>
           )}
         </div>

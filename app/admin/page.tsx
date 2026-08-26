@@ -6,6 +6,7 @@ import {
   getAllMatchRequests,
   getAllProfiles,
   getAllSessionBookings,
+  getAllTherapistApplications,
 } from "@/lib/queries";
 import SchedulingCalendar from "@/components/admin/SchedulingCalendar";
 import type { CalendarEvent } from "@/lib/adminSchedule";
@@ -140,18 +141,21 @@ function MetricBar({ label, value, max, href }: { label: string; value: number; 
 }
 
 export default async function AdminOverviewPage() {
-  const [inquiries, bookings, registrations, profiles, matchRequests, sessionBookings] = await Promise.all([
-    getAllInquiries(),
-    getAllBookingRequests(),
-    getAllGroupRegistrations(),
-    getAllProfiles(),
-    getAllMatchRequests(),
-    getAllSessionBookings(),
-  ]);
+  const [inquiries, bookings, registrations, profiles, matchRequests, sessionBookings, volunteerApplications] =
+    await Promise.all([
+      getAllInquiries(),
+      getAllBookingRequests(),
+      getAllGroupRegistrations(),
+      getAllProfiles(),
+      getAllMatchRequests(),
+      getAllSessionBookings(),
+      getAllTherapistApplications(),
+    ]);
 
   const newBookings = bookings.filter((b) => b.status === "new").length;
   const newMatchRequests = matchRequests.filter((m) => m.status === "new").length;
   const confirmedSessions = sessionBookings.filter((s) => s.status === "confirmed").length;
+  const newVolunteerApplications = volunteerApplications.filter((a) => a.status === "new").length;
   const roleCounts = profiles.reduce<Record<string, number>>((acc, p) => {
     acc[p.role] = (acc[p.role] ?? 0) + 1;
     return acc;
@@ -174,6 +178,15 @@ export default async function AdminOverviewPage() {
       href: "/admin/match-requests",
     },
     { label: "Booking requests", value: bookings.length, sub: `${newBookings} new`, href: "/admin/bookings" },
+    // Phase 69 — was entirely missing from this dashboard before (no tile,
+    // no activity feed entry, no calendar event), even though volunteer
+    // applications have had their own admin review page since Phase 63.
+    {
+      label: "Volunteer applicants",
+      value: volunteerApplications.length,
+      sub: `${newVolunteerApplications} new`,
+      href: "/admin/volunteer-applications",
+    },
   ];
 
   // Phase 60 — a single normalized feed across every real submission type,
@@ -222,6 +235,15 @@ export default async function AdminOverviewPage() {
       email: r.email,
       createdAt: r.created_at,
       isNew: isNew(r.created_at),
+    })),
+    // Phase 69 — previously excluded from this feed entirely.
+    ...volunteerApplications.map((a) => ({
+      type: "Volunteer application",
+      href: "/admin/volunteer-applications",
+      label: `Volunteer application — ${a.full_name}`,
+      email: a.email,
+      createdAt: a.created_at,
+      isNew: a.status === "new",
     })),
   ];
   activity.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -283,6 +305,18 @@ export default async function AdminOverviewPage() {
       statusLabel: "submitted",
       dotClass: "bg-primary-600",
     })),
+    // Phase 69 — same "no separate appointment date" reasoning as
+    // bookings/inquiries/registrations above: therapist_applications has
+    // no date field of its own, so submission date is the honest one to
+    // show here too.
+    ...volunteerApplications.map((a) => ({
+      kind: "volunteer" as const,
+      dateIso: a.created_at.slice(0, 10),
+      time: null,
+      personLabel: `${a.full_name} (${a.email})`,
+      statusLabel: `${a.status}, submitted`,
+      dotClass: "bg-destructive/70",
+    })),
   ];
 
   const eventsByDate: Record<string, CalendarEvent[]> = {};
@@ -314,19 +348,57 @@ export default async function AdminOverviewPage() {
   }
   const todayIso = `${currentYearMonth}-${String(today.getDate()).padStart(2, "0")}`;
 
+  // Phase 69 — Roy asked whether admin/user notification emails are
+  // "really working." `sendEmailSafely` (lib/email/resend.ts) already
+  // silently skips sending — by design, so a missing key never blocks the
+  // underlying booking/inquiry/etc. from saving — whenever RESEND_API_KEY
+  // isn't set, but nothing ever surfaced that anywhere an admin could see
+  // it; it just showed up as a server log line no one but a developer
+  // would ever look at. This is a server-only read (these are never sent
+  // to the client bundle — only the boolean results below are rendered),
+  // so it's safe to check directly here. GESA_CONTACT_INBOX has a
+  // hardcoded fallback ("hello@gesa.org") for the same "never let a
+  // missing var break the underlying feature" reason `lib/email/resend.ts`
+  // uses — but that also means an admin could be missing every
+  // notification email indefinitely without any visible signal that the
+  // real inbox was never configured. Flagging both here closes that gap.
+  const emailKeyConfigured = Boolean(process.env.RESEND_API_KEY);
+  const emailInboxConfigured = Boolean(process.env.GESA_CONTACT_INBOX);
+  const emailConfigWarnings = [
+    !emailKeyConfigured && "RESEND_API_KEY is not set — every notification/confirmation email is being silently skipped.",
+    emailKeyConfigured &&
+      !emailInboxConfigured &&
+      "GESA_CONTACT_INBOX is not set — admin notification emails are falling back to a placeholder address (hello@gesa.org), not a real monitored inbox.",
+  ].filter((w): w is string => Boolean(w));
+
   const requestBars = [
     { label: "Booking requests", value: bookings.length, href: "/admin/bookings" },
     { label: "Contact inquiries", value: inquiries.length, href: "/admin/inquiries" },
     { label: "Group registrations", value: registrations.length, href: "/admin/registrations" },
+    { label: "Volunteer applicants", value: volunteerApplications.length, href: "/admin/volunteer-applications" },
   ];
   const requestMax = Math.max(1, ...requestBars.map((b) => b.value));
 
   return (
     <div className="space-y-5">
-      {/* KPI tiles — same three the reference highlights up top. Contact
-          inquiries / Group registrations / Registered users moved into the
-          "Requests"/"Community" panels below rather than duplicated here. */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {emailConfigWarnings.length > 0 && (
+        <div className="rounded-[var(--radius)] border border-destructive/40 bg-destructive/10 p-4 text-[13.5px] text-destructive">
+          <div className="mb-1 font-semibold">Email delivery isn&apos;t fully configured</div>
+          <ul className="list-inside list-disc space-y-0.5">
+            {emailConfigWarnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* KPI tiles — the reference highlights three up top; Phase 69 added a
+          4th (Volunteer applicants) so that flow isn't the one thing on
+          this list of admin-reviewed submissions with zero dashboard
+          visibility. Contact inquiries / Group registrations / Registered
+          users stay in the "Requests"/"Community" panels below rather than
+          duplicated here. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiTiles.map((t) => (
           <Link key={t.label} href={t.href} className="block">
             <div className="rounded-[var(--radius)] border border-white/50 bg-card p-4 shadow-soft transition-transform hover:-translate-y-0.5">
@@ -350,7 +422,8 @@ export default async function AdminOverviewPage() {
           <h2 className="mb-3 text-base text-primary">Trend</h2>
           <TrendChart points={trend} />
           <p className="mt-2 text-[11.5px] text-muted-fg">
-            All submissions (sessions, Find Your Therapist, bookings, inquiries, group registrations) by month.
+            All submissions (sessions, Find Your Therapist, bookings, inquiries, group registrations, volunteer
+            applications) by month.
           </p>
         </div>
 
