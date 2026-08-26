@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Sparkle, ShieldCheck, HeartHandshake, Users, ArrowRight } from "lucide-react";
 import HighlightedText from "@/components/ui/HighlightedText";
+import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ScrollText from "@/components/motion/ScrollText";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
@@ -184,6 +185,10 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
       <div className="gold-banner relative pt-16 pb-24 md:pt-20 md:pb-32">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-[8%] top-0 h-[420px] w-[560px] rounded-full bg-white/25 blur-[110px]" />
+          {/* Phase 67 — same faint line-art watermark texture as About's
+              gold Hero band and the gold PageHero banners (Our Therapists,
+              Support Groups), for consistency across every gold section. */}
+          <GoldWatermarks />
         </ParallaxLayer>
 
         <div className="wrap relative z-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">

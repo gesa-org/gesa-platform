@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle, Globe2, Link2 } from 'lucide-react';
+import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle } from 'lucide-react';
 import HighlightedText from '@/components/ui/HighlightedText';
+import GoldWatermarks from '@/components/ui/GoldWatermarks';
 import Reveal from '@/components/motion/Reveal';
 import ScrollText from '@/components/motion/ScrollText';
 import ParallaxMedia from '@/components/motion/ParallaxMedia';
@@ -113,11 +114,12 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
         <ParallaxLayer speed={35} className="absolute inset-0">
           <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-accent-soft rounded-full blur-[100px] opacity-60 translate-x-1/3 -translate-y-1/4"></div>
 
-          {/* Faint line-art doodles for texture, matching the reference mockup */}
-          <Globe2 className="absolute left-[6%] top-[38%] h-24 w-24 text-foreground opacity-[0.05]" strokeWidth={1} />
-          <Globe2 className="absolute left-[28%] top-[6%] h-14 w-14 text-foreground opacity-[0.05]" strokeWidth={1} />
-          <Link2 className="absolute left-[2%] top-[10%] h-16 w-16 -rotate-12 text-foreground opacity-[0.05]" strokeWidth={1} />
-          <Link2 className="absolute left-[22%] top-[70%] h-12 w-12 rotate-45 text-foreground opacity-[0.05]" strokeWidth={1} />
+          {/* Faint line-art doodles for texture, matching the reference
+              mockup. Phase 67 — extracted into a shared component (now 5
+              icon types/7 instances, up from 2 types/4 instances) so this
+              same texture also appears on Home, Our Therapists, and
+              Support Groups' gold sections, not just here. */}
+          <GoldWatermarks />
 
           {/* Soft multi-color glow behind the headline */}
           <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--clay)_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />

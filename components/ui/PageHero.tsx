@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
+import GoldWatermarks from "@/components/ui/GoldWatermarks";
 
 interface PageHeroProps {
   icon?: LucideIcon;
@@ -47,6 +48,15 @@ interface PageHeroProps {
 // the pale-background defaults, so those two are conditional on `gold`;
 // everything else (copy, icon, layout, the non-gold pages' appearance) is
 // unchanged.
+//
+// Phase 67 — Roy asked for the same faint line-art watermark texture on
+// About's gold Hero band to appear on every other gold-background section
+// site-wide, for consistency. Since this one component is the shared gold
+// banner for Our Therapists and Support Groups (the two other pages Roy
+// named), rendering <GoldWatermarks /> here — gated behind the existing
+// `gold` prop, same as the other gold-only styling above — picks both of
+// them up from one change. FAQ/Contact/legal pages pass `gold={false}` (or
+// omit it) and are completely unaffected.
 export default function PageHero({
   icon: Icon,
   eyebrow,
@@ -66,6 +76,7 @@ export default function PageHero({
             gold ? "bg-white/25" : "bg-accent-soft opacity-60"
           }`}
         />
+        {gold && <GoldWatermarks />}
       </ParallaxLayer>
       <StaggerGroup
         className={`relative z-10 text-center ${narrow ? "narrow" : "wrap"}`}
