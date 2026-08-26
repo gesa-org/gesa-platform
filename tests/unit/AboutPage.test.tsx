@@ -65,4 +65,18 @@ describe("AboutPage — founders photo/initials fallback", () => {
     const section = screen.getByText(ABOUT_SECTIONS_FALLBACK.taxNote).closest("section");
     expect(section?.className).toContain("bg-sage-soft");
   });
+
+  it("renders a dedicated Mission section before the 'Why GESA exists' section (Phase 70)", async () => {
+    const jsx = await AboutPage();
+    render(jsx);
+
+    expect(screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionHeading)).toBeInTheDocument();
+    expect(screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionBody)).toBeInTheDocument();
+
+    // Order matters — the new section must come before the existing
+    // "Why GESA exists" section, not after it.
+    const missionEl = screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionHeading);
+    const whyGesaEl = screen.getByText(ABOUT_SECTIONS_FALLBACK.missionHeading);
+    expect(missionEl.compareDocumentPosition(whyGesaEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

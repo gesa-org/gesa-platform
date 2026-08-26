@@ -56,6 +56,23 @@ export default async function AboutPage() {
     <div className="reveal-page__main">
       <Hero content={heroContent} />
 
+      {/* Phase 70 — Roy asked for a dedicated "Mission" section, distinct
+          from the section just below it (which is headed "Why GESA
+          exists" in copy, but is internally named "mission" in the schema
+          from an earlier phase — kept as-is per "text details is as is"
+          precedent, not renamed, to avoid touching already-published
+          copy). This new section is a short, standalone mission statement
+          set apart on the sage-soft wash already used elsewhere on this
+          page (Phase 68), so it doesn't visually blend into the wrap
+          max-w-[760px] section directly under it. */}
+      <section className="section bg-sage-soft">
+        <Reveal type="fade-up" as="div" className="wrap max-w-[760px] text-center">
+          <span className="eyebrow">{sections.ourMissionEyebrow}</span>
+          <h2 className="my-2.5 text-[30px]">{sections.ourMissionHeading}</h2>
+          <p className="mx-auto max-w-[620px] text-[15.5px] text-muted-fg">{sections.ourMissionBody}</p>
+        </Reveal>
+      </section>
+
       <section className="section wrap max-w-[760px]">
         <Reveal type="fade-up">
           <h2 className="text-[30px]">{sections.missionHeading}</h2>

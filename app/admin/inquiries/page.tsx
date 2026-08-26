@@ -20,6 +20,7 @@ export default async function AdminInquiriesPage() {
                 <th className="px-5 py-3">Received</th>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
+                <th className="px-5 py-3">Phone</th>
                 <th className="px-5 py-3">Type</th>
                 <th className="px-5 py-3">Message</th>
               </tr>
@@ -40,6 +41,7 @@ export default async function AdminInquiriesPage() {
                       "—"
                     )}
                   </td>
+                  <td className="px-5 py-3 text-muted-fg">{i.phone || "—"}</td>
                   <td className="px-5 py-3">
                     <span className="rounded-full bg-accent-soft px-2.5 py-1 text-[12px] font-medium text-primary">
                       {i.type || "general"}

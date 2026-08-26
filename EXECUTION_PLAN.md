@@ -2118,4 +2118,38 @@ git push
 ```
 
 ---
+
+## Phase 70: About page Mission section + footer sizing/scroll-reveal/"Help us grow" form
+
+**Roy's request:** a dedicated "Mission" section on About (before "Why GESA exists"), and footer enhancements — bigger/more legible, scroll-triggered reveal animations, and a new "Help us grow" mini-form (Name/Phone/Email/Subject/consent) wired to actually save into the CRM. Reference screenshot supplied for the form's look.
+
+**About page:**
+- `lib/content.ts`: `AboutSectionsContent` gained `ourMissionEyebrow` / `ourMissionHeading` / `ourMissionBody`, seeded in `ABOUT_SECTIONS_FALLBACK`. Kept fully separate from the existing `missionHeading`/`missionParagraphs` fields (which render as "Why GESA exists" — an internal naming quirk from an earlier phase, left as-is per the established "don't touch already-published copy" precedent).
+- `app/about/page.tsx`: new section rendered immediately after the Hero, before the existing "Why GESA exists" section — same Reveal fade-up motion, on the site's `bg-sage-soft` wash (Phase 68's token) so it reads as visually distinct from the section directly under it.
+- `components/admin/content/AboutSectionsEditor.tsx`: new "Our Mission" fields, editable and saved alongside the rest of the page's `page_about_sections` content row.
+
+**Footer:**
+- `components/Footer.tsx`: padding grew `py-16` → `py-20 sm:py-24`; nav-column text bumped `text-sm`/`text-[13px]` → `text-[14.5px]`/`text-[13.5px]`; the whole column grid now wraps in `StaggerGroup`/`StaggerItem` (same primitive used for card grids elsewhere) so columns stagger in on scroll; the social/partners row and the bottom copyright bar each wrap in `Reveal` (fade-up and fade respectively).
+- Grid grew from 4 to 5 columns (`lg:grid-cols-5`) to fit the new form without cramping the existing Explore/Support/Legal columns.
+
+**"Help us grow" form (`components/footer/HelpUsGrowForm.tsx`, new):**
+- Reuses the existing `inquiries` table — already public-insert via RLS, already reviewed at `/admin/inquiries` — rather than a new table, tagged `type: "Help us grow"` so Roy can tell these apart from the full Contact page's submissions in the CRM.
+- The reference design has no message field, but the shared `/api/email/contact` route (also used by the full Contact form) requires a non-empty `message` to send the admin-notification email — a short summary line (subject + phone) is generated automatically rather than adding a textarea the reference design doesn't show.
+- `inquiries` table gained a nullable `phone` column (migration applied to both dev and prod Supabase projects) since the reference form has a dedicated phone field the existing Contact form doesn't. `lib/database.types.ts`'s `InquiryRow` and `app/admin/inquiries/page.tsx` (new Phone column) updated to match.
+- Subject dropdown options (Donate / Volunteer as a therapist / Partnership / General inquiry) were not specified by Roy — chosen to match the tone of the existing Contact form's own subject list, adapted for a footer-level "grow" context. Worth Roy's review if a different list is wanted.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean across all 7 touched files.
+- `tests/unit/HelpUsGrowForm.test.tsx` (new) — 2/2 passed: blocks submission without consent, saves to `inquiries` with `type: "Help us grow"` once consent is given.
+- `tests/unit/Footer.test.tsx` (updated) — 2/2 passed, including a new assertion that the form renders inside the footer.
+- `tests/unit/AboutPage.test.tsx` (updated) — 4/4 passed, including a DOM-order assertion that the new Mission section renders before "Why GESA exists."
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 70: About Mission section, footer sizing/scroll-reveal, Help us grow form"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -18,6 +18,9 @@ type Founder = AboutSectionsContent["founders"][number];
 // the shared Hero component used elsewhere.
 export default function AboutSectionsEditor({ initial }: { initial: AboutSectionsContent }) {
   const [published, setPublished] = useState(initial.published);
+  const [ourMissionEyebrow, setOurMissionEyebrow] = useState(initial.ourMissionEyebrow);
+  const [ourMissionHeading, setOurMissionHeading] = useState(initial.ourMissionHeading);
+  const [ourMissionBody, setOurMissionBody] = useState(initial.ourMissionBody);
   const [missionHeading, setMissionHeading] = useState(initial.missionHeading);
   const [missionParagraphs, setMissionParagraphs] = useState<string[]>(initial.missionParagraphs);
   const [howItWorksHeading, setHowItWorksHeading] = useState(initial.howItWorksHeading);
@@ -53,6 +56,9 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
     const supabase = createClient();
     const value: AboutSectionsContent = {
       published,
+      ourMissionEyebrow,
+      ourMissionHeading,
+      ourMissionBody,
       missionHeading,
       missionParagraphs,
       howItWorksHeading,
@@ -84,7 +90,36 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
       </label>
 
       <section className="flex flex-col gap-3">
-        <h3 className="text-[15px] font-semibold">Mission</h3>
+        <h3 className="text-[15px] font-semibold">Our Mission (new dedicated section, above &quot;Why GESA exists&quot;)</h3>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Eyebrow</label>
+          <input
+            value={ourMissionEyebrow}
+            onChange={(e) => setOurMissionEyebrow(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Heading</label>
+          <input
+            value={ourMissionHeading}
+            onChange={(e) => setOurMissionHeading(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Body</label>
+          <textarea
+            rows={3}
+            value={ourMissionBody}
+            onChange={(e) => setOurMissionBody(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3 border-t border-border pt-6">
+        <h3 className="text-[15px] font-semibold">Why GESA exists</h3>
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Heading</label>
           <input

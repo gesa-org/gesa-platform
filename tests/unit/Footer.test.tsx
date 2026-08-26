@@ -31,4 +31,16 @@ describe("Footer", () => {
     expect(screen.getByText("GESA is a registered 501(c)(3) non-profit in the United States.")).toBeInTheDocument();
     expect(screen.getByText(/A registered non-profit organization\./)).toBeInTheDocument();
   });
+
+  // Phase 70 — the footer grew a 5th column embedding the new "Help us
+  // grow" form; this just checks it's actually present alongside the
+  // existing four nav columns, not that the form itself works end-to-end
+  // (that's covered by HelpUsGrowForm.test.tsx).
+  it("renders the Help us grow form alongside the existing nav columns", () => {
+    render(<Footer />);
+
+    expect(screen.getByText("Help us grow")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Name")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Email")).toBeInTheDocument();
+  });
 });

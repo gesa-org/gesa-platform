@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck } from 'lucide-react';
 import Logo from '@/components/Logo';
 import VolunteerApplyButton from '@/components/volunteer/VolunteerApplyButton';
+import HelpUsGrowForm from '@/components/footer/HelpUsGrowForm';
+import Reveal from '@/components/motion/Reveal';
+import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { FooterContent } from '@/lib/content';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
@@ -51,19 +54,26 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
 export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?: FooterContent }) {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-espresso text-[#c7d0de] py-16 mt-10">
-      <div className="max-w-[1160px] mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
+    <footer className="bg-espresso text-[#c7d0de] py-20 sm:py-24 mt-10">
+      <div className="max-w-[1240px] mx-auto px-6 sm:px-8">
+        {/* Phase 70 — Roy asked for the footer's overall size/padding to
+            feel more spacious, its text more legible, and for scroll-
+            triggered reveal animations on the footer's text/sections. The
+            grid grew from 4 to 5 columns (lg) to fit the new "Help us
+            grow" form without cramping the existing nav columns; every
+            column now staggers in via StaggerGroup/StaggerItem, the same
+            primitive already used for card grids elsewhere on the site. */}
+        <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+          <StaggerItem className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#b7c3d6]">
               <Logo size={34} />
               GESA
             </Link>
-            <p className="text-[#a8b4c8] max-w-[260px] text-sm mt-3 leading-relaxed">{content.tagline}</p>
-          </div>
-          <div>
-            <h4 className="text-[#eef1f6] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.exploreHeading}</h4>
-            <ul className="flex flex-col gap-2 text-sm text-[#b0bbcc]">
+            <p className="text-[#a8b4c8] max-w-[260px] text-[14.5px] mt-3.5 leading-relaxed">{content.tagline}</p>
+          </StaggerItem>
+          <StaggerItem>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.exploreHeading}</h4>
+            <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
               <li><Link href="/about" className="hover:text-[#eef1f6] transition-colors">{content.exploreAboutLabel}</Link></li>
               <li><Link href="/therapists" className="hover:text-[#eef1f6] transition-colors">{content.exploreTherapistsLabel}</Link></li>
               <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.exploreSupportGroupsLabel}</Link></li>
@@ -85,10 +95,10 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
               <li><Link href="/faq" className="hover:text-[#eef1f6] transition-colors">{content.exploreFaqLabel}</Link></li>
               <li><Link href="/contact" className="hover:text-[#eef1f6] transition-colors">{content.exploreContactLabel}</Link></li>
             </ul>
-          </div>
-          <div>
-            <h4 className="text-[#eef1f6] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.supportHeading}</h4>
-            <ul className="flex flex-col gap-2 text-sm text-[#b0bbcc]">
+          </StaggerItem>
+          <StaggerItem>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.supportHeading}</h4>
+            <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
               <li><Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">{content.supportFindTherapistLabel}</Link></li>
               <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.supportJoinGroupLabel}</Link></li>
               <li><Link href="/contact?subject=Donation" className="hover:text-[#eef1f6] transition-colors">{content.supportDonateLabel}</Link></li>
@@ -101,18 +111,21 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
               </li>
               <li><a href="tel:988" className="hover:text-[#eef1f6] transition-colors">{content.supportEmergencyLabel}</a></li>
             </ul>
-          </div>
-          <div>
-            <h4 className="text-[#eef1f6] font-sans text-[13px] uppercase tracking-[0.14em] mb-4 font-semibold">{content.legalHeading}</h4>
-            <ul className="flex flex-col gap-2 text-sm text-[#b0bbcc]">
+          </StaggerItem>
+          <StaggerItem>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.legalHeading}</h4>
+            <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
               <li><Link href="/privacy-policy" className="hover:text-[#eef1f6] transition-colors">Privacy Policy</Link></li>
               <li><Link href="/cookies-policy" className="hover:text-[#eef1f6] transition-colors">Cookies Policy</Link></li>
               <li><Link href="/legal-notice" className="hover:text-[#eef1f6] transition-colors">Legal Notice</Link></li>
               <li><Link href="/accessibility-statement" className="hover:text-[#eef1f6] transition-colors">Accessibility Statement</Link></li>
               <li><Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">Terms & Conditions</Link></li>
             </ul>
-          </div>
-        </div>
+          </StaggerItem>
+          <StaggerItem>
+            <HelpUsGrowForm />
+          </StaggerItem>
+        </StaggerGroup>
 
         {/* Phase 57 — "Connect with Us" social row + "Our Trusted Partners"
             row, replacing Phase 56's reverted 5-column/CTA-button redesign
@@ -121,71 +134,75 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
             that's a deliberate change from Phase 56's "" default) so all
             four icons always render, matching the reference immediately —
             Roy swaps in real profile URLs via the Content Manager. */}
-        <div className="mt-8 flex flex-col gap-5 border-t border-[#eef1f6]/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <Reveal type="fade-up" as="div" className="mt-10 flex flex-col gap-5 border-t border-[#eef1f6]/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[13px] font-semibold text-[#eef1f6]">{content.connectWithUsLabel}</span>
-            <div className="flex items-center gap-2">
+            <span className="text-[13.5px] font-semibold text-[#eef1f6]">{content.connectWithUsLabel}</span>
+            <div className="flex items-center gap-2.5">
               <a
                 href={content.socialLinkedinHref}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GESA on LinkedIn"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
               >
-                <Linkedin size={15} />
+                <Linkedin size={16} />
               </a>
               <a
                 href={content.socialTwitterHref}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GESA on Twitter"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
               >
-                <Twitter size={15} />
+                <Twitter size={16} />
               </a>
               <a
                 href={content.socialInstagramHref}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GESA on Instagram"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
               >
-                <Instagram size={15} />
+                <Instagram size={16} />
               </a>
               <a
                 href={content.socialFacebookHref}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GESA on Facebook"
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef1f6]/10 text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
               >
-                <Facebook size={15} />
+                <Facebook size={16} />
               </a>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <span className="text-[13px] font-semibold text-[#eef1f6]">{content.trustedPartnersHeading}</span>
+            <span className="text-[13.5px] font-semibold text-[#eef1f6]">{content.trustedPartnersHeading}</span>
             <div className="flex flex-wrap items-center gap-4">
               {[content.partner1Label, content.partner2Label, content.partner3Label].map((label, i) => {
                 const Icon = PARTNER_ICONS[i] ?? PARTNER_ICONS[PARTNER_ICONS.length - 1];
                 return (
-                  <span key={label} className="flex items-center gap-1.5 text-[12.5px] text-[#b0bbcc]">
+                  <span key={label} className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc]">
                     <Icon size={15} className="text-[#8b96a8]" /> {label}
                   </span>
                 );
               })}
             </div>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="border-t border-[#eef1f6]/10 mt-8 pt-5 text-[13px] text-[#a8b4c8] flex flex-col md:flex-row justify-between gap-2">
+        <Reveal
+          type="fade"
+          as="div"
+          className="border-t border-[#eef1f6]/10 mt-9 pt-6 text-[13.5px] text-[#a8b4c8] flex flex-col md:flex-row justify-between gap-2"
+        >
           <div className="flex flex-col gap-1">
             <span>{content.copyrightLine.replace("{year}", String(year))}</span>
             <span>{content.nonprofitStatusLine}</span>
           </div>
           <span>{content.madeWithLine}</span>
-        </div>
+        </Reveal>
       </div>
     </footer>
   );

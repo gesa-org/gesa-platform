@@ -85,6 +85,7 @@ export type InquiryRow = {
   id: string;
   message: string | null;
   name: string | null;
+  phone: string | null;
   type: string | null;
 }
 
