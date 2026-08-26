@@ -10,7 +10,7 @@ import {
   REVEAL_VIEWPORT,
 } from "@/components/motion/config";
 
-export type RevealType = "fade" | "fade-up" | "fade-scale" | "horizontal" | "image";
+export type RevealType = "fade" | "fade-up" | "fade-scale" | "horizontal" | "horizontal-right" | "image";
 
 const DISTANCE_BY_SIZE = { sm: MOTION_DISTANCE.sm, md: MOTION_DISTANCE.md, lg: MOTION_DISTANCE.lg };
 
@@ -30,6 +30,12 @@ function buildVariants(type: RevealType, distance: number, reduced: boolean) {
       };
     case "horizontal":
       return { hidden: { opacity: 0, x: -distance }, visible: { opacity: 1, x: 0 } };
+    // Phase 66 — Our Founders' alternating rows needed a "slide in from the
+    // right" counterpart to the existing left-only "horizontal" type (used
+    // for the second/even founder row, so entries visibly slide in from
+    // opposite sides rather than all sliding the same direction).
+    case "horizontal-right":
+      return { hidden: { opacity: 0, x: distance }, visible: { opacity: 1, x: 0 } };
     case "image":
       return {
         hidden: { opacity: 0, scale: 1.04, y: distance * 0.5 },

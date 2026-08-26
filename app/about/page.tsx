@@ -106,45 +106,76 @@ export default async function AboutPage() {
           `wrap max-w-[820px]` now on its own inner <div> that only
           constrains the *content's* width, not the color. */}
       <section className="section bg-clay-soft">
-        <div className="wrap max-w-[820px]">
+        {/* Phase 66 — Roy sent a reference mockup of a bigger, alternating
+            photo/text layout (photo-left-text-right for the first founder,
+            text-left-photo-right for the second) with each row sliding in
+            from the side its photo starts on as it scrolls into view,
+            replacing the small side-by-side 2-up card grid from Phase 62.
+            Text content itself (name/role/bio/email) is unchanged — only
+            the layout, sizing, and motion changed, per Roy's "text details
+            is as is" instruction. Widened from max-w-[820px] to
+            max-w-[980px] so two-up alternating rows have room to breathe
+            at the new, bigger photo size. */}
+        <div className="wrap max-w-[980px]">
           <Reveal type="fade-up" className="block text-center">
             <span className="eyebrow">{sections.foundersHeading}</span>
             <h2 className="my-2.5 text-[30px]">{sections.foundersHeading}</h2>
             <p className="mx-auto max-w-[600px] text-muted-fg">{sections.foundersIntro}</p>
           </Reveal>
-          <StaggerGroup className="mt-8.5 mt-[34px] grid gap-[22px] sm:grid-cols-2">
-            {sections.founders.map((p) => (
-              <StaggerItem key={p.name}>
-                <Card className="flex items-start gap-5">
-                  {/* Phase 62 — founders can now have a real photo attached
-                      via the Content Manager; falls back to the initials
-                      block exactly as before for any founder nobody has
-                      uploaded one for yet. */}
-                  {p.photoUrl ? (
-                    <div className="relative h-[112px] w-24 flex-none overflow-hidden rounded-[14px]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.photoUrl} alt={p.name} className="h-full w-full object-cover" />
+          <div className="mt-8.5 mt-[34px] flex flex-col gap-6">
+            {sections.founders.map((p, i) => {
+              // Alternate which side each row's photo starts on — even
+              // index (Ilana, first) slides in from the left; odd index
+              // (Karin, second) slides in from the right. A small
+              // per-row delay (on top of each row's own viewport trigger)
+              // keeps the intended left-then-right order even if both
+              // happen to scroll into view together on a fast scroll.
+              const reversed = i % 2 === 1;
+              return (
+                <Reveal
+                  key={p.name}
+                  type={reversed ? "horizontal-right" : "horizontal"}
+                  distance={140}
+                  duration={0.9}
+                  delay={i * 0.25}
+                >
+                  <Card
+                    className={`flex flex-col items-center gap-7 p-7 text-center sm:p-8 md:flex-row md:text-left ${
+                      reversed ? "md:flex-row-reverse" : ""
+                    }`}
+                  >
+                    {/* Phase 62 — founders can now have a real photo attached
+                        via the Content Manager; falls back to the initials
+                        block exactly as before for any founder nobody has
+                        uploaded one for yet. Phase 66 — sized up from
+                        112x96px to a bigger 260px square per Roy's "a
+                        little bit bigger than the current design" ask. */}
+                    {p.photoUrl ? (
+                      <div className="relative h-[220px] w-[220px] flex-none overflow-hidden rounded-2xl sm:h-[260px] sm:w-[260px]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.photoUrl} alt={p.name} className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="flex h-[220px] w-[220px] flex-none items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white sm:h-[260px] sm:w-[260px]">
+                        {initials(p.name)}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="m-0 text-2xl">{p.name}</h3>
+                      <div className="my-1 mb-3 text-[15px] font-semibold text-primary">{p.roleTitle}</div>
+                      <p className="mb-3 text-[16px] leading-relaxed text-muted-fg">{p.shortBio}</p>
+                      <a
+                        href={`mailto:${p.email}`}
+                        className="inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-primary"
+                      >
+                        <Mail size={16} /> {p.email}
+                      </a>
                     </div>
-                  ) : (
-                    <div className="flex h-[112px] w-24 flex-none items-center justify-center rounded-[14px] bg-gradient-to-br from-primary to-primary-600 text-[26px] font-serif font-semibold text-white">
-                      {initials(p.name)}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="m-0 text-xl">{p.name}</h3>
-                    <div className="my-0.5 mb-2.5 text-sm font-semibold text-primary">{p.roleTitle}</div>
-                    <p className="mb-2.5 text-[14.5px] text-muted-fg">{p.shortBio}</p>
-                    <a
-                      href={`mailto:${p.email}`}
-                      className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary"
-                    >
-                      <Mail size={15} /> {p.email}
-                    </a>
-                  </div>
-                </Card>
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
+                  </Card>
+                </Reveal>
+              );
+            })}
+          </div>
           <p className="mt-5 text-center text-[13px] text-muted-fg">
             More of our team, advisory board, and volunteer network will be introduced here soon.
           </p>

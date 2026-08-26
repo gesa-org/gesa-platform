@@ -1999,4 +1999,29 @@ git push
 ```
 
 ---
-**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 66 — Our Founders redesign: bigger alternating photo/text rows + scroll-triggered slide-in
+
+Roy sent a reference mockup of the "Our Founders" section: instead of the small side-by-side 2-up card grid from Phase 62, each founder gets a full-width row with a bigger photo, alternating which side the photo sits on (photo-left for the first founder, photo-right for the second), and asked for the text content to stay exactly as-is. He also asked for a scroll-triggered animation — each row sliding in slowly from the side its photo starts on, Ilana's row first, then Karin's, as the user scrolls the section into view.
+
+**Layout.** Replaced the `grid sm:grid-cols-2` two-up card grid with a single column of full-width rows (`app/about/page.tsx`), one `Card` per founder. Each card is `flex-col` on mobile (photo stacked above text, both centered) and `md:flex-row` on desktop, alternating to `md:flex-row-reverse` on every odd-indexed founder — so with today's two founders, Ilana's photo sits left of her text and Karin's sits right of hers, matching the reference. This alternation is driven by array index (`i % 2`), so it keeps working correctly if a third/fourth founder is ever added later, not hardcoded to exactly two people. Section container widened from `max-w-[820px]` to `max-w-[980px]` to give the wider alternating rows room. Photo size increased from the old fixed 112×96px box to a 220×220px (mobile) / 260×260px (desktop) square, `rounded-2xl` — both the real-photo `<img>` and the initials-fallback block sized up together, so a founder without an uploaded photo yet still gets the same bigger treatment. Name/role/bio/email text sizes were nudged up to match the bigger card (bio `text-[14.5px]` → `text-[16px] leading-relaxed`, name `text-xl` → `text-2xl`), but the actual copy — every founder's name, role title, bio, and email — is untouched, per Roy's "text details is as is" instruction.
+
+**Scroll-triggered slide-in.** The site already has a shared scroll-reveal primitive (`components/motion/Reveal.tsx`, from the Phase 45/46 motion rollout) with a `type="horizontal"` variant that slides an element in from the left as it enters the viewport — but nothing that slides in from the right. Added a new `"horizontal-right"` type (mirrors `"horizontal"` with a positive `x` offset instead of negative) rather than writing one-off animation code for this section, so the whole site's motion system gains a reusable "slide in from the right" option going forward, not just this one page. Each founder row is wrapped in its own `Reveal`, alternating `type="horizontal"` / `type="horizontal-right"` by index (so Ilana's row slides in from the left, Karin's from the right, matching Roy's ask), with a bigger `distance={140}` and longer `duration={0.9}` than the primitive's usual defaults for a more pronounced "slide" rather than the subtle default reveal, plus `delay={i * 0.25}` so the left-then-right order holds even if both rows happen to be visible at once on a fast scroll. Each `Reveal` still uses the primitive's existing `whileInView`/`once: true` viewport trigger (fires once as the section is scrolled into view, doesn't replay) and its existing `prefers-reduced-motion` handling (drops all movement to a plain fade for anyone with that OS setting), so this didn't need any new accessibility work — it inherited it from the shared primitive.
+
+**Verification:** scoped `tsc --noEmit` on `components/motion/Reveal.tsx` and `app/about/page.tsx` — clean. **Could not get a real Jest run to complete this session** — this sandbox's filesystem (the mounted project folder) was unusually slow today: even `du -sh node_modules` and a single small, previously-fast suite (`tests/unit/Button.test.tsx`) failed to finish inside this session's ~178-second per-command ceiling across five separate attempts, and `npx jest --listTests` alone (no test execution, just config/discovery) took 45 seconds by itself, worse than the "~170-178s ceiling for a full run" already documented in earlier phases. Read through the existing `tests/unit/AboutPage.test.tsx` by hand instead: it asserts the initials fallback text (`"IO"`/`"KH"`) and the uploaded-photo `<img>`'s `alt`/`src` attributes, neither of which changed — the same `p.photoUrl ? <img ...> : <div>{initials(p.name)}</div>` conditional is still there, just with bigger box classes around it — so by inspection nothing in that test should have broken, but this has not been confirmed by an actual passing test run the way every prior phase in this project was.
+
+**Known gaps, honestly flagged:**
+- **Real Jest verification is outstanding** — please run `npx jest tests/unit/AboutPage.test.tsx --runInBand --no-coverage` yourself (or let a future session retry once the sandbox's filesystem is behaving normally again) before fully trusting this phase the way earlier ones could be trusted. This is a first for this project's phases — every prior one had an actual passing test run backing it up.
+- Not screenshot-verified in a real browser — the layout and motion direction are correct by code inspection (alternating `md:flex-row-reverse`, alternating `Reveal` type), but the pixel-level look, timing feel, and actual "slides in slowly" impression haven't been seen rendered.
+- Only Ilana and Karin exist in real content today, so the alternating pattern has only been reasoned about for exactly 2 founders — it's designed to keep alternating correctly for more, but hasn't been exercised with 3+.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 66: Our Founders — bigger alternating photo/text rows with scroll-triggered slide-in from left then right"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts. Given the outstanding Jest verification above, Roy may want to explicitly test this one in a preview/staging view before merging further work on top of it.
