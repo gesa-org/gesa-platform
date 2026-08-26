@@ -3,13 +3,15 @@ import VolunteerApplicationStatusSelect from "@/components/admin/VolunteerApplic
 
 export const dynamic = "force-dynamic";
 
-// Phase 64 — maps the raw MeetingDuration DB value to the human label,
-// same mapping the modal and the notification email use.
+// Phase 64 — maps the raw meeting-duration DB value to a human label for
+// the three fixed presets, same mapping the notification email route uses.
+// Phase 65 — a volunteer's own "Specify time" free text (e.g. "2 hours")
+// isn't a preset, so it isn't in this map and falls through to the
+// `?? a.meeting_duration` below, showing exactly what they typed.
 const MEETING_DURATION_LABELS: Record<string, string> = {
   "60": "60 min",
   "45": "45 min",
   "30": "30 min",
-  anytime: "Anytime",
 };
 
 // Phase 63 — the admin side of the new volunteer therapist application

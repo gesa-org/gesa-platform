@@ -44,7 +44,7 @@ describe("VolunteerApplicationModal", () => {
     expect(screen.getByRole("radio", { name: "60 min" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "45 min" })).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "30 min" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Anytime" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Specify time" })).toBeInTheDocument();
     expect(screen.getByLabelText(/Bio/)).toBeInTheDocument();
   });
 
@@ -117,15 +117,45 @@ describe("VolunteerApplicationModal", () => {
   it("lets picking a different duration option switch the selection (single-select, not multi)", () => {
     render(<VolunteerApplicationModal onClose={jest.fn()} />);
     const sixty = screen.getByRole("radio", { name: "60 min" });
-    const anytime = screen.getByRole("radio", { name: "Anytime" });
+    const specify = screen.getByRole("radio", { name: "Specify time" });
 
     fireEvent.click(sixty);
     expect(sixty).toHaveAttribute("aria-checked", "true");
-    expect(anytime).toHaveAttribute("aria-checked", "false");
+    expect(specify).toHaveAttribute("aria-checked", "false");
 
-    fireEvent.click(anytime);
+    fireEvent.click(specify);
     expect(sixty).toHaveAttribute("aria-checked", "false");
-    expect(anytime).toHaveAttribute("aria-checked", "true");
+    expect(specify).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("reveals a free-text input when 'Specify time' is picked, required before submit", () => {
+    render(<VolunteerApplicationModal onClose={jest.fn()} />);
+    expect(screen.queryByLabelText("Specify your meeting duration")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Specify time" }));
+    expect(screen.getByLabelText("Specify your meeting duration")).toBeInTheDocument();
+
+    fillRequiredTextFields();
+    fireEvent.click(screen.getByText("CBT"));
+    fireEvent.click(screen.getByText("English"));
+    fireEvent.click(screen.getByText("Submit application"));
+
+    // Duration is selected as "Specify time," but no text was typed yet.
+    expect(screen.getByText("Please specify how long you'd like your sessions to be.")).toBeInTheDocument();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("submits the volunteer's own typed duration text (not the literal word 'custom') when 'Specify time' is used", async () => {
+    render(<VolunteerApplicationModal onClose={jest.fn()} />);
+    fillRequiredTextFields();
+    fireEvent.click(screen.getByText("CBT"));
+    fireEvent.click(screen.getByText("English"));
+    fireEvent.click(screen.getByRole("radio", { name: "Specify time" }));
+    fireEvent.change(screen.getByLabelText("Specify your meeting duration"), { target: { value: "2 hours" } });
+    fireEvent.click(screen.getByText("Submit application"));
+
+    await waitFor(() => expect(mockInsert).toHaveBeenCalledTimes(1));
+    expect(mockInsert.mock.calls[0][0]).toMatchObject({ meeting_duration: "2 hours" });
   });
 
   it("shows an error and stays open if the insert fails", async () => {

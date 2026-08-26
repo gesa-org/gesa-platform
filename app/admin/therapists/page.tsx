@@ -1,9 +1,15 @@
-import Image from "next/image";
-import Link from "next/link";
 import { getAllTherapistsAdmin } from "@/lib/queries";
+import TherapistsTable from "@/components/admin/TherapistsTable";
 
 export const dynamic = "force-dynamic";
 
+// Phase 65 — Roy said toggling therapists active/deactivated one at a time
+// through "Edit" (still available, unchanged — see [id]/page.tsx +
+// TherapistEditForm.tsx) was tiring once there are a lot of them, and asked
+// for a shortcut to select several/all and change status in one action.
+// This stays a Server Component fetching the real data; the actual
+// checkbox/bulk-action interactivity lives in the new client
+// TherapistsTable so app/admin/therapists never needs "use client" itself.
 export default async function AdminTherapistsPage() {
   const therapists = await getAllTherapistsAdmin();
 
@@ -12,51 +18,19 @@ export default async function AdminTherapistsPage() {
       <div className="border-b border-border p-5">
         <h2 className="text-lg">Therapists ({therapists.length})</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
-          Edit photos, bios, and languages, or deactivate a therapist to remove them from the public directory.
+          Edit photos, bios, and languages, or deactivate a therapist to remove them from the public directory. Check
+          several (or all) below to activate or deactivate them together.
         </p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-[14px]">
-          <thead className="bg-secondary/60 text-[12.5px] uppercase tracking-wide text-muted-fg">
-            <tr>
-              <th className="px-5 py-3">Photo</th>
-              <th className="px-5 py-3">Name</th>
-              <th className="px-5 py-3">Languages</th>
-              <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {therapists.map((t) => (
-              <tr key={t.id} className="border-t border-border">
-                <td className="px-5 py-3">
-                  <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent">
-                    {t.photo_url && (
-                      <Image src={t.photo_url} alt={t.full_name} fill className="object-cover object-[center_22%]" />
-                    )}
-                  </div>
-                </td>
-                <td className="px-5 py-3 font-medium">{t.full_name}</td>
-                <td className="px-5 py-3 text-muted-fg">{t.languages.join(", ") || "—"}</td>
-                <td className="px-5 py-3">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${
-                      t.is_active ? "bg-accent-soft text-primary" : "bg-secondary text-muted-fg"
-                    }`}
-                  >
-                    {t.is_active ? "Active" : "Deactivated"}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-right">
-                  <Link href={`/admin/therapists/${t.id}`} className="font-semibold text-primary underline">
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <TherapistsTable
+        therapists={therapists.map((t) => ({
+          id: t.id,
+          photo_url: t.photo_url,
+          full_name: t.full_name,
+          languages: t.languages,
+          is_active: t.is_active,
+        }))}
+      />
     </div>
   );
 }

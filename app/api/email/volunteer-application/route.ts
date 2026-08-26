@@ -4,15 +4,15 @@ import { volunteerApplicationNotificationEmail, volunteerApplicationReceivedEmai
 
 const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
-// Phase 64 — the modal sends the raw MeetingDuration value ("60"/"45"/
-// "30"/"anytime"); this route formats it for the human-readable admin
-// notification email so that template doesn't need its own copy of the
-// label mapping.
+// Phase 64 — the modal sends the raw meeting-duration value; this route
+// formats the three fixed presets into a human-readable label for the
+// admin notification email. Phase 65 — anything else (a volunteer's own
+// "Specify time" free text, e.g. "2 hours") isn't in this map, so it falls
+// through to the `?? meetingDuration` below and is shown exactly as typed.
 const MEETING_DURATION_LABELS: Record<string, string> = {
   "60": "60 min",
   "45": "45 min",
   "30": "30 min",
-  anytime: "Anytime",
 };
 
 // Phase 63 — best-effort notification pair for the new volunteer therapist

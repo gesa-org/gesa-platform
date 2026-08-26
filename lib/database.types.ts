@@ -253,11 +253,16 @@ export type SessionBookingRow = {
 // subject option. `status` mirrors the simple string-status convention
 // already used by booking_requests/match_requests ("new", etc.) rather than
 // a DB enum, for the same reason those use plain strings.
-// Phase 64 — Roy asked for a required "Meeting Duration" field (60/45/30
-// min or Anytime) alongside the rest of the volunteer application. Plain
-// string, same convention as `SessionDuration` elsewhere in this file
-// ("30"/"45"/"60"), plus an "anytime" value for "no preference".
-export type MeetingDuration = "60" | "45" | "30" | "anytime";
+// Phase 64 — Roy asked for a required "Meeting Duration" field alongside
+// the rest of the volunteer application. Phase 65 replaced the original
+// fixed "Anytime" choice with "Specify time": a volunteer either picks one
+// of the three presets, or types their own free-text duration (e.g. "2
+// hours") which is meant to show on their public profile once listed. So
+// only the *picker's* own state is a closed set — the real `meeting_duration`
+// column value can be a preset ("60"/"45"/"30") or arbitrary custom text,
+// which is why `TherapistApplicationRow.meeting_duration` stays a plain
+// `string` rather than this union.
+export type MeetingDurationChoice = "60" | "45" | "30" | "custom";
 
 export type TherapistApplicationRow = {
   id: string;
@@ -267,7 +272,7 @@ export type TherapistApplicationRow = {
   credentials_proof: string;
   specialties: string[];
   languages: string[];
-  meeting_duration: MeetingDuration;
+  meeting_duration: string;
   bio: string;
   status: string;
   notes: string | null;

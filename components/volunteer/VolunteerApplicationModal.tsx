@@ -6,7 +6,7 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import TagPicker from "@/components/ui/TagPicker";
 import { createClient } from "@/lib/supabase/client";
-import type { MeetingDuration } from "@/lib/database.types";
+import type { MeetingDurationChoice } from "@/lib/database.types";
 
 // Phase 63 — Roy pointed out that "Become a volunteer therapist" / "Join us
 // as a therapist" / "Volunteer" everywhere on the site all routed to the
@@ -17,7 +17,8 @@ import type { MeetingDuration } from "@/lib/database.types";
 // real fields Roy specified: Full Name, proof of license/verification,
 // specialties (required, curated quick-picks + unlimited custom), languages
 // (required, curated quick-picks + unlimited custom, no cap), a required
-// meeting duration (60/45/30 min or Anytime — added Phase 64), and a bio —
+// meeting duration (60/45/30 min presets, or a free-text "Specify time" —
+// added Phase 64, revised Phase 65), and a bio —
 // into the new therapist_applications table, reviewed by an admin at
 // /admin/volunteer-applications before anyone becomes an actual listed
 // therapist (that promotion step is a deliberate human decision, not
@@ -49,16 +50,20 @@ const LANGUAGE_OPTIONS = [
 ];
 
 // Phase 64 — Roy asked for a required, single-choice "Meeting Duration"
-// field: how long a session this volunteer is willing to commit to, or
-// "Anytime" if they're flexible. Single-select (not TagPicker, which is
-// multi-select) — modeled on the same selected/unselected button styling
-// used across the site's other single-choice pickers (e.g. gender
-// preference, session format in the match wizard).
-const MEETING_DURATION_OPTIONS: { value: MeetingDuration; label: string }[] = [
+// field: how long a session this volunteer is willing to commit to.
+// Single-select (not TagPicker, which is multi-select) — modeled on the
+// same selected/unselected button styling used across the site's other
+// single-choice pickers (e.g. gender preference, session format in the
+// match wizard). Phase 65 — Roy pointed out "Anytime" didn't actually let
+// a volunteer say how long they want a session to run; replaced it with
+// "Specify time," which reveals a free-text input so they can state their
+// own duration (e.g. "2 hours") — meant to be shown on their public
+// profile once they're a listed therapist.
+const MEETING_DURATION_OPTIONS: { value: MeetingDurationChoice; label: string }[] = [
   { value: "60", label: "60 min" },
   { value: "45", label: "45 min" },
   { value: "30", label: "30 min" },
-  { value: "anytime", label: "Anytime" },
+  { value: "custom", label: "Specify time" },
 ];
 
 export default function VolunteerApplicationModal({ onClose }: { onClose: () => void }) {
@@ -68,7 +73,8 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
   const [credentialsProof, setCredentialsProof] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
-  const [meetingDuration, setMeetingDuration] = useState<MeetingDuration | null>(null);
+  const [meetingDurationChoice, setMeetingDurationChoice] = useState<MeetingDurationChoice | null>(null);
+  const [customDuration, setCustomDuration] = useState("");
   const [bio, setBio] = useState("");
 
   const [pending, setPending] = useState(false);
@@ -85,10 +91,18 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
       setError("Please select or add at least one language.");
       return;
     }
-    if (!meetingDuration) {
+    if (!meetingDurationChoice) {
       setError("Please select a meeting duration.");
       return;
     }
+    if (meetingDurationChoice === "custom" && customDuration.trim() === "") {
+      setError("Please specify how long you'd like your sessions to be.");
+      return;
+    }
+    // The preset choices ("60"/"45"/"30") are stored as-is; "Specify time"
+    // stores the volunteer's own free text instead of the literal word
+    // "custom" — that's the actual profile-facing duration value.
+    const meetingDuration = meetingDurationChoice === "custom" ? customDuration.trim() : meetingDurationChoice;
     setPending(true);
     setError(null);
 
@@ -237,14 +251,14 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
           </label>
           <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Meeting duration">
             {MEETING_DURATION_OPTIONS.map((option) => {
-              const isSelected = meetingDuration === option.value;
+              const isSelected = meetingDurationChoice === option.value;
               return (
                 <button
                   key={option.value}
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  onClick={() => setMeetingDuration(option.value)}
+                  onClick={() => setMeetingDurationChoice(option.value)}
                   className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                     isSelected
                       ? "border-primary bg-accent-soft text-primary"
@@ -256,8 +270,24 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
               );
             })}
           </div>
+          {meetingDurationChoice === "custom" && (
+            // Deliberately no `required` HTML attribute here — the actual
+            // required-ness is enforced by handleSubmit's own JS check
+            // above (setError(...)), same as Specialties/Languages, so a
+            // browser's native constraint validation can't silently
+            // swallow the submit event before that check ever runs.
+            <input
+              id="volunteer-duration-custom"
+              value={customDuration}
+              onChange={(e) => setCustomDuration(e.target.value)}
+              placeholder="e.g. 2 hours, 90 minutes"
+              aria-label="Specify your meeting duration"
+              className="mt-2 w-full max-w-[260px] rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+          )}
           <p className="mt-1 text-[12px] text-muted-fg">
-            How long a session are you able to commit to volunteering — or select Anytime if you&apos;re flexible.
+            How long a session are you able to commit to volunteering. Pick a preset, or Specify time to enter your
+            own — this is shown on your public profile once you&apos;re listed.
           </p>
         </div>
 
