@@ -1944,4 +1944,30 @@ git push
 ```
 
 ---
+
+## Phase 64 — Volunteer application: required "Meeting Duration" field
+
+Roy sent a screenshot of the live Phase 63 volunteer application modal and asked for one more required field: "Meeting Duration," a single choice of 60 min / 45 min / 30 min / Anytime, describing how long a session the volunteer can commit to.
+
+**New `meeting_duration` column** on `therapist_applications` (both `iddeoavrlnvwwfopsacy` production and `ggjvpfivyqartvanvhzq` dev — table had zero real rows in either, confirmed before migrating, since the feature only just shipped): `text not null default 'anytime'`. `MeetingDuration` type added to `lib/database.types.ts` (`"60" | "45" | "30" | "anytime"`, following the same plain-string convention as the existing `SessionDuration` type used for therapists' own session lengths) and added to the `Insert` type's required fields alongside `full_name`/`email`/`credentials_proof`/`bio`.
+
+**This is a genuinely different control from Specialties/Languages, not another `TagPicker`.** Specialties and Languages are multi-select with unlimited custom entries; Meeting Duration is a single, fixed choice — so it's a small inline `role="radiogroup"` of four buttons (60 min / 45 min / 30 min / Anytime) using the same selected/unselected styling token (`border-primary bg-accent-soft text-primary` vs. `border-border hover:border-primary-600`) already established by `TagPicker`'s chips and the match wizard's single-choice pickers elsewhere in the codebase, so it looks consistent without introducing a new visual language. Required, with the same "blocks submit with a clear message" validation pattern as Specialties/Languages (`"Please select a meeting duration."`).
+
+**Threaded through everywhere the rest of the application already goes:** the Supabase insert, the best-effort applicant-confirmation/admin-notification email pair (the admin notification email and the API route both format the raw `"60"/"45"/"30"/"anytime"` value into a readable label like "60 min" / "Anytime"), and the `/admin/volunteer-applications` review table, which gained a "Duration" column showing the same formatted label as a small chip.
+
+**Verification:** scoped `tsc --noEmit` across every changed file (`lib/database.types.ts`, `VolunteerApplicationModal.tsx`, `lib/email/templates.ts`, `app/admin/volunteer-applications/page.tsx`, `lib/queries.ts`) — clean. The email API route was checked separately and hits only the same pre-existing, unrelated `resend` package `.d.mts` resolution error already confirmed in Phase 63 — no new errors. Updated `tests/unit/VolunteerApplicationModal.test.tsx` with the new field (asserting all four radio options render, a new "blocks submit with no duration selected" case, a single-select-not-multi toggle test, and the successful-submit test now asserts `meeting_duration: "45"` in the real insert payload) — 7/7 passed, all real Jest renders.
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified in a real browser — tests confirm the field renders, validates, and reaches the database/emails/admin table correctly, not the pixel-level look.
+- The DB column has a `default 'anytime'` as a defensive fallback only (the table was empty, so this never actually fires from the live form, which always sends an explicit value) — flagged in a code comment so a future phase doesn't mistake it for an intentional "anytime" default behavior.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 64: add required Meeting Duration field (60/45/30 min or Anytime) to volunteer therapist application"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

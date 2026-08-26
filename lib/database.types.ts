@@ -253,6 +253,12 @@ export type SessionBookingRow = {
 // subject option. `status` mirrors the simple string-status convention
 // already used by booking_requests/match_requests ("new", etc.) rather than
 // a DB enum, for the same reason those use plain strings.
+// Phase 64 — Roy asked for a required "Meeting Duration" field (60/45/30
+// min or Anytime) alongside the rest of the volunteer application. Plain
+// string, same convention as `SessionDuration` elsewhere in this file
+// ("30"/"45"/"60"), plus an "anytime" value for "no preference".
+export type MeetingDuration = "60" | "45" | "30" | "anytime";
+
 export type TherapistApplicationRow = {
   id: string;
   full_name: string;
@@ -261,6 +267,7 @@ export type TherapistApplicationRow = {
   credentials_proof: string;
   specialties: string[];
   languages: string[];
+  meeting_duration: MeetingDuration;
   bio: string;
   status: string;
   notes: string | null;
@@ -344,7 +351,7 @@ export type Database = {
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };
       therapist_applications: {
         Row: TherapistApplicationRow;
-        Insert: Partial<TherapistApplicationRow> & Pick<TherapistApplicationRow, "full_name" | "email" | "credentials_proof" | "bio">;
+        Insert: Partial<TherapistApplicationRow> & Pick<TherapistApplicationRow, "full_name" | "email" | "credentials_proof" | "bio" | "meeting_duration">;
         Update: Partial<TherapistApplicationRow>;
         Relationships: [
           {

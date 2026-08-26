@@ -4,6 +4,17 @@ import { volunteerApplicationNotificationEmail, volunteerApplicationReceivedEmai
 
 const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
+// Phase 64 — the modal sends the raw MeetingDuration value ("60"/"45"/
+// "30"/"anytime"); this route formats it for the human-readable admin
+// notification email so that template doesn't need its own copy of the
+// label mapping.
+const MEETING_DURATION_LABELS: Record<string, string> = {
+  "60": "60 min",
+  "45": "45 min",
+  "30": "30 min",
+  anytime: "Anytime",
+};
+
 // Phase 63 — best-effort notification pair for the new volunteer therapist
 // application flow, same pattern as /api/email/contact: the application
 // itself is already saved to therapist_applications by the time this is
@@ -17,6 +28,8 @@ export async function POST(request: Request) {
   const credentialsProof = (body?.credentialsProof as string | undefined) ?? "";
   const specialties = Array.isArray(body?.specialties) ? (body.specialties as string[]) : [];
   const languages = Array.isArray(body?.languages) ? (body.languages as string[]) : [];
+  const meetingDuration = (body?.meetingDuration as string | undefined) ?? "";
+  const meetingDurationLabel = MEETING_DURATION_LABELS[meetingDuration] ?? meetingDuration;
   const bio = (body?.bio as string | undefined) ?? "";
 
   if (!email) {
@@ -32,7 +45,16 @@ export async function POST(request: Request) {
     sendEmailSafely({
       to: GESA_INBOX,
       subject: `New volunteer therapist application: ${fullName || email}`,
-      html: volunteerApplicationNotificationEmail({ fullName, email, phone, credentialsProof, specialties, languages, bio }),
+      html: volunteerApplicationNotificationEmail({
+        fullName,
+        email,
+        phone,
+        credentialsProof,
+        specialties,
+        languages,
+        meetingDurationLabel,
+        bio,
+      }),
     }),
   ]);
 

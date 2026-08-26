@@ -33,13 +33,18 @@ describe("VolunteerApplicationModal", () => {
     global.fetch = jest.fn(() => Promise.resolve({ ok: true }));
   });
 
-  it("collects the full volunteer profile — name, proof, specialties, languages, bio — not just a generic message", () => {
+  it("collects the full volunteer profile — name, proof, specialties, languages, meeting duration, bio — not just a generic message", () => {
     render(<VolunteerApplicationModal onClose={jest.fn()} />);
     expect(screen.getByText("Become a volunteer therapist")).toBeInTheDocument();
     expect(screen.getByLabelText(/Full name/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Proof of license/)).toBeInTheDocument();
     expect(screen.getByText("Specialties")).toBeInTheDocument();
     expect(screen.getByText("Languages")).toBeInTheDocument();
+    expect(screen.getByText("Meeting duration")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "60 min" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "45 min" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "30 min" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Anytime" })).toBeInTheDocument();
     expect(screen.getByLabelText(/Bio/)).toBeInTheDocument();
   });
 
@@ -64,6 +69,17 @@ describe("VolunteerApplicationModal", () => {
     expect(mockInsert).not.toHaveBeenCalled();
   });
 
+  it("blocks submit with no meeting duration selected, even once specialty/language are filled", () => {
+    render(<VolunteerApplicationModal onClose={jest.fn()} />);
+    fillRequiredTextFields();
+    fireEvent.click(screen.getByText("CBT"));
+    fireEvent.click(screen.getByText("English"));
+    fireEvent.click(screen.getByText("Submit application"));
+
+    expect(screen.getByText("Please select a meeting duration.")).toBeInTheDocument();
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
   it("submits the full application to therapist_applications and shows the thank-you state", async () => {
     render(<VolunteerApplicationModal onClose={jest.fn()} />);
     fillRequiredTextFields();
@@ -71,6 +87,7 @@ describe("VolunteerApplicationModal", () => {
     fireEvent.click(screen.getByText("Group Sessions"));
     fireEvent.click(screen.getByText("English"));
     fireEvent.click(screen.getByText("Hebrew"));
+    fireEvent.click(screen.getByRole("radio", { name: "45 min" }));
 
     fireEvent.click(screen.getByText("Submit application"));
 
@@ -80,6 +97,7 @@ describe("VolunteerApplicationModal", () => {
       full_name: "Jamie Rivera",
       email: "jamie@example.com",
       credentials_proof: "LMFT #12345, State Board of Behavioral Sciences",
+      meeting_duration: "45",
       bio: "Ten years working with couples and families.",
     });
     expect(payload.specialties).toEqual(expect.arrayContaining(["CBT", "Group Sessions"]));
@@ -96,12 +114,27 @@ describe("VolunteerApplicationModal", () => {
     );
   });
 
+  it("lets picking a different duration option switch the selection (single-select, not multi)", () => {
+    render(<VolunteerApplicationModal onClose={jest.fn()} />);
+    const sixty = screen.getByRole("radio", { name: "60 min" });
+    const anytime = screen.getByRole("radio", { name: "Anytime" });
+
+    fireEvent.click(sixty);
+    expect(sixty).toHaveAttribute("aria-checked", "true");
+    expect(anytime).toHaveAttribute("aria-checked", "false");
+
+    fireEvent.click(anytime);
+    expect(sixty).toHaveAttribute("aria-checked", "false");
+    expect(anytime).toHaveAttribute("aria-checked", "true");
+  });
+
   it("shows an error and stays open if the insert fails", async () => {
     mockInsert.mockResolvedValueOnce({ error: { message: "insert failed" } });
     render(<VolunteerApplicationModal onClose={jest.fn()} />);
     fillRequiredTextFields();
     fireEvent.click(screen.getByText("CBT"));
     fireEvent.click(screen.getByText("English"));
+    fireEvent.click(screen.getByRole("radio", { name: "30 min" }));
     fireEvent.click(screen.getByText("Submit application"));
 
     expect(await screen.findByText(/Something went wrong submitting your application/)).toBeInTheDocument();

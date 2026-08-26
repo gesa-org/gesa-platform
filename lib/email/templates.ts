@@ -64,6 +64,9 @@ export function volunteerApplicationReceivedEmail(fullName: string) {
   `);
 }
 
+// Phase 64 — `meetingDurationLabel` is passed in already-formatted (e.g.
+// "60 min", "Anytime") rather than the raw "60"/"anytime" DB value, so this
+// template doesn't need its own copy of the label mapping the modal owns.
 export function volunteerApplicationNotificationEmail(app: {
   fullName: string;
   email: string;
@@ -71,6 +74,7 @@ export function volunteerApplicationNotificationEmail(app: {
   credentialsProof: string;
   specialties: string[];
   languages: string[];
+  meetingDurationLabel: string;
   bio: string;
 }) {
   return shell(`
@@ -80,6 +84,7 @@ export function volunteerApplicationNotificationEmail(app: {
     ${app.phone ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Phone:</strong> ${app.phone}</p>` : ""}
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Specialties:</strong> ${app.specialties.join(", ")}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Languages:</strong> ${app.languages.join(", ")}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Meeting duration:</strong> ${app.meetingDurationLabel}</p>
     <p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Proof of license / credentials:</strong></p>
     <p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${app.credentialsProof}</p>
     <p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Bio:</strong></p>

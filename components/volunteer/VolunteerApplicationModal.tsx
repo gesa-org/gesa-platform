@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import TagPicker from "@/components/ui/TagPicker";
 import { createClient } from "@/lib/supabase/client";
+import type { MeetingDuration } from "@/lib/database.types";
 
 // Phase 63 — Roy pointed out that "Become a volunteer therapist" / "Join us
 // as a therapist" / "Volunteer" everywhere on the site all routed to the
@@ -15,7 +16,8 @@ import { createClient } from "@/lib/supabase/client";
 // status, bio) to what the old flow ever asked for. This modal collects the
 // real fields Roy specified: Full Name, proof of license/verification,
 // specialties (required, curated quick-picks + unlimited custom), languages
-// (required, curated quick-picks + unlimited custom, no cap), and a bio —
+// (required, curated quick-picks + unlimited custom, no cap), a required
+// meeting duration (60/45/30 min or Anytime — added Phase 64), and a bio —
 // into the new therapist_applications table, reviewed by an admin at
 // /admin/volunteer-applications before anyone becomes an actual listed
 // therapist (that promotion step is a deliberate human decision, not
@@ -46,6 +48,19 @@ const LANGUAGE_OPTIONS = [
   "Ukrainian",
 ];
 
+// Phase 64 — Roy asked for a required, single-choice "Meeting Duration"
+// field: how long a session this volunteer is willing to commit to, or
+// "Anytime" if they're flexible. Single-select (not TagPicker, which is
+// multi-select) — modeled on the same selected/unselected button styling
+// used across the site's other single-choice pickers (e.g. gender
+// preference, session format in the match wizard).
+const MEETING_DURATION_OPTIONS: { value: MeetingDuration; label: string }[] = [
+  { value: "60", label: "60 min" },
+  { value: "45", label: "45 min" },
+  { value: "30", label: "30 min" },
+  { value: "anytime", label: "Anytime" },
+];
+
 export default function VolunteerApplicationModal({ onClose }: { onClose: () => void }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -53,6 +68,7 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
   const [credentialsProof, setCredentialsProof] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
+  const [meetingDuration, setMeetingDuration] = useState<MeetingDuration | null>(null);
   const [bio, setBio] = useState("");
 
   const [pending, setPending] = useState(false);
@@ -69,6 +85,10 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
       setError("Please select or add at least one language.");
       return;
     }
+    if (!meetingDuration) {
+      setError("Please select a meeting duration.");
+      return;
+    }
     setPending(true);
     setError(null);
 
@@ -80,6 +100,7 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
       credentials_proof: credentialsProof,
       specialties,
       languages,
+      meeting_duration: meetingDuration,
       bio,
     });
 
@@ -93,7 +114,16 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
     fetch("/api/email/volunteer-application", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, phone: phone || null, credentialsProof, specialties, languages, bio }),
+      body: JSON.stringify({
+        fullName,
+        email,
+        phone: phone || null,
+        credentialsProof,
+        specialties,
+        languages,
+        meetingDuration,
+        bio,
+      }),
     }).catch(() => {});
   }
 
@@ -200,6 +230,36 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
           customPlaceholder="Other language…"
           help="Add every language you can work in — no limit, and not restricted to the list above."
         />
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">
+            Meeting duration <span className="text-destructive">*</span>
+          </label>
+          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Meeting duration">
+            {MEETING_DURATION_OPTIONS.map((option) => {
+              const isSelected = meetingDuration === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setMeetingDuration(option.value)}
+                  className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                    isSelected
+                      ? "border-primary bg-accent-soft text-primary"
+                      : "border-border text-foreground hover:border-primary-600"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-1 text-[12px] text-muted-fg">
+            How long a session are you able to commit to volunteering — or select Anytime if you&apos;re flexible.
+          </p>
+        </div>
 
         <div>
           <label htmlFor="volunteer-bio" className="mb-1.5 block text-sm font-semibold">

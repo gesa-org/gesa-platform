@@ -3,6 +3,15 @@ import VolunteerApplicationStatusSelect from "@/components/admin/VolunteerApplic
 
 export const dynamic = "force-dynamic";
 
+// Phase 64 — maps the raw MeetingDuration DB value to the human label,
+// same mapping the modal and the notification email use.
+const MEETING_DURATION_LABELS: Record<string, string> = {
+  "60": "60 min",
+  "45": "45 min",
+  "30": "30 min",
+  anytime: "Anytime",
+};
+
 // Phase 63 — the admin side of the new volunteer therapist application
 // flow (components/volunteer/VolunteerApplicationModal.tsx). Without this
 // page the data would be entirely write-only: therapist_applications' RLS
@@ -33,6 +42,7 @@ export default async function AdminVolunteerApplicationsPage() {
                 <th className="px-5 py-3">Contact</th>
                 <th className="px-5 py-3">Specialties</th>
                 <th className="px-5 py-3">Languages</th>
+                <th className="px-5 py-3">Duration</th>
                 <th className="px-5 py-3">Proof of license</th>
                 <th className="px-5 py-3">Bio</th>
                 <th className="px-5 py-3">Status</th>
@@ -68,6 +78,11 @@ export default async function AdminVolunteerApplicationsPage() {
                         </span>
                       ))}
                     </div>
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-3">
+                    <span className="rounded-full bg-clay-soft px-2 py-0.5 text-[11.5px] font-semibold text-clay">
+                      {MEETING_DURATION_LABELS[a.meeting_duration] ?? a.meeting_duration}
+                    </span>
                   </td>
                   <td className="max-w-[260px] whitespace-pre-line px-5 py-3 text-muted-fg">{a.credentials_proof}</td>
                   <td className="max-w-[260px] whitespace-pre-line px-5 py-3 text-muted-fg">{a.bio}</td>
