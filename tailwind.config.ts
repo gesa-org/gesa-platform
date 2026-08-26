@@ -22,6 +22,13 @@ const config: Config = {
           DEFAULT: "var(--accent)",
           soft: "var(--accent-soft)",
         },
+        // Phase 68 — a distinct, slightly more visibly green light-sage
+        // token (see app/globals.css) for full-width section bands, kept
+        // separate from accent.soft so retuning it never affects the many
+        // existing bg-accent-soft chip/badge/glow usages site-wide.
+        sage: {
+          soft: "var(--sage-soft)",
+        },
         clay: {
           DEFAULT: "var(--clay)",
           soft: "var(--clay-soft)",

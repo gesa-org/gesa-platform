@@ -57,4 +57,12 @@ describe("AboutPage — founders photo/initials fallback", () => {
     // Karin has no photoUrl in this scenario, so her initials still render.
     expect(screen.getByText("KH")).toBeInTheDocument();
   });
+
+  it("uses the shared light sage green background on the legal/tax-note section (Phase 68)", async () => {
+    const jsx = await AboutPage();
+    render(jsx);
+
+    const section = screen.getByText(ABOUT_SECTIONS_FALLBACK.taxNote).closest("section");
+    expect(section?.className).toContain("bg-sage-soft");
+  });
 });

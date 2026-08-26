@@ -207,7 +207,11 @@ export default async function AboutPage() {
         </Reveal>
       </section>
 
-      <section className="section bg-accent-soft">
+      {/* Phase 68 — Roy asked for a light sage green background here,
+          matched consistently with Home's Stats section below via the new
+          --sage-soft token, rather than the old --accent-soft wash used
+          site-wide for smaller chip/badge surfaces. */}
+      <section className="section bg-sage-soft">
         <div className="wrap text-center max-w-[700px]">
           <p className="mb-3 text-[15px] text-primary-600">{sections.legalBlurb}</p>
           <div className="text-[13.5px] leading-[1.9] text-muted-fg">

@@ -49,6 +49,20 @@
     --secondary: #b7c3d6; /* the extracted wall color — pills, ghost buttons, section bands */
     --accent: #9ba283; /* Sage/Olive Green (picture-mat color) — icons, thin hover borders */
     --accent-soft: #eaf0e4; /* pale sage wash for badge/pill/glow backgrounds */
+    /* Phase 68 — Roy asked for a "light sage green" full-width band color,
+       applied consistently to the About page's legal/tax-note section and
+       Home's Stats row, which previously used two different, unrelated
+       tones (--accent-soft's very washed pale sage, and --card's pale
+       blue-gray) with nothing tying them together. Deliberately a separate
+       token from --accent-soft rather than reusing/retuning it — that one
+       is already used site-wide for small chip/badge/glow surfaces, and
+       retuning it would have rippled into all of those. --sage-soft is a
+       slightly richer, more visibly green wash than --accent-soft (25%
+       --accent mixed into --background, vs. accent-soft's much lighter
+       mix), read as a light sage green in its own right rather than a
+       near-neutral tint — still restrained/muted to match the site's
+       luxury-but-comfortable palette, not a bright/saturated green. */
+    --sage-soft: #e3ead9;
     --clay: #bfa046; /* Muted Gold (frame pinstripe) — eyebrow labels, thin borders, badges */
     --clay-soft: #f5eeda; /* pale gold wash */
     --muted: #b7c3d6; /* same as --secondary — the extracted wall color */

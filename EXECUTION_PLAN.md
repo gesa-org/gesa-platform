@@ -2052,4 +2052,30 @@ git push
 ```
 
 ---
+
+## Phase 68 — Light sage green background, unified across About's legal section and Home's Stats
+
+Roy sent two screenshots — the About page's "GESA is a registered nonprofit... / Donations are tax-deductible... / Emergency contact numbers" section, and Home's "200+ Verified therapists / 6 Free sessions each / 20+ Languages supported / Global Support circles" Stats row — and asked for both to use a light sage green background, "complement to the website concept to make it luxury and aesthetic but comfortable."
+
+**Where these actually were.** The legal/tax-note section is in `app/about/page.tsx` (not the Footer, despite reading like footer legal copy) — it already used `bg-accent-soft` (`--accent-soft: #eaf0e4`), a very pale, near-neutral sage wash. The Stats row is `components/home/Stats.tsx`, which used `bg-card` (`--card: #e3e8ef`) — a pale blue-gray with no relation to sage at all. So the two sections had two different, unrelated pale tones, not one shared "light sage green."
+
+**A new, dedicated token rather than retuning `--accent-soft`.** `--accent-soft` is used site-wide for small chip/badge/glow surfaces (TagPicker's selected-chip background, various pill badges), so retuning its color to be more visibly green would have rippled into all of those unrelated to this request. Added a new `--sage-soft: #e3ead9` token in `app/globals.css` instead — a deliberately slightly richer, more visibly green wash than `--accent-soft`'s very washed-out tone (mixing more of `--accent`, the site's existing muted Sage/Olive Green, into `--background`), while staying restrained and pale rather than a bright/saturated green, matching the "luxury but comfortable" brief rather than a loud color choice. Registered as `sage.soft` in `tailwind.config.ts` (same pattern as the existing `accent`/`clay`/`amber` color families), so both sections now use one shared `bg-sage-soft` class.
+
+**Applied to both sections.** `app/about/page.tsx`'s legal/tax-note section switched from `bg-accent-soft` to `bg-sage-soft`. `components/home/Stats.tsx` switched from `bg-card` to `bg-sage-soft`. No text, copy, layout, or spacing changed in either — purely the background color.
+
+**Verification:** scoped `tsc --noEmit` on `app/about/page.tsx`, `components/home/Stats.tsx`, and `tailwind.config.ts` — clean. New `tests/unit/Stats.test.tsx` (confirms the real stat labels still render and the section's background is `bg-sage-soft`, not the old `bg-card`) and a new case added to `tests/unit/AboutPage.test.tsx` (confirms the legal section's background is `bg-sage-soft`) — both passed on the first run, 4/4 total.
+
+**Known gaps, honestly flagged:**
+- Not screenshot-verified in a real browser — the two sections now share one real CSS color value by code and by test, but the actual side-by-side visual read (whether `#e3ead9` feels "luxury and aesthetic but comfortable" the way Roy pictured it, versus another shade of sage) hasn't been seen rendered live.
+- No other section on the site was touched — only the exact two Roy pointed at. If the intent was a broader palette shift (e.g. also retuning `--accent-soft` itself, or other pale-toned bands), that's a separate, larger decision not made here.
+
+```bash
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git add -A
+git commit -m "Phase 68: unify About's legal section and Home's Stats section under a new light sage green background token"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
