@@ -188,8 +188,19 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           wasn't asked for and could break the editor for no reason. The
           gold band itself (background glow + watermark texture) stays, as
           a color transition into the three cards below, since only the
-          text and images were asked to go, not the band. */}
-      <div className="gold-banner relative pt-10 pb-14 md:pt-12 md:pb-16">
+          text and images were asked to go, not the band.
+          Phase 72 — Roy flagged that the card row's overlap onto the gold
+          band was too shallow: the visible color line inside each old card
+          (the blue-gray image box giving way to the light-gray text block)
+          sat well below the gold band's own bottom edge, deep in the plain
+          light section, instead of "leveling" with it. Grew this band's
+          bottom padding (pb-14/16 -> a fixed 210px) to match the new
+          card's fixed height's overlap below, so the math is exact rather
+          than eyeballed — see the card wrapper's -mt-[210px] below, chosen
+          as exactly half of each card's own fixed h-[420px], so the cards
+          sit evenly straddling the gold/light seam with noticeably more of
+          each card (and more gold overall) visible above it than before. */}
+      <div className="gold-banner relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-[8%] top-0 h-[420px] w-[560px] rounded-full bg-white/25 blur-[110px]" />
           {/* Phase 67 — same faint line-art watermark texture as About's
@@ -199,33 +210,51 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
         </ParallaxLayer>
       </div>
 
-      {/* Cards float up over the gold/light seam — Phase 47. */}
-      <div className="wrap relative z-10 -mt-14 pb-16 md:-mt-20">
+      {/* Cards float up over the gold/light seam — Phase 47, repositioned
+          Phase 72 (see the gold band comment above for the -mt-[210px]
+          math). */}
+      <div className="wrap relative z-10 -mt-[210px] pb-16">
         <StaggerGroup className="grid gap-6 md:grid-cols-3">
           {cards.map((p, i) => (
+            /* Phase 72 — Roy asked for the paintings to display in full by
+               default (previously only a small 200px-tall sliver of each
+               card was image, with the title/description/CTA always
+               visible underneath) and for the text/CTA to only appear when
+               the card is flipped on hover. Rebuilt as a real 3D flip
+               card: a fixed-height, perspective wrapper holding two
+               absolutely-positioned, backface-hidden faces — the front is
+               the full painting (matted the same way the old small image
+               box was, just filling the entire card now), the back is the
+               title/description/"Reach out now" button that used to sit
+               statically below the image. `group-hover` on the outer
+               `.gold-card-hover` wrapper drives the rotateY(180deg)
+               flip; keyboard/focus users get the same flip via
+               `focus-within` on that wrapper (Tailwind's `group-focus-
+               within`), since the card's only interactive element (the
+               CTA link) needs to be reachable and visible on focus, not
+               just mouse hover. */
             <StaggerItem key={i}>
-              <div className="gold-card-hover group flex h-full flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-lg transition-shadow hover:shadow-2xl">
-                <div className="relative flex h-[200px] flex-none items-center justify-center bg-secondary p-5">
-                  <div className="relative h-full w-full max-w-[220px] rounded-md border-[6px] border-white bg-white p-1 shadow-md">
-                    <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-clay/40">
-                      <Image
-                        src={PATH_IMAGES[i]}
-                        alt={`${p.title} artwork`}
-                        fill
-                        className="object-contain transition-transform duration-500 group-hover:scale-105"
-                      />
+              <div className="gold-card-hover group h-[420px] [perspective:1400px]">
+                <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
+                  {/* Front face — full painting */}
+                  <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[24px] border border-border bg-secondary p-6 shadow-lg [backface-visibility:hidden]">
+                    <div className="relative h-full w-full max-w-[300px] rounded-md border-[8px] border-white bg-white p-1 shadow-md">
+                      <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-clay/40">
+                        <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-1 flex-col p-6">
-                  <h3 className="text-[19px]">{p.title}</h3>
-                  <p className="mt-2 flex-1 text-[14.5px] text-muted-fg">{p.description}</p>
-                  <Link
-                    href={p.ctaLink}
-                    className="relative z-10 mt-5 inline-flex items-center justify-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
-                  >
-                    {p.ctaLabel} <ArrowRight size={15} />
-                  </Link>
+                  {/* Back face — title, description, CTA */}
+                  <div className="absolute inset-0 flex flex-col justify-center overflow-hidden rounded-[24px] border border-border bg-card p-7 shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                    <h3 className="text-[19px]">{p.title}</h3>
+                    <p className="mt-2.5 text-[14px] leading-relaxed text-muted-fg">{p.description}</p>
+                    <Link
+                      href={p.ctaLink}
+                      className="relative z-10 mt-6 inline-flex w-fit items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
+                    >
+                      {p.ctaLabel} <ArrowRight size={15} />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </StaggerItem>

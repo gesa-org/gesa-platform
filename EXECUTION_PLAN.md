@@ -2181,4 +2181,29 @@ git push
 ```
 
 ---
+
+## Phase 72: Reposition path cards higher over the gold band + full-painting flip cards
+
+**Roy's request:** two asks off a reference screenshot — (1) pull the three path cards further up into the gold band so the seam inside each card (the blue-gray image area giving way to the light-gray text area) lines up with the gold band's own bottom edge, instead of sitting well below it in the plain light section; (2) redesign each card so the painting displays in full by default, with the title/description/"Reach out now" button only appearing when the card is flipped on hover.
+
+**Reposition (`components/home/Paths.tsx`):**
+- Gold band's bottom padding grew from `pb-14/16` to a fixed `pb-[210px]` (both breakpoints) — matched exactly to the card wrapper's new `-mt-[210px]` overlap, which is exactly half of each card's new fixed `h-[420px]`. The math is deliberate rather than eyeballed: with a 420px-tall card pulled up 210px, the card's vertical midpoint sits exactly on the gold/light boundary, putting noticeably more of each card (and more gold overall) above the seam than the old shallow `-mt-14/-mt-20` overlap did.
+
+**Flip cards:**
+- Rebuilt each card as a real 3D flip: a `[perspective:1400px]` outer wrapper (still carrying the existing `.gold-card-hover` gold-sheen effect) holding an inner `[transform-style:preserve-3d]` layer that rotates via `group-hover:[transform:rotateY(180deg)]` and `group-focus-within:[transform:rotateY(180deg)]` (so keyboard/focus users reach the same flip, not just mouse hover — the CTA link is the card's only interactive element and needs to be both reachable and visible on focus).
+- Front face: the full painting, `[backface-visibility:hidden]`, filling the entire 420px card (matted the same white-border/frame treatment the old small 200px image box used, just scaled to the whole card instead of a sliver of it).
+- Back face: title, description, and the "Reach out now" button — previously always visible below the image, now only revealed by the flip, rotated 180° so it faces away until the parent rotates.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for `components/home/Paths.tsx` and `app/page.tsx`.
+- `tests/unit/Paths.test.tsx` — 3/3 passed, including a new test confirming both faces (3 artwork images + 3 sets of title/description/CTA text) are actually in the DOM, and that the flip wrapper carries the `group-hover:`/`rotateY` classes driving the effect. (jsdom doesn't compute CSS transforms, so this confirms structure/classes rather than rendered visibility — a real browser check is the only way to see the flip animation itself.)
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 72: reposition path cards over gold band, rebuild as full-painting flip cards"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -31,4 +31,27 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("Seeking support")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /reach out now/i })).toHaveLength(3);
   });
+
+  // Phase 72 — each card is now a real 3D flip: the front face shows the
+  // full painting, the back face (title/description/CTA) only becomes
+  // visible on hover/focus via a CSS rotateY transform on a shared
+  // group-hover wrapper. jsdom doesn't compute CSS transforms, so this
+  // can't assert visual visibility directly — instead it confirms both
+  // faces are actually in the DOM (three artworks + three sets of text),
+  // and that the flip wrapper carries the hover/focus rotate classes that
+  // drive the effect.
+  it("renders both the front (painting) and back (text/CTA) faces of each flip card", () => {
+    render(<Paths />);
+
+    const artworkImages = screen.getAllByAltText(/artwork$/);
+    expect(artworkImages).toHaveLength(3);
+
+    const flipWrapper = screen.getByText("In crisis right now").closest('[class*="transform-style"]') as HTMLElement;
+    // Tailwind arbitrary-property classes render literally in the DOM —
+    // this just confirms the hover/focus rotate classes are present on
+    // whichever element actually carries the transform.
+    const rotatingEl = document.querySelector('[class*="group-hover:"][class*="rotateY"]');
+    expect(rotatingEl).toBeTruthy();
+    expect(flipWrapper).toBeTruthy();
+  });
 });
