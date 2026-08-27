@@ -2288,4 +2288,22 @@ git push
 ```
 
 ---
+
+## Phase 77: Remove the About page's "Why GESA exists" section
+
+**Roy's request:** a screenshot of the "Why GESA exists" section (two paragraphs about GESA's mission, right below the new "Our Mission" section from Phase 70), asking to remove it.
+
+- `app/about/page.tsx`: removed the section entirely. `sections.missionHeading`/`missionParagraphs` and their Content Manager editor fields (in `AboutSectionsEditor.tsx`) are left untouched — just no longer rendered — per the standing rule against removing data/editor fields without confirming first.
+- `tests/unit/AboutPage.test.tsx`: the Phase 70 test that asserted this section's position relative to the new Mission section no longer applies (there's nothing to be positioned before anymore); simplified to just confirm the Mission section itself renders, and added a new test confirming "Why GESA exists" is actually gone.
+
+**Verification:** scoped `tsc --noEmit` clean for `app/about/page.tsx`; `tests/unit/AboutPage.test.tsx` — 5/5 passed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 77: remove About page's Why GESA exists section"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

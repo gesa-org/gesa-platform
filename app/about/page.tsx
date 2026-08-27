@@ -74,16 +74,11 @@ export default async function AboutPage() {
         </Reveal>
       </section>
 
-      <section className="section wrap max-w-[760px]">
-        <Reveal type="fade-up">
-          <h2 className="text-[30px]">{sections.missionHeading}</h2>
-          {sections.missionParagraphs.map((p, i) => (
-            <p key={i} className="text-muted-fg text-[15.5px]">
-              {p}
-            </p>
-          ))}
-        </Reveal>
-      </section>
+      {/* Phase 77 — Roy asked to remove the "Why GESA exists" section
+          entirely. `sections.missionHeading`/`missionParagraphs` and their
+          Content Manager editor fields are left untouched — just no
+          longer rendered here — per the standing rule against removing
+          data/editor fields without confirming first. */}
 
       <section className="section bg-muted">
         <div className="wrap">

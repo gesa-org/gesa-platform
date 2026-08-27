@@ -66,17 +66,24 @@ describe("AboutPage — founders photo/initials fallback", () => {
     expect(section?.className).toContain("bg-sage-soft");
   });
 
-  it("renders a dedicated Mission section before the 'Why GESA exists' section (Phase 70)", async () => {
+  it("renders the dedicated Mission section (Phase 70)", async () => {
     const jsx = await AboutPage();
     render(jsx);
 
     expect(screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionHeading)).toBeInTheDocument();
     expect(screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionBody)).toBeInTheDocument();
+  });
 
-    // Order matters — the new section must come before the existing
-    // "Why GESA exists" section, not after it.
-    const missionEl = screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionHeading);
-    const whyGesaEl = screen.getByText(ABOUT_SECTIONS_FALLBACK.missionHeading);
-    expect(missionEl.compareDocumentPosition(whyGesaEl) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  // Phase 77 — Roy asked to remove the "Why GESA exists" section entirely.
+  // `missionHeading`/`missionParagraphs` still exist in the content model
+  // and its Content Manager editor (not deleted, just unused), so this
+  // confirms they're actually not rendered anymore rather than just
+  // trusting the removed JSX.
+  it("no longer renders the 'Why GESA exists' section (Phase 77)", async () => {
+    const jsx = await AboutPage();
+    render(jsx);
+
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.missionHeading)).not.toBeInTheDocument();
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.missionParagraphs[0])).not.toBeInTheDocument();
   });
 });
