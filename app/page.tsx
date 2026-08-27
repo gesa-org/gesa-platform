@@ -1,6 +1,5 @@
 import Paths, { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import Stats from "@/components/home/Stats";
-import NewsTicker from "@/components/motion/NewsTicker";
 import { getPageContent } from "@/lib/content";
 
 export const revalidate = 300;
@@ -41,13 +40,18 @@ export const revalidate = 300;
 // unused, since it's a valid general-purpose scroll-linked effect that
 // might fit somewhere else later — not deleted per the standing rule on
 // removing files from the synced project folder without confirming first.
+//
+// Phase 74 — Roy asked to remove the NewsTicker row entirely. The
+// component file (components/motion/NewsTicker.tsx) and `homeContent.
+// purposeTicker`/its Content Manager field are left in place, unused, per
+// the same standing rule as HorizontalScroll above — not deleted without
+// confirming first.
 export default async function Home() {
   const homeContent = await getPageContent("page_home", HOME_CONTENT_FALLBACK);
 
   return (
     <div className="reveal-page__main flex flex-col">
       <Paths content={homeContent} />
-      <NewsTicker items={homeContent.purposeTicker.split("\n")} className="border-y border-border bg-muted py-5" />
       <Stats />
     </div>
   );

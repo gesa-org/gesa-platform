@@ -2225,4 +2225,21 @@ git push
 ```
 
 ---
+
+## Phase 74: Remove the Home page's NewsTicker marquee row
+
+**Roy's request:** a screenshot of the scrolling marquee row ("...ALWAYS FREE AT THE POINT OF NEED · BECAUSE NO ONE SHOULD FACE EMOTIONAL PAIN ALONE · ...") between the path cards and the Stats section, asking to remove it.
+
+- `app/page.tsx`: removed the `<NewsTicker>` line and its import. The component file (`components/motion/NewsTicker.tsx`) and the `homeContent.purposeTicker` field (plus its Content Manager editor field) are left in place, unused, per the project's standing rule against removing files/fields from the synced folder without confirming first.
+
+**Verification:** scoped `tsc --noEmit` clean for `app/page.tsx`; no existing test referenced NewsTicker on the Home page, so nothing needed updating.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 74: remove NewsTicker marquee from Home page"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
