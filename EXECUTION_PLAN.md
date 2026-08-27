@@ -2206,4 +2206,23 @@ git push
 ```
 
 ---
+
+## Phase 73: Remove the front-face mat/border on the path cards, full gold background
+
+**Roy's request:** close crops of the three paintings, asking for the flip card's front face to show just the painting — no white mat border, no gray/clay frame border — sitting on a full gold background instead of the ash-gray box it used to sit in.
+
+- `components/home/Paths.tsx`: front face rebuilt from a 3-layer mat (ash-gray `bg-secondary` box → white 8px-bordered mat → thin clay-bordered inner frame) down to one layer — the `.gold-banner` gradient (the same gold used by the band above and elsewhere on the site) directly behind the painting, no borders, no padding. Still `object-contain` so the whole painting displays uncropped — only the matting/background around it changed.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for `components/home/Paths.tsx` and `app/page.tsx`.
+- `tests/unit/Paths.test.tsx` — 3/3 passed, unaffected by this purely visual change (front/back face structure, artwork count, and flip classes are all unchanged).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 73: remove path card mat/border, full gold background on front face"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

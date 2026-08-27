@@ -236,13 +236,17 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
             <StaggerItem key={i}>
               <div className="gold-card-hover group h-[420px] [perspective:1400px]">
                 <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
-                  {/* Front face — full painting */}
-                  <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-[24px] border border-border bg-secondary p-6 shadow-lg [backface-visibility:hidden]">
-                    <div className="relative h-full w-full max-w-[300px] rounded-md border-[8px] border-white bg-white p-1 shadow-md">
-                      <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-clay/40">
-                        <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
-                      </div>
-                    </div>
+                  {/* Front face — full painting, no mat/frame border. Phase
+                      73 — Roy sent close crops of the three paintings and
+                      asked for the front face to show just the painting
+                      itself (no white mat, no gray/clay frame border) on a
+                      full gold background instead of the ash-gray
+                      `bg-secondary` box the mat used to sit on. Still
+                      `object-contain` so the whole painting displays
+                      uncropped — only the matting/background around it
+                      changed, not how the image itself is fit. */}
+                  <div className="gold-banner absolute inset-0 overflow-hidden rounded-[24px] shadow-lg [backface-visibility:hidden]">
+                    <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
                   </div>
                   {/* Back face — title, description, CTA */}
                   <div className="absolute inset-0 flex flex-col justify-center overflow-hidden rounded-[24px] border border-border bg-card p-7 shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
