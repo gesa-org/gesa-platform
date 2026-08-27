@@ -297,8 +297,14 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           ))}
         </StaggerGroup>
 
+        {/* Phase 79 — Roy flagged this caption ("The path to emotional
+            recovery begins here." — the current published `footerNote`
+            value) as too small to read comfortably below the cards.
+            Bumped from 13px to 18px and darkened from `text-muted-fg` to
+            `text-foreground` with a touch of weight, for real visibility
+            rather than reading as fine print. */}
         <Reveal type="fade">
-          <p className="mt-8 text-center text-[13px] text-muted-fg">{content.footerNote}</p>
+          <p className="mt-8 text-center text-[18px] font-medium text-foreground">{content.footerNote}</p>
         </Reveal>
       </div>
     </section>

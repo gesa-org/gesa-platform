@@ -2335,4 +2335,21 @@ git push
 ```
 
 ---
+
+## Phase 79: Enlarge the caption below the path cards
+
+**Roy's request:** a screenshot of "The path to emotional recovery begins here." (the caption below the three path cards, driven by `content.footerNote`), asking for it to be bigger and more readable.
+
+- `components/home/Paths.tsx`: bumped from `text-[13px] text-muted-fg` to `text-[18px] font-medium text-foreground` — larger and darker/higher-contrast, no longer reading as fine print.
+
+**Verification:** scoped `tsc --noEmit` clean; `tests/unit/Paths.test.tsx` — 3/3 passed, unaffected by this visual-only change.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 79: enlarge the path-cards footer caption"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
