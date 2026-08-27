@@ -2267,4 +2267,25 @@ git push
 ```
 
 ---
+
+## Phase 76: Apply the new "certificate" back-face design to all three path cards
+
+**Roy's request:** he generated a new back-face design for the "Seeking Support" card (cream card, gold corner brackets, a circular gold badge icon, serif heading, dark-navy/gold-ringed pill button) and asked for the same treatment on "In crisis right now" and "Veterans, reservists & families," each with a badge icon relevant to its own context rather than reusing one icon for all three.
+
+- `components/home/Paths.tsx`: rebuilt the flip card's back face from the plain `bg-card` box to match the reference — `bg-clay-soft` (warm cream, the site's existing pale-gold wash token) instead of the cool blue-gray card surface, four small gold corner-bracket accents, a circular gold-gradient badge (the same gradient used by `.gold-banner`) above a serif heading, and the CTA button restyled as a dark `bg-espresso` pill with a `border-clay` gold ring — all built from existing design tokens, no new colors introduced.
+- New `PATH_BADGE_ICONS` array (fixed by position, same "code-managed, not editable" treatment as `PATH_IMAGES`): `LifeBuoy` for the crisis card (urgent, keep-afloat help), `Award` for veterans/reservists/families (a service-medal association), `Sparkles` for seeking support (closest available icon to Roy's laurel-sprig badge).
+- Title/description/CTA copy, links, and the front-face painting are all unchanged — only the back face's visual treatment changed.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for `components/home/Paths.tsx` and `app/page.tsx`.
+- `tests/unit/Paths.test.tsx` — 3/3 passed, unaffected by this visual-only change (title/description/CTA text, artwork count, and flip-wrapper classes are all still exactly where the tests expect them).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 76: apply new certificate-style back-face design to all three path cards"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

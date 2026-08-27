@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LifeBuoy, Award, Sparkles } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
@@ -115,6 +115,14 @@ const PATH_IMAGES = [
   "/images/paths/veterans-artwork.png",
   "/images/paths/seeking-support-artwork.png",
 ];
+
+// Phase 76 — one badge icon per card back face, fixed by position (same
+// "code-managed, not editable" treatment as PATH_IMAGES above) — chosen to
+// match each card's own context: a life ring for the crisis path (urgent,
+// keep-afloat help), a service medal for veterans/reservists/families, and
+// a sparkling sprig for general/seeking support (closest available lucide
+// icon to the laurel-sprig badge in Roy's reference design).
+const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
 // Manager-editable via site_content key "page_home", with these exact
@@ -248,17 +256,41 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                   <div className="gold-banner absolute inset-0 overflow-hidden rounded-[24px] shadow-lg [backface-visibility:hidden]">
                     <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
                   </div>
-                  {/* Back face — title, description, CTA */}
-                  <div className="absolute inset-0 flex flex-col justify-center overflow-hidden rounded-[24px] border border-border bg-card p-7 shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
-                    <h3 className="text-[19px]">{p.title}</h3>
-                    <p className="mt-2.5 text-[14px] leading-relaxed text-muted-fg">{p.description}</p>
-                    <Link
-                      href={p.ctaLink}
-                      className="relative z-10 mt-6 inline-flex w-fit items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
-                    >
-                      {p.ctaLabel} <ArrowRight size={15} />
-                    </Link>
-                  </div>
+                  {/* Back face — Phase 76: Roy generated a new "certificate"
+                      style design (cream card, gold corner brackets, a
+                      circular gold badge icon, serif heading, and a dark
+                      navy/gold-ringed pill button) for the Seeking Support
+                      card and asked for the same treatment on the other
+                      two, each with its own contextually relevant badge
+                      icon (see PATH_BADGE_ICONS above) rather than reusing
+                      one icon for all three. */}
+                  {(() => {
+                    const BadgeIcon = PATH_BADGE_ICONS[i] ?? PATH_BADGE_ICONS[PATH_BADGE_ICONS.length - 1];
+                    return (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden rounded-[24px] border border-clay/30 bg-clay-soft p-7 text-center shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                        {/* Gold corner brackets */}
+                        <span className="pointer-events-none absolute left-3 top-3 h-4 w-4 rounded-tl-md border-l-2 border-t-2 border-clay" />
+                        <span className="pointer-events-none absolute right-3 top-3 h-4 w-4 rounded-tr-md border-r-2 border-t-2 border-clay" />
+                        <span className="pointer-events-none absolute bottom-3 left-3 h-4 w-4 rounded-bl-md border-b-2 border-l-2 border-clay" />
+                        <span className="pointer-events-none absolute bottom-3 right-3 h-4 w-4 rounded-br-md border-b-2 border-r-2 border-clay" />
+
+                        <div
+                          className="mb-4 flex h-14 w-14 flex-none items-center justify-center rounded-full shadow-md"
+                          style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}
+                        >
+                          <BadgeIcon size={24} className="text-white" />
+                        </div>
+                        <h3 className="font-serif text-[21px] text-foreground">{p.title}</h3>
+                        <p className="mt-2.5 text-[14px] leading-relaxed text-muted-fg">{p.description}</p>
+                        <Link
+                          href={p.ctaLink}
+                          className="relative z-10 mt-6 inline-flex w-fit items-center justify-center gap-2 rounded-full border-2 border-clay bg-espresso px-6 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#141820]"
+                        >
+                          {p.ctaLabel} <ArrowRight size={15} />
+                        </Link>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </StaggerItem>
