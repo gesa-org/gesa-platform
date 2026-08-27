@@ -1,11 +1,15 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Site navigation", () => {
-  test("home page renders the hero and core sections", async ({ page }) => {
+  // Phase 70 — Roy asked to remove the Home page's gold-band hero text
+  // (eyebrow/headline/subtitle/trust badges) and the decorative "gallery
+  // wall" of the three path artworks; the page now opens directly with the
+  // gold band's background texture, then the three path cards. Updated
+  // this assertion accordingly — there's no longer an <h1> on Home at all.
+  test("home page renders the core sections", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: /find a therapist/i })).toBeVisible();
-    await expect(page.getByText("Two clicks to a therapist who understands")).toBeVisible();
+    await expect(page.getByRole("link", { name: /reach out now/i }).first()).toBeVisible();
   });
 
   test("header nav links reach the right pages", async ({ page }) => {

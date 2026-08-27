@@ -1,10 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkle, ShieldCheck, HeartHandshake, Users, ArrowRight } from "lucide-react";
-import HighlightedText from "@/components/ui/HighlightedText";
+import { ArrowRight } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
-import ScrollText from "@/components/motion/ScrollText";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { HomeContent } from "@/lib/content";
@@ -180,9 +178,18 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
   ];
 
   return (
-    <section aria-labelledby="paths-heading" className="relative overflow-hidden">
-      {/* Gold hero band — Phase 47. */}
-      <div className="gold-banner relative pt-16 pb-24 md:pt-20 md:pb-32">
+    <section aria-label="Ways to get support" className="relative overflow-hidden">
+      {/* Gold hero band — Phase 47. Phase 70 — Roy asked to remove this
+          band's text (eyebrow/headline/subtitle/trust badges) and the
+          decorative "gallery wall" of the three path artworks entirely.
+          The `content.eyebrow`/`title`/`subtitle`/`badge*Label` fields and
+          their Content Manager editor are left untouched — they're just no
+          longer rendered here — since removing them from the data model
+          wasn't asked for and could break the editor for no reason. The
+          gold band itself (background glow + watermark texture) stays, as
+          a color transition into the three cards below, since only the
+          text and images were asked to go, not the band. */}
+      <div className="gold-banner relative pt-10 pb-14 md:pt-12 md:pb-16">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-[8%] top-0 h-[420px] w-[560px] rounded-full bg-white/25 blur-[110px]" />
           {/* Phase 67 — same faint line-art watermark texture as About's
@@ -190,67 +197,6 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
               Support Groups), for consistency across every gold section. */}
           <GoldWatermarks />
         </ParallaxLayer>
-
-        <div className="wrap relative z-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div className="text-center lg:text-left">
-            <Reveal type="fade-up" distance="sm" duration={0.5}>
-              <span className="relative mb-5 inline-flex items-center gap-1.5 rounded-full bg-[#fff8ea]/85 px-4 py-1.5 text-[13px] font-semibold text-primary shadow-sm">
-                <Sparkle size={13} /> {content.eyebrow}
-              </span>
-            </Reveal>
-            <ScrollText distance={20}>
-              <h1
-                id="paths-heading"
-                className="mx-auto mb-4 max-w-[820px] font-serif text-[clamp(32px,4.6vw,50px)] font-semibold leading-[1.1] tracking-[-0.02em] text-foreground lg:mx-0"
-              >
-                <HighlightedText text={content.title} highlight={content.highlight} />
-              </h1>
-            </ScrollText>
-            <Reveal type="fade-up" delay={0.08}>
-              <p className="mx-auto max-w-[620px] text-[17px] leading-[1.55] text-primary/80 lg:mx-0">{content.subtitle}</p>
-            </Reveal>
-            <StaggerGroup className="mt-7 flex flex-wrap justify-center gap-6 text-[14px] font-medium text-primary/85 lg:justify-start">
-              <StaggerItem className="inline-block">
-                <span className="flex items-center gap-2">
-                  <ShieldCheck className="text-accent" size={18} /> {content.badge1Label}
-                </span>
-              </StaggerItem>
-              <StaggerItem className="inline-block">
-                <span className="flex items-center gap-2">
-                  <HeartHandshake className="text-accent" size={18} /> {content.badge2Label}
-                </span>
-              </StaggerItem>
-              <StaggerItem className="inline-block">
-                <span className="flex items-center gap-2">
-                  <Users className="text-accent" size={18} /> {content.badge3Label}
-                </span>
-              </StaggerItem>
-            </StaggerGroup>
-          </div>
-
-          {/* Decorative "gallery wall" of the three path artworks — purely
-              visual, aria-hidden, empty alt (see the Phase 47 comment
-              above: the same images already carry real alt text in the
-              cards below). Hidden below lg since there isn't room for an
-              overlapping gallery once the two columns stack. */}
-          <div className="relative hidden h-[440px] lg:block" aria-hidden="true">
-            <div className="absolute right-[170px] top-0 h-[190px] w-[170px] -rotate-3 rounded-md border-[10px] border-white bg-white shadow-2xl">
-              <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-clay/50">
-                <Image src={PATH_IMAGES[0]} alt="" fill className="object-cover" />
-              </div>
-            </div>
-            <div className="absolute right-0 top-[55px] h-[220px] w-[200px] rotate-2 rounded-md border-[10px] border-[#2b3140] bg-[#2b3140] shadow-2xl">
-              <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-clay/60">
-                <Image src={PATH_IMAGES[2]} alt="" fill className="object-cover" />
-              </div>
-            </div>
-            <div className="absolute right-[110px] top-[245px] h-[170px] w-[220px] -rotate-2 rounded-md border-[10px] border-[#c9b878] bg-[#c9b878] shadow-2xl">
-              <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-white/50">
-                <Image src={PATH_IMAGES[1]} alt="" fill className="object-cover" />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Cards float up over the gold/light seam — Phase 47. */}

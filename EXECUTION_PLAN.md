@@ -2159,4 +2159,26 @@ git push
 ```
 
 ---
+
+## Phase 71: Remove Home page's gold-band hero text and three-painting gallery wall
+
+**Roy's request:** two reference screenshots — the Home gold band's text (eyebrow "A global volunteer support alliance," headline "The path to emotional recovery begins here," subtitle, and the three trust badges) and the decorative "gallery wall" of the three framed path artworks — asking for both to be removed, nothing else changed.
+
+- `components/home/Paths.tsx`: removed the entire left text column (eyebrow chip, `<h1>`, subtitle, trust-badge row) and the right decorative gallery-wall column (three rotated framed images) from the gold hero band. The gold band itself — background glow blob + watermark texture — stays as a color transition into the three path cards below, since only the text and images were asked to go, not the band; padding tightened (`pt-16 pb-24` → `pt-10 pb-14`) now that it's just a decorative strip rather than a full hero. `content.eyebrow`/`title`/`subtitle`/`badge1-3Label` and their Content Manager editor fields are untouched — just no longer rendered — since removing them from the data model wasn't asked for.
+- Removed now-unused imports (`Sparkle`, `ShieldCheck`, `HeartHandshake`, `Users`, `HighlightedText`, `ScrollText`).
+- Fixed a dangling `aria-labelledby="paths-heading"` on the section (the `<h1 id="paths-heading">` it pointed to no longer exists) — replaced with a direct `aria-label`.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for `components/home/Paths.tsx` and `app/page.tsx`.
+- `tests/unit/Paths.test.tsx` (new — no unit test existed for this component before) — 2/2 passed: confirms the removed text/badges are gone and the three real path cards still render.
+- `tests/e2e/navigation.spec.ts` updated — the old assertion checked for an `<h1>` on Home and the exact headline text, both now gone by design; replaced with checks for the still-present "Find a Therapist" footer link and the three cards' "Reach out now" CTAs.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 71: remove Home gold-band hero text and three-painting gallery wall"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
