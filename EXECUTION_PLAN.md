@@ -2306,4 +2306,33 @@ git push
 ```
 
 ---
+
+## Phase 78: Add a working "Forgot password?" flow to login
+
+**Roy's request:** a screenshot of the login card flagging that there was no way for a user who forgot their password to get back into their account — only "Create one" (a new account) or giving up.
+
+**New flow, three parts:**
+- `app/login/page.tsx`: added a "Forgot password?" link next to the Password label, pointing at `/forgot-password`.
+- `app/forgot-password/page.tsx` (new): email-only form calling real `supabase.auth.resetPasswordForEmail(email, { redirectTo: `${NEXT_PUBLIC_SITE_URL}/reset-password` })`. Shows a "Check your email" confirmation state (mirrors `app/signup/page.tsx`'s card shell and done-state pattern) regardless of whether the email is actually registered — that's Supabase's own by-design behavior to prevent email enumeration, not something added here; real errors (rate limiting, network) still surface.
+- `app/reset-password/page.tsx` (new): where the emailed link lands. The Supabase browser client (`createBrowserClient` from `@supabase/ssr`) automatically exchanges the recovery code in the URL for a session on load — no separate `/auth/callback` route was needed, confirmed there wasn't already one in the codebase. Form asks for the new password twice, blocks submission client-side if they don't match, then calls `supabase.auth.updateUser({ password })`.
+- `NEXT_PUBLIC_SITE_URL` (used for the redirect link) was already configured and documented in `ENV_VARS.md` from earlier work — no new env var needed.
+
+**One thing outside this codebase, worth checking:** Supabase requires redirect URLs to be allow-listed in the project's own Authentication → URL Configuration settings (in the Supabase dashboard, not something set in code or reachable by the tools available here). If `<your-domain>/reset-password` isn't already on that list for both the dev and production Supabase projects, the recovery email's link will fail to redirect correctly even though the email itself sends fine. Worth a quick check, Roy, before calling this fully verified end-to-end.
+
+**Test infrastructure note:** the first tests written against these new pages used `getByLabelText`, which failed because none of this project's existing auth pages (`login`, `signup`) link their `<label>`/`<input>` pairs via `htmlFor`/`id`. Rather than work around it, added real `id`/`htmlFor` pairs to the two new pages' fields (a genuine accessibility improvement, zero visual change) and fixed the tests to match — existing `login`/`signup` fields left as-is since editing them wasn't part of this request.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for all three touched/new files.
+- `tests/unit/LoginPage.test.tsx` (new) — 1/1 passed: the Forgot password? link exists and points at the right route.
+- `tests/unit/ForgotPasswordPage.test.tsx` (new) — 2/2 passed: correct `resetPasswordForEmail` call + redirect, and real errors surface correctly.
+- `tests/unit/ResetPasswordPage.test.tsx` (new) — 3/3 passed: password-mismatch is blocked client-side, matching passwords call `updateUser` and show the confirmation state, and an invalid/expired recovery link's real error surfaces.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 78: add working forgot-password flow (request reset + set new password)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

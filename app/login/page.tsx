@@ -56,7 +56,17 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Password</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm font-semibold">Password</label>
+              {/* Phase 78 — Roy sent a screenshot of this exact login card
+                  flagging that there was no way for a user who forgot their
+                  password to actually get back in — the only options were
+                  "Create one" (a new account) or giving up. Links to the
+                  new /forgot-password request-reset page. */}
+              <Link href="/forgot-password" className="text-[13px] font-semibold text-primary">
+                Forgot password?
+              </Link>
+            </div>
             <input
               name="password"
               type="password"
