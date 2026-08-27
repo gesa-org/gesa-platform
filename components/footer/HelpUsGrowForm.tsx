@@ -3,24 +3,28 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-// Phase 70 — Roy sent a reference screenshot of a "Help us grow" mini-form
-// (Name / Phone / Email / Subject dropdown / 18+-and-privacy-policy consent
-// / Sent button) and asked for it inside the footer, wired to actually save
-// submissions to the CRM. Reuses the existing "inquiries" table (already
-// public-insert via RLS, already has an admin review page at
-// /admin/inquiries) rather than inventing a parallel table — this is just
-// another inquiry entry point, distinguished from the full Contact page by
-// `type: "Help us grow"` so Roy can tell them apart in the CRM list. The
-// table had no `phone` column before this phase; one was added (nullable)
-// since the reference design has a dedicated phone field the full Contact
-// form doesn't.
+// Phase 70 — reuses the existing "inquiries" table (already public-insert
+// via RLS, already reviewed at /admin/inquiries) rather than a new table —
+// this is just another inquiry entry point, distinguished from the full
+// Contact page by `type: "Help us grow"` so Roy can tell them apart in the
+// CRM list. The reference design has no message/body textarea, but the
+// shared /api/email/contact route (also used by the full Contact form)
+// requires a non-empty `message` to send the admin-notification email — a
+// short summary line is generated from the subject + phone rather than
+// adding a textarea the reference design doesn't show.
 //
-// The reference design has no message/body textarea, but the shared
-// /api/email/contact route (also used by the full Contact form) requires a
-// non-empty `message` to send the admin-notification email — so a short
-// summary line is generated from the subject + phone rather than adding a
-// textarea the reference design doesn't show.
+// Phase 70 follow-up — Roy sent a second reference (a full-width, two-
+// column "brushed metal" card: intro copy on the left, a labeled-field
+// form on the right, Name/Phone/Subject sharing one row, Email full width,
+// consent row, full-width submit) and asked to adopt that layout/format
+// while keeping all of this project's own text as-is — so only the
+// structure/visual treatment changed here, not the heading, subtitle,
+// placeholders, checkbox copy, subject options, or button label below.
 const SUBJECT_OPTIONS = ["Donate", "Volunteer as a therapist", "Partnership", "General inquiry"];
+
+const fieldClass =
+  "w-full rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none";
+const labelClass = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-white/70";
 
 export default function HelpUsGrowForm() {
   const [submitted, setSubmitted] = useState(false);
@@ -28,17 +32,22 @@ export default function HelpUsGrowForm() {
   const [pending, setPending] = useState(false);
   const [consent, setConsent] = useState(false);
 
+  const cardClass =
+    "relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-600 via-slate-700 to-slate-900 p-7 sm:p-9 shadow-2xl";
+
   if (submitted) {
     return (
-      <div className="rounded-2xl bg-card p-6 text-center text-[13.5px] text-primary-600">
-        Thank you — we&apos;ve received your message and will be in touch soon.
+      <div className={cardClass}>
+        <p className="text-center text-[14px] text-white">
+          Thank you — we&apos;ve received your message and will be in touch soon.
+        </p>
       </div>
     );
   }
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-2xl bg-card p-6 text-left shadow-lg"
+      className={`${cardClass} grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:items-start`}
       onSubmit={async (e) => {
         e.preventDefault();
         if (!consent) {
@@ -77,62 +86,73 @@ export default function HelpUsGrowForm() {
         }).catch(() => {});
       }}
     >
-      <h4 className="text-[17px] font-semibold text-foreground">Help us grow</h4>
-      <p className="mb-1 text-[13px] leading-relaxed text-muted-fg">
-        We will continue to contribute and succeed, also thanks to you.
-      </p>
-      <input
-        name="name"
-        placeholder="Name"
-        required
-        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[13.5px] text-foreground placeholder:text-muted-fg focus:border-primary focus:outline-none"
-      />
-      <input
-        name="phone"
-        type="tel"
-        placeholder="Phone"
-        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[13.5px] text-foreground placeholder:text-muted-fg focus:border-primary focus:outline-none"
-      />
-      <input
-        name="email"
-        type="email"
-        placeholder="Email"
-        required
-        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[13.5px] text-foreground placeholder:text-muted-fg focus:border-primary focus:outline-none"
-      />
-      <select
-        name="subject"
-        defaultValue={SUBJECT_OPTIONS[0]}
-        className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[13.5px] text-foreground focus:border-primary focus:outline-none"
-      >
-        {SUBJECT_OPTIONS.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-      <label className="flex items-start gap-2 text-[12px] leading-relaxed text-muted-fg">
-        <input
-          type="checkbox"
-          checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
-          className="mt-0.5 h-3.5 w-3.5 flex-none"
-        />
-        <span>
-          I confirm that I am over 18 years of age and have read the{" "}
-          <a href="/privacy-policy" className="text-primary underline">
-            Privacy Policy
-          </a>
-        </span>
-      </label>
-      {error && <p className="text-[12px] text-destructive">{error}</p>}
-      <button
-        type="submit"
-        disabled={pending}
-        className="mt-1 w-full rounded-full bg-primary py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-primary-600 disabled:opacity-60"
-      >
-        {pending ? "Sending…" : "Sent"}
-      </button>
+      <div>
+        <h4 className="text-[22px] font-semibold text-white">Help us grow</h4>
+        <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/70">
+          We will continue to contribute and succeed, also thanks to you.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <label className={labelClass} htmlFor="help-grow-name">
+              Name
+            </label>
+            <input id="help-grow-name" name="name" placeholder="Name" required className={fieldClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="help-grow-phone">
+              Phone
+            </label>
+            <input id="help-grow-phone" name="phone" type="tel" placeholder="Phone" className={fieldClass} />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor="help-grow-subject">
+              Subject
+            </label>
+            <select id="help-grow-subject" name="subject" defaultValue={SUBJECT_OPTIONS[0]} className={fieldClass}>
+              {SUBJECT_OPTIONS.map((opt) => (
+                <option key={opt} value={opt} className="text-foreground">
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass} htmlFor="help-grow-email">
+            Email
+          </label>
+          <input id="help-grow-email" name="email" type="email" placeholder="Email" required className={fieldClass} />
+        </div>
+
+        <label className="flex items-start gap-2 text-[12px] leading-relaxed text-white/70">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-3.5 w-3.5 flex-none"
+          />
+          <span>
+            I confirm that I am over 18 years of age and have read the{" "}
+            <a href="/privacy-policy" className="text-white underline">
+              Privacy Policy
+            </a>
+          </span>
+        </label>
+
+        {error && <p className="text-[12px] text-destructive">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full rounded-full bg-white py-3 text-[14.5px] font-semibold text-slate-900 transition-colors hover:bg-white/90 disabled:opacity-60"
+        >
+          {pending ? "Sending…" : "Sent"}
+        </button>
+      </div>
     </form>
   );
 }

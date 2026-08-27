@@ -2144,10 +2144,17 @@ git push
 - `tests/unit/Footer.test.tsx` (updated) — 2/2 passed, including a new assertion that the form renders inside the footer.
 - `tests/unit/AboutPage.test.tsx` (updated) — 4/4 passed, including a DOM-order assertion that the new Mission section renders before "Why GESA exists."
 
+**Follow-up (same day):** Roy sent a second reference screenshot — a full-width "brushed metal" card (dark slate gradient, intro copy on the left, labeled fields on the right, Name/Phone/Subject sharing one row, Email full width, consent row, full-width button) — asking to adopt that visual layout while keeping all existing text as-is (heading, subtitle, placeholders, checkbox copy, subject options, button label unchanged).
+
+- `components/footer/HelpUsGrowForm.tsx`: rebuilt as a full-width two-column card (`bg-gradient-to-br from-slate-600 via-slate-700 to-slate-900`), intro copy on the left, fields on the right with visible labels above each input (new — the original had placeholder-only fields), Name/Phone/Subject sharing one row, Email full width below, consent row, full-width submit button. Same field names, same insert/email logic — only the markup and styling changed.
+- `components/Footer.tsx`: the form moved out of the nav grid (which reverted from 5 to its original 4 columns) into its own full-width row beneath it, matching the reference's full-width card rather than a narrow column.
+
+**Verification:** scoped `tsc --noEmit` clean; `tests/unit/HelpUsGrowForm.test.tsx` + `tests/unit/Footer.test.tsx` — 4/4 passed (existing behavior — consent gating, Supabase insert with `type: "Help us grow"`, form present in the footer — all unchanged by the visual rework).
+
 ```
 del .git\index.lock
 git add -A
-git commit -m "Phase 70: About Mission section, footer sizing/scroll-reveal, Help us grow form"
+git commit -m "Phase 70: About Mission section, footer sizing/scroll-reveal, Help us grow form + metallic card redesign"
 git push
 ```
 

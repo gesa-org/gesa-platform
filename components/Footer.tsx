@@ -58,12 +58,14 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
       <div className="max-w-[1240px] mx-auto px-6 sm:px-8">
         {/* Phase 70 — Roy asked for the footer's overall size/padding to
             feel more spacious, its text more legible, and for scroll-
-            triggered reveal animations on the footer's text/sections. The
-            grid grew from 4 to 5 columns (lg) to fit the new "Help us
-            grow" form without cramping the existing nav columns; every
-            column now staggers in via StaggerGroup/StaggerItem, the same
-            primitive already used for card grids elsewhere on the site. */}
-        <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+            triggered reveal animations on the footer's text/sections.
+            Every column stagers in via StaggerGroup/StaggerItem, the same
+            primitive already used for card grids elsewhere on the site.
+            Phase 70 follow-up — the "Help us grow" form moved out of this
+            4-column nav grid into its own full-width row below (per the
+            second reference Roy sent, a full-width card rather than a 5th
+            narrow column). */}
+        <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           <StaggerItem className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#b7c3d6]">
               <Logo size={34} />
@@ -122,10 +124,11 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
               <li><Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">Terms & Conditions</Link></li>
             </ul>
           </StaggerItem>
-          <StaggerItem>
-            <HelpUsGrowForm />
-          </StaggerItem>
         </StaggerGroup>
+
+        <Reveal type="fade-up" as="div" className="mt-10">
+          <HelpUsGrowForm />
+        </Reveal>
 
         {/* Phase 57 — "Connect with Us" social row + "Our Trusted Partners"
             row, replacing Phase 56's reverted 5-column/CTA-button redesign
