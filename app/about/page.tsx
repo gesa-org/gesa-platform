@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
+import DonateBand from "@/components/home/DonateBand";
 import Reveal from "@/components/motion/Reveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
@@ -244,6 +245,12 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Phase 75 — DonateBand moved here from the fixed footer-reveal
+          layer (see SiteFooterSlot.tsx) so it's a normal, always-visible
+          section instead of part of the hidden-until-scroll effect — only
+          the Footer stays inside that reveal layer now. */}
+      <DonateBand />
     </div>
   );
 }

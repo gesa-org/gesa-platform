@@ -2,6 +2,7 @@ import { Users2 } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
 import SupportGroupsInteractive, { SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK } from "@/components/SupportGroupsInteractive";
 import Testimonials from "@/components/home/Testimonials";
+import DonateBand from "@/components/home/DonateBand";
 import { getSupportGroups, getTestimonials } from "@/lib/queries";
 import { getPageContent, SUPPORT_GROUPS_CONTENT_FALLBACK } from "@/lib/content";
 
@@ -41,6 +42,12 @@ export default async function SupportGroupsPage() {
         <SupportGroupsInteractive groups={groups} content={directoryContent} />
       </section>
       <Testimonials testimonials={testimonials} />
+
+      {/* Phase 75 — DonateBand moved here from the fixed footer-reveal
+          layer (see SiteFooterSlot.tsx) so it's a normal, always-visible
+          section instead of part of the hidden-until-scroll effect — only
+          the Footer stays inside that reveal layer now. */}
+      <DonateBand />
     </div>
   );
 }

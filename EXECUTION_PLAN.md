@@ -2242,4 +2242,29 @@ git push
 ```
 
 ---
+
+## Phase 75: Take the donate band out of the footer-reveal effect
+
+**Roy's request:** a screenshot of the "Your gift keeps care free / Donate to GESA" band, asking for it to stop being part of the scroll-reveal effect — only the Footer itself should stay hidden-until-scroll; the donate band should just be normal, always-visible page content.
+
+- `components/SiteFooterSlot.tsx`: removed `DonateBand` from the fixed `reveal-page__footer-layer` entirely — that layer now contains only the Footer, same as it did before Phase 29 introduced the donate band into it.
+- `app/page.tsx`, `app/about/page.tsx`, `app/therapists/page.tsx`, `app/support-groups/page.tsx` (the four reveal-enabled routes): each now renders `<DonateBand />` directly as the last section of its own normal content, so it appears in place immediately like any other section — no longer hidden underneath the page waiting for a scroll.
+- `reveal-page__gift` (the now-unused CSS rule for the old wrapper div) was left in `app/globals.css` per the standing rule against removing CSS/files without confirming first.
+- `useRevealHeight`'s measured layer height now reflects just the Footer's height, so each page's reserved bottom margin shrank accordingly — no code change needed there, it already measures whatever's inside the ref'd element.
+
+**Test infrastructure fix:** writing the first-ever test for `SiteFooterSlot` surfaced that `jest.setup.ts` had an `IntersectionObserver` stub (from Phase 45) but no `ResizeObserver` stub — `useRevealHeight` calls `new ResizeObserver(...)` unconditionally, which jsdom doesn't provide, so any reveal-route render threw. Added the same kind of minimal stub for `ResizeObserver` alongside the existing `IntersectionObserver` one.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean across all 5 touched files.
+- `tests/unit/SiteFooterSlot.test.tsx` (new — no test existed for this component before) — 2/2 passed: confirms the donate band never renders from this component, on a reveal route or otherwise.
+- `tests/unit/Footer.test.tsx` + `tests/unit/Paths.test.tsx` + `tests/unit/AboutPage.test.tsx` re-run for regression — 11/11 passed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 75: remove donate band from footer-reveal effect, render as normal page content"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

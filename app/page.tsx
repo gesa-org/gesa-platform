@@ -1,5 +1,6 @@
 import Paths, { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import Stats from "@/components/home/Stats";
+import DonateBand from "@/components/home/DonateBand";
 import { getPageContent } from "@/lib/content";
 
 export const revalidate = 300;
@@ -46,6 +47,11 @@ export const revalidate = 300;
 // purposeTicker`/its Content Manager field are left in place, unused, per
 // the same standing rule as HorizontalScroll above — not deleted without
 // confirming first.
+//
+// Phase 75 — DonateBand moved here from the fixed footer-reveal layer (see
+// SiteFooterSlot.tsx) so it's a normal, always-visible section instead of
+// part of the hidden-until-scroll effect — only the Footer stays inside
+// that reveal layer now.
 export default async function Home() {
   const homeContent = await getPageContent("page_home", HOME_CONTENT_FALLBACK);
 
@@ -53,6 +59,7 @@ export default async function Home() {
     <div className="reveal-page__main flex flex-col">
       <Paths content={homeContent} />
       <Stats />
+      <DonateBand />
     </div>
   );
 }

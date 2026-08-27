@@ -28,3 +28,22 @@ if (typeof window !== "undefined" && !("IntersectionObserver" in window)) {
   // the assignment above needs the suppression but this one doesn't.
   global.IntersectionObserver = MockIntersectionObserver;
 }
+
+// Phase 75 — same gap as IntersectionObserver above, but for ResizeObserver:
+// jsdom has no real implementation, and components/layout/useRevealHeight.ts
+// (used by SiteFooterSlot on every reveal-enabled route) calls
+// `new ResizeObserver(...)` unconditionally in a useEffect. Without this
+// stub, any test that renders SiteFooterSlot on a reveal route throws
+// "ReferenceError: ResizeObserver is not defined" inside that effect —
+// discovered writing the first real test for SiteFooterSlot, since nothing
+// before this exercised that code path in a test environment.
+if (typeof window !== "undefined" && !("ResizeObserver" in window)) {
+  class MockResizeObserver implements ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  // @ts-expect-error — assigning a minimal test-only stub, not a full spec-compliant implementation
+  window.ResizeObserver = MockResizeObserver;
+  global.ResizeObserver = MockResizeObserver;
+}

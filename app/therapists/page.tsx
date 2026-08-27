@@ -1,6 +1,7 @@
 import { Users } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
 import TherapistsDirectory, { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/components/TherapistsDirectory";
+import DonateBand from "@/components/home/DonateBand";
 import { getActiveTherapists } from "@/lib/queries";
 import { getPageContent, THERAPISTS_CONTENT_FALLBACK } from "@/lib/content";
 
@@ -45,6 +46,12 @@ export default async function TherapistsPage() {
           <TherapistsDirectory therapists={therapists} content={directoryContent} />
         </div>
       </section>
+
+      {/* Phase 75 — DonateBand moved here from the fixed footer-reveal
+          layer (see SiteFooterSlot.tsx) so it's a normal, always-visible
+          section instead of part of the hidden-until-scroll effect — only
+          the Footer stays inside that reveal layer now. */}
+      <DonateBand />
     </div>
   );
 }
