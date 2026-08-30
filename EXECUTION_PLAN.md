@@ -2352,4 +2352,27 @@ git push
 ```
 
 ---
+
+## Phase 80: Restore the Home page's gold-band hero text and gallery wall
+
+**Roy's request:** a reference screenshot of the original hero design (eyebrow chip "A global volunteer support alliance," headline, subtitle, three trust badges, and an overlapping three-image "gallery wall" on the right, all on the gold band) — asking for this interface to come back on the Home landing page, without changing the current build otherwise.
+
+- `components/home/Paths.tsx`: re-added the hero content into the existing `.gold-banner` band — the eyebrow chip, an `<h1>` headline, the subtitle paragraph, and the three trust badges on the left; a three-image decorative gallery wall (the same `crisis-artwork.png` / `veterans-artwork.png` / `seeking-support-artwork.png` files already used non-decoratively on the flip cards below) on the right, hidden below the `md` breakpoint. All of it reads from `content.eyebrow` / `content.title` / `content.subtitle` / `content.badge1-3Label` — fields that Phase 70 left untouched in the data model and Content Manager, just unrendered, so this is a pure re-render of existing, already-editable content rather than new data.
+- The band's `pb-[210px]` (added Phase 72 so the card row's `-mt-[210px]` overlap lands exactly half a card-height into the band) was left untouched — the restored hero content just renders in the band's existing top-padding flow, so the gold/light seam the flip cards straddle is unaffected. The card row, its 3D flip behavior, and the caption below it (Phase 76/79) are unchanged.
+- `section`'s `aria-label="Ways to get support"` reverted to `aria-labelledby="paths-heading"` pointing at the restored `<h1>`, since there's a real heading again.
+- Re-added the `Sparkle`, `ShieldCheck`, `HeartHandshake`, `Users` lucide-react imports Phase 70 had removed.
+
+**Verification:**
+- Scoped `tsc --noEmit` clean for `components/home/Paths.tsx`.
+- `tests/unit/Paths.test.tsx` — updated the smoke test (previously asserting this content was *absent*) to assert it's present again, plus that both the decorative gallery copies and the cards' own real-alt copies of the three artworks render (6 total `<img>`s across the three files) — 3/3 passed.
+- `tests/unit/SiteFooterSlot.test.tsx` — 2/2 passed, confirming the Home page's footer-reveal behavior (a sibling concern, not touched by this change) still works.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 80: restore Home hero band text and gallery wall"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

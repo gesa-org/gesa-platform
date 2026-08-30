@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, LifeBuoy, Award, Sparkles } from "lucide-react";
+import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
@@ -186,28 +186,28 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
   ];
 
   return (
-    <section aria-label="Ways to get support" className="relative overflow-hidden">
-      {/* Gold hero band — Phase 47. Phase 70 — Roy asked to remove this
-          band's text (eyebrow/headline/subtitle/trust badges) and the
-          decorative "gallery wall" of the three path artworks entirely.
-          The `content.eyebrow`/`title`/`subtitle`/`badge*Label` fields and
-          their Content Manager editor are left untouched — they're just no
-          longer rendered here — since removing them from the data model
-          wasn't asked for and could break the editor for no reason. The
-          gold band itself (background glow + watermark texture) stays, as
-          a color transition into the three cards below, since only the
-          text and images were asked to go, not the band.
-          Phase 72 — Roy flagged that the card row's overlap onto the gold
-          band was too shallow: the visible color line inside each old card
-          (the blue-gray image box giving way to the light-gray text block)
-          sat well below the gold band's own bottom edge, deep in the plain
-          light section, instead of "leveling" with it. Grew this band's
-          bottom padding (pb-14/16 -> a fixed 210px) to match the new
-          card's fixed height's overlap below, so the math is exact rather
-          than eyeballed — see the card wrapper's -mt-[210px] below, chosen
-          as exactly half of each card's own fixed h-[420px], so the cards
-          sit evenly straddling the gold/light seam with noticeably more of
-          each card (and more gold overall) visible above it than before. */}
+    <section aria-labelledby="paths-heading" className="relative overflow-hidden">
+      {/* Gold hero band — Phase 47. Phase 70 removed this band's text
+          (eyebrow/headline/subtitle/trust badges) and the decorative
+          "gallery wall" of the three path artworks entirely, leaving the
+          band as a plain color-transition strip. Phase 80 — Roy sent the
+          original reference design again and asked for that hero content
+          restored: the eyebrow chip, headline, subtitle, and trust badges
+          on the left, and the three-artwork gallery wall on the right. The
+          `content.eyebrow`/`title`/`subtitle`/`badge*Label` fields were
+          never removed from the data model (Phase 70 only stopped
+          rendering them), so this simply re-renders the exact same,
+          already-editable Content Manager fields — no new content, no new
+          Supabase columns. The gallery wall reuses the same three artwork
+          files already shown, non-decoratively, in the cards below
+          (Phase 41/47), rendered here `aria-hidden` with empty `alt` since
+          the meaningful alt text for these images already lives on the
+          cards — a duplicated non-empty alt would be noise for screen
+          reader users, not new information. The band's `pb-[210px]` (added
+          Phase 72 to match the card row's `-mt-[210px]` overlap) is
+          untouched — the new hero content simply renders in the band's
+          existing top padding/flow, so the gold/light seam the cards
+          straddle is unaffected. */}
       <div className="gold-banner relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-[8%] top-0 h-[420px] w-[560px] rounded-full bg-white/25 blur-[110px]" />
@@ -216,6 +216,58 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
               Support Groups), for consistency across every gold section. */}
           <GoldWatermarks />
         </ParallaxLayer>
+
+        <div className="wrap relative z-10">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <Reveal type="fade-up">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-espresso">
+                  <Sparkle size={15} className="text-clay" aria-hidden="true" />
+                  {content.eyebrow}
+                </span>
+                <h1
+                  id="paths-heading"
+                  className="mt-6 max-w-xl font-serif text-[clamp(38px,5vw,60px)] leading-[1.08] text-espresso"
+                >
+                  {content.title}
+                </h1>
+                <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-espresso/75">{content.subtitle}</p>
+                <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-[14px] font-medium text-espresso/80">
+                  <span className="inline-flex items-center gap-2">
+                    <ShieldCheck size={17} className="text-espresso/60" aria-hidden="true" />
+                    {content.badge1Label}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <HeartHandshake size={17} className="text-espresso/60" aria-hidden="true" />
+                    {content.badge2Label}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <Users size={17} className="text-espresso/60" aria-hidden="true" />
+                    {content.badge3Label}
+                  </span>
+                </div>
+              </div>
+            </Reveal>
+
+            {/* Gallery wall — three overlapping framed artworks, hidden below
+                the md breakpoint (same treatment the pre-Phase-70 version
+                used) since there isn't room for a decorative image stack
+                next to the text on narrow viewports. */}
+            <Reveal type="image">
+              <div className="relative mx-auto hidden h-[340px] w-full max-w-md md:block" aria-hidden="true">
+                <div className="absolute left-0 top-2 h-[210px] w-[210px] -rotate-6 overflow-hidden rounded-2xl border-[6px] border-white shadow-2xl">
+                  <Image src={PATH_IMAGES[0]} alt="" fill className="object-cover" />
+                </div>
+                <div className="absolute right-0 top-20 h-[230px] w-[250px] rotate-3 overflow-hidden rounded-2xl border-[6px] border-espresso shadow-2xl">
+                  <Image src={PATH_IMAGES[1]} alt="" fill className="object-cover" />
+                </div>
+                <div className="absolute bottom-0 left-16 h-[190px] w-[230px] -rotate-3 overflow-hidden rounded-2xl border-[6px] border-clay-soft shadow-xl">
+                  <Image src={PATH_IMAGES[2]} alt="" fill className="object-cover" />
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
       </div>
 
       {/* Cards float up over the gold/light seam — Phase 47, repositioned
