@@ -9,6 +9,10 @@ import FooterEditor from "@/components/admin/content/FooterEditor";
 import HeaderEditor from "@/components/admin/content/HeaderEditor";
 import TherapistsDirectoryEditor from "@/components/admin/content/TherapistsDirectoryEditor";
 import SupportGroupsDirectoryEditor from "@/components/admin/content/SupportGroupsDirectoryEditor";
+import DonateBandEditor from "@/components/admin/content/DonateBandEditor";
+import HomeStatsEditor from "@/components/admin/content/HomeStatsEditor";
+import CrisisButtonEditor from "@/components/admin/content/CrisisButtonEditor";
+import IntakeFlowEditor from "@/components/admin/content/IntakeFlowEditor";
 import FaqManager from "@/components/admin/content/FaqManager";
 import LegalPagesManager from "@/components/admin/content/LegalPagesManager";
 import type {
@@ -19,6 +23,10 @@ import type {
   HeaderContent,
   TherapistsDirectoryContent,
   SupportGroupsDirectoryContent,
+  DonateBandContent,
+  HomeStatsContent,
+  CrisisButtonContent,
+  IntakeFlowContent,
   SimplePageContent,
 } from "@/lib/content";
 import type { Tables } from "@/lib/database.types";
@@ -31,28 +39,47 @@ type Props = {
   header: HeaderContent;
   therapistsDirectory: TherapistsDirectoryContent;
   supportGroupsDirectory: SupportGroupsDirectoryContent;
-  therapists: SimplePageContent;
-  supportGroups: SimplePageContent;
-  blog: SimplePageContent;
-  faqBanner: SimplePageContent;
-  contact: SimplePageContent;
+  donateBand: DonateBandContent;
+  homeStats: HomeStatsContent;
+  crisisButton: CrisisButtonContent;
+  intakeFlow: IntakeFlowContent;
+  // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
+  // Support Groups, Find Your Therapist, Blog, FAQ banner, Contact, and
+  // anything added to that registry later), keyed by its site_content key.
+  // Composite tabs (Our Therapists, Support Groups, FAQ) pull their banner
+  // out of this same map instead of a dedicated named prop, so there's one
+  // less place to remember to wire up per page.
+  simplePages: Record<string, SimplePageContent>;
+  simplePageEntries: { key: string; label: string; hasDescription: boolean; fallback: SimplePageContent }[];
   faqs: Tables<"faqs">[];
   legalPages: Tables<"legal_pages">[];
 };
 
-const TABS = [
+// Tabs that need more than a plain banner — each gets its own bespoke block
+// below. Every other entry in `simplePageEntries` (Find Your Therapist,
+// Blog, Contact today; anything added to that registry later) renders
+// generically via the loop at the bottom of TABS/the render body, with zero
+// changes needed here — that's the concrete "future content captured
+// automatically" mechanism for the simple-banner-only case. See
+// CONTENT_GUIDE.md for the full convention.
+const COMPOSITE_SIMPLE_KEYS = new Set(["page_therapists", "page_support_groups", "page_faq"]);
+
+const FIXED_TABS = [
   "Header",
   "Home",
   "About",
   "Our Therapists",
   "Support Groups",
-  "Blog",
+] as const;
+
+const FIXED_TABS_END = [
+  "Intake",
   "FAQ",
-  "Contact",
   "Legal Pages",
   "Footer",
+  "Donate Band",
+  "Crisis Button",
 ] as const;
-type Tab = (typeof TABS)[number];
 
 // The Content Manager's tab shell — a client component so switching tabs is
 // instant (no navigation/refetch), matching the "Admin UI" layer from the
@@ -60,7 +87,9 @@ type Tab = (typeof TABS)[number];
 // its own site_content key (or, for FAQ/Legal Pages, the existing tables
 // those already lived in before this feature).
 export default function ContentManagerApp(props: Props) {
-  const [tab, setTab] = useState<Tab>("Header");
+  const genericEntries = props.simplePageEntries.filter((e) => !COMPOSITE_SIMPLE_KEYS.has(e.key));
+  const TABS = [...FIXED_TABS, ...genericEntries.map((e) => e.label), ...FIXED_TABS_END];
+  const [tab, setTab] = useState<string>(TABS[0]);
 
   return (
     <div>
@@ -81,7 +110,18 @@ export default function ContentManagerApp(props: Props) {
 
       {tab === "Header" && <HeaderEditor initial={props.header} />}
 
-      {tab === "Home" && <HomeEditor initial={props.home} />}
+      {tab === "Home" && (
+        <div className="flex flex-col gap-8">
+          <div>
+            <h3 className="mb-3 text-[15px] font-semibold">Hero band, path cards &amp; gallery</h3>
+            <HomeEditor initial={props.home} />
+          </div>
+          <div className="border-t border-border pt-6">
+            <h3 className="mb-3 text-[15px] font-semibold">Stats row</h3>
+            <HomeStatsEditor initial={props.homeStats} />
+          </div>
+        </div>
+      )}
 
       {tab === "About" && (
         <div className="flex flex-col gap-8">
@@ -100,7 +140,7 @@ export default function ContentManagerApp(props: Props) {
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>
-            <SimplePageEditor contentKey="page_therapists" initial={props.therapists} hasDescription />
+            <SimplePageEditor contentKey="page_therapists" initial={props.simplePages.page_therapists} hasDescription />
           </div>
           <div className="border-t border-border pt-6">
             <h3 className="mb-3 text-[15px] font-semibold">Directory filters &amp; buttons</h3>
@@ -113,7 +153,7 @@ export default function ContentManagerApp(props: Props) {
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>
-            <SimplePageEditor contentKey="page_support_groups" initial={props.supportGroups} hasDescription />
+            <SimplePageEditor contentKey="page_support_groups" initial={props.simplePages.page_support_groups} hasDescription />
           </div>
           <div className="border-t border-border pt-6">
             <h3 className="mb-3 text-[15px] font-semibold">Registration flow</h3>
@@ -122,20 +162,34 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Blog" && (
-        <SimplePageEditor
-          contentKey="page_blog"
-          initial={props.blog}
-          hasDescription
-          note="The Blog page is currently disabled site-wide (it redirects to Home) — this banner isn't live yet. It's here so the copy is ready once Blog is turned back on."
-        />
+      {/* Phase 80 round 2 — generic loop over every non-composite entry in
+          the SIMPLE_PAGE_ENTRIES registry (lib/content.ts). Adding a future
+          banner-only page there is enough for it to get a real tab here,
+          with no new editor component and no new block in this file. */}
+      {genericEntries.map(
+        (entry) =>
+          tab === entry.label && (
+            <SimplePageEditor
+              key={entry.key}
+              contentKey={entry.key}
+              initial={props.simplePages[entry.key]}
+              hasDescription={entry.hasDescription}
+              note={
+                entry.key === "page_blog"
+                  ? "The Blog page is currently disabled site-wide (it redirects to Home) — this banner isn't live yet. It's here so the copy is ready once Blog is turned back on."
+                  : undefined
+              }
+            />
+          )
       )}
+
+      {tab === "Intake" && <IntakeFlowEditor initial={props.intakeFlow} />}
 
       {tab === "FAQ" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>
-            <SimplePageEditor contentKey="page_faq" initial={props.faqBanner} hasDescription={false} />
+            <SimplePageEditor contentKey="page_faq" initial={props.simplePages.page_faq} hasDescription={false} />
           </div>
           <div className="border-t border-border pt-6">
             <h3 className="mb-3 text-[15px] font-semibold">Questions</h3>
@@ -144,11 +198,13 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Contact" && <SimplePageEditor contentKey="page_contact" initial={props.contact} hasDescription />}
-
       {tab === "Legal Pages" && <LegalPagesManager pages={props.legalPages} />}
 
       {tab === "Footer" && <FooterEditor initial={props.footer} />}
+
+      {tab === "Donate Band" && <DonateBandEditor initial={props.donateBand} />}
+
+      {tab === "Crisis Button" && <CrisisButtonEditor initial={props.crisisButton} />}
     </div>
   );
 }

@@ -5,12 +5,12 @@ import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
 import { HEADER_CONTENT_FALLBACK } from "@/components/Header";
 import { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/components/TherapistsDirectory";
 import { SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK } from "@/components/SupportGroupsInteractive";
+import { DONATE_BAND_CONTENT_FALLBACK } from "@/components/home/DonateBand";
+import { HOME_STATS_CONTENT_FALLBACK } from "@/components/home/Stats";
+import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
+import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import {
-  THERAPISTS_CONTENT_FALLBACK,
-  SUPPORT_GROUPS_CONTENT_FALLBACK,
-  BLOG_CONTENT_FALLBACK,
-  FAQ_CONTENT_FALLBACK,
-  CONTACT_CONTENT_FALLBACK,
+  SIMPLE_PAGE_ENTRIES,
   ABOUT_SECTIONS_FALLBACK,
   type HomeContent,
   type HeroContent,
@@ -20,24 +20,32 @@ import {
   type TherapistsDirectoryContent,
   type SupportGroupsDirectoryContent,
   type SimplePageContent,
+  type DonateBandContent,
+  type HomeStatsContent,
+  type CrisisButtonContent,
+  type IntakeFlowContent,
 } from "@/lib/content";
 import ContentManagerApp from "@/components/admin/content/ContentManagerApp";
 
 export const dynamic = "force-dynamic";
 
+// Phase 80 round 2 — the simple-page keys now come from the SIMPLE_PAGE_ENTRIES
+// registry (lib/content.ts) instead of being listed twice (once here, once
+// in that registry) — adding a future simple page there is enough for its
+// row to actually get fetched here too, no second place to remember.
 const KEYS = [
   "page_home",
   "page_about_hero",
   "page_about_sections",
-  "page_therapists",
-  "page_support_groups",
-  "page_blog",
-  "page_faq",
-  "page_contact",
   "page_footer",
   "site_header",
   "component_therapists_directory",
   "component_support_groups_directory",
+  "component_donate_band",
+  "component_home_stats",
+  "component_crisis_button",
+  "component_intake_flow",
+  ...SIMPLE_PAGE_ENTRIES.map((e) => e.key),
 ];
 
 // Reads every editable row in one bulk query rather than one getPageContent()
@@ -50,6 +58,17 @@ function merge<T extends Record<string, unknown>>(row: unknown, fallback: T): T 
 
 export default async function AdminContentPage() {
   const [map, faqs, legalPages] = await Promise.all([getSiteContentMap(KEYS), getFaqs(), getAllLegalPages()]);
+
+  // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
+  // Support Groups, Find Your Therapist, Blog, FAQ banner, Contact — and
+  // whatever's added to that registry later) resolved generically here,
+  // instead of one hand-written `merge<SimplePageContent>(...)` call per
+  // page. ContentManagerApp decides which of these get their own bespoke
+  // tab (because they carry extra, non-banner content alongside them) vs.
+  // which are rendered generically as a plain banner-only tab.
+  const simplePages: Record<string, SimplePageContent> = Object.fromEntries(
+    SIMPLE_PAGE_ENTRIES.map((entry) => [entry.key, merge<SimplePageContent>(map.get(entry.key), entry.fallback)])
+  );
 
   return (
     <div className="rounded-[var(--radius)] border border-border bg-card p-6">
@@ -75,11 +94,12 @@ export default async function AdminContentPage() {
           map.get("component_support_groups_directory"),
           SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK
         )}
-        therapists={merge<SimplePageContent>(map.get("page_therapists"), THERAPISTS_CONTENT_FALLBACK)}
-        supportGroups={merge<SimplePageContent>(map.get("page_support_groups"), SUPPORT_GROUPS_CONTENT_FALLBACK)}
-        blog={merge<SimplePageContent>(map.get("page_blog"), BLOG_CONTENT_FALLBACK)}
-        faqBanner={merge<SimplePageContent>(map.get("page_faq"), FAQ_CONTENT_FALLBACK)}
-        contact={merge<SimplePageContent>(map.get("page_contact"), CONTACT_CONTENT_FALLBACK)}
+        donateBand={merge<DonateBandContent>(map.get("component_donate_band"), DONATE_BAND_CONTENT_FALLBACK)}
+        homeStats={merge<HomeStatsContent>(map.get("component_home_stats"), HOME_STATS_CONTENT_FALLBACK)}
+        crisisButton={merge<CrisisButtonContent>(map.get("component_crisis_button"), CRISIS_BUTTON_CONTENT_FALLBACK)}
+        intakeFlow={merge<IntakeFlowContent>(map.get("component_intake_flow"), INTAKE_FLOW_CONTENT_FALLBACK)}
+        simplePages={simplePages}
+        simplePageEntries={SIMPLE_PAGE_ENTRIES}
         faqs={faqs}
         legalPages={legalPages}
       />

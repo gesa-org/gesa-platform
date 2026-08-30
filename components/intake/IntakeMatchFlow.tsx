@@ -18,18 +18,17 @@ type Match = { therapist: Tables<"therapists">; reasoning: string };
 export default function IntakeMatchFlow({
   pathKey,
   matches,
+  matchListIntro = "Here are volunteer therapists who fit what you shared. Choose one to see their availability and book a free session.",
 }: {
   pathKey: string;
   matches: Match[];
+  matchListIntro?: string;
 }) {
   const [selected, setSelected] = useState<Match | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-center text-[14.5px] text-muted-fg">
-        Here are volunteer therapists who fit what you shared. Choose one to see their availability and book a
-        free session.
-      </p>
+      <p className="text-center text-[14.5px] text-muted-fg">{matchListIntro}</p>
 
       {matches.map(({ therapist, reasoning }) => {
         const initials = therapist.full_name

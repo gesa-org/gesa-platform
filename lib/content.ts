@@ -145,6 +145,14 @@ export type FooterContent = {
   supportVolunteerLabel: string;
   supportEmergencyLabel: string;
   legalHeading: string;
+  // Phase 80 round 2 — these five link labels were the last hardcoded
+  // strings left in the footer (the hrefs stay fixed, same rule as every
+  // other footer link — only visible label text is editable here).
+  legalPrivacyLabel: string;
+  legalCookiesLabel: string;
+  legalNoticeLabel: string;
+  legalAccessibilityLabel: string;
+  legalTermsLabel: string;
   copyrightLine: string;
   madeWithLine: string;
   // Phase 57 — Roy sent a simpler reference than Phase 56 (which was
@@ -219,6 +227,85 @@ export type SupportGroupsDirectoryContent = {
   successHeading: string;
 };
 
+// Phase 80 round 2 — "make sure all the content/text/layout on the site is
+// captured, and future additions stay consistent" audit. The four shapes
+// below (DonateBandContent, HomeStatsContent, CrisisButtonContent,
+// IntakeFlowContent) cover the highest-value gaps found: components reused
+// across multiple pages (so one edit fixes every occurrence) or shown
+// site-wide. See CONTENT_GUIDE.md for the convention every future page/
+// component should follow so nothing new ships hardcoded again, and for the
+// short list of lower-priority gaps (deep wizard-step microcopy, dynamic
+// booking-modal copy) intentionally deferred out of this round.
+
+// Powers components/home/DonateBand.tsx — identical on Home, About, Our
+// Therapists, and Support Groups (Phase 75), so this one row fixes all four
+// at once instead of four separate hardcoded copies that could drift.
+export type DonateBandContent = {
+  published: boolean;
+  headline: string;
+  subtitle: string;
+  ctaLabel: string;
+  ctaHref: string;
+};
+
+// Powers components/home/Stats.tsx (Home only). The four stat *values* are
+// content here, same as their labels — Roy/an admin may want to update a
+// number (e.g. therapist count) without a code change.
+export type HomeStatsContent = {
+  published: boolean;
+  stat1Value: string;
+  stat1Label: string;
+  stat2Value: string;
+  stat2Label: string;
+  stat3Value: string;
+  stat3Label: string;
+  stat4Value: string;
+  stat4Label: string;
+};
+
+// Powers components/CrisisButton.tsx — rendered globally in app/layout.tsx,
+// so this is on every single page. Resource hrefs stay editable too (unlike
+// most nav links) since these are real hotline numbers/URLs that can change,
+// not internal site structure.
+export type CrisisButtonContent = {
+  published: boolean;
+  triggerLabel: string;
+  modalHeading: string;
+  modalSubtitle: string;
+  resource1Title: string;
+  resource1Description: string;
+  resource1Href: string;
+  resource2Title: string;
+  resource2Description: string;
+  resource2Href: string;
+  resource3Title: string;
+  resource3Description: string;
+  resource3Href: string;
+  resource4Title: string;
+  resource4Description: string;
+  resource4Href: string;
+  disclaimer: string;
+};
+
+// Powers app/intake/page.tsx and components/intake/IntakeMatchFlow.tsx — the
+// fast "reach out now" path's per-path labels/hero titles and the crisis
+// path's safety disclaimer. Deliberately does not cover the deeper
+// IntakeBookingModal copy (dynamic, name/date-interpolated strings) — see
+// CONTENT_GUIDE.md for why that's a separate follow-up.
+export type IntakeFlowContent = {
+  published: boolean;
+  pathCrisisLabel: string;
+  pathVeteranLabel: string;
+  pathGeneralLabel: string;
+  pathHelpersLabel: string;
+  crisisHeroTitle: string;
+  defaultHeroTitle: string;
+  crisisDisclaimer: string;
+  moreHelplinesText: string;
+  ongoingSupportPrompt: string;
+  matchListIntro: string;
+};
+
 // --- Fallback objects: the single source of truth for "what the site looks
 // like if the Content Manager row is missing, unpublished, or unreachable."
 // Every one of these is exactly today's live copy — seeding the matching
@@ -262,6 +349,16 @@ export const CONTACT_CONTENT_FALLBACK: SimplePageContent = {
   eyebrow: "Contact",
   title: "We're here to help",
   description: "Questions about support, volunteering, or donating — send us a note and we'll get back to you.",
+};
+
+// Phase 80 round 2 — the Find Your Therapist wizard's PageHero banner had no
+// Content Manager wiring at all until now.
+export const FIND_YOUR_THERAPIST_CONTENT_FALLBACK: SimplePageContent = {
+  published: true,
+  eyebrow: "Find Your Therapist",
+  title: "A guided match, just for you",
+  description:
+    "Answer a few quick questions and we'll match you with a verified volunteer therapist suited to your needs — free, confidential, and no account required.",
 };
 
 export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
@@ -326,13 +423,25 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
   taxNote: "Donations are tax-deductible in Israel, the U.S., the U.K., and Spain.",
 };
 
-// Registry the Content Manager's admin UI (and nothing else) iterates over
-// to build its "Pages" tab list. Each entry names the site_content key, a
-// human label, and which generic editor shape it uses — adding a new simple
-// page later is one entry here, not a new bespoke component.
+// Registry the Content Manager's admin UI iterates over to build its
+// "Pages" tab list. Each entry names the site_content key, a human label,
+// and which generic editor shape it uses — adding a new simple banner-only
+// page later is one entry here, not a new bespoke component or a new tab
+// wired by hand into ContentManagerApp.
+//
+// Phase 80 round 2 — this registry existed since Phase 35 but
+// ContentManagerApp actually hardcoded five near-identical tab blocks
+// instead of iterating it, so "add an entry here" didn't yet do anything.
+// Fixed ContentManagerApp/app/admin/content/page.tsx to genuinely loop over
+// this array — this is the concrete mechanism that makes a *simple* future
+// page (hero banner only, no bespoke fields) show up in the Content Manager
+// automatically, with zero admin-UI code to write. Pages needing more than
+// eyebrow/title/description still need their own bespoke type + editor
+// (see HomeContent/FooterContent/etc. above), same as always.
 export const SIMPLE_PAGE_ENTRIES: { key: string; label: string; hasDescription: boolean; fallback: SimplePageContent }[] = [
   { key: "page_therapists", label: "Our Therapists", hasDescription: true, fallback: THERAPISTS_CONTENT_FALLBACK },
   { key: "page_support_groups", label: "Support Groups", hasDescription: true, fallback: SUPPORT_GROUPS_CONTENT_FALLBACK },
+  { key: "page_find_your_therapist", label: "Find Your Therapist", hasDescription: true, fallback: FIND_YOUR_THERAPIST_CONTENT_FALLBACK },
   { key: "page_blog", label: "Blog (disabled)", hasDescription: true, fallback: BLOG_CONTENT_FALLBACK },
   { key: "page_faq", label: "FAQ", hasDescription: false, fallback: FAQ_CONTENT_FALLBACK },
   { key: "page_contact", label: "Contact", hasDescription: true, fallback: CONTACT_CONTENT_FALLBACK },

@@ -31,6 +31,11 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   supportVolunteerLabel: "Volunteer",
   supportEmergencyLabel: "Emergency Contact",
   legalHeading: "Legal",
+  legalPrivacyLabel: "Privacy Policy",
+  legalCookiesLabel: "Cookies Policy",
+  legalNoticeLabel: "Legal Notice",
+  legalAccessibilityLabel: "Accessibility Statement",
+  legalTermsLabel: "Terms & Conditions",
   copyrightLine: "© {year} GESA (Global Emotional Support Alliance). A registered non-profit organization.",
   madeWithLine: "Made with care for those on the path to healing.",
   connectWithUsLabel: "Connect with Us",
@@ -117,11 +122,11 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
           <StaggerItem>
             <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.legalHeading}</h4>
             <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
-              <li><Link href="/privacy-policy" className="hover:text-[#eef1f6] transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/cookies-policy" className="hover:text-[#eef1f6] transition-colors">Cookies Policy</Link></li>
-              <li><Link href="/legal-notice" className="hover:text-[#eef1f6] transition-colors">Legal Notice</Link></li>
-              <li><Link href="/accessibility-statement" className="hover:text-[#eef1f6] transition-colors">Accessibility Statement</Link></li>
-              <li><Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">Terms & Conditions</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-[#eef1f6] transition-colors">{content.legalPrivacyLabel}</Link></li>
+              <li><Link href="/cookies-policy" className="hover:text-[#eef1f6] transition-colors">{content.legalCookiesLabel}</Link></li>
+              <li><Link href="/legal-notice" className="hover:text-[#eef1f6] transition-colors">{content.legalNoticeLabel}</Link></li>
+              <li><Link href="/accessibility-statement" className="hover:text-[#eef1f6] transition-colors">{content.legalAccessibilityLabel}</Link></li>
+              <li><Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">{content.legalTermsLabel}</Link></li>
             </ul>
           </StaggerItem>
         </StaggerGroup>

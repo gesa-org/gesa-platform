@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Phone, MessageCircle, Globe2, ExternalLink, HeartPulse, ShieldCheck, HandHeart, Users } from "lucide-react";
 import { getCrisisResources, getActiveTherapists } from "@/lib/queries";
 import { matchTherapists } from "@/lib/ai/matchTherapists";
+import { getPageContent } from "@/lib/content";
+import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import IntakeMatchFlow from "@/components/intake/IntakeMatchFlow";
 import PageHero from "@/components/ui/PageHero";
 
@@ -12,11 +14,11 @@ const PATH_ICON: Record<string, typeof HeartPulse> = {
   helpers: Users,
 };
 
-const PATH_MAP: Record<string, { label: string; entryRoute: string }> = {
-  crisis: { label: "In crisis right now", entryRoute: "crisis" },
-  veteran: { label: "Veterans, reservists & families", entryRoute: "veteran_reservist_family" },
-  general: { label: "Seeking support", entryRoute: "seeking_help" },
-  helpers: { label: "Helping the helpers", entryRoute: "helpers" },
+const PATH_ENTRY_ROUTE: Record<string, string> = {
+  crisis: "crisis",
+  veteran: "veteran_reservist_family",
+  general: "seeking_help",
+  helpers: "helpers",
 };
 
 // Phase 20 — each path now feeds the same AI matching engine used by the
@@ -48,8 +50,15 @@ export default async function IntakePage({
 }: {
   searchParams: { path?: string };
 }) {
-  const pathKey = searchParams.path && PATH_MAP[searchParams.path] ? searchParams.path : "general";
-  const { label } = PATH_MAP[pathKey];
+  const pathKey = searchParams.path && PATH_ENTRY_ROUTE[searchParams.path] ? searchParams.path : "general";
+  const content = await getPageContent("component_intake_flow", INTAKE_FLOW_CONTENT_FALLBACK);
+  const PATH_LABEL: Record<string, string> = {
+    crisis: content.pathCrisisLabel,
+    veteran: content.pathVeteranLabel,
+    general: content.pathGeneralLabel,
+    helpers: content.pathHelpersLabel,
+  };
+  const label = PATH_LABEL[pathKey];
 
   const therapists = await getActiveTherapists();
   const hint = PATH_MATCH_HINT[pathKey];
@@ -71,7 +80,7 @@ export default async function IntakePage({
       <PageHero
         icon={PATH_ICON[pathKey]}
         eyebrow={label}
-        title={pathKey === "crisis" ? "Help is available right now" : "You're one step from support"}
+        title={pathKey === "crisis" ? content.crisisHeroTitle : content.defaultHeroTitle}
         narrow
       />
       <section className="section narrow pt-0">
@@ -100,12 +109,11 @@ export default async function IntakePage({
             </div>
           ))}
           <div className="mt-1 rounded-xl bg-accent-soft px-3.5 py-3 text-sm text-primary-600">
-            GESA is not an emergency service. If you are in immediate danger, call your local emergency
-            number.
+            {content.crisisDisclaimer}
           </div>
           <Link href="/" className="mx-auto mt-2 text-[12px]">
             <Globe2 size={14} className="inline mr-1" />
-            More helplines at{" "}
+            {content.moreHelplinesText}{" "}
             <a href="https://findahelpline.com" target="_blank" rel="noreferrer" className="underline">
               findahelpline.com
             </a>
@@ -115,12 +123,10 @@ export default async function IntakePage({
 
       <div className="mt-8">
         {pathKey === "crisis" && (
-          <p className="mb-4 text-center text-[14.5px] text-muted-fg">
-            You can also connect with a volunteer therapist for ongoing, free support.
-          </p>
+          <p className="mb-4 text-center text-[14.5px] text-muted-fg">{content.ongoingSupportPrompt}</p>
         )}
         {matches.length > 0 ? (
-          <IntakeMatchFlow pathKey={pathKey} matches={matches} />
+          <IntakeMatchFlow pathKey={pathKey} matches={matches} matchListIntro={content.matchListIntro} />
         ) : (
           <p className="text-center text-muted-fg">
             We don&apos;t have any verified therapists available right now — please check back soon or{" "}

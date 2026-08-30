@@ -2375,4 +2375,83 @@ git push
 ```
 
 ---
+
+## Phase 81: Extend the Content Manager to cover more of the site, and make future pages capture automatically
+
+**Roy's request:** update the Content Manager so all site content/text/layout is captured, including future
+content, "for the consistency of the features." Clarified scope with Roy up front: public-facing content
+only (not admin CRM labels or validation/error messages), plus a mandatory convention/doc so future pages
+ship CMS-editable by default rather than a one-off cleanup.
+
+**Audit findings:** the biggest remaining gaps were the Donate Band (identical hardcoded copy duplicated
+across Home/About/Our Therapists/Support Groups — Phase 75 moved the component but never wired it to the
+CMS), the Home stats row, the site-wide Crisis Button (rendered in `app/layout.tsx`, every page), the Find
+Your Therapist hero banner (had zero Content Manager wiring), the Footer's five legal-column link labels,
+and the Intake flow's per-path labels/hero titles/crisis disclaimer. Also found that `SIMPLE_PAGE_ENTRIES`
+(`lib/content.ts`) — a registry that already existed specifically so "adding a new simple page is one entry,
+not a new bespoke component" — was never actually read by `ContentManagerApp`; each simple page's tab was
+hand-wired instead, so the registry's stated purpose wasn't real.
+
+- `lib/content.ts`: added `DonateBandContent`, `HomeStatsContent`, `CrisisButtonContent`,
+  `IntakeFlowContent` types + fallbacks (fallbacks colocated with their components, same convention as
+  `HomeContent`/`FooterContent`); extended `FooterContent` with the five legal-label fields; added
+  `FIND_YOUR_THERAPIST_CONTENT_FALLBACK` and a `page_find_your_therapist` entry to `SIMPLE_PAGE_ENTRIES`.
+- `components/home/DonateBand.tsx` and `components/home/Stats.tsx`: became self-fetching async Server
+  Components (`getPageContent` called directly inside each) rather than threading a `content` prop through
+  every page that renders them — since all four DonateBand call sites want identical content, one fetch
+  inside the component is simpler and safer than four call-site edits.
+- `components/CrisisButton.tsx`: now takes a `content` prop (stays a Client Component, can't fetch itself);
+  `app/layout.tsx` fetches it once and passes it down, same pattern already used there for Header/Footer.
+- `components/Footer.tsx`: the five legal link labels now read from `content.legal*Label` instead of being
+  hardcoded, defaulting to the exact same visible text.
+- `app/find-your-therapist/page.tsx`: hero banner now reads `page_find_your_therapist` via
+  `getPageContent`/`SimplePageContent`, replacing hardcoded `PageHero` props.
+- `app/intake/page.tsx`, `app/intake/intakeContent.ts` (new), `components/intake/IntakeMatchFlow.tsx`: path
+  labels, hero titles, the crisis safety disclaimer, the "more helplines" link text, the ongoing-support
+  prompt, and the match-list intro line all now flow from `component_intake_flow` content, passed down to
+  `IntakeMatchFlow` as a prop where needed (it's a Client Component).
+- `components/admin/content/{DonateBandEditor,HomeStatsEditor,CrisisButtonEditor,IntakeFlowEditor}.tsx`
+  (new): thin wrappers around the existing generic `FlatFieldsEditor`, matching every other bespoke editor
+  in the codebase — no new form-handling code, just field lists.
+- `components/admin/content/ContentManagerApp.tsx`: fixed `SIMPLE_PAGE_ENTRIES` to actually be iterated —
+  every entry not already claimed by a composite tab (Our Therapists/Support Groups/FAQ, which have extra
+  bespoke content alongside their banner) now renders generically via `SimplePageEditor`, with zero new code
+  needed per future simple page. Added new tabs for Home's stats row (nested under the existing Home tab),
+  Intake, Donate Band, and Crisis Button.
+- `app/admin/content/page.tsx`: rewritten to resolve every `SIMPLE_PAGE_ENTRIES` row generically into one
+  `simplePages` map (instead of one hand-written `merge()` call per simple page) and to fetch the four new
+  bespoke content shapes; the bulk-fetch `KEYS` array now spreads `SIMPLE_PAGE_ENTRIES.map(e => e.key)`
+  instead of listing simple-page keys a second time.
+- `CONTENT_GUIDE.md` (new): the mandatory convention doc Roy asked for — explains the type/fallback/
+  `getPageContent()` pattern, the "Case A" (simple banner, one registry entry, zero new code) vs. "Case B"
+  (bespoke shape, needs a `FlatFieldsEditor`-based editor) decision, what's explicitly out of scope
+  (therapist records, admin CRM labels, validation/error messages), and the two gaps intentionally deferred
+  out of this phase — the Find Your Therapist wizard's step-by-step microcopy and the booking modals'
+  dynamic/interpolated copy — with the reasoning for deferring each, so they're a known follow-up rather
+  than a silently dropped gap.
+
+**Verification:**
+- Scoped `tsc --noEmit` across the whole project — identical pre-existing error list to before this phase
+  (five unrelated test files + `lib/email/resend.ts`'s Resend SDK type-resolution issue, none touched here);
+  zero new errors from any file this phase changed.
+- `tests/unit/Stats.test.tsx` — updated for Stats now being an async Server Component (`render(await
+  Stats())` instead of `render(<Stats />)`, the standard RTL workaround for testing async Server Components)
+  — 1/1 passed.
+- `tests/unit/Footer.test.tsx` — 2/2 passed unchanged, confirming the five legal labels still render their
+  identical default text via the new content fields.
+- `tests/unit/SiteFooterSlot.test.tsx` — 2/2 passed, unaffected.
+- `tests/unit/Paths.test.tsx` — 3/3 passed, unaffected (Home content wiring untouched by this phase).
+- Manually confirmed `getPageContent`'s existing try/catch fallback contract protects the two newly
+  self-fetching components (`Stats`, `DonateBand`) in any environment where the Supabase server client can't
+  resolve a request context (e.g. Jest) — they silently resolve to their fallback content rather than
+  throwing, exactly like every other `getPageContent` caller already relies on.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 81: extend Content Manager coverage, fix simple-page registry auto-wiring, add CONTENT_GUIDE.md"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

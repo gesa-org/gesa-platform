@@ -3,7 +3,7 @@ import "./globals.css";
 
 import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
 import SiteFooterSlot from "@/components/SiteFooterSlot";
-import CrisisButton from "@/components/CrisisButton";
+import CrisisButton, { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
 import TranslationProvider from "@/components/TranslationProvider";
 import SmoothScroll from "@/components/motion/SmoothScroll";
 import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
@@ -23,9 +23,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [footerContent, headerContent] = await Promise.all([
+  const [footerContent, headerContent, crisisButtonContent] = await Promise.all([
     getPageContent("page_footer", FOOTER_CONTENT_FALLBACK),
     getPageContent("site_header", HEADER_CONTENT_FALLBACK),
+    getPageContent("component_crisis_button", CRISIS_BUTTON_CONTENT_FALLBACK),
   ]);
 
   return (
@@ -42,7 +43,7 @@ export default async function RootLayout({
             <Header content={headerContent} />
             <main className="flex-1">{children}</main>
             <SiteFooterSlot footerContent={footerContent} />
-            <CrisisButton />
+            <CrisisButton content={crisisButtonContent} />
           </TranslationProvider>
         </SmoothScroll>
       </body>
