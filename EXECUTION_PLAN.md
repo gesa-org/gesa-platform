@@ -2916,4 +2916,33 @@ git push
 ```
 
 ---
+
+## Phase 92: Restyle the accessibility launcher as a sage-green/gold enamel-pin badge
+
+**Roy's request:** a reference image of a circular enamel-pin-style badge — sage-green fill, a thin gold ring
+border, white human-figure glyph — asking to use this look for the accessibility widget's launcher button,
+replacing its original solid blue.
+
+- `app/globals.css` (`.a11y-launcher` rule): background changed from a hardcoded blue to `var(--accent)` (this
+  site's existing Sage/Olive Green "picture-mat" token), and a new `3px solid var(--clay)` gold-tone ring
+  border added (`--clay`/`--amber`, the same muted-gold family already used for eyebrow labels and thin
+  borders site-wide) — hover/focus states now use `--amber` instead of the old fixed yellow/blue values. No
+  changes needed to `AccessibilityIcon.tsx` itself — its SVG already fills with `currentColor`, and the
+  button's text color stays white, so the human-figure glyph renders white against the new green fill exactly
+  as in the reference. Reused existing theme tokens rather than hardcoding new one-off colors, so the
+  launcher now also responds correctly if a Color Mode (High Contrast, Monochrome, etc.) overrides those same
+  tokens — same behavior every other themed element on the site already has.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors (this was a
+  CSS-only change).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 92: restyle accessibility launcher as sage-green/gold badge"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -636,9 +636,15 @@ html.a11y-highlight-links a:focus-visible {
    spec) including this site's existing fixed Crisis Button
    (components/CrisisButton.tsx, z-[70], also bottom-right) — stacked
    directly above it with a gap so neither ever overlaps or hides the
-   other. The blue is a fixed, original brand-independent value (not
-   `var(--primary)`) so this widget's recognizable "blue circular button"
-   identity never silently shifts if the site's own theme colors change. */
+   other.
+   Phase 92 — Roy sent a reference image of a sage-green enamel-pin-style
+   badge (gold ring border, white human-figure glyph) and asked for that
+   look specifically, replacing the original solid-blue button. Built from
+   this site's own existing palette tokens (--accent, the Sage/Olive Green
+   "picture-mat" color, and --clay/--amber, the muted-gold family already
+   used for eyebrow labels and thin borders elsewhere) rather than hardcoded
+   one-off hex values, so this now matches the reference and stays
+   consistent with GESA's own brand colors if those tokens are ever retuned. */
 .a11y-launcher {
   position: fixed;
   right: 20px;
@@ -649,20 +655,20 @@ html.a11y-highlight-links a:focus-visible {
   min-width: 44px;
   min-height: 44px;
   border-radius: 9999px;
-  background: #1257e0;
+  background: var(--accent);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  box-shadow: 0 6px 20px rgba(18, 87, 224, 0.45);
+  border: 3px solid var(--clay);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   cursor: pointer;
 }
 .a11y-launcher:hover {
-  background: #0f46b8;
+  border-color: var(--amber);
 }
 .a11y-launcher:focus-visible {
-  outline: 3px solid #ffd400;
+  outline: 3px solid var(--amber);
   outline-offset: 3px;
 }
 .a11y-launcher-icon {
