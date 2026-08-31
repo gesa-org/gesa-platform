@@ -105,6 +105,13 @@ export type AboutSectionsContent = {
   howItWorksHeading: string;
   howItWorksPoints: { title: string; body: string }[];
   foundersHeading: string;
+  // Phase 84 — the founders section split into a single-founder spotlight
+  // (founders[0], "Our Founder") plus a "Team & Advisors" grid (founders[1
+  // onward) — see AboutPage's own comment above that section for why.
+  // foundersIntro is left defined but unrendered by that new layout (same
+  // "don't remove a field just because a redesign stopped using it"
+  // precedent as Phase 77's missionHeading/missionParagraphs), in case a
+  // future layout wants an intro line again.
   foundersIntro: string;
   // Phase 62 — photoUrl is optional/empty-string-default rather than
   // required: existing founder rows published before this phase won't have
@@ -112,6 +119,19 @@ export type AboutSectionsContent = {
   // used when there's no photo, so nothing breaks for founders nobody has
   // uploaded a picture for.
   founders: { name: string; roleTitle: string; email: string; shortBio: string; photoUrl: string }[];
+  // Phase 84 — new "A global vision. A human movement." band between the
+  // founder spotlight and the Team & Advisors grid.
+  movementHeading: string;
+  movementSubtitle: string;
+  movementCtaLabel: string;
+  movementCtaHref: string;
+  // Phase 84 — new "Team & Advisors" grid, listing founders[1] onward
+  // (Karin, today) plus anyone else added to the founders list later.
+  teamEyebrow: string;
+  teamHeading: string;
+  teamIntro: string;
+  teamCtaLabel: string;
+  teamCtaHref: string;
   volunteerHeading: string;
   volunteerBody: string;
   volunteerPrimaryLabel: string;
@@ -401,7 +421,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
       body: "Support that crosses time zones and speaks your language, online and confidential.",
     },
   ],
-  foundersHeading: "Our Founders",
+  foundersHeading: "Our Founder",
   foundersIntro: "Meet the founders behind GESA — a global home for free, trauma-informed emotional support.",
   founders: [
     {
@@ -421,6 +441,15 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
       photoUrl: "",
     },
   ],
+  movementHeading: "A global vision. A human movement.",
+  movementSubtitle: "Making space. Building strength. Moving forward.",
+  movementCtaLabel: "Be part of the movement",
+  movementCtaHref: "/contact?subject=Volunteer",
+  teamEyebrow: "Team & Advisors",
+  teamHeading: "Built with people who choose to contribute",
+  teamIntro: "GESA grows through the expertise, time and commitment of volunteers, team members and advisors around the world.",
+  teamCtaLabel: "Meet our team",
+  teamCtaHref: "/contact",
   volunteerHeading: "Join us as a caregiver",
   volunteerBody:
     "Are you a licensed therapist with a few hours a month to give? Your time becomes someone's turning point. Join a global network making care free and human.",

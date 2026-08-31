@@ -2577,4 +2577,57 @@ git push
 ```
 
 ---
+
+## Phase 84: Split the About page's founders section into a founder spotlight + Team & Advisors
+
+**Roy's request:** a reference screenshot showing three stacked blocks — a single-founder spotlight ("OUR
+FOUNDER" eyebrow, "Meet [Name]" headline, role subtitle, bio, a signature-style rendering of the name, photo
+to the side), a plain tagline/CTA band ("A global vision. A human movement." + a pill button), and a "Team &
+Advisors" grid with compact member cards and a "Meet our team" button. Asked to apply this to the About
+page's "Our Founder" section specifically, keeping both founders' existing photos and this section's existing
+warm background color untouched. Clarified scope: the first founder (Ilana) becomes the spotlight; the second
+(Karin) moves into the new Team & Advisors grid instead of staying as a second alternating row.
+
+- `lib/content.ts`: `AboutSectionsContent.founders` is unchanged in shape — still `name`/`roleTitle`/`email`/
+  `shortBio`/`photoUrl` — only how the page renders that array changed (`founders[0]` = spotlight,
+  `founders[1]` onward = Team & Advisors), so this scales cleanly if a third founder is ever added later.
+  `foundersIntro` is left defined but no longer rendered on the page (same "don't delete a field just because
+  a redesign stopped using it" precedent as Phase 77's `missionHeading`/`missionParagraphs`). Added
+  `movementHeading`/`movementSubtitle`/`movementCtaLabel`/`movementCtaHref` for the new tagline band, and
+  `teamEyebrow`/`teamHeading`/`teamIntro`/`teamCtaLabel`/`teamCtaHref` for the new Team & Advisors section.
+- `app/about/page.tsx`: the old alternating two-founder-row block is now three pieces — a `founders[0]`-only
+  spotlight (`bg-clay-soft`, unchanged, per Roy's "keep the colors as is") with the new eyebrow/"Meet
+  [Name]"/role-subtitle/bio/italic-signature layout, the existing photo-or-initials treatment just moved to
+  the opposite side; a plain tagline band between it and the grid, opening the volunteer application modal
+  by default via the existing `VolunteerPrimaryCta`; and a Team & Advisors grid (`founders.slice(1)`, so
+  Karin today) as compact bordered cards with an outlined-initials circle or real photo. The Team & Advisors
+  section is skipped entirely if there's nobody in it (a founders list with only one entry).
+- `components/admin/content/AboutSectionsEditor.tsx`: relabeled the founders editor group to explain the new
+  founder-1-vs-rest split, and added field groups for the new movement band and Team & Advisors content.
+- `tests/unit/AboutPage.test.tsx`: while running this file for the first time since `DonateBand` became an
+  async Server Component (Phase 80 round 2), found it was already broken independent of this phase — every
+  test in the file crashed on `render()` with "Objects are not valid as a React child (found: [object
+  Promise])", because `<DonateBand />` sits as unawaited JSX inside `AboutPage`'s returned tree; awaiting
+  `AboutPage()` itself doesn't awaits a *nested* async component. Fixed by stubbing `DonateBand` out in this
+  test file (its own content isn't what this file is testing) — a latent, pre-existing test bug, not caused
+  by this phase, just surfaced by being the first to run this file since Phase 80 round 2.
+
+**Note for Roy:** the Team & Advisors "Meet our team" button defaults to linking to the Contact page, since
+there's no dedicated team-roster page on the site yet — repoint it via the Content Manager once/if one
+exists.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors from any
+  file this phase touched.
+- `tests/unit/AboutPage.test.tsx` — 5/5 passed (including the pre-existing DonateBand fix above), confirming
+  both founders' initials/photo fallback logic still works correctly split across the two new sections.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 84: split About's founders section into a founder spotlight + Team & Advisors"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

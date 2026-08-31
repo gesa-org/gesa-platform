@@ -118,82 +118,125 @@ export default async function AboutPage() {
           moving `bg-clay-soft` to this outer, full-width <section>, with
           `wrap max-w-[820px]` now on its own inner <div> that only
           constrains the *content's* width, not the color. */}
-      <section className="section bg-clay-soft">
-        {/* Phase 66 — Roy sent a reference mockup of a bigger, alternating
-            photo/text layout (photo-left-text-right for the first founder,
-            text-left-photo-right for the second) with each row sliding in
-            from the side its photo starts on as it scrolls into view,
-            replacing the small side-by-side 2-up card grid from Phase 62.
-            Text content itself (name/role/bio/email) is unchanged — only
-            the layout, sizing, and motion changed, per Roy's "text details
-            is as is" instruction. Widened from max-w-[820px] to
-            max-w-[980px] so two-up alternating rows have room to breathe
-            at the new, bigger photo size. */}
-        <div className="wrap max-w-[980px]">
-          <Reveal type="fade-up" className="block text-center">
-            <span className="eyebrow">{sections.foundersHeading}</span>
-            <h2 className="my-2.5 text-[30px]">{sections.foundersHeading}</h2>
-            <p className="mx-auto max-w-[600px] text-muted-fg">{sections.foundersIntro}</p>
-          </Reveal>
-          <div className="mt-8.5 mt-[34px] flex flex-col gap-6">
-            {sections.founders.map((p, i) => {
-              // Alternate which side each row's photo starts on — even
-              // index (Ilana, first) slides in from the left; odd index
-              // (Karin, second) slides in from the right. A small
-              // per-row delay (on top of each row's own viewport trigger)
-              // keeps the intended left-then-right order even if both
-              // happen to scroll into view together on a fast scroll.
-              const reversed = i % 2 === 1;
-              return (
-                <Reveal
-                  key={p.name}
-                  type={reversed ? "horizontal-right" : "horizontal"}
-                  distance={140}
-                  duration={0.9}
-                  delay={i * 0.25}
-                >
-                  <Card
-                    className={`flex flex-col items-center gap-7 p-7 text-center sm:p-8 md:flex-row md:text-left ${
-                      reversed ? "md:flex-row-reverse" : ""
-                    }`}
+      {/* Phase 84 — Roy sent a reference screenshot of a redesigned About
+          page: a single-founder spotlight ("OUR FOUNDER" eyebrow, "Meet
+          [Name]" headline, role subtitle, bio, a signature-style rendering
+          of the name), a plain tagline/CTA band underneath it, and a
+          separate "Team & Advisors" grid below that. He asked to keep this
+          section's existing bg-clay-soft wash and both founders' existing
+          photos untouched — only the layout/text arrangement changed.
+          `founders[0]` (Ilana) is the spotlighted founder; `founders`
+          slice(1) onward (Karin, today) move into the new Team & Advisors
+          section further down instead of a second alternating row here. */}
+      {sections.founders[0] && (
+        <section className="section bg-clay-soft">
+          <div className="wrap max-w-[980px]">
+            <Reveal type="horizontal" distance={100} duration={0.9}>
+              <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-14">
+                <div className="min-w-0 flex-1 text-center md:text-left">
+                  <span className="eyebrow">{sections.foundersHeading}</span>
+                  <h2 className="my-2.5 text-[32px] sm:text-[36px]">Meet {sections.founders[0].name}</h2>
+                  <div className="mb-3 text-[15px] font-semibold text-primary">{sections.founders[0].roleTitle}</div>
+                  <p className="mb-5 text-[16px] leading-relaxed text-muted-fg">{sections.founders[0].shortBio}</p>
+                  {/* Signature-style rendering of the founder's own name —
+                      no new content field needed, just a different visual
+                      treatment (italic serif) of the name already above. */}
+                  <div className="mb-4 font-serif text-[28px] italic text-primary">{sections.founders[0].name}</div>
+                  <a
+                    href={`mailto:${sections.founders[0].email}`}
+                    className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary"
                   >
-                    {/* Phase 62 — founders can now have a real photo attached
-                        via the Content Manager; falls back to the initials
-                        block exactly as before for any founder nobody has
-                        uploaded one for yet. Phase 66 — sized up from
-                        112x96px to a bigger 260px square per Roy's "a
-                        little bit bigger than the current design" ask. */}
-                    {p.photoUrl ? (
-                      <div className="relative h-[220px] w-[220px] flex-none overflow-hidden rounded-2xl sm:h-[260px] sm:w-[260px]">
+                    <Mail size={15} /> {sections.founders[0].email}
+                  </a>
+                </div>
+                {/* Phase 62/66 — same real-photo-with-initials-fallback
+                    treatment as before, untouched, just repositioned to the
+                    right of the text per the new layout. */}
+                {sections.founders[0].photoUrl ? (
+                  <div className="relative h-[240px] w-[240px] flex-none overflow-hidden rounded-2xl sm:h-[280px] sm:w-[280px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={sections.founders[0].photoUrl}
+                      alt={sections.founders[0].name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-[240px] w-[240px] flex-none items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white sm:h-[280px] sm:w-[280px]">
+                    {initials(sections.founders[0].name)}
+                  </div>
+                )}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      )}
+
+      {/* Phase 84 — new tagline/CTA band between the founder spotlight and
+          the Team & Advisors grid, per Roy's reference screenshot. Opens
+          the volunteer application modal by default via VolunteerPrimaryCta
+          (same recognized-default-href pattern used by the volunteer CTA
+          band further down this page). */}
+      <section className="section bg-background">
+        <Reveal type="fade-up" as="div" className="wrap max-w-[640px] text-center">
+          <h2 className="mb-2.5 text-[28px] sm:text-[30px]">{sections.movementHeading}</h2>
+          <p className="mb-6 text-muted-fg">{sections.movementSubtitle}</p>
+          <VolunteerPrimaryCta
+            href={sections.movementCtaHref}
+            className="inline-flex items-center rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-transform hover:-translate-y-px"
+          >
+            {sections.movementCtaLabel}
+          </VolunteerPrimaryCta>
+        </Reveal>
+      </section>
+
+      {/* Phase 84 — "Team & Advisors": founders[1] onward (Karin, today)
+          plus anyone else added to the founders list later, each shown as a
+          compact bordered card (real photo if uploaded, otherwise an
+          outlined-initials circle) rather than the founder spotlight's
+          bigger treatment above. Section is skipped entirely if there's
+          nobody in it yet, e.g. a fresh site with only one founder row. */}
+      {sections.founders.length > 1 && (
+        <section className="section bg-muted">
+          <div className="wrap max-w-[820px]">
+            <Reveal type="fade-up" className="block text-center">
+              <span className="eyebrow">{sections.teamEyebrow}</span>
+              <h2 className="my-2.5 text-[30px]">{sections.teamHeading}</h2>
+              <p className="mx-auto max-w-[600px] text-muted-fg">{sections.teamIntro}</p>
+            </Reveal>
+            <StaggerGroup className="mt-7 flex flex-wrap justify-center gap-4">
+              {sections.founders.slice(1).map((m) => (
+                <StaggerItem key={m.name}>
+                  <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-5 py-4 text-left">
+                    {m.photoUrl ? (
+                      <div className="relative h-12 w-12 flex-none overflow-hidden rounded-full">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.photoUrl} alt={p.name} className="h-full w-full object-cover" />
+                        <img src={m.photoUrl} alt={m.name} className="h-full w-full object-cover" />
                       </div>
                     ) : (
-                      <div className="flex h-[220px] w-[220px] flex-none items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white sm:h-[260px] sm:w-[260px]">
-                        {initials(p.name)}
+                      <div className="flex h-12 w-12 flex-none items-center justify-center rounded-full border border-border text-[14px] font-semibold text-primary">
+                        {initials(m.name)}
                       </div>
                     )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="m-0 text-2xl">{p.name}</h3>
-                      <div className="my-1 mb-3 text-[15px] font-semibold text-primary">{p.roleTitle}</div>
-                      <p className="mb-3 text-[16px] leading-relaxed text-muted-fg">{p.shortBio}</p>
-                      <a
-                        href={`mailto:${p.email}`}
-                        className="inline-flex items-center gap-1.5 text-[14.5px] font-semibold text-primary"
-                      >
-                        <Mail size={16} /> {p.email}
-                      </a>
+                    <div>
+                      <div className="font-semibold">{m.name}</div>
+                      <div className="text-[13px] text-muted-fg">{m.roleTitle}</div>
                     </div>
-                  </Card>
-                </Reveal>
-              );
-            })}
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerGroup>
+            <div className="mt-6 text-center">
+              <Link
+                href={sections.teamCtaHref}
+                className="inline-flex items-center rounded-full border border-border px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
+              >
+                {sections.teamCtaLabel}
+              </Link>
+            </div>
           </div>
-          <p className="mt-5 text-center text-[13px] text-muted-fg">
-            More of our team, advisory board, and volunteer network will be introduced here soon.
-          </p>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="section bg-gradient-to-br from-primary to-primary-600">
         <Reveal type="fade-up" as="div" className="wrap text-center max-w-[640px]">

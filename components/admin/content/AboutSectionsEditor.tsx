@@ -28,6 +28,15 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
   const [foundersHeading, setFoundersHeading] = useState(initial.foundersHeading);
   const [foundersIntro, setFoundersIntro] = useState(initial.foundersIntro);
   const [founders, setFounders] = useState<Founder[]>(initial.founders);
+  const [movementHeading, setMovementHeading] = useState(initial.movementHeading);
+  const [movementSubtitle, setMovementSubtitle] = useState(initial.movementSubtitle);
+  const [movementCtaLabel, setMovementCtaLabel] = useState(initial.movementCtaLabel);
+  const [movementCtaHref, setMovementCtaHref] = useState(initial.movementCtaHref);
+  const [teamEyebrow, setTeamEyebrow] = useState(initial.teamEyebrow);
+  const [teamHeading, setTeamHeading] = useState(initial.teamHeading);
+  const [teamIntro, setTeamIntro] = useState(initial.teamIntro);
+  const [teamCtaLabel, setTeamCtaLabel] = useState(initial.teamCtaLabel);
+  const [teamCtaHref, setTeamCtaHref] = useState(initial.teamCtaHref);
   const [volunteerHeading, setVolunteerHeading] = useState(initial.volunteerHeading);
   const [volunteerBody, setVolunteerBody] = useState(initial.volunteerBody);
   const [volunteerPrimaryLabel, setVolunteerPrimaryLabel] = useState(initial.volunteerPrimaryLabel);
@@ -66,6 +75,15 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
       foundersHeading,
       foundersIntro,
       founders,
+      movementHeading,
+      movementSubtitle,
+      movementCtaLabel,
+      movementCtaHref,
+      teamEyebrow,
+      teamHeading,
+      teamIntro,
+      teamCtaLabel,
+      teamCtaHref,
       volunteerHeading,
       volunteerBody,
       volunteerPrimaryLabel,
@@ -206,9 +224,13 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
       </section>
 
       <section className="flex flex-col gap-3 border-t border-border pt-6">
-        <h3 className="text-[15px] font-semibold">Founders</h3>
+        <h3 className="text-[15px] font-semibold">Founder spotlight &amp; Team / Advisors</h3>
+        <p className="text-[12px] text-muted-fg">
+          Founder 1 below is shown as the spotlighted &quot;Meet [Name]&quot; section on its own. Founder 2
+          onward appear instead in the Team &amp; Advisors grid further down the page.
+        </p>
         <div>
-          <label className="mb-1.5 block text-sm font-semibold">Heading</label>
+          <label className="mb-1.5 block text-sm font-semibold">Founder section eyebrow label</label>
           <input
             value={foundersHeading}
             onChange={(e) => setFoundersHeading(e.target.value)}
@@ -216,7 +238,7 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-semibold">Intro</label>
+          <label className="mb-1.5 block text-sm font-semibold">Intro (not currently shown on the page — kept for a future layout)</label>
           <textarea
             rows={2}
             value={foundersIntro}
@@ -227,7 +249,9 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
         {founders.map((f, i) => (
           <div key={i} className="rounded-xl border border-border p-3.5">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[12.5px] font-semibold uppercase tracking-wide text-muted-fg">Founder {i + 1}</span>
+              <span className="text-[12.5px] font-semibold uppercase tracking-wide text-muted-fg">
+                {i === 0 ? "Founder 1 (spotlighted)" : `Team member ${i + 1}`}
+              </span>
               <button
                 type="button"
                 onClick={() => setFounders((fs) => fs.filter((_, idx) => idx !== i))}
@@ -280,6 +304,95 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
         >
           <Plus size={14} /> Add founder
         </button>
+      </section>
+
+      <section className="flex flex-col gap-3 border-t border-border pt-6">
+        <h3 className="text-[15px] font-semibold">Movement tagline band</h3>
+        <p className="text-[12px] text-muted-fg">Sits between the founder spotlight and Team &amp; Advisors.</p>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Heading</label>
+          <input
+            value={movementHeading}
+            onChange={(e) => setMovementHeading(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Subtitle</label>
+          <input
+            value={movementSubtitle}
+            onChange={(e) => setMovementSubtitle(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Button label</label>
+            <input
+              value={movementCtaLabel}
+              onChange={(e) => setMovementCtaLabel(e.target.value)}
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Button link</label>
+            <input
+              value={movementCtaHref}
+              onChange={(e) => setMovementCtaHref(e.target.value)}
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3 border-t border-border pt-6">
+        <h3 className="text-[15px] font-semibold">Team &amp; Advisors</h3>
+        <p className="text-[12px] text-muted-fg">
+          Lists founders 2 onward (see the Founder section above to add or edit those people).
+        </p>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Eyebrow</label>
+          <input
+            value={teamEyebrow}
+            onChange={(e) => setTeamEyebrow(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Heading</label>
+          <input
+            value={teamHeading}
+            onChange={(e) => setTeamHeading(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Intro</label>
+          <textarea
+            rows={2}
+            value={teamIntro}
+            onChange={(e) => setTeamIntro(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Button label</label>
+            <input
+              value={teamCtaLabel}
+              onChange={(e) => setTeamCtaLabel(e.target.value)}
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Button link</label>
+            <input
+              value={teamCtaHref}
+              onChange={(e) => setTeamCtaHref(e.target.value)}
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
       </section>
 
       <section className="flex flex-col gap-3 border-t border-border pt-6">

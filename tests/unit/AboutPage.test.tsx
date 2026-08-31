@@ -16,6 +16,24 @@ jest.mock("@/lib/content", () => {
   };
 });
 
+// Phase 84 — AboutPage renders <DonateBand /> (from Phase 75) as a plain
+// JSX child. `await AboutPage()` awaits AboutPage's own async body, but
+// DonateBand is itself a separate async Server Component (Phase 80 round
+// 2) — nesting it as unawaited JSX inside AboutPage's returned tree means
+// client ReactDOM's render() tries to mount the Promise DonateBand()
+// returns, throwing "Objects are not valid as a React child (found:
+// [object Promise])" the moment any test in this file calls render(). This
+// was a latent bug since Phase 80 round 2 (DonateBand becoming async),
+// unrelated to this phase's founders/Team & Advisors changes — stubbing it
+// out here keeps this file testing what it's actually meant to (the
+// founders/mission sections), same as Stats.test.tsx's existing
+// `render(await Stats())` workaround handles it when a component like this
+// is rendered directly instead of nested inside another Server Component.
+jest.mock("@/components/home/DonateBand", () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
 describe("AboutPage — founders photo/initials fallback", () => {
   it("shows the initials block when no founder has a photoUrl (today's real content)", async () => {
     const jsx = await AboutPage();
