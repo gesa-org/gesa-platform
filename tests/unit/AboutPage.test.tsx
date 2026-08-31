@@ -76,12 +76,21 @@ describe("AboutPage — founders photo/initials fallback", () => {
     expect(screen.getByText("KH")).toBeInTheDocument();
   });
 
-  it("uses the shared light sage green background on the legal/tax-note section (Phase 68)", async () => {
+  // Phase 85 — Roy asked to remove the "Join us as a caregiver" volunteer
+  // CTA band and the legal/tax-note block entirely. Their fields
+  // (volunteerHeading, taxNote, etc.) still exist in the content model and
+  // Content Manager editor, same "don't delete data, just stop rendering
+  // it" precedent as Phase 77 — this replaces the old "uses the shared
+  // light sage green background on the legal/tax-note section (Phase 68)"
+  // test (that section no longer renders at all) with a check that both
+  // removed sections are actually gone.
+  it("no longer renders the volunteer CTA band or the legal/tax-note section (Phase 85)", async () => {
     const jsx = await AboutPage();
     render(jsx);
 
-    const section = screen.getByText(ABOUT_SECTIONS_FALLBACK.taxNote).closest("section");
-    expect(section?.className).toContain("bg-sage-soft");
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.volunteerHeading)).not.toBeInTheDocument();
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.taxNote)).not.toBeInTheDocument();
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.legalBlurb)).not.toBeInTheDocument();
   });
 
   it("renders the dedicated Mission section (Phase 70)", async () => {

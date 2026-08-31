@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, HeartHandshake, Users, Globe2, Mail, Phone, ArrowRight } from "lucide-react";
+import { ShieldCheck, HeartHandshake, Users, Globe2, Mail } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import DonateBand from "@/components/home/DonateBand";
@@ -238,51 +238,14 @@ export default async function AboutPage() {
         </section>
       )}
 
-      <section className="section bg-gradient-to-br from-primary to-primary-600">
-        <Reveal type="fade-up" as="div" className="wrap text-center max-w-[640px]">
-          <h2 className="mb-2.5 text-[30px] text-white">{sections.volunteerHeading}</h2>
-          <p className="mx-auto text-white/90">{sections.volunteerBody}</p>
-          <div className="mt-5.5 mt-[22px] flex flex-wrap justify-center gap-3.5">
-            {/* Phase 63 — opens the real volunteer application modal when
-                this is still pointed at its original default; otherwise
-                stays a normal link, so an admin who's deliberately
-                repointed this via the Content Manager isn't overridden. */}
-            <VolunteerPrimaryCta
-              href={sections.volunteerPrimaryHref}
-              className="inline-flex items-center gap-2 rounded-full bg-card px-6 py-3.5 text-[15px] font-semibold text-primary"
-            >
-              {sections.volunteerPrimaryLabel} <ArrowRight size={16} />
-            </VolunteerPrimaryCta>
-            <Link
-              href={sections.volunteerSecondaryHref}
-              className="inline-flex items-center rounded-full border border-white/60 px-6 py-3.5 text-[15px] font-semibold text-white"
-            >
-              {sections.volunteerSecondaryLabel}
-            </Link>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Phase 68 — Roy asked for a light sage green background here,
-          matched consistently with Home's Stats section below via the new
-          --sage-soft token, rather than the old --accent-soft wash used
-          site-wide for smaller chip/badge surfaces. */}
-      <section className="section bg-sage-soft">
-        <div className="wrap text-center max-w-[700px]">
-          <p className="mb-3 text-[15px] text-primary-600">{sections.legalBlurb}</p>
-          <div className="text-[13.5px] leading-[1.9] text-muted-fg">
-            <div>
-              <strong>{sections.taxNote}</strong>
-            </div>
-            <div>A registered non-profit organization.</div>
-            <div className="mt-2">
-              <a href="tel:988" className="inline-flex items-center gap-1.5 font-semibold text-primary">
-                <Phone size={15} /> Emergency contact numbers
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Phase 85 — Roy sent a screenshot of the "Join us as a caregiver"
+          volunteer CTA band and the legal/tax-note block below it, asking
+          for both to be removed from the About page. Their content fields
+          (volunteerHeading/Body/PrimaryLabel/etc., legalBlurb, taxNote) are
+          left untouched in the content model and Content Manager editor —
+          same "don't delete data just because a section stopped rendering
+          it" precedent as Phase 77's missionHeading/missionParagraphs —
+          just no longer rendered here. */}
 
       {/* Phase 75 — DonateBand moved here from the fixed footer-reveal
           layer (see SiteFooterSlot.tsx) so it's a normal, always-visible

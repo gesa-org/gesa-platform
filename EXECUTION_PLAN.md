@@ -2630,4 +2630,36 @@ git push
 ```
 
 ---
+
+## Phase 85: Remove the About page's volunteer CTA band and legal/tax-note section
+
+**Roy's request:** a screenshot of the dark "Join us as a caregiver" volunteer CTA band stacked directly
+above the light sage legal/tax-note block (GESA nonprofit blurb, tax-deductible note, emergency contact
+link), asking to remove this section from the About page. Confirmed scope with Roy: both blocks shown in the
+screenshot should be removed, not just one.
+
+- `app/about/page.tsx`: removed both `<section>` blocks (the `bg-gradient-to-br from-primary to-primary-600`
+  volunteer CTA band and the `bg-sage-soft` legal/tax-note block) that sat between the new Team & Advisors
+  section (Phase 84) and `<DonateBand />`. Their content fields (`volunteerHeading`, `volunteerBody`,
+  `volunteerPrimaryLabel/Href`, `volunteerSecondaryLabel/Href`, `legalBlurb`, `taxNote`) are left untouched in
+  `lib/content.ts` and `AboutSectionsEditor.tsx` — same "don't delete data just because a section stopped
+  rendering it" precedent as Phase 77's `missionHeading`/`missionParagraphs` — in case a future layout wants
+  them back. Removed the now-unused `Phone` and `ArrowRight` icon imports that only these two sections used.
+- `tests/unit/AboutPage.test.tsx`: replaced the now-obsolete "uses the shared light sage green background on
+  the legal/tax-note section (Phase 68)" test (that section no longer exists) with one confirming neither
+  removed section renders, matching the same "confirm removal, don't just trust the diff" precedent as the
+  existing Phase 77 test in this file.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/AboutPage.test.tsx` — 5/5 passed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 85: remove About page's volunteer CTA band and legal/tax-note section"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
