@@ -6,6 +6,7 @@ import HelpUsGrowForm from '@/components/footer/HelpUsGrowForm';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { FooterContent } from '@/lib/content';
+import { SITE_FOOTER_ID } from '@/lib/accessibility/config';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
 // editable — only each slot's label text is), same approach as About's
@@ -62,7 +63,10 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
 export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?: FooterContent }) {
   const year = new Date().getFullYear();
   return (
-    <footer className="bg-espresso text-[#c7d0de] py-20 sm:py-24 mt-10">
+    // Phase 90 — id/tabIndex added for the accessibility widget's "Skip To
+    // Content → Footer" control (components/accessibility/sections/
+    // SkipToContentSection.tsx), which needs a stable, focusable landmark.
+    <footer id={SITE_FOOTER_ID} tabIndex={-1} className="bg-espresso text-[#c7d0de] py-20 sm:py-24 mt-10 focus:outline-none">
       <div className="max-w-[1240px] mx-auto px-6 sm:px-8">
         {/* Phase 70 — Roy asked for the footer's overall size/padding to
             feel more spacious, its text more legible, and for scroll-

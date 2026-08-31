@@ -391,3 +391,496 @@
     line-height: 1.2;
   }
 }
+
+/* ==========================================================================
+   Phase 90 — Accessibility Widget
+   Built from scratch: original launcher icon (AccessibilityIcon.tsx), an
+   original cursor SVG below, and this project's own CSS-variable theme
+   tokens — nothing here is copied from a third-party accessibility-widget
+   product. Every rule below reads a class/data-attribute set on <html> by
+   components/accessibility/AccessibilityProvider.tsx; nothing here mutates
+   individual elements' inline styles directly (per the "use CSS variables
+   and document-level classes, not destructive inline style rewriting"
+   requirement).
+   ========================================================================== */
+
+/* ---- Content Modules: Font Size ----
+   A root font-size percentage cascades through every rem-sized Tailwind
+   utility site-wide (this codebase's text sizes are almost entirely rem via
+   Tailwind's defaults), so this alone scales the whole UI consistently. */
+html[data-a11y-font-size="increase"] { font-size: 118.75%; }
+html[data-a11y-font-size="decrease"] { font-size: 87.5%; }
+
+/* ---- Content Modules: Line Height ---- */
+html[data-a11y-line-height="increase"] body,
+html[data-a11y-line-height="increase"] body :is(p, li, h1, h2, h3, h4, h5, h6, span, blockquote) {
+  line-height: 1.85 !important;
+}
+html[data-a11y-line-height="decrease"] body,
+html[data-a11y-line-height="decrease"] body :is(p, li, h1, h2, h3, h4, h5, h6, span, blockquote) {
+  line-height: 1.2 !important;
+}
+
+/* ---- Content Modules: Readable Font ----
+   This codebase has no icon-font dependency (all icons are inline SVG via
+   lucide-react), so there is nothing an aggressive body-wide font-family
+   override here could break. */
+html.a11y-readable-font body,
+html.a11y-readable-font input,
+html.a11y-readable-font textarea,
+html.a11y-readable-font select,
+html.a11y-readable-font button {
+  font-family: Arial, Verdana, Tahoma, sans-serif !important;
+}
+
+/* ---- Content Modules: Font Weight ---- */
+html.a11y-font-weight :is(body, p, li, span, a, button, h1, h2, h3, h4, h5, h6) {
+  font-weight: 700 !important;
+}
+
+/* ---- Content Modules: Letter Spacing ---- */
+html.a11y-letter-spacing :is(body, p, li, span, a, button, h1, h2, h3, h4, h5, h6) {
+  letter-spacing: 0.06em !important;
+}
+
+/* ---- Content Modules: Align Text ----
+   Scoped to <main>'s text-bearing block elements only, per spec — logos,
+   icon-only buttons, and centered hero/eyebrow design elements outside
+   <main> (or inside it but not one of these tags) are untouched. LTR aligns
+   left; RTL (Hebrew, via TranslationProvider's dir="rtl") aligns right. */
+html.a11y-align-text main :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, dd, dt) {
+  text-align: left !important;
+}
+html[dir="rtl"].a11y-align-text main :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, dd, dt) {
+  text-align: right !important;
+}
+
+/* ---- Content Modules: Big Cursor ----
+   An original inline SVG cursor (a simple arrow / dot, drawn for this
+   widget) rather than any third-party cursor asset. */
+html.a11y-big-cursor,
+html.a11y-big-cursor * {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M6 3 L6 33 L14 26 L19 36 L24 34 L19 24 L30 24 Z" fill="white" stroke="black" stroke-width="2"/></svg>') 4 4, auto !important;
+}
+html.a11y-big-cursor :is(a, button, [role="button"], select) {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="10" fill="white" stroke="black" stroke-width="2"/></svg>') 18 18, pointer !important;
+}
+html.a11y-big-cursor :is(input, textarea) {
+  cursor: text !important;
+}
+
+/* ---- Color Modules ----
+   Each mode overrides the same CSS custom properties every Tailwind color
+   utility already resolves to (see tailwind.config.ts's `colors` block) —
+   so overriding them here recolors the entire already-built UI without
+   touching a single component. Mutually exclusive is enforced in
+   AccessibilityProvider (only one `data-a11y-color-mode` value is ever set
+   at a time), not by these CSS rules themselves. */
+html[data-a11y-color-mode="light-contrast"] {
+  --background: #ffffff;
+  --foreground: #14181f;
+  --card: #ffffff;
+  --primary: #0b3d91;
+  --primary-600: #072a66;
+  --primary-fg: #ffffff;
+  --secondary: #eef1f6;
+  --muted: #eef1f6;
+  --muted-fg: #2c2c2c;
+  --border: #14181f;
+  --accent: #0b3d91;
+  --accent-soft: #eef1f6;
+  --sage-soft: #eef1f6;
+  --clay-soft: #eef1f6;
+}
+
+html[data-a11y-color-mode="high-contrast"] {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #000000;
+  --primary: #ffd400;
+  --primary-600: #e6bf00;
+  --primary-fg: #000000;
+  --secondary: #1a1a1a;
+  --muted: #1a1a1a;
+  --muted-fg: #ffffff;
+  --border: #ffffff;
+  --accent: #ffd400;
+  --accent-soft: #1a1a1a;
+  --sage-soft: #1a1a1a;
+  --clay: #ffd400;
+  --clay-soft: #1a1a1a;
+  --amber: #ffd400;
+  --amber-soft: #1a1a1a;
+  --espresso: #000000;
+  --destructive: #ff6b57;
+}
+html[data-a11y-color-mode="high-contrast"] a {
+  color: #ffd400 !important;
+  text-decoration: underline !important;
+}
+
+html[data-a11y-color-mode="monochrome"] {
+  --background: #ffffff;
+  --foreground: #111111;
+  --card: #f2f2f2;
+  --primary: #222222;
+  --primary-600: #000000;
+  --primary-fg: #ffffff;
+  --secondary: #e0e0e0;
+  --muted: #e0e0e0;
+  --muted-fg: #555555;
+  --border: #999999;
+  --accent: #444444;
+  --accent-soft: #e5e5e5;
+  --sage-soft: #eeeeee;
+  --clay: #666666;
+  --clay-soft: #eeeeee;
+  --amber: #333333;
+  --amber-soft: #dddddd;
+  --espresso: #111111;
+  --destructive: #444444;
+}
+html[data-a11y-color-mode="monochrome"] :is(img, svg) {
+  filter: grayscale(1);
+}
+
+/* Every color mode keeps focus indicators clearly visible, per spec. */
+html[data-a11y-color-mode] :focus-visible {
+  outline: 3px solid var(--primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ---- Orientation Modules: Hide Images ----
+   Opacity (not display:none/visibility:hidden) so images stay in the DOM,
+   keep their layout space (no reflow) and stay in the accessibility tree —
+   a screen reader user's access to alt text is completely unaffected by
+   this purely-visual toggle. Functional icons across this site are inline
+   SVG components, not <img> tags, so nothing "functional" is hidden by
+   this rule; a future <img>-based logo/CAPTCHA/form-control image can opt
+   out with a `data-a11y-keep-image` attribute. */
+html.a11y-hide-images img:not([data-a11y-keep-image]) {
+  opacity: 0 !important;
+}
+
+/* ---- Orientation Modules: Highlight Content ---- */
+html.a11y-highlight-content main {
+  outline: 3px solid var(--clay) !important;
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+
+/* ---- Orientation Modules: Stop Animations ----
+   Forces the same "near-zero duration" trick this site's own
+   prefers-reduced-motion handling already relies on (see
+   components/motion/SmoothScroll.tsx / Reveal.tsx), but as a toggle instead
+   of only an OS-level setting. Covers CSS transitions/animations and
+   `scroll-behavior: smooth`; does not reach Framer Motion's JS-driven
+   transform animations (Reveal/StaggerReveal) — those already respect the
+   OS's prefers-reduced-motion via their own useReducedMotion() call, but
+   aren't wired to this specific toggle. Documented as a known follow-up in
+   ACCESSIBILITY_WIDGET.md rather than silently claimed as covered. */
+html.a11y-stop-animations *,
+html.a11y-stop-animations *::before,
+html.a11y-stop-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+html.a11y-stop-animations video {
+  animation-play-state: paused;
+}
+
+/* ---- Orientation Modules: Highlight Links ---- */
+html.a11y-highlight-links a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+}
+html.a11y-highlight-links a:focus-visible {
+  outline: 3px solid var(--primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ---- Orientation Modules: Reading Line / Reading Mask ----
+   Rendered by components/accessibility/ReadingOverlays.tsx, positioned via
+   inline style (following the pointer) — the CSS here is just the fixed
+   shell: non-interactive (pointer-events: none, so neither overlay can ever
+   block a click), sitting just below the widget's own launcher/panel. */
+.a11y-reading-line {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 3px solid var(--destructive);
+  z-index: 2147482990;
+  pointer-events: none;
+}
+.a11y-reading-mask-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 2147482980;
+  pointer-events: none;
+}
+.a11y-reading-mask-top {
+  top: 0;
+}
+.a11y-reading-mask-bottom {
+  bottom: 0;
+}
+
+/* ---- Launcher button ----
+   Fixed to the bottom-right corner, above everything (2147483000, per
+   spec) including this site's existing fixed Crisis Button
+   (components/CrisisButton.tsx, z-[70], also bottom-right) — stacked
+   directly above it with a gap so neither ever overlaps or hides the
+   other. The blue is a fixed, original brand-independent value (not
+   `var(--primary)`) so this widget's recognizable "blue circular button"
+   identity never silently shifts if the site's own theme colors change. */
+.a11y-launcher {
+  position: fixed;
+  right: 20px;
+  bottom: 96px;
+  z-index: 2147483000;
+  width: 56px;
+  height: 56px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 9999px;
+  background: #1257e0;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 6px 20px rgba(18, 87, 224, 0.45);
+  cursor: pointer;
+}
+.a11y-launcher:hover {
+  background: #0f46b8;
+}
+.a11y-launcher:focus-visible {
+  outline: 3px solid #ffd400;
+  outline-offset: 3px;
+}
+.a11y-launcher-icon {
+  width: 28px;
+  height: 28px;
+}
+@media (max-width: 640px) {
+  .a11y-launcher {
+    width: 48px;
+    height: 48px;
+    bottom: 84px;
+    right: 14px;
+  }
+  .a11y-launcher-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ---- Panel ---- */
+.a11y-panel {
+  position: fixed;
+  z-index: 2147483000;
+  right: 20px;
+  bottom: 160px;
+  width: 360px;
+  max-width: calc(100vw - 28px);
+  max-height: min(640px, calc(100vh - 120px));
+  overflow-y: auto;
+  background: var(--card);
+  color: var(--foreground);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border);
+}
+@media (max-width: 640px) {
+  .a11y-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 82vh;
+    border-radius: 18px 18px 0 0;
+  }
+}
+.a11y-panel-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.a11y-panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+.a11y-panel-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.a11y-panel-close:hover {
+  background: var(--secondary);
+}
+.a11y-panel-close:focus-visible,
+.a11y-launcher:focus-visible,
+.a11y-panel :is(button, select, a):focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.a11y-panel-body {
+  padding: 6px 18px 18px;
+  display: flex;
+  flex-direction: column;
+}
+.a11y-panel-section {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.a11y-panel-section:last-child {
+  border-bottom: none;
+}
+.a11y-panel-section-heading {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+  color: var(--muted-fg);
+}
+.a11y-panel-hint {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--muted-fg);
+}
+.a11y-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+}
+.a11y-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+.a11y-fieldset-legend {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  padding: 0;
+}
+.a11y-segmented {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.a11y-segmented-btn {
+  flex: 1;
+  padding: 8px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--background);
+  color: var(--foreground);
+  border: none;
+  border-inline-start: 1px solid var(--border);
+  cursor: pointer;
+}
+.a11y-segmented-btn:first-child {
+  border-inline-start: none;
+}
+.a11y-segmented-btn[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+.a11y-toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.a11y-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.a11y-toggle-btn[aria-pressed="true"],
+.a11y-toggle-btn[aria-checked="true"] {
+  background: var(--primary);
+  color: var(--primary-fg);
+  border-color: var(--primary);
+}
+.a11y-toggle-state {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.a11y-reset-section {
+  padding-top: 16px;
+}
+.a11y-reset-btn {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: none;
+  background: var(--destructive);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.a11y-reset-btn:hover {
+  filter: brightness(0.92);
+}
+
+/* Shared visually-hidden utility (screen-reader-only text / the widget's
+   shared aria-live announcer region). */
+.a11y-sr-only,
+.a11y-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
