@@ -21,14 +21,20 @@ import type { HeaderContent } from '@/lib/content';
 // default VolunteerPrimaryCta already recognizes as "open the modal"
 // (used by the About page's volunteer CTA and the donate band) — this is
 // no longer a donation field despite the historical field name.
+// Phase 98 — Roy asked for this button to become a real "DONATE" CTA again,
+// linking to the new full-page /donate flow (see components/donate/
+// DonatePage.tsx) rather than the volunteer modal. `donateHref` is no
+// longer VolunteerPrimaryCta's recognized "open the modal" default, so it
+// now renders as a plain link to /donate — this field is genuinely a
+// donation field again.
 export const HEADER_CONTENT_FALLBACK: HeaderContent = {
   published: true,
   homeLabel: "About",
   aboutLabel: "Find Support",
   therapistsLabel: "Our Professionals",
   supportGroupsLabel: "Community",
-  donateLabel: "JOIN GESA",
-  donateHref: "/contact?subject=Volunteer",
+  donateLabel: "DONATE",
+  donateHref: "/donate",
 };
 
 // Phase 35 (round 2) — nav labels and the Donate CTA are Content

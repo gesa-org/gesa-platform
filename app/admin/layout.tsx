@@ -7,6 +7,7 @@ const NAV = [
   { href: "/admin/match-requests", label: "Find Your Therapist" },
   { href: "/admin/bookings", label: "Booking requests" },
   { href: "/admin/volunteer-applications", label: "Volunteer Applications" },
+  { href: "/admin/donations", label: "Donations" },
   { href: "/admin/inquiries", label: "Inquiries" },
   { href: "/admin/registrations", label: "Group registrations" },
   { href: "/admin/messages", label: "Messages" },

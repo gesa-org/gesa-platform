@@ -6,6 +6,7 @@ import { HEADER_CONTENT_FALLBACK } from "@/components/Header";
 import { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/components/TherapistsDirectory";
 import { SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK } from "@/components/SupportGroupsInteractive";
 import { DONATE_BAND_CONTENT_FALLBACK } from "@/components/home/DonateBand";
+import { DONATE_PAGE_FALLBACK } from "@/components/donate/DonatePage";
 import { HOME_STATS_CONTENT_FALLBACK } from "@/components/home/Stats";
 import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
@@ -21,6 +22,7 @@ import {
   type SupportGroupsDirectoryContent,
   type SimplePageContent,
   type DonateBandContent,
+  type DonatePageContent,
   type HomeStatsContent,
   type CrisisButtonContent,
   type IntakeFlowContent,
@@ -42,6 +44,7 @@ const KEYS = [
   "component_therapists_directory",
   "component_support_groups_directory",
   "component_donate_band",
+  "page_donate",
   "component_home_stats",
   "component_crisis_button",
   "component_intake_flow",
@@ -95,6 +98,7 @@ export default async function AdminContentPage() {
           SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK
         )}
         donateBand={merge<DonateBandContent>(map.get("component_donate_band"), DONATE_BAND_CONTENT_FALLBACK)}
+        donatePage={merge<DonatePageContent>(map.get("page_donate"), DONATE_PAGE_FALLBACK)}
         homeStats={merge<HomeStatsContent>(map.get("component_home_stats"), HOME_STATS_CONTENT_FALLBACK)}
         crisisButton={merge<CrisisButtonContent>(map.get("component_crisis_button"), CRISIS_BUTTON_CONTENT_FALLBACK)}
         intakeFlow={merge<IntakeFlowContent>(map.get("component_intake_flow"), INTAKE_FLOW_CONTENT_FALLBACK)}

@@ -93,6 +93,43 @@ export function volunteerApplicationNotificationEmail(app: {
   `);
 }
 
+// Phase 98 — sent when someone submits the gift-intent form on the new
+// /donate page (components/donate/DonateForm.tsx). Same received/notify
+// pair shape as the volunteer application templates above, adapted for a
+// donation pledge (frequency + amount) instead of an application.
+export function donationReceivedEmail(fullName: string, frequency: string, amount: number) {
+  const cadence = frequency === "monthly" ? "monthly" : "one-time";
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Thank you, ${fullName || "friend"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      We've received your ${cadence} gift pledge of €${amount.toLocaleString()}. Your choice helps carry gifted
+      professional support to people and communities across borders. Our team will follow up at this
+      email address with next steps for completing your gift.
+    </p>
+  `);
+}
+
+export function donationNotificationEmail(donation: {
+  fullName: string;
+  email: string;
+  phone: string | null;
+  frequency: string;
+  amount: number;
+  amountChoice: string | null;
+  message: string | null;
+}) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New donation pledge</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Name:</strong> ${donation.fullName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Email:</strong> ${donation.email}</p>
+    ${donation.phone ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Phone:</strong> ${donation.phone}</p>` : ""}
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Frequency:</strong> ${donation.frequency === "monthly" ? "Monthly" : "One-time"}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Amount:</strong> €${donation.amount.toLocaleString()}${donation.amountChoice === "custom" ? " (custom amount)" : ""}</p>
+    ${donation.message ? `<p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Message:</strong></p><p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${donation.message}</p>` : ""}
+    <p style="color:#33352d;line-height:1.6;margin-top:14px;">Review in the CRM at /admin/donations.</p>
+  `);
+}
+
 export function bookingConfirmationEmail(name: string, therapistName: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're matched, ${name || "friend"}</h1>

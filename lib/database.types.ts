@@ -282,11 +282,37 @@ export type TherapistApplicationRow = {
   reviewed_by: string | null;
 }
 
+// Phase 98 — donation "gift intent" capture from the new /donate page's
+// giving form. No payment processor is connected yet (see EXECUTION_PLAN.md
+// Phase 98), so this table is a lead/intent log — same shape/purpose as
+// InquiryRow above, just with the frequency/amount fields a gift needs
+// instead of a free-text message. `amount_choice` records which tile the
+// visitor picked ("25"/"50"/"100"/"custom") separately from the resolved
+// numeric `amount`, so the admin view can tell a €25 preset pick apart from
+// someone who typed "25" into the custom field.
+export type DonationRow = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  frequency: string;
+  amount: number;
+  amount_choice: string | null;
+  message: string | null;
+  created_at: string;
+}
+
 export type Database = {
   __InternalSupabase: { PostgrestVersion: "14.15" };
   public: {
     Tables: {
       blog_posts: { Row: BlogPostRow; Insert: Partial<BlogPostRow> & Pick<BlogPostRow, "slug" | "title">; Update: Partial<BlogPostRow>; Relationships: [] };
+      donations: {
+        Row: DonationRow;
+        Insert: Partial<DonationRow> & Pick<DonationRow, "full_name" | "email" | "frequency" | "amount">;
+        Update: Partial<DonationRow>;
+        Relationships: [];
+      };
       booking_requests: {
         Row: BookingRequestRow;
         Insert: Partial<BookingRequestRow> & Pick<BookingRequestRow, "entry_route" | "name" | "email">;

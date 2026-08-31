@@ -328,6 +328,57 @@ export type CrisisButtonContent = {
   disclaimer: string;
 };
 
+// Phase 98 — powers the new app/donate/page.tsx (components/donate/DonatePage.tsx
+// + DonateForm.tsx), Roy's replacement for the "JOIN GESA" header CTA (now
+// "DONATE") which used to link to the volunteer application flow. Every
+// section of the reference layout Roy sent — hero, the giving box (once/
+// monthly toggle + preset/custom amount + gift CTA), the three-icon impact
+// row, the dark "movement" band, the trust-badge row, and the closing
+// crisis-resources line — is its own set of editable fields here, same
+// convention as every other page. The three preset amounts are kept as
+// strings (not numbers) — same as every other field this system's generic
+// FlatFieldsEditor edits — since that editor's text inputs and its
+// `site_content` upsert round-trip everything through plain strings; a real
+// `number` field here would silently become a string again the moment an
+// admin re-saves the page, which would then disagree with this type without
+// TypeScript ever catching it. DonateForm.tsx does `Number(...)` on these
+// where it needs to do real math.
+export type DonatePageContent = {
+  published: boolean;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  boldLine: string;
+  heroCtaLabel: string;
+  givingHeading: string;
+  onceLabel: string;
+  monthlyLabel: string;
+  amount1: string;
+  amount2: string;
+  amount3: string;
+  customLabel: string;
+  giftNote: string;
+  giftCtaLabel: string;
+  impactHeading: string;
+  impact1Title: string;
+  impact1Description: string;
+  impact2Title: string;
+  impact2Description: string;
+  impact3Title: string;
+  impact3Description: string;
+  movementHeading: string;
+  movementSubtitle: string;
+  movementCtaLabel: string;
+  movementCtaHref: string;
+  trustBadge1Label: string;
+  trustBadge2Label: string;
+  trustBadge3Label: string;
+  trustBadge4Label: string;
+  crisisText: string;
+  crisisLinkLabel: string;
+  crisisLinkHref: string;
+};
+
 // Powers app/intake/page.tsx and components/intake/IntakeMatchFlow.tsx — the
 // fast "reach out now" path's per-path labels/hero titles and the crisis
 // path's safety disclaimer. Deliberately does not cover the deeper

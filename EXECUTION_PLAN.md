@@ -3159,4 +3159,87 @@ git push
 ```
 
 ---
+
+## Phase 98: "DONATE" CTA + a real donate page, with gift-intent capture into the CRM
+
+**Roy's request:** change the header's "JOIN GESA" CTA back into a "DONATE" button, and have it open a full
+page matching a reference screenshot — hero, a giving box (once/monthly toggle, preset amounts + custom
+amount, gift button), a three-icon "what your gift helps make possible" row, a dark "be part of the
+movement" band, a trust-badge row, and a closing crisis-resources line. Every function shown needed to
+actually work (no dead buttons) and be captured by the CRM Dashboard, with the text pulled from Content
+Manager fields. Clarified two open questions before building: (1) a new dedicated `/donate` page, not a
+modal, since the reference is a full scrollable layout; (2) since no payment processor (Stripe, PayPal, etc.)
+is connected to this project and setting one up needs a real merchant account this build can't create, "Make
+my gift" captures the gift *intent* (amount, frequency, contact details) into a real database table and the
+CRM, the same way the volunteer application form works, rather than actually charging a card.
+
+- **New Supabase table `donations`** (both Dev and Production): `id`, `full_name`, `email`, `phone`,
+  `frequency` (`once`/`monthly`), `amount`, `amount_choice` (which tile was picked, or `"custom"`), `message`,
+  `created_at`. RLS mirrors the existing `inquiries`/`therapist_applications` pattern: public insert, admin/
+  reviewer-only read — no update/status workflow, since a gift intent is a log entry to follow up on
+  manually, not something reviewed and approved like a volunteer application.
+- `lib/database.types.ts`: added `DonationRow` and the `donations` table entry to `Database["public"]["Tables"]`.
+- `lib/queries.ts`: added `getAllDonations()`, same admin-only-read pattern as `getAllInquiries()`.
+- **New `app/admin/donations/page.tsx`**: admin list view (received/name/email/phone/frequency/amount/message),
+  plus a small pledged-totals summary (one-time vs. monthly) at the top. Added to the CRM Dashboard's nav in
+  `app/admin/layout.tsx`.
+- **New `components/donate/DonateForm.tsx`** (client): the interactive giving box — a once/monthly toggle, the
+  three preset amount tiles plus a custom-amount input, and a "Make my gift" button. Selecting an amount and
+  submitting opens a contact-confirmation modal (name/email required, phone/message optional — same shape as
+  `VolunteerApplicationModal.tsx`) that inserts the pledge into `donations` and shows a thank-you state.
+  Best-effort confirmation/notification emails fire the same fire-and-forget way the volunteer flow's do.
+- **New `components/donate/DonatePage.tsx`** (async server component): the static shell around the form —
+  hero (eyebrow/title/subtitle/bold line/CTA that scrolls to the giving box via `#giving-box`, no page
+  navigation), the three-icon impact row (`Users`/`Globe`/`ShieldCheck`, already-used icons in this codebase),
+  the dark "movement" band (reuses `--espresso`, the site's one true dark surface, otherwise only used by the
+  Footer) whose CTA opens the real volunteer application modal by default (`VolunteerPrimaryCta`, same as
+  About's own movement CTA), the trust-badge row (same icon-badge pattern as `Stats.tsx`), and a closing
+  crisis-resources line (a real external link to findahelpline.com, same pattern as `DonateBand`'s). Colors
+  throughout reuse the site's existing tokens (`--primary` for the reference's black pills, `--card`/
+  `--border` for the giving box, `--accent-soft`/`--sage-soft` for the icon rows) rather than introducing new
+  ones.
+- **New `app/donate/page.tsx`**: thin route wrapper with page metadata.
+- `lib/content.ts`: added `DonatePageContent` — every section's copy (hero, giving box labels, the three
+  preset amounts, impact cards, movement band, trust badges, crisis line) as its own Content Manager field.
+  The three preset amounts are stored as strings (not numbers), same as every other field this system's
+  generic `FlatFieldsEditor` edits, since that editor's plain-text inputs round-trip everything through
+  strings regardless of a type's declared shape — `DonateForm` does `Number(...)` on them where it needs real
+  math.
+- **New `components/admin/content/DonatePageEditor.tsx`**: `FlatFieldsEditor`-based CMS editor for every field
+  above, registered as a new "Donate Page" tab in `ContentManagerApp.tsx` and wired into `app/admin/content/page.tsx`.
+- `components/Header.tsx`: `HEADER_CONTENT_FALLBACK.donateLabel`/`donateHref` changed from `"JOIN GESA"` /
+  `"/contact?subject=Volunteer"` (Phase 93 — opened the volunteer modal) to `"DONATE"` / `"/donate"`. Since
+  `/donate` isn't `VolunteerPrimaryCta`'s recognized "open the modal" default, the button now renders as a
+  plain link to the new page — this field is genuinely a donation field again, not a repurposed volunteer one.
+- `lib/email/templates.ts` + new `app/api/email/donation/route.ts`: `donationReceivedEmail`/
+  `donationNotificationEmail`, same best-effort confirmation/notification pair pattern as the volunteer
+  application flow's `/api/email/volunteer-application`.
+- Updated the already-published `site_header` row on both Dev and Production directly (same reasoning as
+  every prior header-field phase) so the live Donate button's label/link change immediately rather than
+  waiting on an admin to re-save the Header tab. `page_donate` is a brand-new key with no existing row on
+  either project, so — unlike a changed field on an existing row — there's no stale value to overwrite; it
+  renders from the code fallback until an admin publishes it, identical to a freshly-seeded row would.
+- New tests: `tests/unit/DonateForm.test.tsx` (frequency/amount selection, blocked submit with no amount,
+  full submit-to-`donations`-table flow for both a preset and a custom amount, thank-you state), `tests/unit/
+  DonatePage.test.tsx` (every section renders, hero CTA anchors to the giving box instead of navigating away,
+  crisis line is a real external link), and `tests/unit/Header.test.tsx` (Donate renders as a plain `/donate`
+  link, not a volunteer-modal button).
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/DonateForm.test.tsx` — 4/4 passed. `tests/unit/DonatePage.test.tsx` — 2/2 passed. `tests/unit/
+  Header.test.tsx` — 1/1 passed. `tests/unit/AboutPage.test.tsx` — 5/5 passed (no regression). `tests/unit/
+  Stats.test.tsx` — 1/1 passed (no regression).
+- Confirmed via direct query that both databases' `donations` table exists with the expected columns and RLS
+  policies (public insert, admin/reviewer read), and that `site_header.donateLabel`/`donateHref` now read
+  `"DONATE"` / `"/donate"` on both projects.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 98: DONATE CTA + full donate page with gift-intent capture into the CRM"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

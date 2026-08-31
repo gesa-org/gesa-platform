@@ -10,6 +10,7 @@ import HeaderEditor from "@/components/admin/content/HeaderEditor";
 import TherapistsDirectoryEditor from "@/components/admin/content/TherapistsDirectoryEditor";
 import SupportGroupsDirectoryEditor from "@/components/admin/content/SupportGroupsDirectoryEditor";
 import DonateBandEditor from "@/components/admin/content/DonateBandEditor";
+import DonatePageEditor from "@/components/admin/content/DonatePageEditor";
 import HomeStatsEditor from "@/components/admin/content/HomeStatsEditor";
 import CrisisButtonEditor from "@/components/admin/content/CrisisButtonEditor";
 import IntakeFlowEditor from "@/components/admin/content/IntakeFlowEditor";
@@ -24,6 +25,7 @@ import type {
   TherapistsDirectoryContent,
   SupportGroupsDirectoryContent,
   DonateBandContent,
+  DonatePageContent,
   HomeStatsContent,
   CrisisButtonContent,
   IntakeFlowContent,
@@ -40,6 +42,7 @@ type Props = {
   therapistsDirectory: TherapistsDirectoryContent;
   supportGroupsDirectory: SupportGroupsDirectoryContent;
   donateBand: DonateBandContent;
+  donatePage: DonatePageContent;
   homeStats: HomeStatsContent;
   crisisButton: CrisisButtonContent;
   intakeFlow: IntakeFlowContent;
@@ -77,6 +80,7 @@ const FIXED_TABS_END = [
   "FAQ",
   "Legal Pages",
   "Footer",
+  "Donate Page",
   "Donate Band",
   "Crisis Button",
 ] as const;
@@ -201,6 +205,8 @@ export default function ContentManagerApp(props: Props) {
       {tab === "Legal Pages" && <LegalPagesManager pages={props.legalPages} />}
 
       {tab === "Footer" && <FooterEditor initial={props.footer} />}
+
+      {tab === "Donate Page" && <DonatePageEditor initial={props.donatePage} />}
 
       {tab === "Donate Band" && <DonateBandEditor initial={props.donateBand} />}
 

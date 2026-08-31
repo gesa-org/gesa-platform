@@ -338,6 +338,20 @@ export async function getAllTherapistApplications(): Promise<Tables<"therapist_a
   return data ?? [];
 }
 
+// Phase 98 — admin-only read for the new /donate page's gift-intent
+// capture (donations), same *_admin_read RLS pattern (admin/reviewer) and
+// same "log, not workflow" shape as getAllInquiries() above — there's no
+// status/review step for a donation intent, just a list an admin can see.
+export async function getAllDonations(): Promise<Tables<"donations">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("donations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getAllProfiles(): Promise<Tables<"profiles">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
