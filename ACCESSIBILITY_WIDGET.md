@@ -46,12 +46,12 @@ hide, or replace it — there's nothing page-level rendering it in the first pla
 
 ## 3. Config object (languages + settings)
 
-- **Languages** — `lib/languages.ts`'s `LANGUAGES` array (51 entries, `{ code, label, flag, name }`). This is
-  the *same* list the header's existing `LanguageSelector` and the account page's language `<select>` already
-  use — the widget doesn't duplicate it. Selecting a language calls the real
-  `TranslationProvider.setLanguage()`, which walks the page's DOM text and translates it (English/Hebrew are
-  instant/free via a bundled dictionary; every other language routes through Google Cloud Translation, see
-  "Assumptions" below).
+- **Languages** — `lib/languages.ts`'s `LANGUAGES` array (`{ code, label, flag, name }`; English and עברית
+  today — briefly expanded to ~51 entries in Phase 90, reverted back to these two in Phase 91 per Roy's
+  request). This is the *same* list the header's existing `LanguageSelector` and the account page's language
+  `<select>` already use — the widget doesn't duplicate it. Selecting a language calls the real
+  `TranslationProvider.setLanguage()`, which walks the page's DOM text and translates it (both entries today
+  are instant/free — English is a no-op, Hebrew via the bundled dictionary in `lib/translations/he.ts`).
 - **Settings** — `lib/accessibility/config.ts`'s `AccessibilitySettings` type, `DEFAULT_ACCESSIBILITY_SETTINGS`,
   and the `CONTENT_TOGGLE_MODULES` / `COLOR_MODE_OPTIONS` / `ORIENTATION_TOGGLE_MODULES` / `SKIP_TARGET_OPTIONS`
   arrays the panel renders from. Adding a new toggle module is a one-line addition to the relevant array plus
@@ -89,18 +89,12 @@ Manual — please verify before/shortly after deploying:
 
 ## 6. Assumptions and integration points needing your attention
 
-- **Language translation coverage**: only English and Hebrew are translated for free/instantly today (Hebrew via
-  the bundled dictionary in `lib/translations/he.ts`). The other 49 languages in the dropdown are genuinely
-  wired to the real translation engine (`/api/translate` → Google Cloud Translation API), but that API call
-  silently no-ops back to English if `GOOGLE_TRANSLATE_API_KEY` isn't set in this environment (see
-  `lib/translate.ts`) — per your explicit instruction ("expand site-wide language support now"), I've added the
-  full list rather than hiding it, but full translation coverage for those 49 depends on that key being
-  configured. This also means the *existing* header language picker and the account page's language field now
-  offer all 51 languages too, not just the widget (they share `lib/languages.ts`).
-- **Flag icons**: only English and Hebrew have a hand-drawn SVG flag in `components/FlagIcon.tsx` (an existing,
-  pre-Phase-90 file). The header's picker already tolerates a missing flag gracefully (shows just the language
-  name); I didn't hand-draw 49 more original flag SVGs to keep this phase's scope to the accessibility widget
-  itself — happy to add specific ones on request.
+- **Language translation coverage**: English and Hebrew only, per Phase 91 (Roy asked to revert the brief
+  Phase 90 expansion to ~51 languages back down to these two). Both flows are already free/instant — English
+  is a no-op, Hebrew via the bundled dictionary in `lib/translations/he.ts`. `/api/translate` (Google Cloud
+  Translation) still exists for any language typed in directly, but nothing in the UI offers one anymore.
+- **Flag icons**: `components/FlagIcon.tsx` already has hand-drawn SVG flags for both current entries
+  (English, Hebrew).
 - **Stop Animations and Framer Motion**: this toggle's CSS reaches ordinary CSS transitions/animations and
   `scroll-behavior: smooth`, but not this site's Framer-Motion-driven scroll reveals (`components/motion/Reveal.tsx`,
   `StaggerReveal.tsx`) — those already respect the OS-level `prefers-reduced-motion` via their own

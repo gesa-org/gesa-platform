@@ -2883,4 +2883,37 @@ git push
 ```
 
 ---
+
+## Phase 91: Revert the header language dropdown back to English/Hebrew only
+
+**Roy's request:** a screenshot of the header's language dropdown now showing English, עברית, Arabic, etc.
+(Phase 90's ~51-language expansion), asking to put it back to just the original two — English and Hebrew.
+
+- `lib/languages.ts`: `LANGUAGES` reverted from ~51 entries back to just `en`/`he`; `RTL_LANGUAGES` reverted
+  to `{"he"}`. This list is shared by the header's `LanguageSelector`, the account page's language field, and
+  the Phase 90 accessibility widget's own Language dropdown — reverting it here reverts all three at once,
+  rather than forking a separate two-language list just for the header while leaving the widget at 51. That
+  felt like the right call since Roy's screenshot was of the header specifically, but the underlying reality
+  is the same everywhere this list is used: only English/Hebrew ever actually translated for free without a
+  Google Translate API key, so the other 49 languages weren't offering distinct real behavior on any of the
+  three surfaces they appeared on.
+- `ACCESSIBILITY_WIDGET.md`: updated the "Languages" and "Assumptions" sections to describe the current
+  two-language reality instead of the ~51-language state Phase 90 had temporarily documented.
+- No database change needed — the language list has always been plain code (`lib/languages.ts`), not
+  Content-Manager-stored data, so this takes effect immediately on the next deploy with no `site_content` row
+  to update (unlike Phase 88/89's header-label issue, which was a stale published database row).
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/AccessibilityWidget.test.tsx` — 8/8 passed (none of these tests depended on the language list's
+  length).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 91: revert language dropdown back to English/Hebrew only"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
