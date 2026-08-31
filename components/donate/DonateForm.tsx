@@ -1,23 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { HeartHandshake } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { createClient } from "@/lib/supabase/client";
 import type { DonatePageContent } from "@/lib/content";
 
 // Phase 98 — the interactive half of the new /donate page (see
 // components/donate/DonatePage.tsx for the static sections around it).
-// There's no payment processor connected to this project (Stripe, PayPal,
-// etc. — see EXECUTION_PLAN.md Phase 98), so "Make my gift" can't actually
-// charge a card yet. Per Roy's explicit choice, it instead captures the
-// gift *intent* — amount, frequency, and contact details — into a real
-// `donations` table (same insert-then-thank-you pattern as
-// VolunteerApplicationModal.tsx and `therapist_applications`), visible at
-// /admin/donations, so nothing here is a dead button: selecting an amount,
-// toggling frequency, and submitting all do something real, they just don't
-// move money yet.
+//
+// Phase 99 — Roy connected Mollie as a real payment processor. Confirming
+// the gift details now posts to /api/donations/create-payment, which saves
+// the `donations` row (status "open") and asks Mollie for a real checkout
+// session, then this redirects the browser to Mollie's own hosted payment
+// page — cards, iDEAL, PayPal, etc. depending on what's enabled in the
+// Mollie dashboard. The donor pays on Mollie's site, not this one; GESA
+// never sees card details. What actually happened to the payment (paid,
+// failed, expired) is only known once Mollie's webhook reports back (see
+// app/api/webhooks/mollie/route.ts) — so there's no "submitted" state here
+// the way there was pre-Mollie; this component's job ends at the redirect.
 type Frequency = "once" | "monthly";
 
 export default function DonateForm({ content }: { content: DonatePageContent }) {
@@ -40,8 +40,13 @@ export default function DonateForm({ content }: { content: DonatePageContent }) 
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  // Two separate error states, not one shared string — the amount-selection
+  // form and the contact/payment modal form each render their own error
+  // paragraph, and a single shared string would render in both places at
+  // once whenever either step failed (caught by a test: "Found multiple
+  // elements with the text...").
+  const [amountError, setAmountError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function pickPreset(amount: number) {
     setSelectedAmount(amount);
@@ -60,59 +65,58 @@ export default function DonateForm({ content }: { content: DonatePageContent }) 
   function openContact(e: React.FormEvent) {
     e.preventDefault();
     if (!canOpenContact) {
-      setError("Please choose or enter a gift amount.");
+      setAmountError("Please choose or enter a gift amount.");
       return;
     }
-    setError(null);
+    setAmountError(null);
+    setSubmitError(null);
     setContactOpen(true);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!resolvedAmount || resolvedAmount <= 0) {
-      setError("Please choose or enter a gift amount.");
+      setSubmitError("Please choose or enter a gift amount.");
       return;
     }
     setPending(true);
-    setError(null);
+    setSubmitError(null);
 
     const amountChoice = showCustom ? "custom" : String(selectedAmount);
-    const supabase = createClient();
-    const { error: insertError } = await supabase.from("donations").insert({
-      full_name: fullName,
-      email,
-      phone: phone || null,
-      frequency,
-      amount: resolvedAmount,
-      amount_choice: amountChoice,
-      message: message || null,
-    });
 
-    setPending(false);
-    if (insertError) {
-      setError("Something went wrong saving your gift. Please try again.");
-      return;
+    try {
+      const res = await fetch("/api/donations/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName,
+          email,
+          phone: phone || null,
+          frequency,
+          amount: resolvedAmount,
+          amountChoice,
+          message: message || null,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.checkoutUrl) {
+        setPending(false);
+        setSubmitError(data?.error || "Something went wrong starting your donation. Please try again.");
+        return;
+      }
+      // Full-page redirect to Mollie's hosted checkout — not a client-side
+      // route change, so `pending` deliberately stays true (no reset) while
+      // the browser navigates away.
+      window.location.href = data.checkoutUrl;
+    } catch {
+      setPending(false);
+      setSubmitError("Something went wrong starting your donation. Please try again.");
     }
-    setSubmitted(true);
-    // Best-effort — the pledge is already saved even if either email fails.
-    fetch("/api/email/donation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fullName,
-        email,
-        phone: phone || null,
-        frequency,
-        amount: resolvedAmount,
-        amountChoice,
-        message: message || null,
-      }),
-    }).catch(() => {});
   }
 
   function closeContact() {
+    if (pending) return;
     setContactOpen(false);
-    setSubmitted(false);
   }
 
   return (
@@ -188,7 +192,7 @@ export default function DonateForm({ content }: { content: DonatePageContent }) 
 
         <p className="text-center text-[13px] text-muted-fg">{content.giftNote}</p>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
 
         <Button type="submit" block>
           {content.giftCtaLabel}
@@ -197,87 +201,72 @@ export default function DonateForm({ content }: { content: DonatePageContent }) 
 
       {contactOpen && (
         <Modal open onClose={closeContact}>
-          {submitted ? (
-            <div className="text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-primary">
-                <HeartHandshake size={22} />
+          <h3 className="mb-1 text-xl">Confirm your gift</h3>
+          <p className="mb-5 text-[14px] text-muted-fg">
+            {frequency === "monthly" ? "Monthly" : "One-time"} gift of <strong>€{resolvedAmount}</strong>. Share your
+            details, then you&apos;ll be sent to Mollie&apos;s secure checkout to complete payment — GESA never sees
+            your card details.
+          </p>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="donate-full-name" className="mb-1.5 block text-sm font-semibold">
+                  Full name <span className="text-destructive">*</span>
+                </label>
+                <input
+                  id="donate-full-name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+                />
               </div>
-              <h3 className="mb-1.5 text-xl">Thank you, {fullName || "friend"}</h3>
-              <p className="text-muted-fg">
-                We&apos;ve received your {frequency === "monthly" ? "monthly" : "one-time"} gift pledge of €
-                {resolvedAmount}. Our team will follow up at {email} with next steps.
-              </p>
+              <div>
+                <label htmlFor="donate-email" className="mb-1.5 block text-sm font-semibold">
+                  Email <span className="text-destructive">*</span>
+                </label>
+                <input
+                  id="donate-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+                />
+              </div>
             </div>
-          ) : (
-            <>
-              <h3 className="mb-1 text-xl">Confirm your gift</h3>
-              <p className="mb-5 text-[14px] text-muted-fg">
-                {frequency === "monthly" ? "Monthly" : "One-time"} gift of <strong>€{resolvedAmount}</strong>. Share
-                your details so our team can follow up — GESA has no live payment processor connected yet, so this
-                confirms your pledge rather than charging a card.
-              </p>
-              <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-                <div className="grid gap-3.5 sm:grid-cols-2">
-                  <div>
-                    <label htmlFor="donate-full-name" className="mb-1.5 block text-sm font-semibold">
-                      Full name <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="donate-full-name"
-                      required
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="donate-email" className="mb-1.5 block text-sm font-semibold">
-                      Email <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="donate-email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="donate-phone" className="mb-1.5 block text-sm font-semibold">
-                    Phone (optional)
-                  </label>
-                  <input
-                    id="donate-phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+1 555 123 4567"
-                    className="w-full max-w-[260px] rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="donate-message" className="mb-1.5 block text-sm font-semibold">
-                    Message (optional)
-                  </label>
-                  <textarea
-                    id="donate-message"
-                    rows={3}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Anything you'd like our team to know."
-                    className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                  />
-                </div>
+            <div>
+              <label htmlFor="donate-phone" className="mb-1.5 block text-sm font-semibold">
+                Phone (optional)
+              </label>
+              <input
+                id="donate-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 555 123 4567"
+                className="w-full max-w-[260px] rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="donate-message" className="mb-1.5 block text-sm font-semibold">
+                Message (optional)
+              </label>
+              <textarea
+                id="donate-message"
+                rows={3}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Anything you'd like our team to know."
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+              />
+            </div>
 
-                {error && <p className="text-sm text-destructive">{error}</p>}
+            {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
-                <Button type="submit" block disabled={pending}>
-                  {pending ? "Submitting…" : "Confirm pledge"}
-                </Button>
-              </form>
-            </>
-          )}
+            <Button type="submit" block disabled={pending}>
+              {pending ? "Redirecting to checkout…" : "Continue to payment"}
+            </Button>
+          </form>
         </Modal>
       )}
     </div>

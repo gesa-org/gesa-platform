@@ -4,11 +4,17 @@ import { donationNotificationEmail, donationReceivedEmail } from "@/lib/email/te
 
 const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
-// Phase 98 — best-effort notification pair for the new /donate page's gift
-// form, same pattern as /api/email/volunteer-application: the pledge itself
-// is already saved to the `donations` table by the time this is called (see
-// components/donate/DonateForm.tsx), so a failure here never loses the
-// pledge, only the confirmation/notification emails.
+// Phase 98 — best-effort notification pair for the /donate page's gift
+// form, same pattern as /api/email/volunteer-application.
+//
+// Phase 99 — no longer called directly from DonateForm.tsx. Once the gift
+// form was wired to real Mollie checkout, sending a "thank you" the instant
+// someone submits the form (before they've actually paid) would be
+// misleading — a donor who abandons checkout would still get a thank-you
+// email. This is now called from app/api/webhooks/mollie/route.ts only
+// after Mollie confirms the payment actually cleared, keeping the one
+// shared email-sending route instead of duplicating the
+// sendEmailSafely/template calls inline in the webhook handler.
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const fullName = (body?.fullName as string | undefined) ?? "";
@@ -26,12 +32,12 @@ export async function POST(request: Request) {
   const [toDonor, toTeam] = await Promise.all([
     sendEmailSafely({
       to: email,
-      subject: "We received your gift pledge to GESA",
+      subject: "Thank you for your gift to GESA",
       html: donationReceivedEmail(fullName, frequency, amount),
     }),
     sendEmailSafely({
       to: GESA_INBOX,
-      subject: `New donation pledge: ${fullName || email} — €${amount}`,
+      subject: `Donation paid: ${fullName || email} — €${amount}`,
       html: donationNotificationEmail({ fullName, email, phone, frequency, amount, amountChoice, message }),
     }),
   ]);

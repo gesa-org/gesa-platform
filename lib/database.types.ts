@@ -290,6 +290,12 @@ export type TherapistApplicationRow = {
 // visitor picked ("25"/"50"/"100"/"custom") separately from the resolved
 // numeric `amount`, so the admin view can tell a €25 preset pick apart from
 // someone who typed "25" into the custom field.
+// Phase 99 — added the Mollie payment fields (status/currency/
+// mollie_payment_id/paid_at) once Roy asked to connect the /donate page's
+// gift-intent capture to a real payment processor. `status` starts at
+// "open" the moment DonateForm creates the row (before the donor even
+// reaches Mollie's checkout), moves to "paid"/"failed"/"canceled"/"expired"
+// once Mollie's webhook reports back — see app/api/webhooks/mollie/route.ts.
 export type DonationRow = {
   id: string;
   full_name: string;
@@ -299,6 +305,17 @@ export type DonationRow = {
   amount: number;
   amount_choice: string | null;
   message: string | null;
+  status: string;
+  currency: string;
+  mollie_payment_id: string | null;
+  // Set only for "monthly" donations — a Mollie Customer is created up
+  // front (Mollie's Recurring flow needs one to attach the mandate/
+  // subscription to), and mollie_subscription_id is filled in once the
+  // first payment clears and the webhook creates the actual recurring
+  // Subscription (see app/api/webhooks/mollie/route.ts).
+  mollie_customer_id: string | null;
+  mollie_subscription_id: string | null;
+  paid_at: string | null;
   created_at: string;
 }
 

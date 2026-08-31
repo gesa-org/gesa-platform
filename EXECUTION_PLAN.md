@@ -3242,4 +3242,82 @@ git push
 ```
 
 ---
+
+## Phase 99: Connect the donate page to Mollie for real payment processing
+
+**Roy's request:** "I already build the Donate page modal for those who wants to donate in the website. Now! i
+want to connect it to Mollie as the platform for the donations and payment process." Clarified two open
+questions before building: (1) a new dedicated Mollie account still needs to be created — this build can't
+create merchant accounts or hold real API keys itself, so this phase ships the full integration ready to go
+once the real key is dropped into Vercel's env vars, rather than being blocked on that step; (2) the flow
+redirects the donor to Mollie's own hosted checkout page (cards, iDEAL, PayPal, etc., whatever's enabled in
+the Mollie dashboard) rather than embedding card fields directly on gesa.org, keeping GESA out of card-data
+PCI scope entirely.
+
+- **New dependency**: `@mollie/api-client` (Mollie's official Node SDK).
+- **`donations` table** (both Dev and Production): added `status` (`open`/`pending`/`authorized`/`paid`/
+  `failed`/`canceled`/`expired` — matches Mollie's own `PaymentStatus` enum), `currency`, `mollie_payment_id`,
+  `mollie_customer_id`, `mollie_subscription_id`, `paid_at`. No new RLS policy needed — the service-role
+  client (bypasses RLS) is what writes these from the new server routes below.
+- **New `lib/mollie.ts`**: server-only Mollie client factory, gated by a `mollieConfigured` flag so every
+  call site can fail with a clear, explainable error ("Donations aren't connected to a payment processor
+  yet…") instead of a raw crash until `MOLLIE_API_KEY` is actually set.
+- **New `app/api/donations/create-payment/route.ts`**: what `DonateForm.tsx` now posts to instead of
+  inserting into Supabase directly. Saves the `donations` row first (status `"open"`) so an abandoned or
+  failed payment still leaves a real record to follow up on, then asks Mollie for a payment/checkout session
+  and returns its checkout URL. A **"Give monthly"** gift needs Mollie's recurring-payments flow — it first
+  creates a Mollie Customer, then a payment with `sequenceType: "first"` (this doesn't itself set up
+  recurring billing; it exists purely to attach a reusable mandate to that first payment for a Subscription
+  to reference next).
+- **New `app/api/webhooks/mollie/route.ts`**: Mollie's webhook contract is deliberately minimal — it POSTs a
+  single `id` field with no signature to verify, so the only trustworthy way to know a payment's real status
+  is to call Mollie's own API back with that id (never trust a status if one ever showed up in the POST body
+  itself). Updates the matching `donations` row's status. The first time a "monthly" donation's status
+  becomes `"paid"`, this creates the actual recurring Subscription using the mandate Mollie attached to that
+  first payment — every later monthly charge from that point on is fully automatic on Mollie's side; this
+  webhook doesn't need to do anything further for the subscription to keep collecting. Also fires the
+  donor/team confirmation emails (via the existing `/api/email/donation` route) once — and only once — a
+  payment actually clears, not the moment the form is submitted.
+- **New `app/donate/thank-you/page.tsx`**: where Mollie redirects the donor back to after checkout (for both
+  success and failure — Mollie's `redirectUrl` isn't success-only). Reads the donation's current status
+  (which may still be `"open"`/`"pending"` if the webhook hasn't landed yet) and shows a paid/failed/
+  still-processing message accordingly, rather than assuming success just because the donor made it back to
+  gesa.org.
+- `components/donate/DonateForm.tsx`: the contact-confirmation modal now posts to `/api/donations/create-
+  payment` and does a full-page redirect (`window.location.href`) to the returned Mollie checkout URL instead
+  of inserting directly into Supabase and showing an in-page thank-you. Split the modal's error state from
+  the amount-selection form's error state (previously one shared `error` string rendered in both places at
+  once whenever either step failed — caught by a test asserting exactly one error message).
+- `app/admin/donations/page.tsx`: added a Status column (with the human-readable label/color per status), and
+  narrowed the pledged-totals summary at the top to only count rows that are actually `"paid"` — an `"open"`
+  or `"failed"` row never became real money, so it shouldn't count toward the total.
+- `.env.example`: documented `MOLLIE_API_KEY` with sign-up/setup steps (test key first, live key only once
+  payment methods are activated in the Mollie dashboard).
+- Tests: rewrote `tests/unit/DonateForm.test.tsx` for the new fetch-and-redirect flow (mocks `fetch` and
+  `window.location` instead of the Supabase client) — covers the redirect-on-success path (both preset and
+  custom amounts), the blocked-submit-with-no-amount path, and the shown-error-no-redirect path when the
+  server can't start checkout.
+
+**What Roy still needs to do:** sign up at mollie.com, grab the test API key from the dashboard's Developers
+→ API keys screen, and add it as `MOLLIE_API_KEY` in Vercel's environment variables (all environments that
+should accept donations). Nothing here charges real money until that live key is added and payment methods
+are activated in the Mollie dashboard's onboarding flow — everything ships today gated behind that one
+missing key, showing a clear "not connected yet" message on `/donate` in the meantime rather than a broken
+page.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/DonateForm.test.tsx` — 5/5 passed. `tests/unit/DonatePage.test.tsx` — 2/2 passed (no
+  regression). `tests/unit/Header.test.tsx` — 1/1 passed (no regression).
+- Confirmed via direct query that both databases' `donations` table has the new Mollie columns and the
+  widened status check constraint.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 99: connect /donate to Mollie for real payment checkout + recurring gifts"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
