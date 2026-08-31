@@ -3,13 +3,26 @@
 // primitives rather than traced from or copied out of any third-party
 // accessibility-widget icon set. Deliberately simple/geometric so it reads
 // clearly at 20-32px inside the launcher button.
+//
+// Phase 94 — Roy flagged the original filled-path version as looking
+// cropped/too small inside the launcher (part of the figure was being cut
+// off). Rebuilt as a single stroked path (rounded caps/joins) plus a head
+// circle instead of a filled silhouette — every coordinate below was chosen
+// with enough margin from the 0-100 viewBox edges to account for the
+// stroke's own width extending past each endpoint, so nothing gets clipped
+// at any of the sizes this renders at (24-32px). Proportions (a fairly high
+// horizontal arm bar, short neck, long diverging legs) now match Roy's
+// reference image.
 export default function AccessibilityIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 36 36" fill="none" className={className} aria-hidden="true">
-      <circle cx="18" cy="7.5" r="4.5" fill="currentColor" />
+    <svg viewBox="0 0 100 100" fill="none" className={className} aria-hidden="true">
+      <circle cx="50" cy="20" r="10" fill="currentColor" />
       <path
-        d="M18 13.5c-6.2 0-11.6 1.35-11.9 1.43a2 2 0 0 0 1 3.87c.06-.02 3.9-1.02 8.4-1.28l-2.1 8.02a2 2 0 0 0 3.87 1.01l1.85-7.06h1.76l1.85 7.06a2 2 0 0 0 3.87-1.01l-2.1-8.02c4.5.26 8.34 1.26 8.4 1.28a2 2 0 0 0 1-3.87c-.3-.08-5.7-1.43-11.9-1.43Z"
-        fill="currentColor"
+        d="M22 38 H78 M50 38 V45 M50 45 L35 85 M50 45 L65 85"
+        stroke="currentColor"
+        strokeWidth="11"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

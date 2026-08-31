@@ -2977,4 +2977,31 @@ git push
 ```
 
 ---
+
+## Phase 94: Fix the accessibility launcher's human-figure icon looking cropped
+
+**Roy's request:** the launcher's white human figure looked cropped/too small compared to his reference
+image; asked for a whole, uncropped figure matching that reference.
+
+- `components/accessibility/AccessibilityIcon.tsx`: rebuilt from a filled silhouette path to a single stroked
+  path (rounded caps/joins) plus a head circle. Rendered a few candidate versions to a PNG locally and
+  compared them against the reference image before picking final coordinates, specifically checking that the
+  stroke's own width (which extends past each path endpoint) stays within the `0-100` viewBox and inside the
+  circular badge's visible radius at every corner — the original version's silhouette path didn't leave that
+  margin, which is what was reading as "cropped."
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors (icon-only
+  change).
+- Rendered the icon to a PNG and visually compared it against Roy's reference image before finalizing the
+  coordinates.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 94: fix accessibility launcher icon cropping"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
