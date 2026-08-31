@@ -4,6 +4,7 @@ import AuthStatus from '@/components/AuthStatus';
 import Logo from '@/components/Logo';
 import LanguageSelector from '@/components/LanguageSelector';
 import NotificationBell from '@/components/admin/NotificationBell';
+import VolunteerPrimaryCta from '@/components/volunteer/VolunteerPrimaryCta';
 import type { HeaderContent } from '@/lib/content';
 
 // Phase 88 — Roy asked to relabel the main nav and the Donate CTA without
@@ -14,6 +15,12 @@ import type { HeaderContent } from '@/lib/content';
 // now reads "JOIN GESA". Only these visible label strings changed — every
 // href below is untouched, and no page's own heading/copy changed (those
 // live in each page's own content, not here).
+// Phase 93 — Roy asked for "JOIN GESA" to behave like the Home donate
+// band's "Join as a professional" button (open the volunteer application
+// modal), not like a donation link. `donateHref` changed to the same
+// default VolunteerPrimaryCta already recognizes as "open the modal"
+// (used by the About page's volunteer CTA and the donate band) — this is
+// no longer a donation field despite the historical field name.
 export const HEADER_CONTENT_FALLBACK: HeaderContent = {
   published: true,
   homeLabel: "About",
@@ -21,7 +28,7 @@ export const HEADER_CONTENT_FALLBACK: HeaderContent = {
   therapistsLabel: "Our Professionals",
   supportGroupsLabel: "Community",
   donateLabel: "JOIN GESA",
-  donateHref: "/contact?subject=Donation",
+  donateHref: "/contact?subject=Volunteer",
 };
 
 // Phase 35 (round 2) — nav labels and the Donate CTA are Content
@@ -53,9 +60,18 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
           <Link href="/support-groups" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">{content.supportGroupsLabel}</Link>
         </nav>
         <div className="ms-auto flex items-center gap-2">
-          <Link href={content.donateHref} className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft">
+          {/* Phase 93 — VolunteerPrimaryCta (not a plain Link) so this opens
+              the real volunteer application modal when donateHref is still
+              the recognized default, same as the Home donate band's "Join
+              as a professional" button and the About page's volunteer CTA;
+              an admin who's deliberately repointed this via the Content
+              Manager still just gets a normal link. */}
+          <VolunteerPrimaryCta
+            href={content.donateHref}
+            className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft"
+          >
             <Heart size={16} /> {content.donateLabel}
-          </Link>
+          </VolunteerPrimaryCta>
           <NotificationBell />
           <LanguageSelector />
           <AuthStatus />

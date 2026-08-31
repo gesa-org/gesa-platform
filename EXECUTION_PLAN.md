@@ -2945,4 +2945,36 @@ git push
 ```
 
 ---
+
+## Phase 93: Make the header's "JOIN GESA" button open the volunteer application, not a donation link
+
+**Roy's request:** make "JOIN GESA" behave the same as the Home donate band's "Join as a professional"
+button — explicitly not a donation field/link.
+
+- `components/Header.tsx`: the Donate button now renders via `VolunteerPrimaryCta` (same component the Home
+  donate band and the About page's volunteer CTA already use) instead of a plain `Link`, so it opens the real
+  volunteer application modal whenever `donateHref` is still the recognized default — falling back to a
+  normal link only if an admin has deliberately repointed it via the Content Manager. `donateHref`'s default
+  changed from `/contact?subject=Donation` to `/contact?subject=Volunteer` (the exact default
+  `VolunteerPrimaryCta` already checks for). The field is still named `donateHref`/`donateLabel` in the data
+  model (renaming it would mean a bigger, riskier migration of the Content Manager's stored field names for no
+  functional benefit) — just noted in code that it's no longer a donation field despite the name.
+- Updated the already-published `site_header` row directly in both the Dev and Production Supabase databases
+  to the new `donateHref` — this field is Content-Manager-editable, so (same as Phase 88/89's header-label
+  issue) a stale published row would otherwise keep serving the old donation link regardless of this code
+  change.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Confirmed via direct query that both databases' `site_header.donateHref` now read
+  `/contact?subject=Volunteer`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 93: JOIN GESA button now opens the volunteer application modal"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
