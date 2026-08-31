@@ -17,9 +17,12 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   tagline:
     "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer therapists.",
   exploreHeading: "Explore",
-  exploreAboutLabel: "About",
-  exploreTherapistsLabel: "Our Therapists",
-  exploreSupportGroupsLabel: "Support Groups",
+  // Phase 88 — matches the header nav's relabeling (Header.tsx) for these
+  // same three routes, so the footer doesn't call /about, /therapists, and
+  // /support-groups something different from what the header calls them.
+  exploreAboutLabel: "Find Support",
+  exploreTherapistsLabel: "Our Professionals",
+  exploreSupportGroupsLabel: "Community",
   exploreBlogLabel: "Blog",
   exploreBlogBadge: "Soon",
   exploreFaqLabel: "FAQ",

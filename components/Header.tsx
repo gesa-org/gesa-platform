@@ -6,13 +6,21 @@ import LanguageSelector from '@/components/LanguageSelector';
 import NotificationBell from '@/components/admin/NotificationBell';
 import type { HeaderContent } from '@/lib/content';
 
+// Phase 88 — Roy asked to relabel the main nav and the Donate CTA without
+// touching any page's actual URL, structure, or in-page content: the item
+// that links to "/" now reads "About", the one linking to "/about" now
+// reads "Find Support", "/therapists" now reads "Our Professionals",
+// "/support-groups" now reads "Community", and the header's Donate button
+// now reads "JOIN GESA". Only these visible label strings changed — every
+// href below is untouched, and no page's own heading/copy changed (those
+// live in each page's own content, not here).
 export const HEADER_CONTENT_FALLBACK: HeaderContent = {
   published: true,
-  homeLabel: "Home",
-  aboutLabel: "About",
-  therapistsLabel: "Our Therapists",
-  supportGroupsLabel: "Support Groups",
-  donateLabel: "Donate",
+  homeLabel: "About",
+  aboutLabel: "Find Support",
+  therapistsLabel: "Our Professionals",
+  supportGroupsLabel: "Community",
+  donateLabel: "JOIN GESA",
   donateHref: "/contact?subject=Donation",
 };
 

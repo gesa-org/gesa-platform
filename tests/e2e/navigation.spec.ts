@@ -12,18 +12,24 @@ test.describe("Site navigation", () => {
     await expect(page.getByRole("link", { name: /reach out now/i }).first()).toBeVisible();
   });
 
+  // Phase 88 — Roy asked to relabel the header nav without changing any
+  // route: the link to "/about" now reads "Find Support" (not "About" — the
+  // Home link itself now reads "About" instead), "/therapists" now reads
+  // "Our Professionals", and "/support-groups" now reads "Community". Only
+  // the clicked link names changed below; the destinations and each
+  // landing page's own heading are untouched.
   test("header nav links reach the right pages", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("link", { name: "About" }).click();
+    await page.getByRole("link", { name: "Find Support" }).first().click();
     await expect(page).toHaveURL(/\/about$/);
     await expect(page.getByRole("heading", { name: /the path to emotional recovery begins here/i })).toBeVisible();
 
-    await page.getByRole("link", { name: "Our Therapists" }).click();
+    await page.getByRole("link", { name: "Our Professionals" }).first().click();
     await expect(page).toHaveURL(/\/therapists$/);
     await expect(page.getByRole("heading", { name: /verified volunteer therapists/i })).toBeVisible();
 
-    await page.getByRole("link", { name: "Support Groups" }).click();
+    await page.getByRole("link", { name: "Community" }).first().click();
     await expect(page).toHaveURL(/\/support-groups$/);
   });
 

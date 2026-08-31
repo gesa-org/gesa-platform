@@ -2726,4 +2726,47 @@ git push
 ```
 
 ---
+
+## Phase 88: Relabel the main nav and the header's Donate button
+
+**Roy's request:** rename the visible nav labels — "Home" → "About", "About" → "Find Support", "Our
+Therapists" → "Our Professionals", "Support Groups" → "Community" — and the header's "Donate" button to
+"JOIN GESA", with every page's actual URL, structure, and in-page content left exactly as it is. This is
+purely a label swap: the item that has always linked to "/" is now labeled "About" instead of "Home", the
+item linking to "/about" is now labeled "Find Support" instead of "About", and so on — no route changed.
+
+- `components/Header.tsx` (`HEADER_CONTENT_FALLBACK`): `homeLabel`, `aboutLabel`, `therapistsLabel`,
+  `supportGroupsLabel`, and `donateLabel` updated to the new text above. Every `href` (`/`, `/about`,
+  `/therapists`, `/support-groups`, the Donate link) is untouched — this content type (`HeaderContent`) was
+  already built in Phase 35 round 2 specifically so nav destinations stay fixed while only the label text is
+  editable, which is exactly what this ask needed.
+- `components/Footer.tsx` (`FOOTER_CONTENT_FALLBACK`): the footer's "Explore" column links to the same three
+  routes (`/about`, `/therapists`, `/support-groups`), so `exploreAboutLabel`, `exploreTherapistsLabel`, and
+  `exploreSupportGroupsLabel` were updated to match the header's new labels for those same pages — otherwise
+  the footer would call a page something different from what the header calls it. The footer's *separate*
+  "Donate" list item (`supportDonateLabel`, in the "Support" column, a different link than the header's
+  Donate button) was left as "Donate" — Roy's request named "the modal Donate" specifically, which read as
+  the one prominent header CTA; happy to rename this one too if he wants full consistency.
+- `tests/e2e/navigation.spec.ts`: updated the header-nav Playwright test to click the *new* label text for
+  each destination (e.g. it now clicks "Find Support" to reach `/about`, not "About" — "About" now belongs to
+  the Home link instead).
+
+**Note for Roy:** the footer's own "Donate" link (Support column) still says "Donate" — only the header's
+prominent Donate button changed to "JOIN GESA". Let me know if you'd like that footer link renamed too for
+consistency.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Manually confirmed no other test asserts on the old label text (`PageHero.test.tsx`'s "Our Therapists"/
+  "Support Groups" strings are unrelated fixture values passed directly as props in that test, not the real
+  site content, so they didn't need updating).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 88: relabel main nav and header Donate button"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
