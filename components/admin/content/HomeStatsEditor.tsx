@@ -8,12 +8,12 @@ export default function HomeStatsEditor({ initial }: { initial: HomeStatsContent
     <FlatFieldsEditor<HomeStatsContent>
       contentKey="component_home_stats"
       initial={initial}
-      note="The four numbers below the Home page's hero band. Numeric values (like the free-session count) animate by counting up on scroll — non-numeric values (like 'Global') just display as-is."
-      groups={[
-        { heading: "Stat 1", fields: [{ key: "stat1Value", label: "Value" }, { key: "stat1Label", label: "Label" }] },
-        { heading: "Stat 2", fields: [{ key: "stat2Value", label: "Value" }, { key: "stat2Label", label: "Label" }] },
-        { heading: "Stat 3", fields: [{ key: "stat3Value", label: "Value" }, { key: "stat3Label", label: "Label" }] },
-        { heading: "Stat 4", fields: [{ key: "stat4Value", label: "Value" }, { key: "stat4Label", label: "Label" }] },
+      note="The four icon badges below the Home page's hero band. Icons are fixed (shield, globe, dollar sign, people) — only the label text is editable here."
+      fields={[
+        { key: "badge1Label", label: "Badge 1 label (shield icon)" },
+        { key: "badge2Label", label: "Badge 2 label (globe icon)" },
+        { key: "badge3Label", label: "Badge 3 label (dollar sign icon)" },
+        { key: "badge4Label", label: "Badge 4 label (people icon)" },
       ]}
     />
   );

@@ -10,13 +10,15 @@ import Stats from "@/components/home/Stats";
 // Testing Library's render() doesn't await Server Components, so the
 // established workaround is to call and await the component function
 // directly to get its resolved JSX before passing that into render().
+// Phase 83 — redesigned from four counted-up numbers into four icon badges;
+// updated to assert the new badge labels instead of the old stat labels.
 describe("Stats", () => {
-  it("renders the real stat values/labels and uses the shared sage-soft background", async () => {
+  it("renders the real badge labels and uses the shared sage-soft background", async () => {
     render(await Stats());
-    expect(screen.getByText("Verified therapists")).toBeInTheDocument();
-    expect(screen.getByText("Support circles")).toBeInTheDocument();
+    expect(screen.getByText("Verified Profiles")).toBeInTheDocument();
+    expect(screen.getByText("Global Community")).toBeInTheDocument();
 
-    const section = screen.getByText("Verified therapists").closest("section");
+    const section = screen.getByText("Verified Profiles").closest("section");
     expect(section?.className).toContain("bg-sage-soft");
     expect(section?.className).not.toContain("bg-card");
   });

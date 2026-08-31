@@ -240,27 +240,37 @@ export type SupportGroupsDirectoryContent = {
 // Powers components/home/DonateBand.tsx — identical on Home, About, Our
 // Therapists, and Support Groups (Phase 75), so this one row fixes all four
 // at once instead of four separate hardcoded copies that could drift.
+// Phase 83 — Roy asked for a redesign: the single "Donate to GESA" button
+// became two pill CTAs (join as a professional / explore the community),
+// plus a small crisis-resources line underneath. `cta1Href` still defaults
+// to VolunteerPrimaryCta's recognized default, so "Join as a professional"
+// keeps opening the volunteer application modal rather than just linking to
+// the contact page, exactly like the About page's existing volunteer CTA.
 export type DonateBandContent = {
   published: boolean;
   headline: string;
   subtitle: string;
-  ctaLabel: string;
-  ctaHref: string;
+  cta1Label: string;
+  cta1Href: string;
+  cta2Label: string;
+  cta2Href: string;
+  crisisText: string;
+  crisisLinkLabel: string;
+  crisisLinkHref: string;
 };
 
-// Powers components/home/Stats.tsx (Home only). The four stat *values* are
-// content here, same as their labels — Roy/an admin may want to update a
-// number (e.g. therapist count) without a code change.
+// Powers components/home/Stats.tsx (Home only). Phase 83 — Roy asked for a
+// redesign: the four counted-up numeric stats became four static icon
+// badges (Verified Profiles / Multilingual Support / Clear Session Fees /
+// Global Community). Icons are fixed per position in code (same convention
+// as CrisisButton's resource icons) since only the label text is meant to
+// be admin-editable.
 export type HomeStatsContent = {
   published: boolean;
-  stat1Value: string;
-  stat1Label: string;
-  stat2Value: string;
-  stat2Label: string;
-  stat3Value: string;
-  stat3Label: string;
-  stat4Value: string;
-  stat4Label: string;
+  badge1Label: string;
+  badge2Label: string;
+  badge3Label: string;
+  badge4Label: string;
 };
 
 // Powers components/CrisisButton.tsx — rendered globally in app/layout.tsx,

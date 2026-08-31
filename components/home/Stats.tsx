@@ -1,51 +1,44 @@
+import { ShieldCheck, Globe, DollarSign, Users } from "lucide-react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
-import AnimatedCounter from "@/components/motion/AnimatedCounter";
 import { getPageContent, type HomeStatsContent } from "@/lib/content";
 
-// Phase 80 round 2 — these four value/label pairs were hardcoded with no
-// Content Manager wiring. Values are content here too (not just labels) —
-// an admin should be able to update "200+ Verified therapists" to a real,
-// current count without a code change.
+// Phase 83 — Roy asked for this row to become four icon badges (Verified
+// Profiles / Multilingual Support / Clear Session Fees / Global Community)
+// instead of the four counted-up numbers it used to show. Icons are fixed
+// per position here, same convention as CrisisButton's resource icons —
+// only the label text comes from the Content Manager.
+const ICONS = [ShieldCheck, Globe, DollarSign, Users];
+
 export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
   published: true,
-  stat1Value: "200+",
-  stat1Label: "Verified therapists",
-  stat2Value: "6",
-  stat2Label: "Free sessions each",
-  stat3Value: "20+",
-  stat3Label: "Languages supported",
-  stat4Value: "Global",
-  stat4Label: "Support circles",
+  badge1Label: "Verified Profiles",
+  badge2Label: "Multilingual Support",
+  badge3Label: "Clear Session Fees",
+  badge4Label: "Global Community",
 };
 
-// Phase 45 — spec section 8 ("Statistics / Metrics"): the numbers count up
-// from 0 when this row scrolls into view, via AnimatedCounter. That
-// component already handles the one non-numeric value here ("Global")
-// gracefully — it just renders the word statically, no animation — so no
-// special-casing is needed in this file. Card-style stagger entrance on
-// the four columns themselves, same primitive used everywhere else.
-// Phase 68 — background changed from --card (pale blue-gray) to the new
-// --sage-soft token (light sage green), matched consistently with the
-// About page's legal/tax-note section, per Roy's request to unify both
-// under one light sage green rather than two unrelated pale tones.
+// Phase 68 — background stays the shared --sage-soft token, matched with
+// the About page's legal/tax-note section.
 export default async function Stats() {
   const content = await getPageContent("component_home_stats", HOME_STATS_CONTENT_FALLBACK);
-  const stats = [
-    { value: content.stat1Value, label: content.stat1Label },
-    { value: content.stat2Value, label: content.stat2Label },
-    { value: content.stat3Value, label: content.stat3Label },
-    { value: content.stat4Value, label: content.stat4Label },
+  const badges = [
+    { icon: ICONS[0], label: content.badge1Label },
+    { icon: ICONS[1], label: content.badge2Label },
+    { icon: ICONS[2], label: content.badge3Label },
+    { icon: ICONS[3], label: content.badge4Label },
   ];
 
   return (
-    <section className="border-y border-border bg-sage-soft py-14">
-      <StaggerGroup className="mx-auto grid max-w-[1160px] grid-cols-2 gap-6 px-6 text-center md:grid-cols-4">
-        {stats.map((s) => (
-          <StaggerItem key={s.label}>
-            <div className="font-serif text-[46px] font-semibold tracking-tight text-primary">
-              <AnimatedCounter value={s.value} />
-            </div>
-            <div className="text-muted-fg">{s.label}</div>
+    <section className="border-y border-border bg-sage-soft py-10">
+      <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
+        {badges.map((b) => (
+          <StaggerItem key={b.label} className="flex items-center gap-3.5">
+            <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-card text-primary shadow-sm">
+              <b.icon size={22} />
+            </span>
+            <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary">
+              {b.label}
+            </span>
           </StaggerItem>
         ))}
       </StaggerGroup>

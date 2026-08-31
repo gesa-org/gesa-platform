@@ -2522,4 +2522,59 @@ git push
 ```
 
 ---
+
+## Phase 83: Redesign the Home page's stats row and donate band
+
+**Roy's request:** two reference screenshots — the first showing four icon badges (Verified Profiles /
+Multilingual Support / Clear Session Fees / Global Community) on a light sage band, the second showing the
+donate band with two outline pill buttons ("Join as a professional" / "Explore the community") and a small
+"Need immediate emergency support? Find local crisis services." line, replacing the single "Donate to GESA"
+button. Asked to find this section on the Home page and apply the new design.
+
+Note: the donate band (`components/home/DonateBand.tsx`) is the same shared component rendered identically
+on Home, About, Our Therapists, and Support Groups (Phase 75) — this redesign updates all four at once,
+consistent with how that component has worked since Phase 80 round 2. The stats row (`Stats.tsx`) is
+Home-only.
+
+- `lib/content.ts`: `HomeStatsContent` changed from four numeric stat value/label pairs to four badge
+  labels only (`badge1Label`…`badge4Label`) — the design no longer has counted-up numbers, just an icon and
+  a label per badge. `DonateBandContent` changed from one `ctaLabel`/`ctaHref` pair to `cta1Label/Href`,
+  `cta2Label/Href`, plus `crisisText`, `crisisLinkLabel`, `crisisLinkHref` for the new line underneath.
+- `components/home/Stats.tsx`: rewritten from an animated counter row to four icon badges (fixed icons in
+  code — `ShieldCheck`, `Globe`, `DollarSign`, `Users`, same convention as `CrisisButton`'s fixed resource
+  icons — only the label text is Content Manager-editable); dropped the now-unused `AnimatedCounter` import.
+- `components/home/DonateBand.tsx`: renders two pill-style CTAs instead of one filled button, plus a
+  crisis line with a heart icon underneath. The first CTA goes through the existing `VolunteerPrimaryCta`
+  component (unchanged) rather than a plain link — its default href (`/contact?subject=Volunteer`) is
+  already recognized by that component as "open the volunteer application modal", so "Join as a
+  professional" gets the same modal behavior as the About page's existing volunteer CTA, for free. The
+  second CTA links to `/support-groups`. The crisis link defaults to `findahelpline.com`, the same
+  international directory already used as a resource in `CrisisButton`.
+- `components/admin/content/HomeStatsEditor.tsx`, `DonateBandEditor.tsx`: field lists updated to match the
+  new content shapes.
+- `tests/unit/Stats.test.tsx`: updated to assert the new badge labels ("Verified Profiles", "Global
+  Community") instead of the old stat labels.
+
+**Note for Roy:** this changes the shape of `component_home_stats` and `component_donate_band`'s content.
+If either was ever edited away from its default in the live Content Manager, those specific edits won't
+carry over to the new fields (there's no way to auto-map an old numeric stat onto a new badge label, or an
+old single button onto two new ones) — worth a quick check in the Content Manager after this deploys, though
+since both were only added a few hours ago in Phase 81, this is unlikely to matter in practice.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors from any
+  file this phase touched.
+- `tests/unit/Stats.test.tsx` — 1/1 passed.
+- `tests/unit/SiteFooterSlot.test.tsx` — inspected rather than re-run under this phase (its assertions only
+  confirm `SiteFooterSlot` never renders a donate band at all, per Phase 75 — it doesn't touch
+  `DonateBand.tsx`'s internals, so this phase's changes can't affect it).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 83: redesign Home stats row into icon badges, donate band into two CTAs + crisis line"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

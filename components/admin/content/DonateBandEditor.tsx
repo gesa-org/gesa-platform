@@ -12,8 +12,13 @@ export default function DonateBandEditor({ initial }: { initial: DonateBandConte
       fields={[
         { key: "headline", label: "Headline" },
         { key: "subtitle", label: "Subtitle", multiline: true },
-        { key: "ctaLabel", label: "Button label" },
-        { key: "ctaHref", label: "Button link" },
+        { key: "cta1Label", label: "First button label" },
+        { key: "cta1Href", label: "First button link" },
+        { key: "cta2Label", label: "Second button label" },
+        { key: "cta2Href", label: "Second button link" },
+        { key: "crisisText", label: "Crisis line text" },
+        { key: "crisisLinkLabel", label: "Crisis line link label" },
+        { key: "crisisLinkHref", label: "Crisis line link" },
       ]}
     />
   );
