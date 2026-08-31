@@ -3004,4 +3004,60 @@ git push
 ```
 
 ---
+
+## Phase 95: Redesign the Home page's three path cards as framed artwork + gold badge
+
+**Roy's request:** a reference image showing the three "path" cards restyled as framed artwork with a small
+gold badge and serif title overlapping the frame's bottom edge, using art-piece titles ("Grounded" / "Service
+Remembrance" / "Life from the Deep") instead of the previous audience-descriptive titles. Clarified two open
+questions before building: (1) keep the cards fully functional — each still links to its intake path — rather
+than turning them into a non-interactive gallery; (2) yes, replace the titles with the new art-piece names.
+Also asked broadly that any updated page/section/field/CTA text stay Content Manager-editable, and (separately
+confirmed) to keep this project's existing convention of never deleting a field just because a redesign
+stopped rendering it, rather than starting to prune "orphaned" fields now.
+
+- `components/home/Paths.tsx`: replaced the 3D flip-card (painting on the front, description + "Reach out
+  now" button revealed on hover-flip) with a static card — framed artwork (mat/frame color varies per card,
+  built from existing palette tokens: `--clay-soft`/`--clay` for the first, `--sage-soft`/`--espresso` for
+  the second, and a new slate-blue value matched to the Footer's own existing text color for the third, since
+  no existing token was close to the reference's blue-gray mat) with a small gold-badge "dome" overlapping
+  the frame's bottom edge — a line-art icon (`Sprout`/`Footprints`/`Waves`, re-picked to match the new
+  titles' imagery) and the serif title inside it. The whole card is now one link to its intake path
+  (`/intake?path=crisis` etc., unchanged) rather than a separate button — since the reference design has no
+  visible description or button on the card face, the description moved to the link's `aria-label` (same
+  "description lives in the accessible name, not visible card text" pattern this section used originally,
+  before Phase 42 added visible description text back).
+- `HOME_CONTENT_FALLBACK`'s `card1Title`/`card2Title`/`card3Title` updated to "Grounded" / "Service
+  Remembrance" / "Life from the Deep" — no new content fields needed, this reuses the exact same
+  Content-Manager-editable fields (`page_home`) these cards have used since Phase 35 round 2, so an admin can
+  already retitle any of these three cards from the Content Manager going forward.
+- Updated the already-published `page_home` row directly in both the Dev and Production Supabase databases
+  to the new three titles — same reasoning as Phase 88/89/93: this is Content-Manager-editable data, so the
+  stale published row would otherwise keep showing the old titles regardless of this code change.
+- `tests/unit/Paths.test.tsx`: updated to check the new titles and the whole-card-is-a-link/aria-label
+  pattern instead of the removed flip-card structure and "Reach out now" button text.
+
+**On the broader "keep everything changed in this project Content-Manager-editable" request:** every phase
+in this session that touched real page content (the header nav/Donate CTA, About's founder/Team & Advisors/
+movement band, and now these three cards) already went through a `site_content` field, not a hardcoded
+string — so nothing from Phase 88 onward needs new CMS wiring; it's already there. The one category that's
+intentionally *not* CMS-wired, consistent with `CONTENT_GUIDE.md`'s existing scope, is the accessibility
+widget's own interface labels ("Accessibility Adjustments," toggle names, etc.) — those are functional UI
+chrome (like admin CRM labels or validation messages), not public marketing copy, which is the line
+`CONTENT_GUIDE.md` already draws for what belongs in the Content Manager.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/Paths.test.tsx` — 3/3 passed.
+- Confirmed via direct query that both databases' `page_home.card1Title`/`card2Title`/`card3Title` now read
+  the new titles.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 95: redesign Home path cards as framed artwork + gold badge, new titles"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
