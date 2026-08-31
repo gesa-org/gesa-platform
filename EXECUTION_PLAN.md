@@ -3060,4 +3060,38 @@ git push
 ```
 
 ---
+
+## Phase 96: Revert Phase 95 — the redesign didn't match Roy's reference
+
+**Roy's request:** revert Phase 95 entirely — the implementation didn't follow the design he provided.
+
+- `components/home/Paths.tsx`, `tests/unit/Paths.test.tsx`: restored byte-for-byte to their state at commit
+  `8b01e81` (Phase 94, immediately before the Phase 95 commit) — the 3D flip-card design (full painting on
+  the front face, "certificate"-style back face with the gold circular badge/heading/description/CTA button
+  revealed on hover) and the original card titles ("In crisis right now" / "Veterans, reservists & families"
+  / "Seeking support") are back exactly as they were.
+- Reverted the already-published `page_home` row directly in both the Dev and Production Supabase databases
+  back to those same three original titles, undoing Phase 95's direct database edit.
+- Left Phase 95's own write-up above in place (not deleted) as a historical record of what was tried and
+  reverted, per this document's standing "don't erase history, add a new entry" convention — same reasoning
+  already applied to every other phase's write-up in this file.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/Paths.test.tsx` — 3/3 passed (the original Phase-94-era assertions, restored unchanged).
+- Confirmed via direct query that both databases' `page_home.card1Title`/`card2Title`/`card3Title` are back
+  to the original three titles.
+
+**Next step:** if you still want the Home cards redesigned along the lines of your reference image, it'd
+help to know specifically what didn't land — e.g. the frame/mat styling, the badge shape/position, the
+dropped description text, or something else — so the next attempt gets it right the first time.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 96: revert Phase 95 Home path card redesign"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

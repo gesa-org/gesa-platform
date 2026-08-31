@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Sprout, Footprints, Waves, Sparkle, ShieldCheck, HeartHandshake, Users } from "lucide-react";
+import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
@@ -20,29 +20,17 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   footerNote: "Free, confidential sessions · verified volunteer therapists · secure communication",
   purposeTicker:
     "Because no one should face emotional pain alone\nVerified volunteer therapists, giving their time freely\nUp to six free sessions — cost is never why someone goes without care\nA global community of care, across borders and languages\nConfidential, dignified support, always free at the point of need",
-  // Phase 95 — Roy sent a reference image of the three cards restyled as
-  // framed artwork with a gold badge + serif title beneath, using art-piece
-  // titles ("Grounded" / "Service Remembrance" / "Life from the Deep")
-  // instead of the previous audience-descriptive titles ("In crisis right
-  // now" etc). Confirmed with Roy: yes, replace the titles; keep the cards
-  // fully functional (still link to their intake path) rather than turning
-  // them into a non-interactive gallery. Descriptions are unchanged and
-  // still carry the full audience context — they're no longer shown as
-  // visible card text (the reference design has no description text on the
-  // card face), but live on as each card's aria-label, same "whole card is
-  // a link, description moves to the accessible name" pattern this section
-  // already used before Phase 42 added visible description text.
-  card1Title: "Grounded",
+  card1Title: "In crisis right now",
   card1Description:
     "For anyone shaken by war, terror, or disaster. Fast, gentle help when you can't wait — approximately six free sessions to start.",
   card1CtaLabel: "Reach out now",
   card1CtaLink: "/intake?path=crisis",
-  card2Title: "Service Remembrance",
+  card2Title: "Veterans, reservists & families",
   card2Description:
     "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
   card2CtaLabel: "Reach out now",
   card2CtaLink: "/intake?path=veteran",
-  card3Title: "Life from the Deep",
+  card3Title: "Seeking support",
   card3Description: "For anyone carrying anxiety, ongoing stress, or the weight of antisemitism. Start here — more is coming.",
   card3CtaLabel: "Reach out now",
   card3CtaLink: "/intake?path=general",
@@ -128,28 +116,13 @@ const PATH_IMAGES = [
   "/images/paths/seeking-support-artwork.png",
 ];
 
-// Phase 76 — one badge icon per card, fixed by position (same "code-
-// managed, not editable" treatment as PATH_IMAGES above) — chosen to match
-// each card's own context. Phase 95 — re-picked to match the new art-piece
-// titles in Roy's reference image: a sprouting plant for "Grounded" (growth/
-// rootedness), footprints for "Service Remembrance" (military
-// boots/journey — closest available lucide icon to the boots-and-sprig
-// badge in the reference), and waves for "Life from the Deep" (the ocean
-// imagery in that card's artwork and reference badge).
-const PATH_BADGE_ICONS = [Sprout, Footprints, Waves];
-
-// Phase 95 — each card's mat/frame color loosely follows Roy's reference
-// (cream, sage, and a cool slate-blue mat), built from this site's existing
-// palette tokens rather than picking arbitrary new colors, except the third
-// mat — no existing token was close to the reference's blue-gray, so that
-// one is a new hardcoded value matched to the Footer's own long-standing
-// slate-blue text color (#c7d0de) for consistency with a color already
-// established elsewhere on the site.
-const CARD_STYLES: { mat: string; frame: string }[] = [
-  { mat: "bg-clay-soft", frame: "border-clay" },
-  { mat: "bg-sage-soft", frame: "border-espresso" },
-  { mat: "bg-[#c7d0de]", frame: "border-clay" },
-];
+// Phase 76 — one badge icon per card back face, fixed by position (same
+// "code-managed, not editable" treatment as PATH_IMAGES above) — chosen to
+// match each card's own context: a life ring for the crisis path (urgent,
+// keep-afloat help), a service medal for veterans/reservists/families, and
+// a sparkling sprig for general/seeking support (closest available lucide
+// icon to the laurel-sprig badge in Roy's reference design).
+const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
 // Manager-editable via site_content key "page_home", with these exact
@@ -301,44 +274,79 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           Phase 72 (see the gold band comment above for the -mt-[210px]
           math). */}
       <div className="wrap relative z-10 -mt-[210px] pb-16">
-        <StaggerGroup className="grid gap-x-6 gap-y-14 md:grid-cols-3">
-          {cards.map((p, i) => {
-            const BadgeIcon = PATH_BADGE_ICONS[i] ?? PATH_BADGE_ICONS[PATH_BADGE_ICONS.length - 1];
-            const style = CARD_STYLES[i] ?? CARD_STYLES[CARD_STYLES.length - 1];
-            return (
-              /* Phase 95 — Roy sent a reference image restyling these as
-                 framed artwork with a small gold badge + serif title
-                 overlapping the frame's bottom edge, replacing the previous
-                 3D flip card (painting on the front, description/CTA
-                 revealed on hover-flip). The whole card is one link — same
-                 "the description lives in the aria-label, not as visible
-                 card text" pattern this section used originally (Phase 19),
-                 before Phase 42 added visible description text — since the
-                 reference design has no description or button on the card
-                 face itself, only the artwork, badge, and title. */
-              <StaggerItem key={i}>
-                <Link
-                  href={p.ctaLink}
-                  aria-label={`${p.title}: ${p.description}`}
-                  className="gold-card-hover group block"
-                >
-                  <div className={`relative aspect-[4/5] w-full overflow-hidden rounded-2xl border-[6px] shadow-lg transition-transform duration-300 group-hover:-translate-y-1 ${style.mat} ${style.frame}`}>
-                    <div className="absolute inset-4 overflow-hidden rounded-md bg-white/50">
-                      <Image src={PATH_IMAGES[i]} alt="" aria-hidden="true" fill className="object-contain" />
-                    </div>
+        <StaggerGroup className="grid gap-6 md:grid-cols-3">
+          {cards.map((p, i) => (
+            /* Phase 72 — Roy asked for the paintings to display in full by
+               default (previously only a small 200px-tall sliver of each
+               card was image, with the title/description/CTA always
+               visible underneath) and for the text/CTA to only appear when
+               the card is flipped on hover. Rebuilt as a real 3D flip
+               card: a fixed-height, perspective wrapper holding two
+               absolutely-positioned, backface-hidden faces — the front is
+               the full painting (matted the same way the old small image
+               box was, just filling the entire card now), the back is the
+               title/description/"Reach out now" button that used to sit
+               statically below the image. `group-hover` on the outer
+               `.gold-card-hover` wrapper drives the rotateY(180deg)
+               flip; keyboard/focus users get the same flip via
+               `focus-within` on that wrapper (Tailwind's `group-focus-
+               within`), since the card's only interactive element (the
+               CTA link) needs to be reachable and visible on focus, not
+               just mouse hover. */
+            <StaggerItem key={i}>
+              <div className="gold-card-hover group h-[420px] [perspective:1400px]">
+                <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
+                  {/* Front face — full painting, no mat/frame border. Phase
+                      73 — Roy sent close crops of the three paintings and
+                      asked for the front face to show just the painting
+                      itself (no white mat, no gray/clay frame border) on a
+                      full gold background instead of the ash-gray
+                      `bg-secondary` box the mat used to sit on. Still
+                      `object-contain` so the whole painting displays
+                      uncropped — only the matting/background around it
+                      changed, not how the image itself is fit. */}
+                  <div className="gold-banner absolute inset-0 overflow-hidden rounded-[24px] shadow-lg [backface-visibility:hidden]">
+                    <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
                   </div>
-                  {/* Badge — a small dome overlapping the frame's bottom
-                      edge, matching the reference: line-art gold icon near
-                      the top, serif title beneath it, both inside the
-                      dome shape. */}
-                  <div className="relative z-10 mx-auto -mt-9 flex w-[76%] flex-col items-center rounded-t-full bg-[#e7d6a6] px-4 pb-4 pt-6 text-center shadow-md">
-                    <BadgeIcon size={26} strokeWidth={1.75} className="mb-1.5 text-clay" aria-hidden="true" />
-                    <h3 className="font-serif text-[17px] leading-tight text-espresso">{p.title}</h3>
-                  </div>
-                </Link>
-              </StaggerItem>
-            );
-          })}
+                  {/* Back face — Phase 76: Roy generated a new "certificate"
+                      style design (cream card, gold corner brackets, a
+                      circular gold badge icon, serif heading, and a dark
+                      navy/gold-ringed pill button) for the Seeking Support
+                      card and asked for the same treatment on the other
+                      two, each with its own contextually relevant badge
+                      icon (see PATH_BADGE_ICONS above) rather than reusing
+                      one icon for all three. */}
+                  {(() => {
+                    const BadgeIcon = PATH_BADGE_ICONS[i] ?? PATH_BADGE_ICONS[PATH_BADGE_ICONS.length - 1];
+                    return (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden rounded-[24px] border border-clay/30 bg-clay-soft p-7 text-center shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                        {/* Gold corner brackets */}
+                        <span className="pointer-events-none absolute left-3 top-3 h-4 w-4 rounded-tl-md border-l-2 border-t-2 border-clay" />
+                        <span className="pointer-events-none absolute right-3 top-3 h-4 w-4 rounded-tr-md border-r-2 border-t-2 border-clay" />
+                        <span className="pointer-events-none absolute bottom-3 left-3 h-4 w-4 rounded-bl-md border-b-2 border-l-2 border-clay" />
+                        <span className="pointer-events-none absolute bottom-3 right-3 h-4 w-4 rounded-br-md border-b-2 border-r-2 border-clay" />
+
+                        <div
+                          className="mb-4 flex h-14 w-14 flex-none items-center justify-center rounded-full shadow-md"
+                          style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}
+                        >
+                          <BadgeIcon size={24} className="text-white" />
+                        </div>
+                        <h3 className="font-serif text-[21px] text-foreground">{p.title}</h3>
+                        <p className="mt-2.5 text-[14px] leading-relaxed text-muted-fg">{p.description}</p>
+                        <Link
+                          href={p.ctaLink}
+                          className="relative z-10 mt-6 inline-flex w-fit items-center justify-center gap-2 rounded-full border-2 border-clay bg-espresso px-6 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#141820]"
+                        >
+                          {p.ctaLabel} <ArrowRight size={15} />
+                        </Link>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
         </StaggerGroup>
 
         {/* Phase 79 — Roy flagged this caption ("The path to emotional

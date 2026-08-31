@@ -27,35 +27,35 @@ describe("Paths (Home)", () => {
     expect(allArtworkImgs.length).toBe(6);
   });
 
-  // Phase 95 — Roy replaced the flip-card design (painting on the front,
-  // description/CTA revealed on hover-flip) with framed artwork + a small
-  // gold badge + serif title, and swapped the card titles to art-piece
-  // names. The whole card is now one link (no separate "Reach out now"
-  // button on the face) whose accessible name carries the title +
-  // description — same pattern this section used before Phase 42 added
-  // visible description text.
-  it("still renders the three real path cards as single links to their intake path", () => {
+  it("still renders the three real path cards", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Grounded")).toBeInTheDocument();
-    expect(screen.getByText("Service Remembrance")).toBeInTheDocument();
-    expect(screen.getByText("Life from the Deep")).toBeInTheDocument();
-
-    const groundedLink = screen.getByRole("link", { name: /^Grounded:/ });
-    expect(groundedLink).toHaveAttribute("href", "/intake?path=crisis");
-    expect(screen.getByRole("link", { name: /^Service Remembrance:/ })).toHaveAttribute("href", "/intake?path=veteran");
-    expect(screen.getByRole("link", { name: /^Life from the Deep:/ })).toHaveAttribute("href", "/intake?path=general");
+    expect(screen.getByText("In crisis right now")).toBeInTheDocument();
+    expect(screen.getByText("Veterans, reservists & families")).toBeInTheDocument();
+    expect(screen.getByText("Seeking support")).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /reach out now/i })).toHaveLength(3);
   });
 
-  it("renders each card's artwork as decorative (empty alt) since the link's aria-label already carries the title/description", () => {
+  // Phase 72 — each card is now a real 3D flip: the front face shows the
+  // full painting, the back face (title/description/CTA) only becomes
+  // visible on hover/focus via a CSS rotateY transform on a shared
+  // group-hover wrapper. jsdom doesn't compute CSS transforms, so this
+  // can't assert visual visibility directly — instead it confirms both
+  // faces are actually in the DOM (three artworks + three sets of text),
+  // and that the flip wrapper carries the hover/focus rotate classes that
+  // drive the effect.
+  it("renders both the front (painting) and back (text/CTA) faces of each flip card", () => {
     render(<Paths />);
 
-    // Three card images now share the same empty-alt/aria-hidden treatment
-    // as the gallery wall's decorative copies (Phase 95) — combined with
-    // the gallery wall, this is the same six-image total the hero test
-    // above already checks; this test specifically confirms none of the
-    // three card images have non-empty alt text (that would double up with
-    // the link's own aria-label for screen reader users).
-    expect(screen.queryAllByAltText(/artwork$/)).toHaveLength(0);
+    const artworkImages = screen.getAllByAltText(/artwork$/);
+    expect(artworkImages).toHaveLength(3);
+
+    const flipWrapper = screen.getByText("In crisis right now").closest('[class*="transform-style"]') as HTMLElement;
+    // Tailwind arbitrary-property classes render literally in the DOM —
+    // this just confirms the hover/focus rotate classes are present on
+    // whichever element actually carries the transform.
+    const rotatingEl = document.querySelector('[class*="group-hover:"][class*="rotateY"]');
+    expect(rotatingEl).toBeTruthy();
+    expect(flipWrapper).toBeTruthy();
   });
 });
