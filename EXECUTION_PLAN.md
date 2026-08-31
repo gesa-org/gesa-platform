@@ -2454,4 +2454,72 @@ git push
 ```
 
 ---
+
+## Phase 82: Add "Add therapist" and "Add user" to the CRM's Therapists and Users sections
+
+**Roy's request:** "Update the 'Therapists, and Users' section at the CRM Dashboard the section must have a
+feature able to 'Add' therapists and 'Add' users." Neither section had any create path before this — Therapists
+only supported edit/deactivate on existing rows, Users only supported changing an existing profile's role.
+
+**Design decision, verified live against both Supabase projects (Dev `ggjvpfivyqartvanvhzq`, Production
+`iddeoavrlnvwwfopsacy`) rather than assumed:** the two features needed different approaches. Adding a
+therapist is a plain row insert — queried `pg_policies` on both projects and confirmed the
+`therapists_admin_insert` RLS policy (`admin`/`reviewer` roles) already exists on both, so
+`AddTherapistModal` inserts directly with the ordinary browser Supabase client, no new migration needed.
+Adding a user is not a plain row insert: `profiles.id` has no default and must equal a real `auth.users.id`,
+so a new user can only be created by first minting a real `auth.users` row. That requires Supabase's Auth
+Admin API, which requires the service-role key — so this goes through a new server-only API route using
+`lib/supabase/admin.ts`'s `createAdminClient()` (defined in an earlier phase, never previously called by
+anything). Queried `pg_get_functiondef` for the existing `handle_new_user()` trigger and confirmed it reads
+`raw_user_meta_data->>'full_name'` and `raw_user_meta_data->>'role'`, so passing both as `user_metadata` on
+`createUser()` means the trigger populates the new `profiles` row correctly with no follow-up write.
+
+- `app/api/admin/users/route.ts` (new): `POST` — requires the caller be a signed-in `admin` (checked
+  manually, not via `requireAdmin()`, since that helper redirects and is page-oriented, not API-route-
+  appropriate); validates full name, email, and role; generates a random temporary password (not
+  Supabase's own invite-email flow, since this project's email is via Resend, a separate system from
+  Supabase's own SMTP — relying on the latter being configured would be a silent failure mode); calls
+  `admin.auth.admin.createUser()` with `email_confirm: true` and the metadata above; returns the new user's
+  id and the temp password once, for the admin to relay however they choose. Checks
+  `process.env.SUPABASE_SERVICE_ROLE_KEY` up front and returns a clear 500 with an actionable message if
+  it's unset, rather than letting the Supabase client throw an opaque error.
+- `components/admin/AddUserModal.tsx` (new): full name / email / role form, posts to the route above, shows
+  the returned temporary password with a copy-to-clipboard button, calls `router.refresh()` when closed
+  after a successful creation so the table reflects the new row immediately.
+- `components/admin/AddTherapistModal.tsx` (new): single full-name field; derives a slug
+  (`slugify()`), inserts `{ full_name, slug, is_active: false }` directly via the browser client, retries
+  up to 5 times appending `-2`, `-3`, etc. if Postgres returns a unique-violation (`23505`) on the slug, and
+  routes straight into the new therapist's edit page (`/admin/therapists/[id]`) on success — new therapists
+  land inactive so they don't appear in the public directory until an admin fills in their profile.
+- `app/admin/therapists/page.tsx`, `app/admin/users/page.tsx`: header restructured to
+  `flex items-start justify-between gap-4` and the new modal button added alongside each section's existing
+  heading/description.
+
+**Action needed from Roy before this works in any deployed environment:** `SUPABASE_SERVICE_ROLE_KEY` was
+previously unset everywhere (ENV_VARS.md — "not yet used by any live flow, only needed if a future feature
+requires bypassing RLS server-side"). This is that feature. There's no way to confirm from here whether it's
+been added to Vercel's Production/Preview environment variables — please check Vercel's project settings and
+add it (the value is on the Dev/Production Supabase project's API settings page, under "service_role") before
+relying on "Add user" in any deployed environment. Until then, the route will fail cleanly with the message
+above rather than a generic crash, but Add User itself won't work.
+
+**Verification:**
+- `tests/unit/AddTherapistModal.test.tsx` (new) — 4/4 passed: form disabled until a name is entered; slug
+  correctly derived and therapist created inactive, with navigation to its edit page; slug-collision retry
+  appends `-2` on a `23505` error; a non-conflict error is shown and navigation does not happen.
+- `tests/unit/AddUserModal.test.tsx` (new) — 3/3 passed: posts the expected body and displays the returned
+  temp password; server error messages are shown and no password is displayed on failure; closing after
+  success calls `router.refresh()`.
+- Full-project `tsc --noEmit`: identical pre-existing error list to before this phase (same unrelated test
+  files and the Resend SDK type-resolution issue noted in Phase 81) — zero new errors from any file this
+  phase touched.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 82: add Add Therapist and Add User to the CRM dashboard"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

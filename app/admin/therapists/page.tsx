@@ -1,5 +1,6 @@
 import { getAllTherapistsAdmin } from "@/lib/queries";
 import TherapistsTable from "@/components/admin/TherapistsTable";
+import AddTherapistModal from "@/components/admin/AddTherapistModal";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +16,15 @@ export default async function AdminTherapistsPage() {
 
   return (
     <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
-      <div className="border-b border-border p-5">
-        <h2 className="text-lg">Therapists ({therapists.length})</h2>
-        <p className="mt-1 text-[13px] text-muted-fg">
-          Edit photos, bios, and languages, or deactivate a therapist to remove them from the public directory. Check
-          several (or all) below to activate or deactivate them together.
-        </p>
+      <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+        <div>
+          <h2 className="text-lg">Therapists ({therapists.length})</h2>
+          <p className="mt-1 text-[13px] text-muted-fg">
+            Edit photos, bios, and languages, or deactivate a therapist to remove them from the public directory.
+            Check several (or all) below to activate or deactivate them together.
+          </p>
+        </div>
+        <AddTherapistModal />
       </div>
       <TherapistsTable
         therapists={therapists.map((t) => ({

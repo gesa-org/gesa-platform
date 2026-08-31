@@ -1,6 +1,7 @@
 import { getAllProfiles } from "@/lib/queries";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import RoleSelect from "@/components/admin/RoleSelect";
+import AddUserModal from "@/components/admin/AddUserModal";
 
 export const dynamic = "force-dynamic";
 
@@ -10,11 +11,15 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
-      <div className="border-b border-border p-5">
-        <h2 className="text-lg">Registered users ({profiles.length})</h2>
-        <p className="mt-1 text-[13px] text-muted-fg">
-          Change a user&apos;s role to grant or remove access. Restricted to administrators.
-        </p>
+      <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+        <div>
+          <h2 className="text-lg">Registered users ({profiles.length})</h2>
+          <p className="mt-1 text-[13px] text-muted-fg">
+            Change a user&apos;s role to grant or remove access, or add a new user directly. Restricted to
+            administrators.
+          </p>
+        </div>
+        <AddUserModal />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-[14px]">
