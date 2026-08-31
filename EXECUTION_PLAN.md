@@ -3094,4 +3094,69 @@ git push
 ```
 
 ---
+
+## Phase 97: Redesign the Home path cards' front face only — keep the flip effect and back face intact
+
+**Roy's request:** resent the same reference image (framed artwork + gold badge dome, art-piece titles
+"Grounded" / "Service Remembrance" / "Life from the Deep") with a refined instruction: don't change the
+current structure or flip effect, and don't change the text details on the back of the cards — only apply
+the new design to the front of each card. As with Phase 95, wanted the new front text captured in the
+Content Manager so it stays editable.
+
+- `lib/content.ts`: added `card1FrontLabel`/`card2FrontLabel`/`card3FrontLabel: string` to the `HomeContent`
+  type — separate fields from the existing `card1Title`/`card2Title`/`card3Title`, since those back-face
+  titles ("In crisis right now" etc.) and the new front-face badge labels are visible at different flip
+  states and needed to stay independently editable.
+- `components/home/Paths.tsx`:
+  - `HOME_CONTENT_FALLBACK` gained the three new `card*FrontLabel` defaults ("Grounded" / "Service
+    Remembrance" / "Life from the Deep" — the same art-piece names from the reverted Phase 95 attempt; that
+    attempt's *titles* were fine, using them to replace the back face's own content instead of adding them
+    to the front was the actual mistake).
+  - Added `PATH_FRONT_BADGE_ICONS` (`Sprout`/`Footprints`/`Waves`, matched to the new labels' imagery) and
+    `PATH_FRONT_STYLES` (per-card mat/frame color, reusing existing palette tokens plus one new hardcoded
+    slate-blue value matched to the Footer's own existing text color, same as Phase 95) as new constants
+    separate from the untouched `PATH_BADGE_ICONS` used on the back face.
+  - The front face (`[backface-visibility:hidden]`, no rotate) was rebuilt as framed/matted artwork — the
+    painting still renders `object-contain` and uncropped inside an inner `overflow-hidden` box, with a gold
+    badge dome (icon + front label) absolutely positioned to overlap the frame's bottom edge via
+    `-translate-y-1/2`-style offset; the outer face wrapper switched to `overflow-visible` so the dome isn't
+    clipped.
+  - The back face — gold corner brackets, circular badge (`PATH_BADGE_ICONS`), `p.title`/`p.description`,
+    and the "Reach out now" CTA `<Link>` — and the flip mechanic itself (`[perspective:1400px]`,
+    `group-hover`/`group-focus-within` `rotateY(180deg)`) are byte-for-byte unchanged from Phase 94.
+- `tests/unit/Paths.test.tsx`: added a new test asserting the three front badge labels render, and that the
+  three original back-face titles from the existing "still renders the three real path cards" test are still
+  present — confirming the front redesign didn't touch the back face's content. All three pre-existing tests
+  (hero/gallery, real path cards, front/back flip faces) left unchanged and still pass.
+- `components/admin/content/HomeEditor.tsx`: added a "front badge label" field ahead of each card's title
+  field in the "Path cards" group, so `card1FrontLabel`/`card2FrontLabel`/`card3FrontLabel` are editable from
+  the Content Manager alongside the existing card fields.
+- Updated the already-published `page_home` row directly in both the Dev and Production Supabase databases
+  with the three new `card*FrontLabel` values — same reasoning as every prior CMS-field phase (Phase 88/89/
+  93/95): a stale published row would otherwise keep showing nothing (falling back silently) for these new
+  keys until an admin manually re-saves the page in the Content Manager.
+
+**On the broader "keep everything Content-Manager-editable" request:** the new front labels are the only
+genuinely new text this phase introduces, and they're now CMS-wired per above. Everything else changed in
+this session (header nav/Donate CTA, About's founder/Team & Advisors/movement band, the back face of these
+cards) was already wired through `site_content` in earlier phases — nothing here needed new plumbing. The
+accessibility widget's own interface chrome remains intentionally out of scope, per `CONTENT_GUIDE.md`'s
+existing line between public marketing copy and functional UI labels.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase (`resend.ts`,
+  `ForgotPasswordPage`/`ResetPasswordPage`/`ImageUploadField`/`TherapistsTable`/`VolunteerApplicationModal`
+  test files) — zero new errors.
+- `tests/unit/Paths.test.tsx` — 4/4 passed.
+- Confirmed via direct query that both databases' `page_home.card1FrontLabel`/`card2FrontLabel`/
+  `card3FrontLabel` now read "Grounded" / "Service Remembrance" / "Life from the Deep".
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 97: redesign Home path cards' front face only, keep flip + back face intact"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -58,4 +58,23 @@ describe("Paths (Home)", () => {
     expect(rotatingEl).toBeTruthy();
     expect(flipWrapper).toBeTruthy();
   });
+
+  // Phase 97 — Roy sent a reference image restyling the front face of each
+  // card (framed artwork + gold badge dome) while explicitly asking to keep
+  // the flip effect and the back face's own title/description/CTA content
+  // untouched. This confirms the new front-face badge labels render
+  // alongside the still-unchanged back-face titles from the previous test,
+  // rather than replacing them.
+  it("renders the new front-face badge labels without changing the back face", () => {
+    render(<Paths />);
+
+    expect(screen.getByText("Grounded")).toBeInTheDocument();
+    expect(screen.getByText("Service Remembrance")).toBeInTheDocument();
+    expect(screen.getByText("Life from the Deep")).toBeInTheDocument();
+
+    // Back face content from the earlier test is still present, unchanged.
+    expect(screen.getByText("In crisis right now")).toBeInTheDocument();
+    expect(screen.getByText("Veterans, reservists & families")).toBeInTheDocument();
+    expect(screen.getByText("Seeking support")).toBeInTheDocument();
+  });
 });

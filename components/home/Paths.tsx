@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users } from "lucide-react";
+import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Footprints, Waves } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
@@ -34,6 +34,13 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   card3Description: "For anyone carrying anxiety, ongoing stress, or the weight of antisemitism. Start here — more is coming.",
   card3CtaLabel: "Reach out now",
   card3CtaLink: "/intake?path=general",
+  // Phase 97 — front-face badge labels (see the HomeContent type comment
+  // in lib/content.ts). Reuses the same art-piece names from the Phase 95
+  // attempt Roy asked to revert — that redesign's *titles* were fine, it
+  // was applying them in place of the back face's own content that wasn't.
+  card1FrontLabel: "Grounded",
+  card2FrontLabel: "Service Remembrance",
+  card3FrontLabel: "Life from the Deep",
 };
 
 // Phase 16 — replaced the scroll-pinned, 300vh-tall crossfade showcase
@@ -124,6 +131,32 @@ const PATH_IMAGES = [
 // icon to the laurel-sprig badge in Roy's reference design).
 const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 
+// Phase 97 — Roy sent a reference image restyling each card's *front* face
+// (visible before hover/flip) as framed artwork with a small gold badge
+// overlapping the frame's bottom edge — explicitly keeping the flip effect
+// and the back face's existing content untouched, only the front face's
+// look changes. Icons here are separate from PATH_BADGE_ICONS above (which
+// stay on the unchanged back face) — re-picked to match the front badge's
+// new labels: a sprouting plant for "Grounded" (growth/rootedness),
+// footprints for "Service Remembrance" (military boots/journey — closest
+// available lucide icon to the reference's boots-and-sprig badge), and
+// waves for "Life from the Deep" (the ocean imagery in that card's own
+// artwork and reference badge).
+const PATH_FRONT_BADGE_ICONS = [Sprout, Footprints, Waves];
+
+// Phase 97 — each card's mat/frame color loosely follows Roy's reference
+// (cream, sage, and a cool slate-blue mat), built from this site's existing
+// palette tokens rather than picking arbitrary new colors, except the third
+// mat — no existing token was close to the reference's blue-gray, so that
+// one is a new hardcoded value matched to the Footer's own long-standing
+// slate-blue text color (#c7d0de) for consistency with a color already
+// established elsewhere on the site.
+const PATH_FRONT_STYLES: { mat: string; frame: string }[] = [
+  { mat: "bg-clay-soft", frame: "border-clay" },
+  { mat: "bg-sage-soft", frame: "border-espresso" },
+  { mat: "bg-[#c7d0de]", frame: "border-clay" },
+];
+
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
 // Manager-editable via site_content key "page_home", with these exact
 // current strings seeded as the value so publishing changes nothing until
@@ -180,9 +213,9 @@ const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 // explicit request for "a golden effect hover" on them specifically.
 export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: HomeContent }) {
   const cards = [
-    { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink },
-    { title: content.card2Title, description: content.card2Description, ctaLabel: content.card2CtaLabel, ctaLink: content.card2CtaLink },
-    { title: content.card3Title, description: content.card3Description, ctaLabel: content.card3CtaLabel, ctaLink: content.card3CtaLink },
+    { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink, frontLabel: content.card1FrontLabel },
+    { title: content.card2Title, description: content.card2Description, ctaLabel: content.card2CtaLabel, ctaLink: content.card2CtaLink, frontLabel: content.card2FrontLabel },
+    { title: content.card3Title, description: content.card3Description, ctaLabel: content.card3CtaLabel, ctaLink: content.card3CtaLink, frontLabel: content.card3FrontLabel },
   ];
 
   return (
@@ -296,18 +329,37 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
             <StaggerItem key={i}>
               <div className="gold-card-hover group h-[420px] [perspective:1400px]">
                 <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
-                  {/* Front face — full painting, no mat/frame border. Phase
-                      73 — Roy sent close crops of the three paintings and
-                      asked for the front face to show just the painting
-                      itself (no white mat, no gray/clay frame border) on a
-                      full gold background instead of the ash-gray
-                      `bg-secondary` box the mat used to sit on. Still
-                      `object-contain` so the whole painting displays
-                      uncropped — only the matting/background around it
-                      changed, not how the image itself is fit. */}
-                  <div className="gold-banner absolute inset-0 overflow-hidden rounded-[24px] shadow-lg [backface-visibility:hidden]">
-                    <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
-                  </div>
+                  {/* Front face — Phase 97: Roy sent a reference image
+                      restyling the front face as framed/matted artwork with
+                      a small gold badge dome overlapping the frame's bottom
+                      edge, explicitly asking to keep the flip effect and the
+                      back face's own content untouched — only this front
+                      face's look changes. The painting still renders full
+                      and uncropped (`object-contain`) inside its own
+                      overflow-hidden inner box; the outer face wrapper is
+                      `overflow-visible` so the badge dome below can extend
+                      outside the frame without being clipped. */}
+                  {(() => {
+                    const FrontIcon = PATH_FRONT_BADGE_ICONS[i] ?? PATH_FRONT_BADGE_ICONS[PATH_FRONT_BADGE_ICONS.length - 1];
+                    const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
+                    return (
+                      <div className="absolute inset-0 overflow-visible rounded-[24px] [backface-visibility:hidden]">
+                        <div className={`h-full w-full overflow-hidden rounded-[24px] border-[10px] ${frontStyle.frame} ${frontStyle.mat} p-3 shadow-lg`}>
+                          <div className="relative h-full w-full overflow-hidden rounded-[10px] bg-white/40">
+                            <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
+                          </div>
+                        </div>
+                        {/* Gold badge dome — overlaps the frame's bottom edge,
+                            per the reference image. Icon + label are separate
+                            from the back face's badge/title (PATH_BADGE_ICONS /
+                            p.title) since they show at different flip states. */}
+                        <div className="pointer-events-none absolute bottom-0 left-1/2 flex w-[78%] -translate-x-1/2 translate-y-1/2 flex-col items-center gap-1 rounded-full px-4 py-3 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
+                          <FrontIcon size={20} className="text-espresso" aria-hidden="true" />
+                          <span className="text-xs font-semibold uppercase tracking-wide text-espresso">{p.frontLabel}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {/* Back face — Phase 76: Roy generated a new "certificate"
                       style design (cream card, gold corner brackets, a
                       circular gold badge icon, serif heading, and a dark

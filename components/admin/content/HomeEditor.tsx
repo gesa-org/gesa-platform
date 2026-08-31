@@ -39,6 +39,11 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
           heading: "Path cards",
           fields: [
             {
+              key: "card1FrontLabel",
+              label: "Card 1 — front badge label",
+              help: "Phase 97: shown on the gold badge over the card's front (framed artwork) face, before it's flipped. Separate from the title below, which is the back face's heading shown after flipping.",
+            },
+            {
               key: "card1Title",
               label: "Card 1 — title (crisis)",
               help: "Note: the visible headline/description on the homepage card is baked into its photo and won't change here — this field and the description below only affect screen-reader text. The CTA link is the one field that changes what visitors actually experience.",
@@ -46,10 +51,20 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
             { key: "card1Description", label: "Card 1 — description", multiline: true },
             { key: "card1CtaLabel", label: "Card 1 — CTA label (screen-reader only)" },
             { key: "card1CtaLink", label: "Card 1 — CTA link (this one is real — where the card navigates to)" },
+            {
+              key: "card2FrontLabel",
+              label: "Card 2 — front badge label",
+              help: "Phase 97: shown on the gold badge over the card's front (framed artwork) face, before it's flipped.",
+            },
             { key: "card2Title", label: "Card 2 — title (veterans)" },
             { key: "card2Description", label: "Card 2 — description", multiline: true },
             { key: "card2CtaLabel", label: "Card 2 — CTA label (screen-reader only)" },
             { key: "card2CtaLink", label: "Card 2 — CTA link (this one is real)" },
+            {
+              key: "card3FrontLabel",
+              label: "Card 3 — front badge label",
+              help: "Phase 97: shown on the gold badge over the card's front (framed artwork) face, before it's flipped.",
+            },
             { key: "card3Title", label: "Card 3 — title (general support)" },
             { key: "card3Description", label: "Card 3 — description", multiline: true },
             { key: "card3CtaLabel", label: "Card 3 — CTA label (screen-reader only)" },

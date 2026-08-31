@@ -77,6 +77,17 @@ export type HomeContent = {
   card3Description: string;
   card3CtaLabel: string;
   card3CtaLink: string;
+  // Phase 97 — Roy sent a reference image restyling each card's *front*
+  // face (the side shown before hover/flip) as framed artwork with a small
+  // gold badge + label overlapping the frame's bottom edge, using art-piece
+  // names ("Grounded" etc.) — explicitly keeping the flip effect and the
+  // back face's existing title/description/CTA (card1Title etc. above)
+  // untouched. These are separate fields, not a rename of card1Title,
+  // since the front badge label and the back face's heading are now two
+  // different pieces of text shown at different times.
+  card1FrontLabel: string;
+  card2FrontLabel: string;
+  card3FrontLabel: string;
 };
 
 // Powers components/Hero.tsx, currently only used on About — kept general
