@@ -426,10 +426,14 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
   founders: [
     {
       name: "Ilana O'Malley",
-      roleTitle: "Co-Founder, GESA",
+      // Phase 86 — Roy sent a reference screenshot of the founder spotlight
+      // with this exact role title and a first-person bio quote, asking to
+      // match it. Replaces the previous third-person "Co-Founder, GESA" /
+      // "Ilana helped establish GESA..." copy.
+      roleTitle: "Founder of GESA",
       email: "ilana@gesa.org",
       shortBio:
-        "Ilana helped establish GESA out of a conviction that no one should face emotional pain alone or be priced out of care. She guides the alliance's mission of warm, accessible support and its growing worldwide community of volunteer therapists.",
+        "I created GESA from a belief that emotional support can cross every border. When people choose growth, and professionals choose to contribute their time and expertise, meaningful change becomes possible.",
       photoUrl: "",
     },
     {

@@ -2662,4 +2662,34 @@ git push
 ```
 
 ---
+
+## Phase 86: Update the Our Founder section's text to match Roy's reference screenshot
+
+**Roy's request:** a close-up screenshot of the Our Founder spotlight (Phase 84's layout) with specific
+text — "Founder of GESA" as the role subtitle, and a first-person bio quote — asking to use these exact
+details.
+
+- `lib/content.ts` (`ABOUT_SECTIONS_FALLBACK`): Ilana's `roleTitle` changed from "Co-Founder, GESA" to
+  "Founder of GESA"; her `shortBio` replaced with the first-person quote from the screenshot ("I created
+  GESA from a belief that emotional support can cross every border. When people choose growth, and
+  professionals choose to contribute their time and expertise, meaningful change becomes possible."),
+  replacing the previous third-person bio. Karin's entry is unchanged — she's not part of this spotlight
+  (Phase 84 moved her to Team & Advisors). No component changes needed: the "OUR FOUNDER" eyebrow, "Meet
+  [Name]" headline, and signature-style name rendering already built in Phase 84 pick up this text
+  automatically, and the page's existing `.eyebrow` CSS class already uppercases the eyebrow text to match
+  the screenshot's all-caps "OUR FOUNDER" styling.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/AboutPage.test.tsx` — 5/5 passed (none of these tests assert on the specific bio wording, so
+  no test updates were needed for the copy change itself).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 86: update Our Founder section text to match reference screenshot"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
