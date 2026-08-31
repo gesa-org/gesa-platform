@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Caveat:wght@500;600;700&display=swap');
 
 /* Phase 45 — global smooth scrolling (motion spec section 1). Native
    `scroll-behavior`, not a scroll-hijacking JS library — see the long
@@ -75,6 +75,13 @@
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
     --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* Phase 87 — Roy sent a reference screenshot of the About page founder
+       signature rendered in a real handwriting/cursive style, not just an
+       italicized serif. Caveat is a free Google-hosted handwriting font
+       that reads like a natural signature at this size; scoped to its own
+       token (rather than reusing --font-serif) since it's only meant for
+       this one signature line, not general italic emphasis site-wide. */
+    --font-signature: "Caveat", "Segoe Script", "Brush Script MT", cursive;
   }
 }
 

@@ -2692,4 +2692,38 @@ git push
 ```
 
 ---
+
+## Phase 87: Real handwriting font for the founder signature, plus its own slide-in-from-left effect
+
+**Roy's request:** a close-up screenshot of "Ilana O'Malley" rendered as an actual handwritten signature
+(not the italic serif it was using), asking for that font/style, plus a scroll effect where the signature
+itself slides in from the left as the section comes into view.
+
+- `app/globals.css`: added Google's "Caveat" handwriting font to the existing font `@import` (same import
+  that already loads Cormorant Garamond and Nunito Sans), and a new `--font-signature` token scoped to just
+  this use case rather than reusing `--font-serif` — this is a one-off handwriting treatment, not a general
+  italic-emphasis style other parts of the site should pick up.
+- `tailwind.config.ts`: added a `font-signature` utility class mapped to that token, same convention as the
+  existing `font-serif`/`font-sans` utilities.
+- `app/about/page.tsx`: the signature line now uses `font-signature` at a bigger size (40px, tuned for how
+  much smaller cursive script reads versus a regular typeface at the same font-size) instead of
+  `font-serif italic`. Wrapped it in its own nested `Reveal` (`type="horizontal"`, slides from the left, a
+  0.35s delay so it visibly appears just after the text above it, "signing off" last) — this is on top of
+  the parent `Reveal` already wrapping the whole founder row, giving the signature a distinct, separately
+  triggered scroll-in effect rather than only moving as part of the larger block's motion. Same
+  independent-nested-Reveal pattern already used elsewhere on this page (e.g. the alternating founder rows
+  before Phase 84's redesign).
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/AboutPage.test.tsx` — 5/5 passed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 87: real handwriting font + slide-in effect for the founder signature"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

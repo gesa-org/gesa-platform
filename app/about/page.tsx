@@ -138,10 +138,22 @@ export default async function AboutPage() {
                   <h2 className="my-2.5 text-[32px] sm:text-[36px]">Meet {sections.founders[0].name}</h2>
                   <div className="mb-3 text-[15px] font-semibold text-primary">{sections.founders[0].roleTitle}</div>
                   <p className="mb-5 text-[16px] leading-relaxed text-muted-fg">{sections.founders[0].shortBio}</p>
-                  {/* Signature-style rendering of the founder's own name —
-                      no new content field needed, just a different visual
-                      treatment (italic serif) of the name already above. */}
-                  <div className="mb-4 font-serif text-[28px] italic text-primary">{sections.founders[0].name}</div>
+                  {/* Phase 87 — Roy asked for this line to look like a real
+                      handwritten signature (font-signature/Caveat, see
+                      globals.css) and to slide in from the left on its own
+                      as the section scrolls into view, distinct from the
+                      rest of the block's motion. No new content field
+                      needed — still just the founder's own name — but it
+                      gets its own nested Reveal (rather than only relying
+                      on the parent Reveal wrapping the whole row) so it
+                      visibly animates in on its own, with a short delay so
+                      it reads as "signing off" after the text above it has
+                      already appeared. */}
+                  <Reveal type="horizontal" distance={60} duration={0.7} delay={0.35}>
+                    <div className="mb-4 font-signature text-[40px] leading-none text-primary">
+                      {sections.founders[0].name}
+                    </div>
+                  </Reveal>
                   <a
                     href={`mailto:${sections.founders[0].email}`}
                     className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary"

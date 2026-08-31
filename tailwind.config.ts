@@ -58,6 +58,9 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
+        // Phase 87 — handwriting/cursive font for the About page's founder
+        // signature line only (see globals.css's --font-signature).
+        signature: ["var(--font-signature)"],
       },
       borderRadius: {
         lg: "var(--radius)",
