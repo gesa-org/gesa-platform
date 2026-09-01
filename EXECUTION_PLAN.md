@@ -4316,3 +4316,75 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 118 — About page "Team & Advisors": two-column redesign
+
+**Request:** Redesign the "Team & Advisors" section (currently a centered heading over a row of small,
+compact pill-cards, Karin Horen being the one member today) into a two-column desktop layout — text
+(eyebrow/heading/description) on one side, a substantially larger profile card on the other — with a bigger
+type scale, a much larger profile photo (~240-320px desktop), correct mobile stacking (text first, then
+profile), and no regressions to Hebrew/RTL, the Founder spotlight above it, the donation CTA, or the footer.
+
+**File changed:** `app/about/page.tsx` only — the "Team & Advisors" `<section>` (previously lines ~198-244).
+No other section on the page was touched.
+
+**Implementation:**
+- Layout: a plain CSS grid (`grid md:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]`), inside this page's
+  standard `wrap` container (1160px — replacing the section's old, narrower `max-w-[820px]`, which had no room
+  for two columns side by side). Only the `md:` breakpoint sets `grid-template-columns`; below that it's a plain
+  single-column stack in DOM order, so mobile gets the request's "text first, profile second" reading order for
+  free, with no separate mobile CSS block needed.
+- Copy column: `text-start` (a logical property — right-aligned automatically under Hebrew's `dir="rtl"`, no
+  `[dir="rtl"]` override needed), heading bumped to `clamp(2.75rem,4vw,3.5rem)` (44-56px, matching the request's
+  target), description to `clamp(1.125rem,1.5vw,1.3125rem)` (18-21px) at `leading-[1.65]` and `max-w-[38rem]`.
+  The eyebrow keeps the site's existing shared `.eyebrow` class/size unchanged — bumping just this one instance
+  to a different size than every other section eyebrow on the same page would itself be the inconsistency the
+  request also asked to avoid ("tracked consistently with other section eyebrows" / "preserving the site's
+  existing design system"). The "Meet the team" CTA link moved here too, under the description — it isn't a
+  card, and reads naturally as an extension of the text block now that it's no longer centered under a card row.
+- Profile column: each member (`founders.slice(1)`) renders in its own larger card
+  (`rounded-2xl border border-border bg-card`, padding scaling via `clamp(1.25rem,2vw,2rem)`), photo/initials
+  block sized `200px` (mobile) → `240px` (`sm:`) → `288px` (`lg:`) — comfortably inside the requested 240-320px
+  desktop range and 200-260px mobile range, and matching this same page's own founder-spotlight photo sizing
+  pattern (240px/280px) rather than inventing a new one. Name bumped to `clamp(1.5rem,2vw,1.875rem)` (24-30px),
+  role to `16px`/`18px` at `sm:`. Multiple members (if added later) stack vertically in this same column
+  (`flex flex-col gap-5`), each still getting the same larger card treatment — not a shrink-to-fit grid.
+- RTL: no `left`/`right`/`ml-`/`mr-`/`pl-`/`pr-` anywhere in the new markup. `text-start` handles the copy
+  column's alignment; the grid's own direction-aware column flow (the same CSS-spec mechanism Header.tsx's nav
+  already relies on for its own RTL mirroring, per that file's Phase 52 comment) puts the copy column at the
+  reading start and the profile column at the reading end in both directions — Hebrew gets copy on the right,
+  profile on the left, without a single Hebrew-specific rule added to `globals.css`.
+- Content model: no `AboutSectionsContent` fields changed, added, or removed — `teamEyebrow`/`teamHeading`/
+  `teamIntro`/`teamCtaLabel`/`teamCtaHref`/`founders[].name`/`roleTitle`/`photoUrl` all render exactly as
+  before, only the surrounding markup/classNames changed. Nothing new to translate — every string already
+  flows through the same Content-Manager/Hebrew-dictionary path it did before this phase.
+
+**Verification:**
+- `tsc --noEmit`: zero errors in `app/about/page.tsx`.
+- `git diff --stat`: change confined to this one file (78 insertions / 39 deletions, all inside the one section).
+- Read `tests/unit/AboutPage.test.tsx` line by line against the new markup: its assertions check for the
+  initials text ("IO"/"KH") and the founder photo's `alt`/`src` attributes, none of which changed — only
+  wrapping classNames/sizing did — so the existing tests' expectations still hold on manual review.
+- **Not run this phase, disclosed honestly:** the actual Jest suite. `npx jest` does not complete in this
+  sandbox within the tool's time limit (produces no output at all, even backgrounded) — the same category of
+  sandbox limitation already disclosed for `next build`/`eslint` in earlier phases, not something specific to
+  this change. Manual line-by-line review against the test file's actual assertions (above) is the verification
+  actually performed in its place.
+- **Not verified this phase:** an actual rendered screenshot at desktop/tablet/mobile widths or in Hebrew — this
+  sandbox has no way to run the live Next.js dev server. Please check `/about`'s Team & Advisors section after
+  deploying, at a typical laptop width, a phone width, and with Hebrew selected, and flag anything that reads
+  off — particularly whether `288px` feels right for Karin's specific photo (portrait crops sometimes want a
+  taller aspect than the square `object-cover` box here, same box shape the Founder photo above it already
+  uses).
+- Founder spotlight section, the movement/CTA band above Team & Advisors, and `DonateBand` below it: untouched —
+  confirmed by `git diff` showing no changes outside the one section's markup.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md app/about/page.tsx
+git commit -m "Phase 118: Team & Advisors two-column redesign (larger type/photo, RTL-safe grid)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

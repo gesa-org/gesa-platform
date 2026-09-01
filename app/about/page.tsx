@@ -196,48 +196,87 @@ export default async function AboutPage() {
       </section>
 
       {/* Phase 84 — "Team & Advisors": founders[1] onward (Karin, today)
-          plus anyone else added to the founders list later, each shown as a
-          compact bordered card (real photo if uploaded, otherwise an
-          outlined-initials circle) rather than the founder spotlight's
-          bigger treatment above. Section is skipped entirely if there's
-          nobody in it yet, e.g. a fresh site with only one founder row. */}
+          plus anyone else added to the founders list later. Section is
+          skipped entirely if there's nobody in it yet, e.g. a fresh site
+          with only one founder row.
+          Phase 118 — Roy sent a wireframe redesigning this from a centered
+          heading over a row of small compact pill-cards into a two-column
+          layout: text (eyebrow/heading/intro/the "meet the team" CTA, which
+          previously sat centered below the cards) on one side, one larger,
+          more prominent profile card per member on the other — closer to
+          the founder spotlight section above it in visual weight, though
+          still visibly a lighter/secondary treatment (smaller photo, no
+          signature line, no bio paragraph) so the two sections stay
+          distinguishable.
+          Layout: a plain CSS grid, `wrap` (this page's standard 1160px
+          container, replacing the old 820px narrow one — a two-column
+          layout needs the room a single centered column didn't). Only
+          `md:grid-cols-[...]` is set, so below `md` this is naturally a
+          single-column stack in DOM order (copy, then profiles) with no
+          extra media-query work needed — the same "mobile gets the
+          unmodified base styles, larger breakpoints add the grid" pattern
+          used everywhere else in this codebase. That DOM order is also
+          exactly the "text first, profile second" accessible reading order
+          the request asked for, since nothing here reorders visually
+          without reordering in the DOM. RTL: intentionally no left/right
+          utility anywhere in this block — `text-start` (a logical property,
+          flips to right-aligned under Hebrew's dir="rtl" automatically) and
+          plain CSS Grid's own direction-aware column flow (the same
+          mechanism Header.tsx's nav already relies on — see its Phase 52
+          comment) place the copy column at the reading start and the
+          profile column at the reading end in both directions, with no
+          `[dir="rtl"]` override needed in globals.css. */}
       {sections.founders.length > 1 && (
         <section className="section bg-muted">
-          <div className="wrap max-w-[820px]">
-            <Reveal type="fade-up" className="block text-center">
-              <span className="eyebrow">{sections.teamEyebrow}</span>
-              <h2 className="my-2.5 text-[30px]">{sections.teamHeading}</h2>
-              <p className="mx-auto max-w-[600px] text-muted-fg">{sections.teamIntro}</p>
-            </Reveal>
-            <StaggerGroup className="mt-7 flex flex-wrap justify-center gap-4">
-              {sections.founders.slice(1).map((m) => (
-                <StaggerItem key={m.name}>
-                  <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-5 py-4 text-left">
-                    {m.photoUrl ? (
-                      <div className="relative h-12 w-12 flex-none overflow-hidden rounded-full">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={m.photoUrl} alt={m.name} className="h-full w-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="flex h-12 w-12 flex-none items-center justify-center rounded-full border border-border text-[14px] font-semibold text-primary">
-                        {initials(m.name)}
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-semibold">{m.name}</div>
-                      <div className="text-[13px] text-muted-fg">{m.roleTitle}</div>
+          <div className="wrap">
+            <div className="grid items-center gap-[clamp(2.5rem,6vw,5rem)] md:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]">
+              <Reveal type="fade-up" as="div" className="text-start">
+                <span className="eyebrow">{sections.teamEyebrow}</span>
+                <h2 className="mb-4 text-[clamp(2.75rem,4vw,3.5rem)] leading-[1.1]">{sections.teamHeading}</h2>
+                <p className="max-w-[38rem] text-[clamp(1.125rem,1.5vw,1.3125rem)] leading-[1.65] text-muted-fg">
+                  {sections.teamIntro}
+                </p>
+                <div className="mt-7">
+                  <Link
+                    href={sections.teamCtaHref}
+                    className="inline-flex items-center rounded-full border border-border px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
+                  >
+                    {sections.teamCtaLabel}
+                  </Link>
+                </div>
+              </Reveal>
+              <StaggerGroup className="flex flex-col items-start gap-5 md:justify-self-end">
+                {sections.founders.slice(1).map((m) => (
+                  <StaggerItem key={m.name} className="w-full">
+                    {/* Card width/padding scale with the same clamp()
+                        approach as the typography above — generous on a
+                        wide desktop column, but never wider than the
+                        360-420px the grid's own right column reserves. */}
+                    <div className="w-full max-w-[26rem] rounded-2xl border border-border bg-card p-[clamp(1.25rem,2vw,2rem)] text-center shadow-soft">
+                      {/* Same real-photo-with-initials-fallback treatment as
+                          the founder spotlight above, sized up from the old
+                          48px pill-avatar into the 200-288px range the
+                          request asked for (200px on mobile, scaling to
+                          288px at lg — comfortably inside the requested
+                          desktop 240-320px target, and matching this same
+                          page's existing founder-photo sizing pattern rather
+                          than inventing a new one). */}
+                      {m.photoUrl ? (
+                        <div className="relative mx-auto h-[200px] w-[200px] overflow-hidden rounded-2xl sm:h-[240px] sm:w-[240px] lg:h-[288px] lg:w-[288px]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={m.photoUrl} alt={m.name} className="h-full w-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="mx-auto flex h-[200px] w-[200px] items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white sm:h-[240px] sm:w-[240px] lg:h-[288px] lg:w-[288px]">
+                          {initials(m.name)}
+                        </div>
+                      )}
+                      <div className="mt-5 text-[clamp(1.5rem,2vw,1.875rem)] font-semibold">{m.name}</div>
+                      <div className="mt-1 text-[16px] text-muted-fg sm:text-[18px]">{m.roleTitle}</div>
                     </div>
-                  </div>
-                </StaggerItem>
-              ))}
-            </StaggerGroup>
-            <div className="mt-6 text-center">
-              <Link
-                href={sections.teamCtaHref}
-                className="inline-flex items-center rounded-full border border-border px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
-              >
-                {sections.teamCtaLabel}
-              </Link>
+                  </StaggerItem>
+                ))}
+              </StaggerGroup>
             </div>
           </div>
         </section>
