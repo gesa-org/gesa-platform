@@ -4,7 +4,6 @@ import HighlightedText from '@/components/ui/HighlightedText';
 import GoldWatermarks from '@/components/ui/GoldWatermarks';
 import Reveal from '@/components/motion/Reveal';
 import ScrollText from '@/components/motion/ScrollText';
-import ParallaxMedia from '@/components/motion/ParallaxMedia';
 import ParallaxLayer from '@/components/motion/ParallaxLayer';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
@@ -96,15 +95,32 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // gold (the eyebrow chip's background, and the subtitle/badges' color,
 // both previously tuned for a pale background) — no copy, links, CTAs, or
 // the painting/media panel changed.
+//
+// Phase 120 — Roy sent a screenshot of Home's gold hero band as a styling
+// reference (warm gold background, refined typography, spacious layout)
+// but asked for the painting/media panel removed from *this* section
+// entirely and the remaining text centered, not replaced with any other
+// artwork. The former two-column `grid lg:grid-cols-[1fr_1.12fr]` (text
+// left, square painting panel right) is now a single centered column —
+// `ParallaxMedia`, the painting `<img>`, its gradient-fallback backdrop,
+// and the whole media `<div>` are gone, along with the now-unused
+// `ParallaxMedia` import. `content.backgroundImage` (still a real
+// `HeroContent`/Content-Manager field — see HeroEditor.tsx) is simply not
+// read anywhere in this file anymore, same "don't delete the data, just
+// stop rendering it" precedent used elsewhere in this codebase, in case a
+// future layout wants an image here again.
+// The decorative background layer (ParallaxLayer/GoldWatermarks/glow blob)
+// didn't depend on the removed artwork at all, so it's untouched — moving
+// the headline glow blob to sit centered behind the now-centered headline
+// (was offset left, matching the old text column's position) is the one
+// adjustment made there.
 export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
   return (
-    <section className="gold-banner relative border-b border-border pt-16 pb-20">
+    <section className="gold-banner relative border-b border-border pt-20 pb-24 md:pt-24 md:pb-28">
       {/* Decorative Background — kept as its own absolutely-positioned,
           overflow-hidden layer (rather than putting overflow-hidden on the
           section itself) purely so this glow/doodle texture stays clipped
-          to the hero bounds. Phase 50 removed the old media panel that used
-          to bleed past the section's top edge, but this layer's own
-          structure didn't need to change either way. */}
+          to the hero bounds. */}
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
         {/* Phase 46 — wrapped in ParallaxLayer for the same background-layer
             drift added to Home's glow blob; the existing translate-x/y
@@ -121,94 +137,65 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               Support Groups' gold sections, not just here. */}
           <GoldWatermarks />
 
-          {/* Soft multi-color glow behind the headline */}
-          <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--clay)_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />
+          {/* Soft multi-color glow behind the headline — re-centered under
+              the headline (Phase 120) now that the text column itself is
+              centered instead of sitting in a left-hand column. */}
+          <div className="absolute left-1/2 top-[16%] h-[280px] w-[540px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,var(--clay)_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[80px]" />
         </ParallaxLayer>
       </div>
 
       <div className="max-w-[1160px] mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12 items-center">
-          {/* Text Content */}
-          <div className="max-w-2xl relative">
-            <Reveal type="fade-up" distance="sm" duration={0.5}>
-              <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-[#fff8ea]/85 shadow-sm rounded-full px-4 py-1.5 mb-5">
-                <Sparkle size={13} /> {content.eyebrow}
+        {/* Phase 120 — single centered column, replacing the old two-column
+            grid. `max-w-[52rem]` matches the reference's "readable, not
+            edge-to-edge" centered measure. */}
+        <div className="relative mx-auto w-full max-w-[52rem] text-center">
+          <Reveal type="fade-up" distance="sm" duration={0.5}>
+            <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-[#fff8ea]/85 shadow-sm rounded-full px-4 py-1.5 mb-5">
+              <Sparkle size={13} /> {content.eyebrow}
+            </span>
+          </Reveal>
+          <ScrollText distance={22}>
+            <h1 className="relative mx-auto max-w-[18ch] font-serif text-[clamp(38px,6vw,64px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
+              <HighlightedText text={content.title} highlight={content.highlight} />
+            </h1>
+          </ScrollText>
+          <Reveal type="fade-up" delay={0.08}>
+            <p className="mx-auto max-w-[42rem] text-[clamp(1.05rem,1.5vw,1.25rem)] text-primary/80 leading-[1.7] mb-8">
+              {content.subtitle}
+            </p>
+          </Reveal>
+
+          <StaggerGroup className="flex flex-wrap justify-center gap-4 mt-6">
+            <StaggerItem className="inline-block">
+              <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
+                {content.ctaPrimaryLabel} <ArrowRight size={18} />
+              </Link>
+            </StaggerItem>
+            <StaggerItem className="inline-block">
+              <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-card text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
+                {content.ctaSecondaryLabel}
+              </Link>
+            </StaggerItem>
+          </StaggerGroup>
+
+          {/* Badges */}
+          <StaggerGroup className="flex flex-wrap justify-center gap-6 mt-10 text-primary/85 text-[14px] font-medium">
+            <StaggerItem className="inline-block">
+              <span className="flex items-center gap-2">
+                <ShieldCheck className="text-accent" size={18} /> Verified Professionals
               </span>
-            </Reveal>
-            <ScrollText distance={22}>
-              <h1 className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
-                <HighlightedText text={content.title} highlight={content.highlight} />
-              </h1>
-            </ScrollText>
-            <Reveal type="fade-up" delay={0.08}>
-              <p className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
-            </Reveal>
-
-            <StaggerGroup className="flex flex-wrap gap-4 mt-6">
-              <StaggerItem className="inline-block">
-                <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
-                  {content.ctaPrimaryLabel} <ArrowRight size={18} />
-                </Link>
-              </StaggerItem>
-              <StaggerItem className="inline-block">
-                <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-card text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
-                  {content.ctaSecondaryLabel}
-                </Link>
-              </StaggerItem>
-            </StaggerGroup>
-
-            {/* Badges */}
-            <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-primary/85 text-[14px] font-medium">
-              <StaggerItem className="inline-block">
-                <span className="flex items-center gap-2">
-                  <ShieldCheck className="text-accent" size={18} /> Verified Professionals
-                </span>
-              </StaggerItem>
-              <StaggerItem className="inline-block">
-                <span className="flex items-center gap-2">
-                  <HeartHandshake className="text-accent" size={18} /> 100% Free Sessions
-                </span>
-              </StaggerItem>
-              <StaggerItem className="inline-block">
-                <span className="flex items-center gap-2">
-                  <Users className="text-accent" size={18} /> Global Community
-                </span>
-              </StaggerItem>
-            </StaggerGroup>
-          </div>
-
-          {/* Hero Image / Media — Phase 50: Roy sent a reference screenshot
-              showing this painting displayed much smaller and fully
-              contained (a modest square box beside the text) rather than
-              the large asymmetric panel this used to bleed to the viewport
-              edge as. Replaced the old two-block setup (a contained
-              mobile/tablet card plus a separate absolute, edge-bleeding
-              lg+ panel) with one unified, in-flow square card that's used
-              at every breakpoint, capped at 460px so it stays a compact
-              square even on wide screens instead of stretching. No text,
-              links, or the trust-chip overlay's copy changed — only the
-              media container's size/positioning and the image itself
-              (the new painting Roy provided, which folds the same hands/
-              light motif together with a boot, a seated figure, and a
-              small group — echoing the veteran/crisis/community paths
-              elsewhere on the site). */}
-          <div className="relative mx-auto lg:mx-0 lg:ml-auto w-full max-w-[460px] aspect-square rounded-[26px] overflow-hidden shadow-2xl bg-gradient-to-br from-primary to-accent">
-            <div className="absolute inset-0 bg-black/10 z-10"></div>
-            <ParallaxMedia intensity={20} scale={1.07} className="absolute inset-0 z-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={content.backgroundImage}
-                alt="A painting of hands cradling a glowing light, with a boot, a seated figure, and a small group woven into the surrounding leaves"
-                className="w-full h-full object-cover relative"
-              />
-            </ParallaxMedia>
-            {/* Phase 102 — Roy asked to remove the floating "Over 5,000+
-                Sessions Completed" stat badge that used to sit over the
-                bottom-left corner of this image, keeping the picture itself
-                clean/unobstructed. This was a hardcoded stat (no
-                Content-Manager field backed it — HeroContent has no matching
-                key), so removing it here is the whole change. */}
-          </div>
+            </StaggerItem>
+            <StaggerItem className="inline-block">
+              <span className="flex items-center gap-2">
+                <HeartHandshake className="text-accent" size={18} /> 100% Free Sessions
+              </span>
+            </StaggerItem>
+            <StaggerItem className="inline-block">
+              <span className="flex items-center gap-2">
+                <Users className="text-accent" size={18} /> Global Community
+              </span>
+            </StaggerItem>
+          </StaggerGroup>
         </div>
       </div>
     </section>

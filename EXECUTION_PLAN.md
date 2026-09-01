@@ -4427,3 +4427,71 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 120 — About page hero: remove artwork, center the copy
+
+**Request:** Remove the painting/media panel from the About page's hero (`components/Hero.tsx`) entirely and
+replace the two-column split layout with a centered, text-only composition — eyebrow, heading, subtitle, and
+CTAs all centered, no replacement artwork. Roy's reference screenshot was Home's gold hero band (used for
+styling only — gold background, typography, spacing), not the actual target; confirmed with him directly that
+the target is About's `Hero.tsx`, not Home's `components/home/Paths.tsx`.
+
+**Files changed:** `components/Hero.tsx` (the hero itself) and `components/admin/content/HeroEditor.tsx`
+(one label/comment update, no logic change). No other file touched.
+
+**Layout change:** the old `grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12` (text column left, a 460px
+square painting panel right) is now a single `mx-auto max-w-[52rem] text-center` column. Removed entirely: the
+media `<div>` (painting `<img>`, its `ParallaxMedia` wrapper, the gradient fallback backdrop), and the now-
+unused `ParallaxMedia` import. `content.backgroundImage` is no longer read anywhere in the component — the
+`HeroContent` field itself, its fallback value, and its Content-Manager upload control in `HeroEditor.tsx` are
+untouched (same "don't delete the data, just stop rendering it" precedent used throughout this codebase), with
+the editor's label updated to say plainly that the field is currently unused so an admin isn't left wondering
+why uploading an image here has no visible effect.
+- Eyebrow, heading, subtitle, both CTAs, and the three trust badges all changed from left-aligned/`justify-start`
+  to `text-center`/`justify-center`, with `mx-auto` measures capping line length (heading `max-w-[18ch]`,
+  subtitle `max-w-[42rem]`) so centered text doesn't run edge-to-edge.
+- Heading size bumped slightly (`clamp(38px,5vw,60px)` → `clamp(38px,6vw,64px)`) and section padding increased
+  (`pt-16 pb-20` → `pt-20 pb-24 md:pt-24 md:pb-28`) for the more spacious feel the reference screenshot was
+  sent for.
+- The decorative background layer (`ParallaxLayer`, `GoldWatermarks`, the glow blobs) didn't depend on the
+  removed artwork and is untouched, except the headline glow blob — re-centered under the now-centered
+  headline instead of sitting offset toward the old left-hand text column.
+- `text-center` (not the logical `text-start` used elsewhere in this codebase for left/right-flipping RTL
+  layouts) is the deliberate choice here: the request explicitly asks for the content to **stay centered in
+  both English and Hebrew**, not flip to right-aligned under `dir="rtl"` — `text-center` already centers
+  identically regardless of direction, so no `[dir="rtl"]` override is needed for alignment. Hebrew font/`dir`/
+  `lang` behavior is unchanged — this section carries no hardcoded text of its own; every string still flows
+  through `content.*` (Content Manager) and the existing Hebrew dictionary exactly as before.
+
+**Verification:**
+- `tsc --noEmit`: zero errors in `Hero.tsx`/`HeroEditor.tsx` (same 16-line pre-existing baseline as every prior
+  phase).
+- Confirmed `Hero.tsx` is only imported by `app/about/page.tsx` and `app/admin/content/page.tsx` (the admin
+  editor page) — no other route uses this component, so nothing else on the site is affected.
+- Checked `tests/unit/AboutPage.test.tsx` — no assertions reference the hero image, `backgroundImage`, or the
+  painting alt text, so nothing there depends on what was removed.
+- **Not verified this phase:** an actual rendered screenshot at desktop/tablet/mobile widths or in Hebrew —
+  same disclosed sandbox limitation as prior phases (no live dev server here).
+
+**Responsive/QA checklist (for Roy to confirm after deploying):**
+- Desktop (≥1024px): eyebrow, heading, subtitle, and both CTAs centered with balanced whitespace on both sides;
+  no leftover blank column where the painting was.
+- Tablet (~768-1024px): same centered treatment; heading wraps at a comfortable `18ch` measure, subtitle at
+  `42rem`.
+- Mobile (<640px): heading/subtitle/CTAs stack centered, no clipped text or horizontal scroll; section padding
+  scales down via the existing `clamp()`s.
+- Next section ("How GESA works," `bg-muted`) begins at a natural point directly below the hero — untouched by
+  this change.
+- English: renders as above. Hebrew (`dir="rtl"`): content stays centered (not right-aligned), Heebo font and
+  `lang="he"` apply exactly as they did before this phase (unrelated to this section specifically).
+- Header/nav: untouched — confirmed by `git diff` showing no changes outside `Hero.tsx`/`HeroEditor.tsx`.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/Hero.tsx components/admin/content/HeroEditor.tsx
+git commit -m "Phase 120: remove About hero artwork, center hero copy"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
