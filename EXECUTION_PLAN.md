@@ -4388,3 +4388,42 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 119 — Team & Advisors: scale back down
+
+**Request:** Roy sent a screenshot of the live Phase 118 section and asked to make it smaller overall —
+specifically Karin Horen's photo/card and the surrounding text — since it had grown large enough to compete
+with (rather than stay secondary to) the Founder spotlight section above it.
+
+**File changed:** `app/about/page.tsx` only — same section as Phase 118, no other page content touched.
+
+**Implementation:** kept the exact same two-column grid, RTL handling (`text-start` + grid's own
+direction-aware column flow, no `[dir="rtl"]` overrides), and real-photo-with-initials-fallback pattern from
+Phase 118 — only reduced the size values, roughly 35-40% down across the board:
+- Heading: `clamp(2.75rem,4vw,3.5rem)` (44-56px) → `clamp(1.75rem,2.6vw,2.25rem)` (28-36px).
+- Description: `clamp(1.125rem,1.5vw,1.3125rem)` (18-21px) → `clamp(0.95rem,1.1vw,1.0625rem)` (~15-17px),
+  `max-w` 38rem → 30rem.
+- "Meet the team" button: `px-6 py-3` text `13px` → `px-5 py-2.5` text `12.5px`.
+- Column gap: `clamp(2.5rem,6vw,5rem)` → `clamp(1.5rem,4vw,3rem)`; right column's `minmax()` narrowed from
+  `minmax(320px,0.85fr)` to `minmax(220px,0.7fr)` so the grid itself reserves less width for the now-smaller card.
+- Card: `max-w-[26rem]` → `max-w-[17rem]`, padding `clamp(1.25rem,2vw,2rem)` → `clamp(0.875rem,1.4vw,1.25rem)`.
+- Photo/initials block: 200px → 240px → 288px (mobile/sm/lg) → 120px → 140px → 160px.
+- Name: `clamp(1.5rem,2vw,1.875rem)` (24-30px) → `clamp(1.05rem,1.3vw,1.25rem)` (~17-20px).
+- Role: 16px/18px → 13px/14px.
+
+**Verification:**
+- `tsc --noEmit`: zero errors in `app/about/page.tsx` (same 16-line pre-existing baseline as every prior phase).
+- `git diff --stat`: change confined to this one section (28 insertions / 36 deletions).
+- **Not verified this phase:** an actual rendered screenshot — same disclosed sandbox limitation as Phase 118
+  (no live dev server here). Please take a look after deploying; if the card still reads too large or too
+  small, the six clamp()/px values above are the only numbers that would need nudging again.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md app/about/page.tsx
+git commit -m "Phase 119: scale down Team & Advisors section per Roy's feedback on the live page"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

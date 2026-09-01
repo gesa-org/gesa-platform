@@ -202,77 +202,69 @@ export default async function AboutPage() {
           Phase 118 — Roy sent a wireframe redesigning this from a centered
           heading over a row of small compact pill-cards into a two-column
           layout: text (eyebrow/heading/intro/the "meet the team" CTA, which
-          previously sat centered below the cards) on one side, one larger,
-          more prominent profile card per member on the other — closer to
-          the founder spotlight section above it in visual weight, though
-          still visibly a lighter/secondary treatment (smaller photo, no
-          signature line, no bio paragraph) so the two sections stay
-          distinguishable.
+          previously sat centered below the cards) on one side, a more
+          prominent profile card per member on the other.
           Layout: a plain CSS grid, `wrap` (this page's standard 1160px
           container, replacing the old 820px narrow one — a two-column
           layout needs the room a single centered column didn't). Only
           `md:grid-cols-[...]` is set, so below `md` this is naturally a
           single-column stack in DOM order (copy, then profiles) with no
-          extra media-query work needed — the same "mobile gets the
-          unmodified base styles, larger breakpoints add the grid" pattern
-          used everywhere else in this codebase. That DOM order is also
-          exactly the "text first, profile second" accessible reading order
-          the request asked for, since nothing here reorders visually
-          without reordering in the DOM. RTL: intentionally no left/right
+          extra media-query work needed. RTL: intentionally no left/right
           utility anywhere in this block — `text-start` (a logical property,
           flips to right-aligned under Hebrew's dir="rtl" automatically) and
           plain CSS Grid's own direction-aware column flow (the same
           mechanism Header.tsx's nav already relies on — see its Phase 52
           comment) place the copy column at the reading start and the
           profile column at the reading end in both directions, with no
-          `[dir="rtl"]` override needed in globals.css. */}
+          `[dir="rtl"]` override needed in globals.css.
+          Phase 119 — Roy sent a screenshot of the live section and asked
+          for it to come down in scale: the heading/photo/card had grown
+          large enough to read as heavier than the Founder spotlight section
+          above it, which was meant to stay the more prominent of the two.
+          Every size below is reduced roughly 35-40% from Phase 118's
+          values, keeping the same two-column grid, the same
+          logical-property/grid-direction RTL handling, and the same
+          real-photo-with-initials-fallback pattern — only the clamp()/px
+          numbers changed. */}
       {sections.founders.length > 1 && (
         <section className="section bg-muted">
           <div className="wrap">
-            <div className="grid items-center gap-[clamp(2.5rem,6vw,5rem)] md:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]">
+            <div className="grid items-center gap-[clamp(1.5rem,4vw,3rem)] md:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)]">
               <Reveal type="fade-up" as="div" className="text-start">
                 <span className="eyebrow">{sections.teamEyebrow}</span>
-                <h2 className="mb-4 text-[clamp(2.75rem,4vw,3.5rem)] leading-[1.1]">{sections.teamHeading}</h2>
-                <p className="max-w-[38rem] text-[clamp(1.125rem,1.5vw,1.3125rem)] leading-[1.65] text-muted-fg">
+                <h2 className="mb-3 text-[clamp(1.75rem,2.6vw,2.25rem)] leading-[1.15]">{sections.teamHeading}</h2>
+                <p className="max-w-[30rem] text-[clamp(0.95rem,1.1vw,1.0625rem)] leading-[1.6] text-muted-fg">
                   {sections.teamIntro}
                 </p>
-                <div className="mt-7">
+                <div className="mt-5">
                   <Link
                     href={sections.teamCtaHref}
-                    className="inline-flex items-center rounded-full border border-border px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
+                    className="inline-flex items-center rounded-full border border-border px-5 py-2.5 text-[12.5px] font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
                   >
                     {sections.teamCtaLabel}
                   </Link>
                 </div>
               </Reveal>
-              <StaggerGroup className="flex flex-col items-start gap-5 md:justify-self-end">
+              <StaggerGroup className="flex flex-col items-start gap-4 md:justify-self-end">
                 {sections.founders.slice(1).map((m) => (
                   <StaggerItem key={m.name} className="w-full">
-                    {/* Card width/padding scale with the same clamp()
-                        approach as the typography above — generous on a
-                        wide desktop column, but never wider than the
-                        360-420px the grid's own right column reserves. */}
-                    <div className="w-full max-w-[26rem] rounded-2xl border border-border bg-card p-[clamp(1.25rem,2vw,2rem)] text-center shadow-soft">
-                      {/* Same real-photo-with-initials-fallback treatment as
-                          the founder spotlight above, sized up from the old
-                          48px pill-avatar into the 200-288px range the
-                          request asked for (200px on mobile, scaling to
-                          288px at lg — comfortably inside the requested
-                          desktop 240-320px target, and matching this same
-                          page's existing founder-photo sizing pattern rather
-                          than inventing a new one). */}
+                    {/* Phase 119 — card/photo/type scaled down from Phase
+                        118 (26rem/200-288px/24-30px name) to the sizes
+                        below, per Roy's "make this section smaller"
+                        feedback on the live rendered page. */}
+                    <div className="w-full max-w-[17rem] rounded-2xl border border-border bg-card p-[clamp(0.875rem,1.4vw,1.25rem)] text-center shadow-soft">
                       {m.photoUrl ? (
-                        <div className="relative mx-auto h-[200px] w-[200px] overflow-hidden rounded-2xl sm:h-[240px] sm:w-[240px] lg:h-[288px] lg:w-[288px]">
+                        <div className="relative mx-auto h-[120px] w-[120px] overflow-hidden rounded-2xl sm:h-[140px] sm:w-[140px] lg:h-[160px] lg:w-[160px]">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={m.photoUrl} alt={m.name} className="h-full w-full object-cover" />
                         </div>
                       ) : (
-                        <div className="mx-auto flex h-[200px] w-[200px] items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white sm:h-[240px] sm:w-[240px] lg:h-[288px] lg:w-[288px]">
+                        <div className="mx-auto flex h-[120px] w-[120px] items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[30px] font-serif font-semibold text-white sm:h-[140px] sm:w-[140px] lg:h-[160px] lg:w-[160px]">
                           {initials(m.name)}
                         </div>
                       )}
-                      <div className="mt-5 text-[clamp(1.5rem,2vw,1.875rem)] font-semibold">{m.name}</div>
-                      <div className="mt-1 text-[16px] text-muted-fg sm:text-[18px]">{m.roleTitle}</div>
+                      <div className="mt-3.5 text-[clamp(1.05rem,1.3vw,1.25rem)] font-semibold">{m.name}</div>
+                      <div className="mt-0.5 text-[13px] text-muted-fg sm:text-[14px]">{m.roleTitle}</div>
                     </div>
                   </StaggerItem>
                 ))}
