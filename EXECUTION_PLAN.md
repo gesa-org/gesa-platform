@@ -3763,4 +3763,30 @@ git push
 ```
 
 ---
+
+## Phase 108: Remove the Community page's closing band
+
+**Roy's request:** a screenshot of the "One global vision. Many ways forward." closing band (added Phase 107,
+the last section on the Community page before the real group listing) asking to remove it.
+
+- `components/support-groups/CommunityIntro.tsx`: removed the `<section className="section bg-clay-soft">`
+  block entirely (the closing band). `closingHeading`/`closingSubtitle` stay defined in
+  `CommunityIntroContent`, `COMMUNITY_INTRO_FALLBACK`, and the Content Manager's "Community" tab editor —
+  same "stop rendering, don't delete the field" precedent as the About page's Phase 77/85 removals — since
+  Roy didn't ask for these removed from the Content Manager this time (unlike Phase 104's About mission
+  banner, where he explicitly did).
+- No other section, copy, or link on the page changed.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- No test file covers this page (same gap noted in Phase 107), so nothing to update there.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/support-groups/CommunityIntro.tsx
+git commit -m "Phase 108: remove Community page's closing band"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

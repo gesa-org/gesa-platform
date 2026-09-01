@@ -160,12 +160,13 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
         </div>
       </section>
 
-      <section className="section bg-clay-soft">
-        <Reveal type="fade-up" as="div" className="wrap max-w-[640px] text-center">
-          <h2 className="mb-2.5 text-[28px] sm:text-[30px]">{content.closingHeading}</h2>
-          <p className="text-muted-fg">{content.closingSubtitle}</p>
-        </Reveal>
-      </section>
+      {/* Phase 108 — Roy asked to remove the "One global vision. Many ways
+          forward." closing band added in Phase 107. `closingHeading`/
+          `closingSubtitle` and their Content Manager fields are left
+          untouched in the content model and admin editor — same "don't
+          delete data just because a section stopped rendering it"
+          precedent as the About page's Phase 77/85 removals — just no
+          longer rendered here. */}
     </>
   );
 }
