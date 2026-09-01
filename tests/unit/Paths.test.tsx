@@ -4,11 +4,15 @@ import Paths from "@/components/home/Paths";
 // Phase 70 removed the Home page's gold-band hero text (eyebrow/headline/
 // subtitle/trust badges) and the decorative "gallery wall" of the three
 // path artworks. Phase 80 restored both per Roy's request, reusing the same
-// `content.*` fields that were left in the data model the whole time. This
-// test now confirms the hero content and gallery are back, alongside the
-// three real path cards further down.
+// `content.*` fields that were left in the data model the whole time.
+// Phase 121 — Roy asked for the gallery wall removed again, permanently
+// this time (no replacement image), and the remaining hero text centered.
+// This test now confirms the hero text still renders (centered, per the
+// updated markup) with no artwork left anywhere in the hero band, alongside
+// the three real path cards further down (which never used these images —
+// see Paths.tsx's own Phase 121 comment on `PATH_IMAGES`).
 describe("Paths (Home)", () => {
-  it("renders the gold-band hero text and the decorative gallery wall", () => {
+  it("renders the gold-band hero text with no gallery-wall artwork", () => {
     render(<Paths />);
 
     expect(screen.getByText("A global volunteer support alliance")).toBeInTheDocument();
@@ -20,12 +24,11 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("100% Free Sessions")).toBeInTheDocument();
     expect(screen.getByText("Global Community")).toBeInTheDocument();
 
-    // Gallery wall renders the three artwork files decoratively (aria-hidden,
-    // empty alt). Phase 100 removed the cards' own copies of these same
-    // images from the front face (replaced by the GesaMark graphic), so
-    // these three are the only "-artwork.png" renders left on the page.
+    // No "-artwork.png" images render anywhere in the hero band anymore —
+    // the gallery wall is gone, and (per the comment above) the real path
+    // cards below never used these particular files either.
     const allArtworkImgs = document.querySelectorAll('img[src*="-artwork.png"]');
-    expect(allArtworkImgs.length).toBe(3);
+    expect(allArtworkImgs.length).toBe(0);
   });
 
   it("still renders the three real path cards", () => {

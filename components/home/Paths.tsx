@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Tags, Waves } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
@@ -121,18 +120,23 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
 // comment block above) is the only thing here that stays code-managed.
 // Everything else per card now comes from `content` (Content Manager key
 // "page_home").
-const PATH_IMAGES = [
-  "/images/paths/crisis-artwork.png",
-  "/images/paths/veterans-artwork.png",
-  "/images/paths/seeking-support-artwork.png",
-];
+//
+// Phase 121 — the three actual card faces below use GesaMark (an abstract
+// recolored mark, see PATH_FRONT_STYLES further down), not photos — the
+// only place these three artwork files (crisis/veterans/seeking-support)
+// ever actually rendered was a separate, purely decorative "gallery wall"
+// in the gold hero band above this grid. Roy asked for that hero band's
+// artwork removed entirely and the hero text centered instead, so the
+// `PATH_IMAGES` array that fed that gallery wall, and the `next/image`
+// import it was the only user of, are both gone along with it.
 
 // Phase 76 — one badge icon per card back face, fixed by position (same
-// "code-managed, not editable" treatment as PATH_IMAGES above) — chosen to
-// match each card's own context: a life ring for the crisis path (urgent,
-// keep-afloat help), a service medal for veterans/reservists/families, and
-// a sparkling sprig for general/seeking support (closest available lucide
-// icon to the laurel-sprig badge in Roy's reference design).
+// "code-managed, not editable" treatment used elsewhere on this page) —
+// chosen to match each card's own context: a life ring for the crisis path
+// (urgent, keep-afloat help), a service medal for veterans/reservists/
+// families, and a sparkling sprig for general/seeking support (closest
+// available lucide icon to the laurel-sprig badge in Roy's reference
+// design).
 const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 
 // Phase 97 — Roy sent a reference image restyling each card's *front* face
@@ -265,19 +269,27 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           never removed from the data model (Phase 70 only stopped
           rendering them), so this simply re-renders the exact same,
           already-editable Content Manager fields — no new content, no new
-          Supabase columns. The gallery wall reuses the same three artwork
-          files already shown, non-decoratively, in the cards below
-          (Phase 41/47), rendered here `aria-hidden` with empty `alt` since
-          the meaningful alt text for these images already lives on the
-          cards — a duplicated non-empty alt would be noise for screen
-          reader users, not new information. The band's `pb-[210px]` (added
+          Supabase columns.
+          Phase 121 — Roy sent a screenshot of this exact section (referring
+          to it as "the About page" — this is the page the header's "About"
+          nav item actually links to, `/`, a Phase 88 relabeling; the
+          literal `/about` URL is labeled "Find Support" in the nav and is a
+          different component, `components/Hero.tsx`) and asked for the
+          gallery-wall artwork removed entirely and the remaining text
+          centered, with no replacement image content. The old
+          `grid md:grid-cols-2` (text column left, gallery wall right) is
+          now a single centered column, `mx-auto max-w-[52rem] text-center`
+          — same centering approach used on `/about`'s own hero for the
+          same kind of request. The gallery wall `<div>`, its three
+          `next/image` calls, the `PATH_IMAGES` array that fed them, and the
+          `next/image` import are all gone (see this file's Phase 121
+          comment above `PATH_BADGE_ICONS`). The band's `pb-[210px]` (added
           Phase 72 to match the card row's `-mt-[210px]` overlap) is
-          untouched — the new hero content simply renders in the band's
-          existing top padding/flow, so the gold/light seam the cards
-          straddle is unaffected. */}
+          untouched — the gold/light seam the cards below straddle is
+          unaffected by this change. */}
       <div className="gold-banner relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
-          <div className="absolute left-[8%] top-0 h-[420px] w-[560px] rounded-full bg-white/25 blur-[110px]" />
+          <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-white/25 blur-[110px]" />
           {/* Phase 67 — same faint line-art watermark texture as About's
               gold Hero band and the gold PageHero banners (Our Therapists,
               Support Groups), for consistency across every gold section. */}
@@ -285,55 +297,33 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
         </ParallaxLayer>
 
         <div className="wrap relative z-10">
-          <div className="grid items-center gap-12 md:grid-cols-2">
-            <Reveal type="fade-up">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-espresso">
-                  <Sparkle size={15} className="text-clay" aria-hidden="true" />
-                  {content.eyebrow}
-                </span>
-                <h1
-                  id="paths-heading"
-                  className="mt-6 max-w-xl font-serif text-[clamp(38px,5vw,60px)] leading-[1.08] text-espresso"
-                >
-                  {content.title}
-                </h1>
-                <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-espresso/75">{content.subtitle}</p>
-                <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-[14px] font-medium text-espresso/80">
-                  <span className="inline-flex items-center gap-2">
-                    <ShieldCheck size={17} className="text-espresso/60" aria-hidden="true" />
-                    {content.badge1Label}
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <HeartHandshake size={17} className="text-espresso/60" aria-hidden="true" />
-                    {content.badge2Label}
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <Users size={17} className="text-espresso/60" aria-hidden="true" />
-                    {content.badge3Label}
-                  </span>
-                </div>
-              </div>
-            </Reveal>
-
-            {/* Gallery wall — three overlapping framed artworks, hidden below
-                the md breakpoint (same treatment the pre-Phase-70 version
-                used) since there isn't room for a decorative image stack
-                next to the text on narrow viewports. */}
-            <Reveal type="image">
-              <div className="relative mx-auto hidden h-[340px] w-full max-w-md md:block" aria-hidden="true">
-                <div className="absolute left-0 top-2 h-[210px] w-[210px] -rotate-6 overflow-hidden rounded-2xl border-[6px] border-white shadow-2xl">
-                  <Image src={PATH_IMAGES[0]} alt="" fill className="object-cover" />
-                </div>
-                <div className="absolute right-0 top-20 h-[230px] w-[250px] rotate-3 overflow-hidden rounded-2xl border-[6px] border-espresso shadow-2xl">
-                  <Image src={PATH_IMAGES[1]} alt="" fill className="object-cover" />
-                </div>
-                <div className="absolute bottom-0 left-16 h-[190px] w-[230px] -rotate-3 overflow-hidden rounded-2xl border-[6px] border-clay-soft shadow-xl">
-                  <Image src={PATH_IMAGES[2]} alt="" fill className="object-cover" />
-                </div>
-              </div>
-            </Reveal>
-          </div>
+          <Reveal type="fade-up" as="div" className="mx-auto max-w-[52rem] text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-espresso">
+              <Sparkle size={15} className="text-clay" aria-hidden="true" />
+              {content.eyebrow}
+            </span>
+            <h1
+              id="paths-heading"
+              className="mx-auto mt-6 max-w-[18ch] font-serif text-[clamp(38px,5.5vw,64px)] leading-[1.08] text-espresso"
+            >
+              {content.title}
+            </h1>
+            <p className="mx-auto mt-5 max-w-[42rem] text-[16px] leading-relaxed text-espresso/75">{content.subtitle}</p>
+            <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-[14px] font-medium text-espresso/80">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck size={17} className="text-espresso/60" aria-hidden="true" />
+                {content.badge1Label}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <HeartHandshake size={17} className="text-espresso/60" aria-hidden="true" />
+                {content.badge2Label}
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Users size={17} className="text-espresso/60" aria-hidden="true" />
+                {content.badge3Label}
+              </span>
+            </div>
+          </Reveal>
         </div>
       </div>
 

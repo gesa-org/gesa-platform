@@ -4533,3 +4533,58 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 122 — Home gold hero band: remove gallery-wall artwork, center text
+
+**Request:** Roy sent the same screenshot again, this time transcribing its exact text ("A GLOBAL EMOTIONAL
+SUPPORT ECOSYSTEM" / "The right support changes what becomes possible." / etc.) as what should remain on "the
+About page" hero, with the artwork removed and the text centered.
+
+**Root ambiguity resolved directly:** that text is Home's content, not the `/about` route's — confirmed by
+asking Roy directly. The confusion has a real cause: the header's nav item labeled **"About"** links to `/`
+(Home), while the nav item labeled **"Find Support"** links to the actual `/about` URL (a Phase 88
+relabeling). So "the About page" from a visitor's-eyes perspective — the page you land on by clicking "About"
+— is `components/home/Paths.tsx`'s gold hero band, not `components/Hero.tsx`. Confirmed with Roy which one he
+meant before touching anything, since this same page/component ambiguity produced Phase 120 (a real change,
+just to the wrong component) and its revert (Phase 121) — not repeating that mistake a third time.
+
+**Files changed:** `components/home/Paths.tsx` and `tests/unit/Paths.test.tsx`.
+
+**Implementation:**
+- The gold hero band's `grid md:grid-cols-2` (text column left, a "gallery wall" of three overlapping framed
+  artwork images right) is now a single centered column: `mx-auto max-w-[52rem] text-center` — the same
+  centering approach already used on `/about`'s own hero (Phase 120/121) for the equivalent request, kept
+  consistent rather than inventing a second pattern.
+- Removed entirely: the gallery-wall `<div>` and its three `next/image` calls, the `PATH_IMAGES` array that
+  fed them, and the now-unused `next/image` import. Confirmed via grep that `PATH_IMAGES` had no other
+  reader anywhere in the codebase — the three actual path cards below this hero band use an unrelated abstract
+  `GesaMark` graphic on their front face, not these photo files, so nothing else depends on them.
+- Heading measure capped at `18ch`, subtitle at `42rem`, badges row switched to `justify-center` — same
+  "readable centered column" treatment as the `/about` hero change. The decorative glow blob in the background
+  layer was re-centered (`left-1/2 -translate-x-1/2`, was offset toward the old left-hand text column);
+  `GoldWatermarks` and the section's own gold background/padding are untouched.
+- `content.eyebrow`/`title`/`subtitle`/`badge1-3Label` — no `HomeContent` fields changed, added, or removed;
+  only the surrounding markup changed. Nothing new to translate; Hebrew continues to flow through the existing
+  dictionary exactly as before.
+
+**Verification:**
+- `tsc --noEmit`: zero new errors (same 16-line pre-existing baseline as every prior phase).
+- Grepped the full codebase for `PATH_IMAGES`/the three artwork filenames — confirmed no other file reads them.
+- Updated `tests/unit/Paths.test.tsx`'s first test (previously asserted exactly 3 `-artwork.png` images render
+  in the gallery wall) to assert **zero** such images render instead — this test would otherwise now fail
+  against the intended behavior. The other three tests in that file (path cards, flip-card faces, front-face
+  badge labels) don't touch the hero band and needed no changes.
+- Could not run the actual Jest suite in this sandbox (same disclosed limitation as every prior phase) — the
+  updated assertion was checked by hand against the new markup instead.
+- **Not verified this phase:** an actual rendered screenshot at desktop/tablet/mobile widths or in Hebrew.
+  Please check the Home page (reached via "About" in the nav) after deploying.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/home/Paths.tsx tests/unit/Paths.test.tsx
+git commit -m "Phase 122: remove Home hero gallery-wall artwork, center hero text"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
