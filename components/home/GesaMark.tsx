@@ -1,23 +1,19 @@
-// Phase 100 — Roy sent a reference image of a new abstract "swirl" mark
-// (three nested crescents opening onto a small dot, with a short comma-like
-// tail) recolored per card, and asked for it to become the new front-face
-// design for the Home page's three flip-cards, replacing the framed
-// painting used since Phase 97. Rather than sourcing or generating a raster
-// image asset, this is coded as a real SVG component — scalable, recolored
-// per-card via props from a fixed set of palette values (no new image files
-// to manage), and built the same way the accessibility launcher icon was
-// (Phase 90/94): plain stroked/filled path primitives approximating the
-// reference art, verified visually by rendering to PNG and comparing side
-// by side with the reference before landing on these exact coordinates.
-//
-// The three arcs are literally the same circle at three radii (72/54/37),
-// each swept through the same 285°-degree span with a shared gap centered
-// at 15° (upper right) — only stroke width and color change per ring. The
-// "tail" is a small filled comma shape closing the innermost ring's lower
-// end into the dot, and the dot itself is a plain filled circle. All four
-// colors are passed in per card (outerRing/middleRing/innerRing/dot) so the
-// same markup can be recolored to match each card's mat, rather than three
-// near-duplicate components.
+// Phase 106 — Roy asked to replace this component's shape with the real
+// GESA website logo (public/images/brand/gesa-logo.png — the one shown in
+// the header), recolored per card, instead of the Phase 100 hand-drawn
+// approximation (three equal-width stroked arcs + a plain comma tail). That
+// approximation was always a stand-in, not a trace of the actual mark (see
+// its own header comment, since removed) — this version is a real trace:
+// each of the logo's three tapered crescents and its dot were extracted
+// from the PNG by isolating each fill color, finding its contour, and
+// fitting a smooth closed Catmull-Rom spline through resampled points
+// (verified by rendering the traced paths back to PNG and comparing side
+// by side with the source logo before landing on these coordinates) — the
+// same "hand-coded SVG, not a raster asset" approach as before, but now the
+// actual logo's proportions (the tapered wave-shaped inner crescent, not a
+// uniform-width arc) rather than an approximation of them. All four
+// regions still take their color as a prop so the same markup recolors
+// per card exactly as it did before.
 export type GesaMarkColors = {
   outerRing: string;
   middleRing: string;
@@ -29,28 +25,21 @@ export default function GesaMark({ colors, className }: { colors: GesaMarkColors
   return (
     <svg viewBox="0 0 200 220" className={className} aria-hidden="true">
       <path
-        d="M 143.8 152.1 A 72 72 0 1 1 166.5 67.4"
-        stroke={colors.outerRing}
-        strokeWidth="20"
-        fill="none"
-        strokeLinecap="round"
+        d="M 90.40 20.32 C 83.88 21.34 77.35 23.21 71.16 25.51 C 64.97 27.80 58.80 30.60 53.24 34.09 C 47.68 37.57 42.51 41.87 37.82 46.42 C 33.13 50.97 28.73 56.02 25.09 61.41 C 21.45 66.80 18.34 72.74 15.99 78.78 C 13.65 84.82 11.98 91.28 11.03 97.67 C 10.08 104.06 9.91 110.67 10.29 117.12 C 10.68 123.57 11.64 130.14 13.35 136.38 C 15.06 142.62 17.58 148.78 20.54 154.55 C 23.51 160.33 27.03 166.00 31.14 171.04 C 35.24 176.09 40.14 180.65 45.19 184.82 C 50.24 188.98 55.67 192.93 61.44 196.04 C 67.22 199.15 73.55 201.48 79.84 203.47 C 86.14 205.46 92.65 207.26 99.20 207.97 C 105.75 208.68 117.24 208.17 119.14 207.72 C 121.04 207.28 115.15 206.78 110.59 205.30 C 106.04 203.82 97.82 201.56 91.83 198.86 C 85.84 196.15 80.04 192.77 74.65 189.05 C 69.27 185.33 64.09 181.19 59.53 176.54 C 54.97 171.88 50.74 166.65 47.32 161.13 C 43.89 155.61 40.95 149.57 38.97 143.43 C 37.00 137.28 35.86 130.70 35.45 124.26 C 35.04 117.82 35.32 111.12 36.54 104.78 C 37.76 98.45 39.98 92.08 42.78 86.24 C 45.58 80.41 49.17 74.73 53.34 69.75 C 57.52 64.78 62.50 60.18 67.84 56.40 C 73.17 52.62 79.21 49.36 85.38 47.07 C 91.54 44.78 98.28 43.19 104.82 42.66 C 111.37 42.14 118.24 42.62 124.66 43.92 C 131.08 45.22 137.48 47.56 143.35 50.45 C 149.22 53.35 154.99 57.02 159.90 61.28 C 164.81 65.55 169.29 70.63 172.81 76.05 C 176.32 81.46 179.69 93.28 180.99 93.78 C 182.29 94.29 181.80 84.59 180.60 79.08 C 179.40 73.58 176.73 66.53 173.78 60.75 C 170.84 54.97 167.26 49.24 162.92 44.41 C 158.58 39.59 153.25 35.30 147.74 31.79 C 142.22 28.27 136.05 25.40 129.82 23.33 C 123.58 21.26 116.90 19.85 110.33 19.35 C 103.76 18.85 96.93 19.29 90.40 20.32 Z"
+        fill={colors.outerRing}
       />
       <path
-        d="M 132.9 137.8 A 54 54 0 1 1 149.9 74.3"
-        stroke={colors.middleRing}
-        strokeWidth="17"
-        fill="none"
-        strokeLinecap="round"
+        d="M 88.89 55.99 C 83.38 57.97 78.08 61.01 73.29 64.37 C 68.50 67.73 63.96 71.74 60.16 76.16 C 56.37 80.57 53.04 85.63 50.51 90.84 C 47.98 96.05 46.20 101.76 45.00 107.41 C 43.80 113.06 43.14 118.98 43.30 124.74 C 43.46 130.50 44.39 136.41 45.96 141.97 C 47.53 147.53 49.87 153.03 52.71 158.09 C 55.54 163.14 59.02 168.05 62.99 172.30 C 66.97 176.55 71.67 180.36 76.56 183.59 C 81.45 186.81 86.97 189.22 92.36 191.66 C 97.74 194.11 103.27 196.39 108.87 198.26 C 114.47 200.13 120.16 202.17 125.96 202.90 C 131.76 203.62 138.00 203.79 143.66 202.60 C 149.32 201.42 154.97 198.82 159.91 195.79 C 164.86 192.77 169.72 188.93 173.33 184.47 C 176.94 180.01 180.28 174.37 181.58 169.02 C 182.87 163.68 183.54 153.93 181.11 152.41 C 178.68 150.90 171.29 156.48 166.98 159.94 C 162.68 163.39 159.40 168.98 155.27 173.15 C 151.13 177.33 147.06 181.86 142.16 184.97 C 137.25 188.07 131.50 190.59 125.85 191.78 C 120.19 192.96 113.91 193.09 108.22 192.08 C 102.52 191.06 96.78 188.54 91.67 185.69 C 86.57 182.84 81.67 179.12 77.59 174.98 C 73.52 170.84 69.83 165.99 67.24 160.85 C 64.64 155.72 62.98 149.86 62.02 144.19 C 61.06 138.51 60.83 132.53 61.47 126.81 C 62.10 121.10 63.67 115.26 65.82 109.88 C 67.97 104.51 70.94 99.28 74.36 94.58 C 77.78 89.89 81.82 85.34 86.35 81.69 C 90.87 78.04 96.18 75.07 101.53 72.70 C 106.88 70.32 112.67 68.23 118.45 67.44 C 124.24 66.64 130.48 66.88 136.25 67.91 C 142.01 68.94 148.05 71.09 153.05 73.62 C 158.05 76.16 165.88 83.81 166.26 83.11 C 166.64 82.41 159.56 73.39 155.33 69.42 C 151.10 65.46 146.10 61.92 140.89 59.31 C 135.67 56.70 129.82 54.89 124.06 53.76 C 118.30 52.63 112.20 52.15 106.34 52.52 C 100.48 52.89 94.40 54.02 88.89 55.99 Z"
+        fill={colors.middleRing}
       />
       <path
-        d="M 122.5 124.4 A 37 37 0 1 1 134.2 80.8"
-        stroke={colors.innerRing}
-        strokeWidth="15"
-        fill="none"
-        strokeLinecap="round"
+        d="M 67.68 122.39 C 66.95 126.09 67.20 130.17 67.20 133.96 C 67.20 137.75 67.01 141.44 67.68 145.11 C 68.34 148.78 69.54 152.55 71.18 155.97 C 72.82 159.38 75.07 162.65 77.51 165.61 C 79.95 168.57 82.83 171.47 85.81 173.73 C 88.78 175.99 91.94 177.73 95.35 179.17 C 98.76 180.61 102.48 181.78 106.27 182.38 C 110.06 182.98 114.27 183.12 118.07 182.77 C 121.87 182.42 125.53 181.52 129.09 180.27 C 132.66 179.03 136.29 177.39 139.44 175.32 C 142.59 173.25 145.29 170.49 147.98 167.86 C 150.67 165.22 153.03 162.24 155.57 159.51 C 158.10 156.78 160.19 153.52 163.19 151.50 C 166.18 149.47 171.56 148.64 173.52 147.34 C 175.47 146.05 176.54 144.68 174.92 143.71 C 173.30 142.75 167.49 141.32 163.78 141.56 C 160.07 141.80 156.21 143.65 152.68 145.16 C 149.15 146.66 145.85 148.59 142.59 150.58 C 139.34 152.56 136.41 155.29 133.15 157.07 C 129.90 158.86 126.66 160.51 123.06 161.29 C 119.46 162.06 115.30 162.14 111.55 161.75 C 107.81 161.36 104.09 160.37 100.61 158.94 C 97.13 157.51 93.62 155.47 90.68 153.15 C 87.74 150.83 85.19 147.94 82.96 145.00 C 80.73 142.05 78.75 138.84 77.27 135.47 C 75.80 132.11 74.69 128.49 74.12 124.81 C 73.55 121.12 73.54 117.08 73.86 113.34 C 74.19 109.61 76.43 102.65 76.05 102.38 C 75.67 102.11 72.99 108.39 71.59 111.73 C 70.20 115.06 68.41 118.68 67.68 122.39 Z"
+        fill={colors.innerRing}
       />
-      <path d="M 128 118 C 138 128, 132 145, 112 148 C 122 140, 122 128, 112 122 Z" fill={colors.innerRing} />
-      <circle cx="150" cy="107" r="11" fill={colors.dot} />
+      <path
+        d="M 165.15 116.94 C 164.03 117.00 162.87 117.69 161.85 118.19 C 160.83 118.70 159.77 119.13 159.05 119.95 C 158.34 120.76 157.99 122.02 157.58 123.10 C 157.16 124.19 156.51 125.36 156.57 126.45 C 156.62 127.55 157.42 128.61 157.92 129.66 C 158.42 130.71 158.74 132.03 159.56 132.76 C 160.38 133.48 161.78 133.65 162.86 134.01 C 163.94 134.37 164.93 134.96 166.01 134.92 C 167.10 134.88 168.31 134.32 169.37 133.78 C 170.42 133.25 171.51 132.50 172.32 131.71 C 173.13 130.91 173.84 130.06 174.24 129.02 C 174.65 127.98 174.80 126.62 174.75 125.46 C 174.69 124.30 174.40 123.10 173.90 122.05 C 173.39 121.00 172.60 119.88 171.72 119.18 C 170.83 118.47 169.70 118.22 168.60 117.84 C 167.51 117.47 166.28 116.88 165.15 116.94 Z"
+        fill={colors.dot}
+      />
     </svg>
   );
 }

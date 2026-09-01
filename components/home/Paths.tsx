@@ -166,6 +166,13 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // none of these four-per-card tones exist as design tokens already, so
 // (consistent with Phase 97's own precedent of hardcoding the one color no
 // token fit) they're hardcoded here rather than force-fit to existing ones.
+//
+// Phase 106 — GesaMark's shape changed from the Phase 100 approximation to
+// a real trace of the actual site logo, which has one ring fewer visual
+// "gap" than the approximation did — recolored these four-per-card values
+// (verified by rendering each card's own palette to PNG before landing on
+// these) so every ring still reads as a distinct tone against its own
+// card's background, not just carried over from the old shape unchanged.
 const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] = [
   {
     bg: "bg-clay-soft",
@@ -175,12 +182,12 @@ const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] =
   {
     bg: "bg-accent",
     frame: "border-clay",
-    mark: { outerRing: "#c9d3e0", middleRing: "#9db99f", innerRing: "#f0c49a", dot: "#f0c49a" },
+    mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
     bg: "bg-[#5f7a91]",
     frame: "border-clay",
-    mark: { outerRing: "#a8c49a", middleRing: "#d9a6c2", innerRing: "#f2e2a0", dot: "#f2e2a0" },
+    mark: { outerRing: "#f0d9e8", middleRing: "#f5e08a", innerRing: "#e0955c", dot: "#e0955c" },
   },
 ];
 

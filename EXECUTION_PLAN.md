@@ -3646,4 +3646,50 @@ git push
 ```
 
 ---
+
+## Phase 106: Trace the real GESA logo for the Home page's three flip-card fronts
+
+**Roy's request:** a screenshot of the three flip-card fronts (matching what was already live — same swirl
+mark, same "CRISIS"/"VETERANS"/"SUPPORT" badges), asking to "use the website logo instead" for the card
+design, recolored per card, without changing any text. The Phase 100 `GesaMark` component was always a
+hand-drawn *approximation* of the real logo (three equal-width stroked arcs + a plain comma tail, per its own
+code comment) rather than an actual trace of `public/images/brand/gesa-logo.png` — the real logo's inner
+crescent is a tapered wave shape, not a uniform-width arc, and its proportions differ noticeably up close.
+This phase replaces the approximation with a real trace of that file.
+
+- Traced the logo programmatically rather than eyeballing coordinates: isolated each of the PNG's three fill
+  colors (outer blue-gray ring, middle sage ring, gold inner crescent + dot) with OpenCV, found each region's
+  contour, resampled it to an even point spacing, and fit a smooth closed Catmull-Rom spline through those
+  points to get natural-looking cubic Bezier curves instead of a jagged polygon. Rendered the result back to
+  PNG and compared it side by side with the source logo (same verification method the original `GesaMark`
+  used) before finalizing the path data.
+- `components/home/GesaMark.tsx`: replaced all four `<path>` `d` attributes with the traced logo paths.
+  `GesaMarkColors` (outerRing/middleRing/innerRing/dot props) and the `viewBox="0 0 200 220"` are unchanged,
+  so nothing else calling this component needed to change.
+- `components/home/Paths.tsx` (`PATH_FRONT_STYLES`): updated each card's four mark colors — the traced
+  shape's proportions read differently than the old approximation's equal-width rings, so the old per-card
+  color choices (picked for that shape) needed rebalancing to still look distinct against each card's own
+  background; verified each card's exact palette by rendering it standalone before landing on these values.
+  Card backgrounds, borders, badge icons/labels, and every text field are untouched — only the mark's shape
+  and its four colors changed, exactly as asked.
+- Confirmed via a live-site check before starting that the "before" state genuinely matched Roy's screenshot
+  (same recurring caching-confusion pattern as earlier phases, so worth ruling out first) — it did, so this
+  phase is a real design change, not a re-fix of something already correct.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/Paths.test.tsx`'s existing assertion (`svg[viewBox="0 0 200 220"]`, count 3) still holds
+  unchanged — the viewBox and component API didn't change, only the path data and per-card colors inside it.
+- Rendered the new traced mark recolored with each card's actual final palette to PNG and visually confirmed
+  all three read as distinct, legible marks against their own card backgrounds before finalizing the colors
+  in code.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/home/GesaMark.tsx components/home/Paths.tsx
+git commit -m "Phase 106: trace the real GESA logo for the Home flip-cards, recolored per card"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
