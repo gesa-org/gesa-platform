@@ -71,6 +71,29 @@ function collectTextNodes(root: Node): Text[] {
   return nodes;
 }
 
+// Phase 113 — `collectTextNodes` only ever caught rendered text *nodes*,
+// which misses copy that lives in an attribute instead: an input's
+// `placeholder`, an icon-only button's `aria-label`, a `title` tooltip.
+// None of those have a corresponding Text node in the DOM at all, so they
+// silently stayed English no matter how complete the dictionary was —
+// this is a second, independent collector for exactly those three
+// attributes, run through the same dictionary-then-API pipeline as
+// ordinary text below.
+const TRANSLATABLE_ATTRS = ["placeholder", "aria-label", "title"] as const;
+type TranslatableAttr = (typeof TRANSLATABLE_ATTRS)[number];
+
+function collectTranslatableAttributes(root: ParentNode): { el: Element; attr: TranslatableAttr; value: string }[] {
+  const results: { el: Element; attr: TranslatableAttr; value: string }[] = [];
+  root.querySelectorAll("*").forEach((el) => {
+    if (el.closest("[data-no-translate]")) return;
+    TRANSLATABLE_ATTRS.forEach((attr) => {
+      const value = el.getAttribute(attr);
+      if (value && value.trim()) results.push({ el, attr, value });
+    });
+  });
+  return results;
+}
+
 export default function TranslationProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState("en");
   const [translating, setTranslating] = useState(false);
@@ -81,6 +104,9 @@ export default function TranslationProvider({ children }: { children: React.Reac
   // in place instead of reloading. Cleared out (not just left stale) once
   // a revert actually happens — see translatePage's "en" branch below.
   const originalTextRef = useRef<Map<Text, string>>(new Map());
+  // Phase 113 — same idea as originalTextRef, but keyed by (element, attr
+  // name) so placeholder/aria-label/title can revert to English too.
+  const originalAttrRef = useRef<Map<Element, Partial<Record<TranslatableAttr, string>>>>(new Map());
 
   useEffect(() => {
     // Phase 33 — the picker only offers English and Hebrew now, but
@@ -147,11 +173,20 @@ export default function TranslationProvider({ children }: { children: React.Reac
         if (node.isConnected) node.textContent = original;
       });
       originalTextRef.current.clear();
+      originalAttrRef.current.forEach((attrs, el) => {
+        if (!el.isConnected) return;
+        (Object.keys(attrs) as TranslatableAttr[]).forEach((attr) => {
+          const original = attrs[attr];
+          if (original !== undefined) el.setAttribute(attr, original);
+        });
+      });
+      originalAttrRef.current.clear();
       return;
     }
     setTranslating(true);
     try {
       const nodes = collectTextNodes(document.body);
+      const attrTargets = collectTranslatableAttributes(document.body);
       // Cache each node's real English text before anything gets mutated —
       // only the first time we see a given node, so re-translating (e.g.
       // switching he -> en -> he again) doesn't overwrite the cached
@@ -161,7 +196,18 @@ export default function TranslationProvider({ children }: { children: React.Reac
           originalTextRef.current.set(node, node.textContent || "");
         }
       });
-      const uniqueTexts = Array.from(new Set(nodes.map((n) => n.textContent || "")));
+      attrTargets.forEach(({ el, attr, value }) => {
+        const existing = originalAttrRef.current.get(el);
+        if (existing && existing[attr] !== undefined) return;
+        originalAttrRef.current.set(el, { ...existing, [attr]: value });
+      });
+      // One shared unique-string set for both plain text and attribute
+      // values — a string like "Submit" that appears as both a button's
+      // visible label and some other element's aria-label only needs one
+      // dictionary lookup / API call either way.
+      const uniqueTexts = Array.from(
+        new Set([...nodes.map((n) => n.textContent || ""), ...attrTargets.map((a) => a.value)])
+      );
       if (uniqueTexts.length === 0) return;
 
       // Phase 53 — check the bundled dictionary (lib/translations/he.ts)
@@ -232,6 +278,10 @@ export default function TranslationProvider({ children }: { children: React.Reac
       nodes.forEach((node) => {
         const translated = translatedMap.get(node.textContent || "");
         if (translated) node.textContent = translated;
+      });
+      attrTargets.forEach(({ el, attr, value }) => {
+        const translated = translatedMap.get(value);
+        if (translated) el.setAttribute(attr, translated);
       });
     } finally {
       setTranslating(false);

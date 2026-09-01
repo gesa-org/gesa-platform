@@ -357,6 +357,30 @@ export const HE_DICTIONARY: Record<string, string> = {
   Specialties: "תחומי התמחות",
   Languages: "שפות",
   Bio: "ביוגרפיה",
+  "Your license number, certifying body/institution, and any other credential details our team can verify.":
+    "מספר הרישיון שלך, גוף/מוסד ההסמכה, וכל פרט הכשרה נוסף שהצוות שלנו יכול לאמת.",
+  "Tell us about your background and why you'd like to volunteer with GESA.":
+    "ספרו לנו על הרקע שלכם ולמה תרצו להתנדב עם GESA.",
+  "Specify your meeting duration": "ציינו את משך הפגישה שלכם",
+  "e.g. 2 hours, 90 minutes": "לדוגמה, שעתיים, 90 דקות",
+
+  // --- Phase 113: attribute-only copy (placeholder/aria-label/title) that
+  // collectTextNodes could never see, since there's no rendered Text node
+  // for these — see collectTranslatableAttributes in TranslationProvider.tsx. ---
+  Close: "סגירה",
+  "Close accessibility toolbar": "סגירת סרגל הנגישות",
+  "Accessibility options": "אפשרויות נגישות",
+  "Color mode": "מצב צבע",
+  "GESA on Facebook": "GESA בפייסבוק",
+  "GESA on Instagram": "GESA באינסטגרם",
+  "GESA on LinkedIn": "GESA בלינקדאין",
+  "GESA on Twitter": "GESA בטוויטר",
+  "Type a message…": "כתבו הודעה…",
+  Amount: "סכום",
+  "Gift frequency": "תדירות התרומה",
+  "Anything you'd like our team to know.": "כל דבר שתרצו שהצוות שלנו ידע.",
+  "e.g. 1990": "לדוגמה, 1990",
+  "+1 555 123 4567": "+1 555 123 4567",
 };
 
 // Any 4-digit year (1900–2099) — used to normalize a string like

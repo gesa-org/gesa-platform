@@ -3985,4 +3985,60 @@ git push
 ```
 
 ---
+
+## Phase 113: Translate placeholder/aria-label/title attributes, expand dictionary further
+
+**Roy's request:** a second, more detailed spec for the same Hebrew i18n bug from Phase 111, explicitly
+calling out placeholders, tooltips, and accessibility text (`aria-label`) as content that must be translated
+too.
+
+**A genuine, previously-undiscovered architectural gap.** `TranslationProvider.tsx`'s DOM walk
+(`collectTextNodes`) only ever finds rendered Text nodes. An `<input placeholder="...">`, an icon-only
+button's `aria-label="Close"`, or a `title="..."` tooltip aren't Text nodes at all — they're element
+attributes — so no matter how complete the dictionary got in Phase 111, none of that copy could ever have
+translated. This is a real, separate bug from the dictionary-coverage gap already fixed, not a duplicate of
+it.
+
+- `components/TranslationProvider.tsx`: added `collectTranslatableAttributes()`, a second collector that
+  walks every element in the document for a non-empty `placeholder`, `aria-label`, or `title` attribute
+  (skipping anything inside a `[data-no-translate]` ancestor, same rule the text-node walker already
+  follows). Its results feed into the exact same dictionary-then-`/api/translate` pipeline as ordinary text —
+  one shared unique-string set, so a string appearing as both visible text and an aria-label only costs one
+  lookup — and a new `originalAttrRef` (keyed by element + attribute name) restores each attribute's real
+  English value when switching back to English, the same pattern `originalTextRef` already used for text.
+- `lib/translations/he.ts`: added ~20 more entries specifically for attribute-only copy found by grepping
+  every `aria-label="..."` and `placeholder="..."` literal across `components/` and `app/` — the accessibility
+  toolbar's own labels ("Close accessibility toolbar," "Color mode"), the footer's social-icon labels ("GESA
+  on Facebook" etc.), the chat placeholder ("Type a message…"), and a few remaining Volunteer-application-modal
+  placeholders. Admin-only labels found in that same grep (Remove founder, Delete question, Select all
+  therapists, Copy password, Monthly activity trend) were left out — consistent with `CONTENT_GUIDE.md`'s
+  standing "admin CRM screen labels are out of scope" rule, same boundary the Content Manager work has used
+  all along.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Checked the dictionary for duplicate keys programmatically again after this round of additions — none.
+- Could not get a clean Jest/`next build` run in this sandbox this session either (same documented flakiness);
+  reviewed the new `collectTranslatableAttributes`/`originalAttrRef` logic by hand instead — it's additive
+  (a second, independent collector feeding the same existing pipeline) and doesn't change
+  `collectTextNodes`, `lookupHeDictionary`, or `useTranslation()`'s public shape at all.
+
+**Still not covered (same honest list as Phase 111, unchanged by this pass):** the live
+`GOOGLE_TRANSLATE_API_KEY` is still unset, so anything outside the (now larger) dictionary — dynamic
+per-record content like therapist bios, and any static copy this and the last pass didn't reach — still
+falls back to English; this needs Roy to obtain and set that credential, not more code. Directional Tailwind
+utilities (`ml-`/`mr-`/`pl-`/`pr-`/absolute `left-*`/`right-*`) still don't auto-mirror under RTL — same
+reasoning as Phase 111 for not attempting a blanket CSS fix. There is currently no mobile navigation menu at
+all in `Header.tsx` (nav links are `hidden md:flex`, with nothing shown on mobile to replace them) — noticed
+while checking for a hamburger menu to audit, but this is a pre-existing UX gap unrelated to translation, not
+something in scope here.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/TranslationProvider.tsx lib/translations/he.ts
+git commit -m "Phase 113: translate placeholder/aria-label/title attributes, expand Hebrew dictionary"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
