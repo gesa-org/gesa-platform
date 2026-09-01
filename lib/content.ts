@@ -590,7 +590,11 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
 export const SIMPLE_PAGE_ENTRIES: { key: string; label: string; hasDescription: boolean; fallback: SimplePageContent }[] = [
   { key: "page_therapists", label: "Our Therapists", hasDescription: true, fallback: THERAPISTS_CONTENT_FALLBACK },
   { key: "page_support_groups", label: "Support Groups", hasDescription: true, fallback: SUPPORT_GROUPS_CONTENT_FALLBACK },
-  { key: "page_find_your_therapist", label: "Find Your Therapist", hasDescription: true, fallback: FIND_YOUR_THERAPIST_CONTENT_FALLBACK },
+  // Phase 105 — label matches the footer nav's own link text for this page
+  // ("Find a Therapist", Footer.tsx's supportFindTherapistLabel) rather
+  // than this route's internal name, same reasoning as the Content
+  // Manager's other tab renames this phase.
+  { key: "page_find_your_therapist", label: "Find a Therapist", hasDescription: true, fallback: FIND_YOUR_THERAPIST_CONTENT_FALLBACK },
   { key: "page_blog", label: "Blog (disabled)", hasDescription: true, fallback: BLOG_CONTENT_FALLBACK },
   { key: "page_faq", label: "FAQ", hasDescription: false, fallback: FAQ_CONTENT_FALLBACK },
   { key: "page_contact", label: "Contact", hasDescription: true, fallback: CONTACT_CONTENT_FALLBACK },

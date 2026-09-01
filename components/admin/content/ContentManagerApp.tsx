@@ -73,12 +73,23 @@ type Props = {
 // CONTENT_GUIDE.md for the full convention.
 const COMPOSITE_SIMPLE_KEYS = new Set(["page_therapists", "page_support_groups", "page_faq"]);
 
+// Phase 105 — Roy pointed out these tabs didn't match what a visitor
+// actually sees in the live header nav, which is confusing since he's
+// picking a tab by the page's real-world name, not its internal route/key.
+// Phase 88 relabeled the header nav so "/" reads "About" and "/about" reads
+// "Find Support" (a deliberate swap, not a typo — see Header.tsx's own
+// comment) — so the tab for the homepage (page_home) is now named "About"
+// here, and the tab for the About page (page_about_hero/page_about_sections)
+// is named "Find Support", matching the nav exactly even though it means
+// the tab names don't match this file's own internal identifiers. Same idea
+// for "Our Therapists" → "Our Professionals" and "Support Groups" →
+// "Community" (Header.tsx's therapistsLabel/supportGroupsLabel).
 const FIXED_TABS = [
   "Header",
-  "Home",
-  "About",
-  "Our Therapists",
-  "Support Groups",
+  "About", // page_home — the header nav labels "/" as "About" (Phase 88)
+  "Find Support", // page_about_hero / page_about_sections — the actual About page, labeled "Find Support" in nav
+  "Our Professionals", // page_therapists
+  "Community", // page_support_groups
 ] as const;
 
 const FIXED_TABS_END = [
@@ -121,7 +132,7 @@ export default function ContentManagerApp(props: Props) {
 
       {tab === "Header" && <HeaderEditor initial={props.header} />}
 
-      {tab === "Home" && (
+      {tab === "About" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Hero band, path cards &amp; gallery</h3>
@@ -134,7 +145,7 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "About" && (
+      {tab === "Find Support" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Hero</h3>
@@ -147,7 +158,7 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Our Therapists" && (
+      {tab === "Our Professionals" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>
@@ -160,7 +171,7 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Support Groups" && (
+      {tab === "Community" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>

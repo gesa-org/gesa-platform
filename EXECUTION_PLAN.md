@@ -3600,4 +3600,50 @@ git push
 ```
 
 ---
+
+## Phase 105: Rename Content Manager tabs to match the live nav's page names
+
+**Roy's request:** "Update the pages name at the 'Content Manager' CRM Dashboard to match the pages name
+navigation at the live website." The Content Manager's tabs were named after each page's internal route/key
+(Home, About, Our Therapists, Support Groups), but Phase 88 relabeled the actual header nav so those same
+pages show different names to a visitor: "/" reads "About" in the nav, "/about" reads "Find Support",
+"/therapists" reads "Our Professionals", "/support-groups" reads "Community" (a deliberate swap, documented
+in `Header.tsx`'s own comment — not a bug). Picking a tab by its live-site name was pointing at the wrong
+page's content.
+
+- `components/admin/content/ContentManagerApp.tsx`: renamed the four `FIXED_TABS` entries and their matching
+  `tab === "..."` conditionals to the live nav's own labels:
+  - "Home" → **"About"** (the homepage, `page_home` — nav calls "/" "About")
+  - "About" → **"Find Support"** (the actual About page, `page_about_hero`/`page_about_sections` — nav calls
+    "/about" "Find Support")
+  - "Our Therapists" → **"Our Professionals"** (`page_therapists`)
+  - "Support Groups" → **"Community"** (`page_support_groups`)
+  - Added a comment above `FIXED_TABS` explaining why the tab names now deliberately don't match this file's
+    own internal identifiers, so a future session doesn't "fix" this back.
+- `lib/content.ts`: `SIMPLE_PAGE_ENTRIES`' `"Find Your Therapist"` label → **"Find a Therapist"**, matching the
+  footer nav's own link text for that page (`supportFindTherapistLabel`) exactly.
+- Confirmed via direct query against the production Supabase database that the live `site_header` row's
+  labels match the code fallback exactly (`About`/`Find Support`/`Our Professionals`/`Community`/`DONATE`),
+  so these tab names match what's actually live today, not just the code default.
+- Left the Blog/FAQ/Contact tabs as-is — their footer nav labels ("Blog", "FAQ", "Contact") already match the
+  Content Manager's tab names exactly.
+- No `site_content` data changed — this only renames tabs in the admin UI shell, not any editable field, page
+  content, or key.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Grepped the whole `ContentManagerApp.tsx` file to confirm no leftover `tab === "Home"` /
+  `tab === "Our Therapists"` / `tab === "Support Groups"` conditional was missed after the rename.
+- Checked every test file for an assertion on the old tab label strings — none exist (no dedicated
+  `ContentManagerApp` test file, and the only other matches for these strings in `tests/` are unrelated
+  components like `PageHero.test.tsx`'s own eyebrow text).
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/admin/content/ContentManagerApp.tsx lib/content.ts
+git commit -m "Phase 105: rename Content Manager tabs to match live nav page names"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
