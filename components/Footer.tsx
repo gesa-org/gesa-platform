@@ -1,11 +1,13 @@
 import Link from 'next/link';
-import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck } from 'lucide-react';
+import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck, Heart } from 'lucide-react';
 import Logo from '@/components/Logo';
 import VolunteerApplyButton from '@/components/volunteer/VolunteerApplyButton';
 import HelpUsGrowForm from '@/components/footer/HelpUsGrowForm';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
-import type { FooterContent } from '@/lib/content';
+import type { FooterContent, HeaderContent } from '@/lib/content';
+import { HEADER_CONTENT_FALLBACK } from '@/components/Header';
+import { getFooterExploreItems } from '@/lib/navigation';
 import { SITE_FOOTER_ID } from '@/lib/accessibility/config';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
@@ -18,9 +20,18 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   tagline:
     "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer therapists.",
   exploreHeading: "Explore",
-  // Phase 88 — matches the header nav's relabeling (Header.tsx) for these
-  // same three routes, so the footer doesn't call /about, /therapists, and
-  // /support-groups something different from what the header calls them.
+  // Phase 117 — these three fields are kept in the type/fallback/DB row
+  // (same "don't delete data just because a section stopped reading it"
+  // precedent used elsewhere in this codebase) but are no longer rendered.
+  // They're exactly the bug this phase fixed: two independently-editable
+  // labels for "the same nav item" (this field, and HeaderContent's own
+  // homeLabel/aboutLabel/therapistsLabel/supportGroupsLabel) had already
+  // drifted apart on the live site — the footer called /therapists "Find
+  // Support" while the header called it "Our Professionals". The Explore
+  // column below now reads its first four links' labels/hrefs from
+  // `headerContent` via lib/navigation.ts's shared PRIMARY_NAVIGATION list
+  // instead, so there is exactly one editable label per route going
+  // forward. See FooterEditor.tsx for the matching admin-UI note.
   exploreAboutLabel: "Find Support",
   exploreTherapistsLabel: "Our Professionals",
   exploreSupportGroupsLabel: "Community",
@@ -31,6 +42,14 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   supportHeading: "Support",
   supportFindTherapistLabel: "Find a Therapist",
   supportJoinGroupLabel: "Join a Group",
+  // Phase 117 — kept in the type/fallback/DB row (not deleted, same
+  // precedent as the exploreAboutLabel-etc. note above) but no longer
+  // rendered: this was a second, independently-editable "Donate" link that
+  // pointed to /contact?subject=Donation — a different destination than the
+  // header's/Explore's own Donate, which goes to the real /donate flow
+  // (HeaderContent.donateHref). That mismatch is exactly the "links point to
+  // different routes" bug this phase fixed; Donate now appears exactly once
+  // in this footer, in the Explore column, sharing the header's own link.
   supportDonateLabel: "Donate",
   supportVolunteerLabel: "Volunteer",
   supportEmergencyLabel: "Emergency Contact",
@@ -65,8 +84,20 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
 // the actual DB fetch happens up in app/layout.tsx (a Server Component) and
 // is passed down as a prop, since a Client Component can't import a
 // Server-only data-fetching module without breaking the browser bundle.
-export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?: FooterContent }) {
+// Phase 117 — headerContent is a new, optional prop (defaults to the same
+// HEADER_CONTENT_FALLBACK the header itself falls back to) so every existing
+// caller/test that only ever passed `content` keeps working unchanged, while
+// app/layout.tsx's real render now threads the same HeaderContent object it
+// already fetches for <Header> down here too — see lib/navigation.ts for why.
+export default function Footer({
+  content = FOOTER_CONTENT_FALLBACK,
+  headerContent = HEADER_CONTENT_FALLBACK,
+}: {
+  content?: FooterContent;
+  headerContent?: HeaderContent;
+}) {
   const year = new Date().getFullYear();
+  const exploreItems = getFooterExploreItems(headerContent);
   return (
     // Phase 90 — id/tabIndex added for the accessibility widget's "Skip To
     // Content → Footer" control (components/accessibility/sections/
@@ -92,13 +123,66 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
           </StaggerItem>
           <StaggerItem>
             <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.exploreHeading}</h4>
+            {/* Phase 117 — every link here now comes from
+                lib/navigation.ts's shared PRIMARY_NAVIGATION list, resolved
+                against the same `headerContent` object <Header> itself
+                renders from (both fetched once, together, in
+                app/layout.tsx) — so this list's labels, hrefs, and order
+                always match the top nav exactly, with no separate footer
+                copy of any of it left to drift out of sync. Blog/FAQ/Contact
+                moved to the Support column below: they're not part of the
+                primary header nav, so per the "match the top nav, keep
+                everything else separate" goal they don't belong mixed into
+                Explore either.
+                Structural audit (this phase) — Donate rendered identically
+                to the four plain page links above it lost the distinct
+                "this is a monetary ask, not a page link" signal Donate gets
+                everywhere else on the site (Header's filled pill CTA,
+                DonateBand's pill CTA) — a screen-reader user tabbing this
+                list had no way to tell the 5th item apart from the first
+                four. Donate keeps its position and destination (still the
+                same `content.donateHref` the header uses) but now renders
+                with a small heart icon and warmer text color, matching the
+                icon this same button uses in the header, so it's visually
+                and semantically distinguishable without becoming a second,
+                differently-styled button competing with the header's own. */}
             <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
-              <li><Link href="/about" className="hover:text-[#eef1f6] transition-colors">{content.exploreAboutLabel}</Link></li>
-              <li><Link href="/therapists" className="hover:text-[#eef1f6] transition-colors">{content.exploreTherapistsLabel}</Link></li>
-              <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.exploreSupportGroupsLabel}</Link></li>
-              {/* Blog moved here from the main header nav — the page has no
-                  posts to show yet, so it's a disabled, non-clickable label
-                  rather than a dead link, until there's real content. */}
+              {exploreItems.map((item) => (
+                <li key={item.key}>
+                  <Link
+                    href={item.href}
+                    className={
+                      item.key === "donate"
+                        ? "inline-flex items-center gap-1.5 font-semibold text-[#ecd48f] hover:text-[#f5e3ab] transition-colors"
+                        : "hover:text-[#eef1f6] transition-colors"
+                    }
+                  >
+                    {item.key === "donate" && <Heart size={13} aria-hidden="true" />}
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </StaggerItem>
+          <StaggerItem>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.supportHeading}</h4>
+            <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
+              <li><Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">{content.supportFindTherapistLabel}</Link></li>
+              <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.supportJoinGroupLabel}</Link></li>
+              {/* Phase 63 — was a plain Link to the generic Contact form;
+                  now opens the real volunteer therapist application. */}
+              <li>
+                <VolunteerApplyButton className="text-left hover:text-[#eef1f6] transition-colors">
+                  {content.supportVolunteerLabel}
+                </VolunteerApplyButton>
+              </li>
+              <li><a href="tel:988" className="hover:text-[#eef1f6] transition-colors">{content.supportEmergencyLabel}</a></li>
+              {/* Phase 117 — moved here from the Explore column (see the
+                  comment on that column above): Blog/FAQ/Contact aren't part
+                  of the primary header nav, so they no longer live alongside
+                  the items that mirror it. Blog stays a disabled,
+                  non-clickable label (no real page exists yet), not a dead
+                  link. */}
               <li>
                 <span
                   aria-disabled="true"
@@ -113,22 +197,6 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
               </li>
               <li><Link href="/faq" className="hover:text-[#eef1f6] transition-colors">{content.exploreFaqLabel}</Link></li>
               <li><Link href="/contact" className="hover:text-[#eef1f6] transition-colors">{content.exploreContactLabel}</Link></li>
-            </ul>
-          </StaggerItem>
-          <StaggerItem>
-            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.supportHeading}</h4>
-            <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
-              <li><Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">{content.supportFindTherapistLabel}</Link></li>
-              <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.supportJoinGroupLabel}</Link></li>
-              <li><Link href="/contact?subject=Donation" className="hover:text-[#eef1f6] transition-colors">{content.supportDonateLabel}</Link></li>
-              {/* Phase 63 — was a plain Link to the generic Contact form;
-                  now opens the real volunteer therapist application. */}
-              <li>
-                <VolunteerApplyButton className="text-left hover:text-[#eef1f6] transition-colors">
-                  {content.supportVolunteerLabel}
-                </VolunteerApplyButton>
-              </li>
-              <li><a href="tel:988" className="hover:text-[#eef1f6] transition-colors">{content.supportEmergencyLabel}</a></li>
             </ul>
           </StaggerItem>
           <StaggerItem>

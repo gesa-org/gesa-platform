@@ -4588,3 +4588,63 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 123 — structural audit findings: fixes
+
+**Request:** analyze the whole site for weak/poorly-coordinated structure (not content), report findings before
+fixing anything, then fix only the ones Roy approved.
+
+**Audit performed first** (via a dedicated research pass, no files touched): found 6 real structural issues.
+Presented all 6 to Roy before any change, since several involved trade-offs against his explicit "don't change
+any visible page details" instruction. Roy approved: fix #2, #3, #4 (zero visible change) and #5 (small,
+approved style change); leave #1 (duplicate volunteer CTAs) and #6 (no mobile nav) as documented findings only.
+
+**#2 and #3 — orphaned Content-Manager sections with no warning to the editing admin.**
+`components/admin/content/AboutSectionsEditor.tsx`: added a one-line note to each of "Why GESA exists"
+(removed per Phase 77), "Volunteer CTA band," and "Legal / tax blurb" (both removed per Phase 85) stating
+plainly that the section isn't shown on the live page and editing it has no visible effect — matching the
+pattern already used on the adjacent `foundersIntro` field in the same file. `components/admin/content/
+HomeEditor.tsx`: same treatment for the "News ticker" group (`purposeTicker` — the ticker component itself was
+removed from the Home page in Phase 74). No `AboutSectionsContent`/`HomeContent` fields changed — admin-editor
+labels/help text only, nothing rendered on any public page changed.
+
+**#4 — `components/chat/MessageTherapistButton.tsx`'s button-not-link navigation: investigated, not changed,
+correcting my own earlier finding.** On closer implementation attempt, this button's destination genuinely
+can't be known ahead of time the way a normal link's can: the logged-in path calls a `get_or_create_thread`
+RPC that creates state server-side and only then knows which `/messages/[id]` to go to — there's no real href
+to put on a `<Link>` before that call resolves. Turning it into a `<Link>` would mean either a fake/stale href
+or firing the thread-creation RPC on every render or hover, which is worse than the current behavior, not
+better. This matches an existing, already-correct precedent in this same codebase — `DonateForm.tsx`'s
+"Continue to payment" button also redirects via `window.location.href` only after an async call resolves, and
+is also (correctly) a plain `<button>`, not a `Link`. Flagging this correction directly rather than forcing a
+change that would add real risk (an extra auth check per rendered card on every therapist listing, to
+special-case the logged-out redirect) for a marginal, edge-case accessibility benefit. Left unchanged.
+
+**#5 — Donate mixed into Footer's "Explore" list with no visual distinction from a plain page link.**
+`components/Footer.tsx`: Donate keeps its exact position (5th item, matching header order) and destination
+(`content.donateHref`, same as the header), but now renders with a small heart icon and the same warm gold
+tone (`#ecd48f`) as the header's Donate button, distinguishing it from the four plain page links above it
+without turning it into a second, differently-styled button competing with the header's own pill CTA. Added
+the `Heart` icon import (already used the same way in `Header.tsx`).
+
+**Verification:**
+- `tsc --noEmit`: zero new errors across all three changed files (same 16-line pre-existing baseline).
+- Checked `tests/unit/Footer.test.tsx` — only asserts the "Explore" heading text exists, unaffected by the
+  Donate-item styling change.
+- No `AboutSectionsContent`, `HomeContent`, or `FooterContent`/`HeaderContent` type changed — every fix in this
+  phase is either admin-editor-only text or a styling addition to one already-existing link.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/Footer.tsx components/admin/content/AboutSectionsEditor.tsx components/admin/content/HomeEditor.tsx app/layout.tsx components/SiteFooterSlot.tsx components/admin/content/FooterEditor.tsx
+git commit -m "Phase 123: structural audit fixes; also commit Phase 117's still-pending Footer/layout files"
+git push
+```
+
+Note: `app/layout.tsx`, `components/SiteFooterSlot.tsx`, and `components/admin/content/FooterEditor.tsx` are
+included in this command because they're still sitting uncommitted from Phase 117/121 (flagged in the Phase 121
+entry above) — this bundles them in so they finally land, rather than leaving Header and Footer mismatched in
+production any longer.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
