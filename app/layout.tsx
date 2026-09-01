@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 
 import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
@@ -34,30 +33,7 @@ export default async function RootLayout({
   ]);
 
   return (
-    // Phase 111 — `lang`/`dir` used to only ever be set client-side, in
-    // TranslationProvider's useEffect, which runs *after* React hydrates.
-    // A returning visitor with Hebrew already saved in localStorage would
-    // briefly see an English, LTR-rendered page on every full page load or
-    // refresh, since this Server Component always emits lang="en" with no
-    // dir attribute at all.
-    // The inline script below runs synchronously before paint (same
-    // pre-hydration pattern used for dark-mode flash prevention) and sets
-    // both attributes from localStorage immediately, so the very first
-    // paint is already correct — TranslationProvider's own effect still
-    // runs afterward and is what actually keeps them in sync as the user
-    // switches languages later. suppressHydrationWarning is scoped to just
-    // this one element since these two attributes are the only ones this
-    // script (or TranslationProvider) ever touches on it. Uses next/script
-    // with strategy="beforeInteractive" (Next's own blessed mechanism for
-    // exactly this "must run before hydration" case, injected into <head>
-    // automatically) rather than a raw <script> tag, which
-    // eslint-config-next's build-time lint flags.
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <Script id="set-lang-dir" strategy="beforeInteractive">
-          {`(function(){try{var l=localStorage.getItem("gesa-lang");if(l==="he"){document.documentElement.lang="he";document.documentElement.dir="rtl";}}catch(e){}})();`}
-        </Script>
-      </head>
+    <html lang="en">
       <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
         {/* Phase 45 — SmoothScroll only provides a spring-smoothed scroll-
             progress value via React context (see the long comment in

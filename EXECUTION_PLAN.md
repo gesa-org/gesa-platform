@@ -4041,4 +4041,43 @@ git push
 ```
 
 ---
+
+## Phase 114: Revert Phases 111-113 (Hebrew i18n work)
+
+**Roy's request:** revert Phase 111, Phase 112, and Phase 113 — the Hebrew dictionary expansion, the Hebrew
+font/RTL CSS changes, the pre-hydration `lang`/`dir` script, and the placeholder/aria-label/title attribute
+translation support.
+
+Confirmed via `git log` that all three phases were already committed (`dee0e47`, `56b216f`, `adffa86`), and
+Phase 111 was confirmed pushed and deployed (that's the commit Vercel showed the build error against). Rather
+than rewrite already-pushed history, this restores the four affected files' content to exactly their
+pre-Phase-111 state and lands as a new commit on top — safer than a history rewrite once a commit's already
+been deployed.
+
+- `components/TranslationProvider.tsx`: restored to its pre-Phase-111 version — removed
+  `collectTranslatableAttributes()`, `originalAttrRef`, and the dev-only dictionary-gap `console.warn`;
+  `translatePage`'s dependency array is back to `[]`.
+- `app/layout.tsx`: restored to its pre-Phase-111 version — removed the `next/script` pre-hydration
+  `lang`/`dir` sync and `suppressHydrationWarning`; `<html lang="en">` again.
+- `app/globals.css`: restored to its pre-Phase-111 version — removed Heebo from the Google Fonts `@import`
+  and the entire `html[dir="rtl"]` font/letter-spacing/text-align override block. The Phase 52 arrow/chevron
+  mirroring rule (predates Phase 111) is untouched.
+- `lib/translations/he.ts`: restored to its exact Phase 53 content — removed every Phase 111/113 addition,
+  including the `"DONATE"` case-fix entry and the Community/Donate/Crisis-button/Volunteer-modal/attribute
+  sections.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list — zero new errors.
+- `git diff` against the last commit confirms only deletions of Phase 111-113 content, with the small number
+  of "added" lines `git diff` reports being exactly the original pre-Phase-111 lines (diff-alignment noise,
+  not new content) — checked by hand, line by line.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/TranslationProvider.tsx app/layout.tsx app/globals.css lib/translations/he.ts
+git commit -m "Phase 114: revert Phases 111-113 (Hebrew i18n dictionary/RTL/font changes)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
