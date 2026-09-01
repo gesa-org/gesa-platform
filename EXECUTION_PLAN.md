@@ -4233,3 +4233,86 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 117 — shared navigation source of truth (Header + Footer Explore)
+
+**Request:** Footer's "Explore" column was independently maintained from the header's top navigation and had
+drifted: different labels for the same route (footer called `/therapists` "Find Support," header called it
+"Our Professionals"), a Blog/FAQ/Contact mix that isn't part of the primary nav, and a second "Donate" link in
+the Support column pointing to `/contact?subject=Donation` instead of the header Donate button's real `/donate`
+destination. Asked for one shared navigation config so Explore always mirrors the header automatically.
+
+**Root cause confirmed directly:** queried the live `site_header` and `page_footer` rows — `site_header`'s
+`therapistsLabel` is `"Our Professionals"`; `page_footer`'s own separate `exploreTherapistsLabel` field (which
+rendered under the same `/therapists` href) was `"Find Support"`. Two independently-editable Content Manager
+fields for the label of the same link, not a one-off copy mistake — confirms this needed a structural fix, not
+a text edit.
+
+**Implementation:**
+- **`lib/navigation.ts` (new)** — `PRIMARY_NAVIGATION`, the single list of the site's primary destination pages
+  (About → `/`, Find Support → `/about`, Our Professionals → `/therapists`, Community → `/support-groups`,
+  Donate → `HeaderContent.donateHref`), each with a `contentField` naming which `HeaderContent` key holds its
+  live, Content-Manager-edited, already-Hebrew-translated label — no hardcoded label strings live in this file.
+  `href` is fixed per item except Donate, matching this codebase's existing "only the label is editable, not the
+  destination" rule. Exports `getFooterExploreItems(headerContent)` (resolves the list against a `HeaderContent`
+  object) and a `showOnMobile` flag on every item — noted honestly in a comment that no dedicated mobile nav menu
+  exists yet in this codebase (Header's `<nav>` is `hidden md:flex`), so that flag is wired for whenever one gets
+  built, not applied to something that doesn't exist today.
+- **`components/Header.tsx`** — the four plain nav `<Link>`s are now one `.map()` over
+  `PRIMARY_NAVIGATION.filter(showInHeader)` (excluding the `donate` key, which keeps its own distinct CTA-button
+  markup via `VolunteerPrimaryCta`, unchanged). Same visible output as before — this is a refactor, not a
+  redesign — but it's now the same array Footer reads.
+- **`components/Footer.tsx`** — takes a new optional `headerContent` prop (defaults to
+  `HEADER_CONTENT_FALLBACK`, so every existing caller/test that only passes `content` keeps working). The
+  Explore column now renders `getFooterExploreItems(headerContent)` instead of
+  `exploreAboutLabel`/`exploreTherapistsLabel`/`exploreSupportGroupsLabel` — five items (About, Find Support,
+  Our Professionals, Community, Donate), same order as the header. Blog/FAQ/Contact moved into the Support
+  column (they aren't part of the primary header nav, so per the request they don't belong mixed into Explore).
+  The Support column's old, separately-editable "Donate" link (→ `/contact?subject=Donation`) was removed
+  outright — Donate now appears exactly once in this footer, sharing the header's own link and label.
+  `exploreAboutLabel`/`exploreTherapistsLabel`/`exploreSupportGroupsLabel`/`supportDonateLabel` stay in the
+  `FooterContent` type/fallback/DB row (not deleted — same "don't delete data" precedent used elsewhere in this
+  codebase) but are documented in code comments as no longer rendered.
+- **`components/SiteFooterSlot.tsx`** and **`app/layout.tsx`** — `headerContent` (already fetched once in
+  `layout.tsx` for `<Header>`) is now threaded through `SiteFooterSlot` to `<Footer>` as well, so both read the
+  identical fetched object — no second fetch, no chance of the two ever seeing different data.
+- **`components/admin/content/FooterEditor.tsx`** — updated the Explore-column note and the four now-unused
+  fields' labels/help text to tell an editing admin plainly that these fields no longer render anywhere and
+  where the real, live control is (the Header tab), rather than leaving dead fields silently confusing to edit.
+
+**Links removed, added, or moved:**
+- *Removed*: the Support column's second "Donate" link (mismatched destination, now genuinely gone from the
+  page — not just hidden).
+- *Added*: "About" (→ `/`) to Explore — previously missing from the footer entirely despite being the header's
+  first nav item.
+- *Moved*: Blog (disabled/"Coming soon"), FAQ, and Contact — from Explore to the Support column.
+- *Relabeled* (as a direct effect of now sharing the header's own labels, not a manual edit): the Explore link
+  to `/therapists` now reads "Our Professionals" (was "Find Support"); the link to `/about` now reads "Find
+  Support" (was, correctly, already "Find Support," so unchanged in this case).
+
+**Verification:**
+- `tsc --noEmit`: identical line count/content to the pre-existing baseline (16 lines, all pre-existing unrelated
+  test-file errors) — zero new errors across `lib/navigation.ts`, `Header.tsx`, `Footer.tsx`,
+  `SiteFooterSlot.tsx`, `app/layout.tsx`, `FooterEditor.tsx`.
+- `git diff --stat` confined to the five intended files plus the new `lib/navigation.ts`.
+- Read `tests/unit/Footer.test.tsx` — it renders `<Footer />` with no props and only asserts on column headings,
+  the social row, and the bottom bar, none of which changed; unaffected by this refactor.
+- Manually traced every Explore href against the header: `/` (About), `/about` (Find Support), `/therapists`
+  (Our Professionals), `/support-groups` (Community), and Donate's `content.donateHref` — all five now come from
+  the exact same `HeaderContent` object and fixed-href list the header itself uses, so there is no remaining
+  path for them to diverge short of editing `lib/navigation.ts` itself.
+- Hebrew: no new dictionary entries needed — every one of these five labels is exact-text-identical to what the
+  header already renders and already has a Hebrew dictionary entry, so translating the header automatically
+  translates the footer's copies of the same string.
+- **Not built/deployed in this sandbox** — same disclosed `next build` limitation as prior phases; please
+  confirm visually after deploying that both header and footer show the same five labels in English and Hebrew.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md lib/navigation.ts components/Header.tsx components/Footer.tsx components/SiteFooterSlot.tsx app/layout.tsx components/admin/content/FooterEditor.tsx
+git commit -m "Phase 117: shared navigation config so Footer Explore always mirrors the header nav"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

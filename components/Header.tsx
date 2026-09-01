@@ -6,6 +6,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 import NotificationBell from '@/components/admin/NotificationBell';
 import VolunteerPrimaryCta from '@/components/volunteer/VolunteerPrimaryCta';
 import type { HeaderContent } from '@/lib/content';
+import { PRIMARY_NAVIGATION, resolveNavHref } from '@/lib/navigation';
 
 // Phase 88 — Roy asked to relabel the main nav and the Donate CTA without
 // touching any page's actual URL, structure, or in-page content: the item
@@ -59,11 +60,24 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
             right-hand action cluster actually mirror sides like the
             reference recording, instead of staying pinned left regardless
             of reading direction. */}
+        {/* Phase 117 — every plain nav link now maps from the shared
+            PRIMARY_NAVIGATION config (lib/navigation.ts) instead of being
+            hand-written per item, so this list and Footer's "Explore"
+            column can never drift apart again — both read the exact same
+            HeaderContent object passed down from app/layout.tsx. Donate
+            renders differently (a filled CTA button via VolunteerPrimaryCta,
+            not a plain Link) so it's pulled out of the map and rendered on
+            its own right after, same visual treatment as before. */}
         <nav className="hidden md:flex gap-2 ms-2">
-          <Link href="/" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">{content.homeLabel}</Link>
-          <Link href="/about" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">{content.aboutLabel}</Link>
-          <Link href="/therapists" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">{content.therapistsLabel}</Link>
-          <Link href="/support-groups" className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors">{content.supportGroupsLabel}</Link>
+          {PRIMARY_NAVIGATION.filter((item) => item.showInHeader && item.key !== "donate").map((item) => (
+            <Link
+              key={item.key}
+              href={resolveNavHref(item, content)}
+              className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors"
+            >
+              {content[item.contentField]}
+            </Link>
+          ))}
         </nav>
         <div className="ms-auto flex items-center gap-2">
           {/* Phase 93 — VolunteerPrimaryCta (not a plain Link) so this opens
