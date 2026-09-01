@@ -26,7 +26,23 @@ const fieldClass =
   "w-full rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none";
 const labelClass = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-white/70";
 
-export default function HelpUsGrowForm() {
+// Content Manager audit pass — heading/subtitle/submit-state copy now comes
+// from Footer.tsx's content prop (FooterContent's helpGrow* fields) instead
+// of being hardcoded here. Defaults match today's live copy exactly so
+// nothing changes visually until an admin edits the Footer tab.
+export default function HelpUsGrowForm({
+  heading = "Help us grow",
+  subtitle = "We will continue to contribute and succeed, also thanks to you.",
+  submitLabel = "Sent",
+  sendingLabel = "Sending…",
+  submittedMessage = "Thank you — we've received your message and will be in touch soon.",
+}: {
+  heading?: string;
+  subtitle?: string;
+  submitLabel?: string;
+  sendingLabel?: string;
+  submittedMessage?: string;
+}) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -38,9 +54,7 @@ export default function HelpUsGrowForm() {
   if (submitted) {
     return (
       <div className={cardClass}>
-        <p className="text-center text-[14px] text-white">
-          Thank you — we&apos;ve received your message and will be in touch soon.
-        </p>
+        <p className="text-center text-[14px] text-white">{submittedMessage}</p>
       </div>
     );
   }
@@ -87,10 +101,8 @@ export default function HelpUsGrowForm() {
       }}
     >
       <div>
-        <h4 className="text-[22px] font-semibold text-white">Help us grow</h4>
-        <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/70">
-          We will continue to contribute and succeed, also thanks to you.
-        </p>
+        <h4 className="text-[22px] font-semibold text-white">{heading}</h4>
+        <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/70">{subtitle}</p>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -150,7 +162,7 @@ export default function HelpUsGrowForm() {
           disabled={pending}
           className="w-full rounded-full bg-white py-3 text-[14.5px] font-semibold text-slate-900 transition-colors hover:bg-white/90 disabled:opacity-60"
         >
-          {pending ? "Sending…" : "Sent"}
+          {pending ? sendingLabel : submitLabel}
         </button>
       </div>
     </form>

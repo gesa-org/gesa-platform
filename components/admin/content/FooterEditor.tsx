@@ -66,6 +66,16 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
           ],
         },
         {
+          heading: "Help us grow (inquiry card)",
+          fields: [
+            { key: "helpGrowHeading", label: "Heading" },
+            { key: "helpGrowSubtitle", label: "Subtitle", multiline: true },
+            { key: "helpGrowSubmitLabel", label: "Submit button label" },
+            { key: "helpGrowSendingLabel", label: "Submit button label (while sending)" },
+            { key: "helpGrowSubmittedMessage", label: "Message shown after submitting", multiline: true },
+          ],
+        },
+        {
           heading: "Bottom bar",
           fields: [
             {

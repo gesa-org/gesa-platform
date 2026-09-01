@@ -6,7 +6,24 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import TagPicker from "@/components/ui/TagPicker";
 import { createClient } from "@/lib/supabase/client";
+import { useSiteContent } from "@/lib/content-client";
 import type { MeetingDurationChoice } from "@/lib/database.types";
+import type { VolunteerApplicationModalContent } from "@/lib/content";
+
+// Content Manager audit pass — this modal's heading, intro, submit button,
+// and thank-you state were hardcoded with no site_content key backing them
+// at all. These literals are exactly today's live copy, so publishing the
+// seeded row changes nothing visually until an admin actually edits it.
+export const VOLUNTEER_MODAL_CONTENT_FALLBACK: VolunteerApplicationModalContent = {
+  published: true,
+  heading: "Become a volunteer therapist",
+  intro: "Tell us about yourself — our team reviews every application before you're listed on the site.",
+  submitLabel: "Submit application",
+  submittingLabel: "Submitting…",
+  thankYouHeading: "Thank you, {name}",
+  thankYouBody:
+    "We've received your volunteer therapist application. Our team reviews every application by hand and will follow up at {email} once we have.",
+};
 
 // Phase 63 — Roy pointed out that "Become a volunteer therapist" / "Join us
 // as a therapist" / "Volunteer" everywhere on the site all routed to the
@@ -67,6 +84,7 @@ const MEETING_DURATION_OPTIONS: { value: MeetingDurationChoice; label: string }[
 ];
 
 export default function VolunteerApplicationModal({ onClose }: { onClose: () => void }) {
+  const content = useSiteContent("component_volunteer_modal", VOLUNTEER_MODAL_CONTENT_FALLBACK);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -148,11 +166,8 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-primary">
             <HeartHandshake size={22} />
           </div>
-          <h3 className="mb-1.5 text-xl">Thank you, {fullName || "friend"}</h3>
-          <p className="text-muted-fg">
-            We&apos;ve received your volunteer therapist application. Our team reviews every application by hand and
-            will follow up at {email} once we have.
-          </p>
+          <h3 className="mb-1.5 text-xl">{content.thankYouHeading.replace("{name}", fullName || "friend")}</h3>
+          <p className="text-muted-fg">{content.thankYouBody.replace("{email}", email)}</p>
         </div>
       </Modal>
     );
@@ -160,10 +175,8 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
 
   return (
     <Modal open onClose={onClose}>
-      <h3 className="mb-1 text-xl">Become a volunteer therapist</h3>
-      <p className="mb-5 text-[14px] text-muted-fg">
-        Tell us about yourself — our team reviews every application before you&apos;re listed on the site.
-      </p>
+      <h3 className="mb-1 text-xl">{content.heading}</h3>
+      <p className="mb-5 text-[14px] text-muted-fg">{content.intro}</p>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="grid gap-3.5 sm:grid-cols-2">
@@ -309,7 +322,7 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <Button type="submit" block disabled={pending}>
-          {pending ? "Submitting…" : "Submit application"}
+          {pending ? content.submittingLabel : content.submitLabel}
         </Button>
       </form>
     </Modal>

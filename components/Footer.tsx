@@ -52,6 +52,11 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   partner2Label: "Validated Therapist Network",
   partner3Label: "Crisis Support International",
   nonprofitStatusLine: "GESA is a registered 501(c)(3) non-profit in the United States.",
+  helpGrowHeading: "Help us grow",
+  helpGrowSubtitle: "We will continue to contribute and succeed, also thanks to you.",
+  helpGrowSubmitLabel: "Sent",
+  helpGrowSendingLabel: "Sending…",
+  helpGrowSubmittedMessage: "Thank you — we've received your message and will be in touch soon.",
 };
 
 // Phase 35 — the tagline is Content Manager-editable via site_content key
@@ -139,7 +144,13 @@ export default function Footer({ content = FOOTER_CONTENT_FALLBACK }: { content?
         </StaggerGroup>
 
         <Reveal type="fade-up" as="div" className="mt-10">
-          <HelpUsGrowForm />
+          <HelpUsGrowForm
+            heading={content.helpGrowHeading}
+            subtitle={content.helpGrowSubtitle}
+            submitLabel={content.helpGrowSubmitLabel}
+            sendingLabel={content.helpGrowSendingLabel}
+            submittedMessage={content.helpGrowSubmittedMessage}
+          />
         </Reveal>
 
         {/* Phase 57 — "Connect with Us" social row + "Our Trusted Partners"

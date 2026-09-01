@@ -70,6 +70,17 @@ For Case B you do need to:
 - Fetch it in whichever public page/layout actually renders that content, the same way every existing
   bespoke shape is fetched today.
 
+**Case C — a Client Component with no single Server Component ancestor.** Case B's "fetch it one level up and
+pass it down as a prop" assumes there's one ancestor to fetch it in. Some components don't have that:
+`VolunteerApplicationModal` (`components/volunteer/VolunteerApplicationModal.tsx`) opens from
+`VolunteerApplyButton`, which itself renders in 4+ unrelated places across the site (Footer, About page CTA,
+Our Therapists sidebar, Donate band) — there's no single page or layout to thread a prop through without
+touching every call site. For this shape, fetch client-side instead with `useSiteContent(key, fallback)`
+(`lib/content-client.ts`), which applies the exact same fallback/`published` contract as `getPageContent()`
+but runs in the browser — safe because `site_content`'s RLS is public-read regardless (it's marketing copy,
+not sensitive data). Everything else about the type/fallback/admin-editor contract is identical to Case B;
+only the read-side mechanism changes.
+
 ## What "content" means here (and what it deliberately doesn't)
 
 In scope: headlines, subtitles, eyebrow labels, button/CTA text, banner copy, empty-state and informational
@@ -103,3 +114,31 @@ crisis disclaimer. Two areas were deliberately left out of that pass, not overlo
 
 If either of these becomes a priority, follow the same Case A/Case B decision above — the pattern doesn't
 change, there's just more surface area to cover carefully.
+
+## September 2026 follow-up pass
+
+A second audit (Phase 103) re-checked the whole site against this guide's own scope and found four more
+genuine gaps, now fixed: the Volunteer Application modal's heading/intro/submit/thank-you copy (new Case C
+above — `component_volunteer_modal`), the Donate thank-you page's three payment-status states
+(`page_donate_thank_you`), and the Footer's "Help us grow" inquiry card heading/subtitle/submit-state copy
+(added to `FooterContent`). Also queried both Supabase projects' `site_content` table directly and confirmed
+no stale-row bug exists today — every currently-read key's live row (where one exists) matches the current
+code shape, and the newer keys (`component_home_stats`, `component_donate_band`, `page_donate`,
+`component_crisis_button`, `component_intake_flow`, and this pass's new keys) simply don't have a row yet in
+one or both Supabase projects, which is the safe, by-design "falls back to the code default" case, not a bug.
+
+That same query also turned up six keys nothing in the current codebase reads at all —
+`about_page`, `home_hero_media`, `intake_config`, `our_specialists`, `paths_section`, `preloader` (prod), plus
+`about_page`/`paths_section` in dev. These look like rows from an earlier, since-replaced content-management
+approach. They're harmless (nothing queries them), so this pass left them in place rather than deleting data
+outside its own scope — flagged here for Roy to decide whether to clean them up.
+
+Remaining lower-priority gaps identified but **not** fixed in this pass (still hardcoded, ordered roughly by
+how much of the site they touch): the three trust badges in `components/Hero.tsx` (About page only — "Verified
+Professionals" etc., no `HeroContent` fields for them yet); `app/therapists/[slug]/page.tsx`'s labels; the
+"Showing X of Y therapists" string in `components/TherapistsDirectory.tsx` and `BookSessionButton.tsx`'s "Book
+a Session" label; badges/messages in `components/SupportGroupsInteractive.tsx`; the empty-state message in
+`app/intake/page.tsx` and the "Choose {firstName}" button in `components/intake/IntakeMatchFlow.tsx`; the
+blog-link tooltip in `components/Footer.tsx`; and `app/messages/page.tsx` (which also has a separate, unrelated
+stale-copy bug — its own text still says "Our Specialists" — worth a follow-up look). None of these are large
+individually; grouping a few into one future phase is reasonable rather than doing them one at a time.

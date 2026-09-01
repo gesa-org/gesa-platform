@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { HeartHandshake, Clock, XCircle } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getPageContent } from "@/lib/content";
+import { DONATE_THANK_YOU_CONTENT_FALLBACK } from "@/app/donate/thank-you/thankYouContent";
 
 export const metadata = {
   title: "Thank you — GESA",
@@ -31,6 +33,8 @@ export default async function DonateThankYouPage({ searchParams }: { searchParam
     status = data?.status ?? null;
   }
 
+  const content = await getPageContent("page_donate_thank_you", DONATE_THANK_YOU_CONTENT_FALLBACK);
+
   const isPaid = status === "paid";
   const isFailedLike = status === "failed" || status === "canceled" || status === "expired";
 
@@ -42,34 +46,25 @@ export default async function DonateThankYouPage({ searchParams }: { searchParam
         </span>
         {isFailedLike ? (
           <>
-            <h1 className="mb-2 font-serif text-[28px] font-semibold text-foreground">Your payment didn&apos;t go through</h1>
-            <p className="text-muted-fg">
-              No charge was made. If this wasn&apos;t intentional, you&apos;re welcome to try again — or reach out and
-              we&apos;ll help directly.
-            </p>
+            <h1 className="mb-2 font-serif text-[28px] font-semibold text-foreground">{content.failedHeading}</h1>
+            <p className="text-muted-fg">{content.failedBody}</p>
           </>
         ) : isPaid ? (
           <>
-            <h1 className="mb-2 font-serif text-[28px] font-semibold text-foreground">Thank you for your gift</h1>
-            <p className="text-muted-fg">
-              Your payment has been confirmed. A receipt and confirmation email are on their way — your generosity
-              helps gifted professional support reach more people, across borders.
-            </p>
+            <h1 className="mb-2 font-serif text-[28px] font-semibold text-foreground">{content.paidHeading}</h1>
+            <p className="text-muted-fg">{content.paidBody}</p>
           </>
         ) : (
           <>
-            <h1 className="mb-2 font-serif text-[28px] font-semibold text-foreground">Finishing up your gift</h1>
-            <p className="text-muted-fg">
-              We&apos;re confirming your payment with our payment provider — this only takes a moment. You&apos;ll
-              receive a confirmation email as soon as it clears.
-            </p>
+            <h1 className="mb-2 font-serif text-[28px] font-semibold text-foreground">{content.pendingHeading}</h1>
+            <p className="text-muted-fg">{content.pendingBody}</p>
           </>
         )}
         <Link
           href="/"
           className="mt-7 inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-primary-fg shadow-soft transition-all hover:-translate-y-px hover:bg-primary-600"
         >
-          Back to GESA
+          {content.backLinkLabel}
         </Link>
       </div>
     </section>

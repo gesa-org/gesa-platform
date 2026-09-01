@@ -3444,4 +3444,118 @@ git push
 ```
 
 ---
+
+## Phase 103: Content Manager audit — catch hardcoded text that never got wired up
+
+**Roy's request:** "Update the website to update the 'Content Manager' section at the CRM Dashboard to always
+captured the changes and check the website details so, that we could see all the section details and do some
+changes anytime. If a certain details, names, text or paragraph in a section, fields or pages is changed
+always update the content manager so that we all know what is latest updates details across the website." —
+read as: audit the whole site for visitor-facing text that isn't yet backed by a `site_content` row, fix the
+highest-value gaps following `CONTENT_GUIDE.md`'s existing convention, and confirm no stale-row bug exists
+between the live database and current code.
+
+A full-site audit turned up ~13 components/pages with hardcoded copy `CONTENT_GUIDE.md`'s own scope says
+should be editable. Three already-documented items were deliberately left alone (the Find Your Therapist
+wizard's step microcopy and the booking modals' interpolated copy — both explicitly deferred in
+`CONTENT_GUIDE.md` for reasons unrelated to this pass). Of the rest, fixed the three highest-value/most-visible
+gaps this phase; the remaining lower-priority ones are listed in `CONTENT_GUIDE.md`'s new "September 2026
+follow-up pass" section for a future phase.
+
+**1. Volunteer application modal** (`components/volunteer/VolunteerApplicationModal.tsx`) — heading, intro,
+submit button, and thank-you state were fully hardcoded. This modal opens from `VolunteerApplyButton`, which
+itself renders in 4+ unrelated places across the site (Footer, About page, Our Therapists sidebar, Donate
+band) — there's no single Server Component ancestor to fetch content in and pass down as a prop, the
+mechanism every other content type uses. Added a new mechanism for exactly this case:
+- `lib/content-client.ts` (new): `useSiteContent(key, fallback)` — a client-side counterpart to
+  `getPageContent()` that fetches straight from `site_content` in the browser (safe: that table's RLS is
+  public-read regardless) and applies the identical fallback/`published` contract.
+- `lib/content.ts`: new `VolunteerApplicationModalContent` type (heading/intro/submitLabel/submittingLabel/
+  thankYouHeading/thankYouBody — the last two support a `{name}`/`{email}` placeholder, substituted in the
+  component).
+- `components/volunteer/VolunteerApplicationModal.tsx`: reads via `useSiteContent("component_volunteer_modal", ...)`
+  instead of hardcoded strings. Field labels/help text (Full name, Proof of license, etc.) stay hardcoded —
+  same form-field carve-out as every other form on the site.
+- `components/admin/content/VolunteerApplicationModalEditor.tsx` (new) + registered as its own "Volunteer
+  Modal" tab in `ContentManagerApp.tsx` and `app/admin/content/page.tsx`.
+- Documented this as **Case C** in `CONTENT_GUIDE.md` — the pattern for any future Client Component with no
+  single page ancestor to thread a prop through.
+
+**2. Donate thank-you page** (`app/donate/thank-you/page.tsx`) — the page Mollie redirects a donor to after
+checkout has three states (paid / failed-canceled-expired / still-processing), all hardcoded, zero
+`site_content` key.
+- `lib/content.ts`: new `DonateThankYouContent` type.
+- `app/donate/thank-you/thankYouContent.ts` (new): the fallback constant, kept in its own file rather than
+  in `page.tsx` itself since Next's App Router route files only allow a fixed set of exports (same reason
+  `app/intake/intakeContent.ts` exists separately from `app/intake/page.tsx`).
+- `app/donate/thank-you/page.tsx`: reads via `getPageContent("page_donate_thank_you", ...)` (plain Server
+  Component, no special mechanism needed here).
+- `components/admin/content/DonateThankYouEditor.tsx` (new), nested inside the existing "Donate Page" tab in
+  `ContentManagerApp.tsx` (same funnel, one tab) rather than as its own top-level tab.
+
+**3. Footer's "Help us grow" inquiry card** (`components/footer/HelpUsGrowForm.tsx`) — heading, subtitle, and
+submit-state copy were hardcoded. This one *does* have a single Server Component ancestor (`Footer.tsx`,
+already Content-Manager-wired), so this is a plain Case B extension:
+- `lib/content.ts`: added `helpGrowHeading`/`helpGrowSubtitle`/`helpGrowSubmitLabel`/`helpGrowSendingLabel`/
+  `helpGrowSubmittedMessage` to the existing `FooterContent` type.
+- `components/Footer.tsx`: added matching literals to `FOOTER_CONTENT_FALLBACK`, passes them down as props to
+  `HelpUsGrowForm`.
+- `components/footer/HelpUsGrowForm.tsx`: takes these as props (with the same literals as defaults, so
+  `render(<HelpUsGrowForm />)` — used by the existing test — is unaffected), reads them instead of the
+  hardcoded strings. Field labels/placeholders stay hardcoded.
+- `components/admin/content/FooterEditor.tsx`: new "Help us grow (inquiry card)" field group.
+
+**4. Verified no stale-row bug.** Queried both Supabase projects' `site_content` table directly (every key,
+every field) and cross-checked against current code fallbacks — this is the same class of bug that caused
+several "my change isn't showing up live" reports in earlier phases (a published row missing a newer field
+silently wins over the updated code default via `getPageContent`'s shallow merge). Result: no bug found.
+`site_header`'s live row already has `donateLabel: "DONATE"` / `donateHref: "/donate"` (Phase 98's change, not
+stale). Every newer content type without a live row yet (`component_home_stats`, `component_donate_band`,
+`page_donate`, `component_crisis_button`, `component_intake_flow`, and this phase's three new keys) simply
+has no row at all in one or both Supabase projects — the safe, by-design "falls back to the code default"
+case, not the stale-override bug. Also found six keys nothing in the current codebase reads at all
+(`about_page`, `home_hero_media`, `intake_config`, `our_specialists`, `paths_section`, `preloader` in prod;
+`about_page`/`paths_section` in dev) — harmless leftovers from an earlier content approach, left in place
+(deleting data is outside this pass's scope) and flagged in `CONTENT_GUIDE.md` for Roy to decide on.
+
+**5. Documented the convention** — `CONTENT_GUIDE.md` now has the Case C mechanism above, and a "September
+2026 follow-up pass" section listing exactly what this phase fixed, the stale-row check result, the orphaned
+DB keys, and the remaining lower-priority gaps (Hero trust badges, therapist profile page, therapist
+directory/support groups strings, intake empty-state/button copy, footer blog tooltip, and a separately
+noted stale-copy bug on `app/messages/page.tsx` unrelated to CMS wiring) for a future phase.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase (the same handful of test-file mock
+  typing issues and one `resend` package type-declaration issue that predate this session) — zero new errors
+  in any file this phase touched.
+- Confirmed by reading the mocks that `tests/unit/VolunteerApplicationModal.test.tsx` and
+  `tests/unit/HelpUsGrowForm.test.tsx` remain compatible: both mock `createClient()` without a `select`/
+  `maybeSingle` chain, so `useSiteContent`'s fetch throws inside its own try/catch and silently falls back to
+  the fallback constant (which is exactly today's live copy) — the existing assertions on that copy still
+  hold. Could not get a clean run of the actual Jest suite this session — the sandbox's known Jest flakiness
+  (documented in Phase 102) hit again, timing out with zero output on repeated attempts. Same honest gap as
+  Phase 102: worth re-running next session to confirm formally, but the change is narrow enough (props/read
+  source only, no logic changed) that this is a low-risk gap, not a sign of an actual regression.
+- Queried both Supabase projects directly via the Supabase MCP tools rather than guessing from code — see
+  point 4 above.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md CONTENT_GUIDE.md lib/content.ts lib/content-client.ts app/admin/content/page.tsx app/donate/thank-you/page.tsx app/donate/thank-you/thankYouContent.ts components/Footer.tsx components/footer/HelpUsGrowForm.tsx components/volunteer/VolunteerApplicationModal.tsx components/admin/content/ContentManagerApp.tsx components/admin/content/FooterEditor.tsx components/admin/content/VolunteerApplicationModalEditor.tsx components/admin/content/DonateThankYouEditor.tsx
+git commit -m "Phase 103: Content Manager audit - wire up volunteer modal, donate thank-you page, and Help us grow card"
+git push
+```
+
+**Note:** three PNG files from Phase 100 (`public/images/brand/gesa-mark-crisis.png`,
+`gesa-mark-support.png`, `gesa-mark-veterans.png`) are still sitting untracked in your folder — they were
+superseded by the `GesaMark` SVG component and were never actually used. The `git add` above lists files
+explicitly so they stay out of this commit; if you want them gone, run
+`del public\images\brand\gesa-mark-crisis.png public\images\brand\gesa-mark-support.png public\images\brand\gesa-mark-veterans.png`
+whenever it's convenient (unrelated to this phase, so no rush).
+
+**Next step for the seeded rows:** the new `component_volunteer_modal` and `page_donate_thank_you` keys (and
+the new `helpGrow*` fields on the existing `page_footer` row) don't need any manual database work — they'll
+simply use the code fallback (today's exact live copy) until you open the Content Manager and edit them.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

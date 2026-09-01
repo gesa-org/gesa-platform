@@ -14,6 +14,8 @@ import DonatePageEditor from "@/components/admin/content/DonatePageEditor";
 import HomeStatsEditor from "@/components/admin/content/HomeStatsEditor";
 import CrisisButtonEditor from "@/components/admin/content/CrisisButtonEditor";
 import IntakeFlowEditor from "@/components/admin/content/IntakeFlowEditor";
+import VolunteerApplicationModalEditor from "@/components/admin/content/VolunteerApplicationModalEditor";
+import DonateThankYouEditor from "@/components/admin/content/DonateThankYouEditor";
 import FaqManager from "@/components/admin/content/FaqManager";
 import LegalPagesManager from "@/components/admin/content/LegalPagesManager";
 import type {
@@ -29,6 +31,8 @@ import type {
   HomeStatsContent,
   CrisisButtonContent,
   IntakeFlowContent,
+  VolunteerApplicationModalContent,
+  DonateThankYouContent,
   SimplePageContent,
 } from "@/lib/content";
 import type { Tables } from "@/lib/database.types";
@@ -46,6 +50,8 @@ type Props = {
   homeStats: HomeStatsContent;
   crisisButton: CrisisButtonContent;
   intakeFlow: IntakeFlowContent;
+  volunteerModal: VolunteerApplicationModalContent;
+  donateThankYou: DonateThankYouContent;
   // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
   // Support Groups, Find Your Therapist, Blog, FAQ banner, Contact, and
   // anything added to that registry later), keyed by its site_content key.
@@ -83,6 +89,7 @@ const FIXED_TABS_END = [
   "Donate Page",
   "Donate Band",
   "Crisis Button",
+  "Volunteer Modal",
 ] as const;
 
 // The Content Manager's tab shell — a client component so switching tabs is
@@ -206,11 +213,24 @@ export default function ContentManagerApp(props: Props) {
 
       {tab === "Footer" && <FooterEditor initial={props.footer} />}
 
-      {tab === "Donate Page" && <DonatePageEditor initial={props.donatePage} />}
+      {tab === "Donate Page" && (
+        <div className="flex flex-col gap-8">
+          <div>
+            <h3 className="mb-3 text-[15px] font-semibold">Page</h3>
+            <DonatePageEditor initial={props.donatePage} />
+          </div>
+          <div className="border-t border-border pt-6">
+            <h3 className="mb-3 text-[15px] font-semibold">Thank-you page (after checkout)</h3>
+            <DonateThankYouEditor initial={props.donateThankYou} />
+          </div>
+        </div>
+      )}
 
       {tab === "Donate Band" && <DonateBandEditor initial={props.donateBand} />}
 
       {tab === "Crisis Button" && <CrisisButtonEditor initial={props.crisisButton} />}
+
+      {tab === "Volunteer Modal" && <VolunteerApplicationModalEditor initial={props.volunteerModal} />}
     </div>
   );
 }

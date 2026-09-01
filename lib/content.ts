@@ -206,6 +206,16 @@ export type FooterContent = {
   partner2Label: string;
   partner3Label: string;
   nonprofitStatusLine: string;
+  // Content Manager audit pass — the "Help us grow" inquiry card
+  // (components/footer/HelpUsGrowForm.tsx) sits inside the footer and was
+  // fully hardcoded. Only its heading/subtitle/submit-state copy is here —
+  // the field labels/placeholders themselves stay hardcoded, same carve-out
+  // as every other form on the site (see CONTENT_GUIDE.md).
+  helpGrowHeading: string;
+  helpGrowSubtitle: string;
+  helpGrowSubmitLabel: string;
+  helpGrowSendingLabel: string;
+  helpGrowSubmittedMessage: string;
 };
 
 // New this round — the global header nav (components/Header.tsx) was fully
@@ -377,6 +387,42 @@ export type DonatePageContent = {
   crisisText: string;
   crisisLinkLabel: string;
   crisisLinkHref: string;
+};
+
+// Powers components/volunteer/VolunteerApplicationModal.tsx — the "Become a
+// volunteer therapist" application form opened from VolunteerApplyButton,
+// which is itself reused across ~4+ site locations (Footer, About page CTA,
+// Our Therapists sidebar, DonateBand), so there's no single Server Component
+// ancestor to fetch this through and pass down as a prop the way every other
+// page-scoped content type does. Fetched client-side instead, via the
+// useSiteContent() hook in lib/content-client.ts, which mirrors
+// getPageContent()'s same fallback/published contract but runs in the
+// browser against site_content's public-read RLS. Only the modal's real
+// marketing copy (heading, intro, submit button, thank-you state) is
+// covered here — the field labels/help text themselves stay hardcoded, same
+// as CONTENT_GUIDE.md's existing form-field carve-out.
+export type VolunteerApplicationModalContent = {
+  published: boolean;
+  heading: string;
+  intro: string;
+  submitLabel: string;
+  submittingLabel: string;
+  thankYouHeading: string;
+  thankYouBody: string;
+};
+
+// Powers app/donate/thank-you/page.tsx — the page Mollie redirects a donor
+// back to after checkout. Its three states (paid/failed-like/still-
+// processing) were fully hardcoded with no site_content key at all.
+export type DonateThankYouContent = {
+  published: boolean;
+  paidHeading: string;
+  paidBody: string;
+  failedHeading: string;
+  failedBody: string;
+  pendingHeading: string;
+  pendingBody: string;
+  backLinkLabel: string;
 };
 
 // Powers app/intake/page.tsx and components/intake/IntakeMatchFlow.tsx — the

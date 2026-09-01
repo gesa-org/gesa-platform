@@ -10,6 +10,8 @@ import { DONATE_PAGE_FALLBACK } from "@/components/donate/DonatePage";
 import { HOME_STATS_CONTENT_FALLBACK } from "@/components/home/Stats";
 import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
+import { VOLUNTEER_MODAL_CONTENT_FALLBACK } from "@/components/volunteer/VolunteerApplicationModal";
+import { DONATE_THANK_YOU_CONTENT_FALLBACK } from "@/app/donate/thank-you/thankYouContent";
 import {
   SIMPLE_PAGE_ENTRIES,
   ABOUT_SECTIONS_FALLBACK,
@@ -26,6 +28,8 @@ import {
   type HomeStatsContent,
   type CrisisButtonContent,
   type IntakeFlowContent,
+  type VolunteerApplicationModalContent,
+  type DonateThankYouContent,
 } from "@/lib/content";
 import ContentManagerApp from "@/components/admin/content/ContentManagerApp";
 
@@ -48,6 +52,8 @@ const KEYS = [
   "component_home_stats",
   "component_crisis_button",
   "component_intake_flow",
+  "component_volunteer_modal",
+  "page_donate_thank_you",
   ...SIMPLE_PAGE_ENTRIES.map((e) => e.key),
 ];
 
@@ -102,6 +108,14 @@ export default async function AdminContentPage() {
         homeStats={merge<HomeStatsContent>(map.get("component_home_stats"), HOME_STATS_CONTENT_FALLBACK)}
         crisisButton={merge<CrisisButtonContent>(map.get("component_crisis_button"), CRISIS_BUTTON_CONTENT_FALLBACK)}
         intakeFlow={merge<IntakeFlowContent>(map.get("component_intake_flow"), INTAKE_FLOW_CONTENT_FALLBACK)}
+        volunteerModal={merge<VolunteerApplicationModalContent>(
+          map.get("component_volunteer_modal"),
+          VOLUNTEER_MODAL_CONTENT_FALLBACK
+        )}
+        donateThankYou={merge<DonateThankYouContent>(
+          map.get("page_donate_thank_you"),
+          DONATE_THANK_YOU_CONTENT_FALLBACK
+        )}
         simplePages={simplePages}
         simplePageEntries={SIMPLE_PAGE_ENTRIES}
         faqs={faqs}
