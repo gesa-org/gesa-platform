@@ -1,6 +1,7 @@
 import { Users2 } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
 import SupportGroupsInteractive, { SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK } from "@/components/SupportGroupsInteractive";
+import CommunityIntro, { CommunityHeroExtras, COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityIntro";
 import Testimonials from "@/components/home/Testimonials";
 import DonateBand from "@/components/home/DonateBand";
 import { getSupportGroups, getTestimonials } from "@/lib/queries";
@@ -27,18 +28,32 @@ export const revalidate = 60;
 //
 // Phase 47 — banner now uses the gold background treatment (`gold` prop
 // on PageHero) per Roy's request; copy/labels/registration flow unchanged.
+//
+// Phase 107 — Roy sent a wireframe adding a hero buttons/tagline row, a
+// "Why GESA exists" mission blurb, and a three-card pathway navigator
+// between this banner and the real group-listing/registration flow below.
+// Confirmed via AskUserQuestion that the existing SupportGroupsInteractive
+// flow stays exactly as it is, just further down the page — so this
+// banner's own eyebrow/title/description are untouched, `CommunityIntro`
+// is new content inserted after it, and the registration section below
+// picked up `id="support-groups-list"` so the new pathway cards' "Explore
+// Community" card and the hero's own tagline link can jump straight to it.
 export default async function SupportGroupsPage() {
-  const [groups, content, directoryContent, testimonials] = await Promise.all([
+  const [groups, content, directoryContent, communityIntro, testimonials] = await Promise.all([
     getSupportGroups(),
     getPageContent("page_support_groups", SUPPORT_GROUPS_CONTENT_FALLBACK),
     getPageContent("component_support_groups_directory", SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK),
+    getPageContent("component_community_intro", COMMUNITY_INTRO_FALLBACK),
     getTestimonials(),
   ]);
 
   return (
     <div className="reveal-page__main">
-      <PageHero gold icon={Users2} eyebrow={content.eyebrow} title={content.title} description={content.description} />
-      <section className="section wrap pt-0">
+      <PageHero gold icon={Users2} eyebrow={content.eyebrow} title={content.title} description={content.description}>
+        <CommunityHeroExtras content={communityIntro} />
+      </PageHero>
+      <CommunityIntro content={communityIntro} />
+      <section id="support-groups-list" className="section wrap pt-0">
         <SupportGroupsInteractive groups={groups} content={directoryContent} />
       </section>
       <Testimonials testimonials={testimonials} />

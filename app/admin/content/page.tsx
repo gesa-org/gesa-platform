@@ -12,6 +12,7 @@ import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import { VOLUNTEER_MODAL_CONTENT_FALLBACK } from "@/components/volunteer/VolunteerApplicationModal";
 import { DONATE_THANK_YOU_CONTENT_FALLBACK } from "@/app/donate/thank-you/thankYouContent";
+import { COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityIntro";
 import {
   SIMPLE_PAGE_ENTRIES,
   ABOUT_SECTIONS_FALLBACK,
@@ -30,6 +31,7 @@ import {
   type IntakeFlowContent,
   type VolunteerApplicationModalContent,
   type DonateThankYouContent,
+  type CommunityIntroContent,
 } from "@/lib/content";
 import ContentManagerApp from "@/components/admin/content/ContentManagerApp";
 
@@ -54,6 +56,7 @@ const KEYS = [
   "component_intake_flow",
   "component_volunteer_modal",
   "page_donate_thank_you",
+  "component_community_intro",
   ...SIMPLE_PAGE_ENTRIES.map((e) => e.key),
 ];
 
@@ -115,6 +118,10 @@ export default async function AdminContentPage() {
         donateThankYou={merge<DonateThankYouContent>(
           map.get("page_donate_thank_you"),
           DONATE_THANK_YOU_CONTENT_FALLBACK
+        )}
+        communityIntro={merge<CommunityIntroContent>(
+          map.get("component_community_intro"),
+          COMMUNITY_INTRO_FALLBACK
         )}
         simplePages={simplePages}
         simplePageEntries={SIMPLE_PAGE_ENTRIES}

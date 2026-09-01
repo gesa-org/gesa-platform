@@ -16,6 +16,7 @@ import CrisisButtonEditor from "@/components/admin/content/CrisisButtonEditor";
 import IntakeFlowEditor from "@/components/admin/content/IntakeFlowEditor";
 import VolunteerApplicationModalEditor from "@/components/admin/content/VolunteerApplicationModalEditor";
 import DonateThankYouEditor from "@/components/admin/content/DonateThankYouEditor";
+import CommunityIntroEditor from "@/components/admin/content/CommunityIntroEditor";
 import FaqManager from "@/components/admin/content/FaqManager";
 import LegalPagesManager from "@/components/admin/content/LegalPagesManager";
 import type {
@@ -33,6 +34,7 @@ import type {
   IntakeFlowContent,
   VolunteerApplicationModalContent,
   DonateThankYouContent,
+  CommunityIntroContent,
   SimplePageContent,
 } from "@/lib/content";
 import type { Tables } from "@/lib/database.types";
@@ -52,6 +54,7 @@ type Props = {
   intakeFlow: IntakeFlowContent;
   volunteerModal: VolunteerApplicationModalContent;
   donateThankYou: DonateThankYouContent;
+  communityIntro: CommunityIntroContent;
   // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
   // Support Groups, Find Your Therapist, Blog, FAQ banner, Contact, and
   // anything added to that registry later), keyed by its site_content key.
@@ -176,6 +179,12 @@ export default function ContentManagerApp(props: Props) {
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>
             <SimplePageEditor contentKey="page_support_groups" initial={props.simplePages.page_support_groups} hasDescription />
+          </div>
+          <div className="border-t border-border pt-6">
+            <h3 className="mb-3 text-[15px] font-semibold">
+              Hero buttons, &quot;Why GESA exists&quot;, pathway cards &amp; closing band
+            </h3>
+            <CommunityIntroEditor initial={props.communityIntro} />
           </div>
           <div className="border-t border-border pt-6">
             <h3 className="mb-3 text-[15px] font-semibold">Registration flow</h3>

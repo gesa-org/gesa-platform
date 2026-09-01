@@ -427,6 +427,47 @@ export type DonateThankYouContent = {
   backLinkLabel: string;
 };
 
+// Powers components/support-groups/CommunityIntro.tsx — the new hero
+// buttons/tagline row, "Why GESA exists" mission blurb, three-card pathway
+// navigator, and closing band Roy asked to add to the Support Groups page
+// (labeled "Community" in the live nav — Phase 105). The page's existing
+// eyebrow/title/description banner (SimplePageContent, key
+// "page_support_groups") and its actual group registration flow
+// (SupportGroupsDirectoryContent, key "component_support_groups_directory")
+// are untouched — this is purely the new content sitting between them.
+export type CommunityIntroContent = {
+  published: boolean;
+  heroPrimaryLabel: string;
+  heroPrimaryHref: string;
+  heroSecondaryLabel: string;
+  heroSecondaryHref: string;
+  tagline1Label: string;
+  tagline1Href: string;
+  tagline2Label: string;
+  tagline2Href: string;
+  tagline3Label: string;
+  tagline3Href: string;
+  missionHeading: string;
+  missionBody: string;
+  card1Eyebrow: string;
+  card1Title: string;
+  card1Body: string;
+  card1CtaLabel: string;
+  card1CtaHref: string;
+  card2Eyebrow: string;
+  card2Title: string;
+  card2Body: string;
+  card2CtaLabel: string;
+  card2CtaHref: string;
+  card3Eyebrow: string;
+  card3Title: string;
+  card3Body: string;
+  card3CtaLabel: string;
+  card3CtaHref: string;
+  closingHeading: string;
+  closingSubtitle: string;
+};
+
 // Powers app/intake/page.tsx and components/intake/IntakeMatchFlow.tsx — the
 // fast "reach out now" path's per-path labels/hero titles and the crisis
 // path's safety disclaimer. Deliberately does not cover the deeper
@@ -463,11 +504,16 @@ export const THERAPISTS_CONTENT_FALLBACK: SimplePageContent = {
     "Browse our network of verified volunteer therapists. Search and filter to find the right fit, then open a profile to read more and book.",
 };
 
+// Phase 107 — Roy sent new hero copy for this page as part of a wireframe
+// adding a buttons/tagline row, mission blurb, pathway cards, and closing
+// band (see components/support-groups/CommunityIntro.tsx) — these three
+// fields are exactly that wireframe's headline/eyebrow/subtitle text.
 export const SUPPORT_GROUPS_CONTENT_FALLBACK: SimplePageContent = {
   published: true,
-  eyebrow: "Support Groups",
-  title: "Facilitated circles for collective healing",
-  description: "Online and in-person groups, guided by verified facilitators. You are welcome exactly as you are.",
+  eyebrow: "A Global Emotional Support Ecosystem",
+  title: "Wherever you are, there is a pathway forward.",
+  description:
+    "GESA brings people, professionals and communities together across languages, cultures and borders. Choose the kind of emotional support that fits where you are today and where you want to go next.",
 };
 
 export const BLOG_CONTENT_FALLBACK: SimplePageContent = {

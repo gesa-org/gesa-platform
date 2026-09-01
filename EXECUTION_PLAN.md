@@ -3692,4 +3692,75 @@ git push
 ```
 
 ---
+
+## Phase 107: New hero buttons, mission blurb & pathway cards on the Community page
+
+**Roy's request:** a wireframe (plain, unstyled export) for the "Community" page (the live nav's name for
+Support Groups, `/support-groups` — Phase 105) showing a new hero with two buttons and a small tagline link
+row, a "Why GESA exists" mission blurb, a three-card "Choose your pathway" navigator, and a closing
+"One global vision. Many ways forward." band — asking for this exact layout/copy, styled to match the site,
+fully Content Manager-editable, with the large empty gap in his wireframe (an export artifact, not an
+intentional design element) removed.
+
+Two things in the mockup needed clarifying before building, confirmed over AskUserQuestion: (1) the mockup
+has no support-group listing or registration UI at all, even though that's the actual point of this page
+today (`SupportGroupsInteractive`) — Roy confirmed to keep that flow exactly as-is, just further down the
+page, not replace it; (2) the three pathway cards read as general site navigation (crisis intake, the
+therapist directory, community) rather than anything specific to browsing support groups — Roy confirmed
+that's intentional, same framing as Home's own three path cards.
+
+- `lib/content.ts`: new `CommunityIntroContent` type — hero button labels/hrefs, three tagline links, the
+  mission heading/body, three pathway cards (eyebrow/title/body/CTA label+href each), and the closing band's
+  heading/subtitle.
+- `components/support-groups/CommunityIntro.tsx` (new): `COMMUNITY_INTRO_FALLBACK` (this phase's exact
+  wireframe copy) plus two exports — `CommunityHeroExtras` (the two buttons + tagline link row, meant to
+  render as `PageHero`'s `children`) and the default `CommunityIntro` component (mission section, the
+  three-card pathway grid, and the closing band). Card numbers (01/02/03) are fixed by position, not
+  editable — same precedent as Home's per-card icons. No isolated empty section between the cards and the
+  closing band — just the site's normal section padding throughout, which is what removes the wireframe's
+  blank gap.
+- Card/link destinations: card 1 ("Access gifted professional support") → `/intake?path=crisis`, matching
+  Home's own Crisis path; card 2 ("Choose the professional who feels right for you") → `/therapists`; card 3
+  ("Connect, participate and move forward together") → `#support-groups-list`, a same-page anchor added
+  around the real registration section below, so this "general navigation" card and the hero's own "Global
+  Community" tagline link both jump straight to the actual feature Roy asked to keep. The hero's primary
+  button ("Explore Your Options") anchors to `#pathways` (the three-card section, added as its own id); the
+  secondary ("Join The Movement") defaults to `/contact?subject=Volunteer`, the same recognized default
+  `VolunteerPrimaryCta` already treats as "open the volunteer application modal" elsewhere on the site.
+- `app/support-groups/page.tsx`: fetches the new `component_community_intro` key, passes `CommunityHeroExtras`
+  into the existing `PageHero`'s `children` slot (so the new buttons/tagline sit inside the same gold banner,
+  matching the site's color palette by construction rather than introducing new colors), renders
+  `CommunityIntro` right after it, and added `id="support-groups-list"` to the wrapper around
+  `SupportGroupsInteractive`. The banner's own eyebrow/title/description and the registration flow itself are
+  otherwise untouched.
+- Updated the banner's own copy to match the wireframe's hero text: `SUPPORT_GROUPS_CONTENT_FALLBACK` in
+  `lib/content.ts` (eyebrow/title/description) now reads "A Global Emotional Support Ecosystem" / "Wherever
+  you are, there is a pathway forward." / the new subtitle. Also ran a direct `UPDATE` against both Supabase
+  projects' `page_support_groups` row with the same three fields — the row already existed and was
+  `published: true` with the old copy, so leaving it alone would have hit the exact stale-row bug documented
+  in Phase 103 (the live row's old fields would keep winning over the new code fallback via `getPageContent`'s
+  shallow merge).
+- `components/admin/content/CommunityIntroEditor.tsx` (new): `FlatFieldsEditor`-based, grouped into Hero
+  buttons / Tagline links / Why GESA exists / Pathway card 1-3 / Closing band. Registered in
+  `ContentManagerApp.tsx` as a new block inside the existing "Community" tab (between the existing Banner and
+  Registration flow blocks) and fetched/passed down in `app/admin/content/page.tsx`.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Confirmed via direct query that both Supabase projects' `page_support_groups` rows now carry the new
+  eyebrow/title/description, matching the code fallback exactly — not just updating the fallback and hoping
+  the live row didn't already exist.
+- No existing test file covers the Support Groups page (`tests/unit/` has no `SupportGroups*.test.tsx`), so
+  this phase didn't risk breaking test coverage that assumed the old banner copy or page structure; there's
+  also nothing to add a regression test to without introducing a new test file, which felt out of scope for
+  a content/layout phase — flagging this as a real coverage gap for the future, not glossing over it.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md lib/content.ts components/support-groups/CommunityIntro.tsx components/admin/content/CommunityIntroEditor.tsx components/admin/content/ContentManagerApp.tsx app/admin/content/page.tsx app/support-groups/page.tsx
+git commit -m "Phase 107: add hero buttons, mission blurb, and pathway cards to the Community page"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
