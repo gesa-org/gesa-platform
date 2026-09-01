@@ -3375,4 +3375,40 @@ git push
 ```
 
 ---
+
+## Phase 101: Shrink the Home path cards — they were overpowering the section
+
+**Roy's request:** the three redesigned cards (Phase 100's GesaMark swirl design) read as too large/dominant
+in the section — asked for them to be made smaller so they don't overpower the page. Sent a screenshot of the
+live site (confirming Phase 100's design itself was already correctly deployed and matched his reference —
+see the review thread above) with just this sizing note.
+
+- `components/home/Paths.tsx`:
+  - Narrowed the whole card row, not just each card's height — added `max-w-[860px] mx-auto` to the grid
+    container (on top of the section's own `wrap` max-width), so three columns render as visibly smaller
+    cards even on wide screens rather than only shrinking vertically.
+  - Card height: `h-[420px]` → `h-[300px]`.
+  - Front face: frame corner radius `24px` → `20px`, border `10px` → `7px`, inner padding `p-6` → `p-4`, the
+    `GesaMark` graphic `70%/70%` → `68%/68%` of the frame. Badge dome: width `78%` → `76%`, padding
+    `px-4 py-3` → `px-3 py-2`, icon `20px` → `16px`, label text `text-xs` → `11px`.
+  - Back face: padding `p-7` → `p-5`, corner brackets `h-4 w-4` → `h-3.5 w-3.5`, circular badge `h-14 w-14` →
+    `h-11 w-11` with a `24px` → `19px` icon, title `21px` → `17px`, description `14px` → `12.5px`, CTA button
+    padding/text/icon scaled down to match (`px-6 py-2.5 text-[14px]` → `px-[18px] py-2 text-[12.5px]`, arrow
+    icon `15px` → `13px`).
+  - The flip mechanic, back-face content/links, and every Content-Manager-editable field are untouched — this
+    phase is purely a proportional size reduction of the same design, not a content or structure change.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/Paths.test.tsx` — 4/4 passed, no test changes needed (nothing the tests assert on — text
+  content, element counts, CSS class *names* driving the flip — changed, only pixel sizes did).
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/home/Paths.tsx
+git commit -m "Phase 101: shrink Home path cards so they don't overpower the section"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

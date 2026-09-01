@@ -332,9 +332,14 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
 
       {/* Cards float up over the gold/light seam — Phase 47, repositioned
           Phase 72 (see the gold band comment above for the -mt-[210px]
-          math). */}
+          math). Phase 101 — Roy flagged the cards (420px tall, spanning the
+          full `wrap` width) as overpowering the section once the Phase 100
+          GesaMark redesign made them visually heavier. Narrowed the row
+          itself (`max-w-[860px] mx-auto`, on top of `wrap`'s own max-width)
+          so three columns render as smaller cards even on wide screens,
+          rather than only shrinking each card's own fixed height. */}
       <div className="wrap relative z-10 -mt-[210px] pb-16">
-        <StaggerGroup className="grid gap-6 md:grid-cols-3">
+        <StaggerGroup className="mx-auto grid max-w-[860px] gap-5 md:grid-cols-3">
           {cards.map((p, i) => (
             /* Phase 72 — Roy asked for the paintings to display in full by
                default (previously only a small 200px-tall sliver of each
@@ -354,7 +359,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                CTA link) needs to be reachable and visible on focus, not
                just mouse hover. */
             <StaggerItem key={i}>
-              <div className="gold-card-hover group h-[420px] [perspective:1400px]">
+              <div className="gold-card-hover group h-[300px] [perspective:1400px]">
                 <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
                   {/* Front face — Phase 97 first restyled this as framed/
                       matted artwork with a gold badge dome overlapping the
@@ -372,17 +377,17 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                     const FrontIcon = PATH_FRONT_BADGE_ICONS[i] ?? PATH_FRONT_BADGE_ICONS[PATH_FRONT_BADGE_ICONS.length - 1];
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     return (
-                      <div className="absolute inset-0 overflow-visible rounded-[24px] [backface-visibility:hidden]">
-                        <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[24px] border-[10px] ${frontStyle.frame} ${frontStyle.bg} p-6 shadow-lg`}>
-                          <GesaMark colors={frontStyle.mark} className="h-[70%] w-[70%]" />
+                      <div className="absolute inset-0 overflow-visible rounded-[20px] [backface-visibility:hidden]">
+                        <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20px] border-[7px] ${frontStyle.frame} ${frontStyle.bg} p-4 shadow-lg`}>
+                          <GesaMark colors={frontStyle.mark} className="h-[68%] w-[68%]" />
                         </div>
                         {/* Gold badge dome — overlaps the frame's bottom edge,
                             per the reference image. Icon + label are separate
                             from the back face's badge/title (PATH_BADGE_ICONS /
                             p.title) since they show at different flip states. */}
-                        <div className="pointer-events-none absolute bottom-0 left-1/2 flex w-[78%] -translate-x-1/2 translate-y-1/2 flex-col items-center gap-1 rounded-full px-4 py-3 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
-                          <FrontIcon size={20} className="text-espresso" aria-hidden="true" />
-                          <span className="text-xs font-semibold uppercase tracking-wide text-espresso">{p.frontLabel}</span>
+                        <div className="pointer-events-none absolute bottom-0 left-1/2 flex w-[76%] -translate-x-1/2 translate-y-1/2 flex-col items-center gap-0.5 rounded-full px-3 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
+                          <FrontIcon size={16} className="text-espresso" aria-hidden="true" />
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-espresso">{p.frontLabel}</span>
                         </div>
                       </div>
                     );
@@ -398,26 +403,26 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                   {(() => {
                     const BadgeIcon = PATH_BADGE_ICONS[i] ?? PATH_BADGE_ICONS[PATH_BADGE_ICONS.length - 1];
                     return (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden rounded-[24px] border border-clay/30 bg-clay-soft p-7 text-center shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden rounded-[20px] border border-clay/30 bg-clay-soft p-5 text-center shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
                         {/* Gold corner brackets */}
-                        <span className="pointer-events-none absolute left-3 top-3 h-4 w-4 rounded-tl-md border-l-2 border-t-2 border-clay" />
-                        <span className="pointer-events-none absolute right-3 top-3 h-4 w-4 rounded-tr-md border-r-2 border-t-2 border-clay" />
-                        <span className="pointer-events-none absolute bottom-3 left-3 h-4 w-4 rounded-bl-md border-b-2 border-l-2 border-clay" />
-                        <span className="pointer-events-none absolute bottom-3 right-3 h-4 w-4 rounded-br-md border-b-2 border-r-2 border-clay" />
+                        <span className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 rounded-tl-md border-l-2 border-t-2 border-clay" />
+                        <span className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 rounded-tr-md border-r-2 border-t-2 border-clay" />
+                        <span className="pointer-events-none absolute bottom-2.5 left-2.5 h-3.5 w-3.5 rounded-bl-md border-b-2 border-l-2 border-clay" />
+                        <span className="pointer-events-none absolute bottom-2.5 right-2.5 h-3.5 w-3.5 rounded-br-md border-b-2 border-r-2 border-clay" />
 
                         <div
-                          className="mb-4 flex h-14 w-14 flex-none items-center justify-center rounded-full shadow-md"
+                          className="mb-2.5 flex h-11 w-11 flex-none items-center justify-center rounded-full shadow-md"
                           style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}
                         >
-                          <BadgeIcon size={24} className="text-white" />
+                          <BadgeIcon size={19} className="text-white" />
                         </div>
-                        <h3 className="font-serif text-[21px] text-foreground">{p.title}</h3>
-                        <p className="mt-2.5 text-[14px] leading-relaxed text-muted-fg">{p.description}</p>
+                        <h3 className="font-serif text-[17px] leading-tight text-foreground">{p.title}</h3>
+                        <p className="mt-1.5 text-[12.5px] leading-snug text-muted-fg">{p.description}</p>
                         <Link
                           href={p.ctaLink}
-                          className="relative z-10 mt-6 inline-flex w-fit items-center justify-center gap-2 rounded-full border-2 border-clay bg-espresso px-6 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#141820]"
+                          className="relative z-10 mt-3.5 inline-flex w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-espresso px-[18px] py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#141820]"
                         >
-                          {p.ctaLabel} <ArrowRight size={15} />
+                          {p.ctaLabel} <ArrowRight size={13} />
                         </Link>
                       </div>
                     );
