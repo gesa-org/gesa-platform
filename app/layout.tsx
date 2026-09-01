@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
@@ -46,15 +47,16 @@ export default async function RootLayout({
     // runs afterward and is what actually keeps them in sync as the user
     // switches languages later. suppressHydrationWarning is scoped to just
     // this one element since these two attributes are the only ones this
-    // script (or TranslationProvider) ever touches on it.
+    // script (or TranslationProvider) ever touches on it. Uses next/script
+    // with strategy="beforeInteractive" (Next's own blessed mechanism for
+    // exactly this "must run before hydration" case, injected into <head>
+    // automatically) rather than a raw <script> tag, which
+    // eslint-config-next's build-time lint flags.
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var l=localStorage.getItem("gesa-lang");if(l==="he"){document.documentElement.lang="he";document.documentElement.dir="rtl";}}catch(e){}})();`,
-          }}
-        />
+        <Script id="set-lang-dir" strategy="beforeInteractive">
+          {`(function(){try{var l=localStorage.getItem("gesa-lang");if(l==="he"){document.documentElement.lang="he";document.documentElement.dir="rtl";}}catch(e){}})();`}
+        </Script>
       </head>
       <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
         {/* Phase 45 — SmoothScroll only provides a spring-smoothed scroll-

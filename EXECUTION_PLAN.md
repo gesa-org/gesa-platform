@@ -3950,4 +3950,39 @@ git push
 ```
 
 ---
+
+## Phase 112: Fix Phase 111's failed Vercel build
+
+**Roy's report:** the Phase 111 deployment showed "Error" in Vercel after ~18s.
+
+Couldn't get a full local `next build` to finish in this session's sandbox (it hung well past the tool's
+timeout on every attempt, and the sandbox's own `eslint` install is separately broken — missing
+`tsconfig-paths/lib/tsconfig-loader` — so `next lint` couldn't run standalone either), so this is a
+best-diagnosis fix from re-reading Phase 111's own diff rather than a reproduced-and-confirmed error message.
+The strongest candidate: `app/layout.tsx` added a raw `<script dangerouslySetInnerHTML>` tag directly in a
+manually-added `<head>`. `eslint-config-next`'s Core Web Vitals rules specifically flag a raw `<script>` tag
+in the App Router in favor of `next/script`, and Next.js runs ESLint during `next build` by default, failing
+the build on any lint error — an 18-second failure is consistent with failing fast during that lint step
+rather than a slower type-check or compile failure.
+
+- `app/layout.tsx`: replaced the raw `<script>` with Next's own `<Script id="set-lang-dir" strategy="beforeInteractive">` (`next/script`) — the framework's documented, ESLint-approved mechanism for exactly this
+  "must run before hydration" case. `strategy="beforeInteractive"` is only valid in the root layout, which is
+  exactly where this is. No behavior change — same inline JS, same timing, same `suppressHydrationWarning`
+  scoping — only the tag/import mechanism changed.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Could not run a full `next build` or `next lint` to completion in this sandbox (see above) — this fix is
+  my best diagnosis, not a confirmed-fixed build. **If Vercel still shows an error after this deploys, please
+  paste the actual error text from the Vercel build log (not just the red "Error" status) — that log has the
+  exact file/line/rule, and I'd rather fix the real reported error than guess a second time.**
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md app/layout.tsx
+git commit -m "Phase 112: use next/script instead of a raw script tag to fix Phase 111's build error"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
