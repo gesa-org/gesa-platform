@@ -3789,4 +3789,29 @@ git push
 ```
 
 ---
+
+## Phase 109: Fix the "Why GESA exists" section's background to the site's actual ivory
+
+**Roy's request:** a screenshot of the Community page's "Why GESA exists" mission section, which rendered on
+a noticeably blue-gray background, asking to change it to the ivory tone used elsewhere on the site.
+
+- `components/support-groups/CommunityIntro.tsx`: the mission section used `bg-muted`, which maps to
+  `--muted` (`#b7c3d6`, globals.css's own comment calls this "the extracted wall color") — a real, distinctly
+  blue-gray tone, not ivory. Switched to `bg-background` (`--background: #eef1f6`, labeled "Powder Ivory" in
+  globals.css), the token most other plain sections on the site already use. No text, layout, or other
+  section changed.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Confirmed the color mapping directly in `app/globals.css` rather than guessing from the class name alone
+  (`bg-muted` sounds neutral/pale, but its actual value is a saturated blue-gray).
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/support-groups/CommunityIntro.tsx
+git commit -m "Phase 109: fix Community page mission section background to site's ivory tone"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

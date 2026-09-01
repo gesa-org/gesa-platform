@@ -127,7 +127,13 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
 
   return (
     <>
-      <section className="section bg-muted">
+      {/* Phase 109 — Roy asked for this section's background to match the
+          "ivory" tone used elsewhere on the site. `bg-muted` maps to
+          --muted (#b7c3d6, the darker "extracted wall color" blue-gray),
+          not the site's actual ivory — that's `bg-background`
+          (--background: #eef1f6, labeled "Powder Ivory" in globals.css),
+          the same token most other plain sections already use. */}
+      <section className="section bg-background">
         <Reveal type="fade-up" as="div" className="wrap max-w-[720px] text-center">
           <h2 className="mb-3 text-[30px]">{content.missionHeading}</h2>
           <p className="text-[15.5px] leading-relaxed text-muted-fg">{content.missionBody}</p>
