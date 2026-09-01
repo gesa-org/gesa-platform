@@ -181,6 +181,21 @@ export default function TranslationProvider({ children }: { children: React.Reac
           if (dictHit !== undefined) translatedMap.set(text, dictHit);
           else remaining.push(text);
         });
+        // Phase 111 — dev-only visibility into dictionary gaps. Every one
+        // of these falls through to /api/translate, which silently no-ops
+        // back to the original English whenever GOOGLE_TRANSLATE_API_KEY
+        // isn't set (see lib/translate.ts) — today, that's every
+        // deployment of this project — so this is the only signal a
+        // developer gets that a given string needs a lib/translations/he.ts
+        // entry. Gated to non-production so it never reaches a real
+        // visitor's console.
+        if (process.env.NODE_ENV !== "production" && remaining.length > 0) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[i18n] ${remaining.length} string(s) on ${pathname} have no Hebrew dictionary entry (lib/translations/he.ts) and will stay English unless GOOGLE_TRANSLATE_API_KEY is set:`,
+            remaining
+          );
+        }
       } else {
         remaining.push(...uniqueTexts);
       }
@@ -221,7 +236,11 @@ export default function TranslationProvider({ children }: { children: React.Reac
     } finally {
       setTranslating(false);
     }
-  }, []);
+    // Phase 111 — `pathname` is now read (dev-only dictionary-gap logging
+    // above), so it has to be a real dependency; every other value this
+    // callback touches is a ref, a stable setState function, or a module-
+    // level import, none of which need to be listed.
+  }, [pathname]);
 
   useEffect(() => {
     // The admin panel is internal-only and not part of the public-facing

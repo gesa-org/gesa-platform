@@ -28,12 +28,24 @@
 // the real year back into the Hebrew result — so this dictionary only
 // ever needs the one templated entry, not one per calendar year.
 export const HE_DICTIONARY: Record<string, string> = {
-  // --- Header ---
+  // --- Header (Phase 111 update: Phase 88/98 relabeled these — the nav's
+  // "/" now reads "About", "/about" reads "Find Support", and the header's
+  // CTA is "DONATE" in caps, not "Donate". The old lowercase "Donate" entry
+  // below this block is now dead weight for the header itself (a case-
+  // sensitive exact-match lookup means "DONATE" never hit it) but is kept
+  // since Footer's supportDonateLabel still uses sentence case "Donate".
+  // "About" here is also intentionally different from the About page's own
+  // "About" — same English string, same Hebrew translation either way, so
+  // one dictionary entry correctly covers both. ) ---
   Home: "בית",
   About: "אודות",
   "Our Therapists": "המטפלים שלנו",
   "Support Groups": "קבוצות תמיכה",
   Donate: "תרומה",
+  DONATE: "תרומה",
+  "Find Support": "מצאו תמיכה",
+  "Our Professionals": "אנשי המקצוע שלנו",
+  Community: "קהילה",
 
   // --- Footer ---
   "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer therapists.":
@@ -57,6 +69,31 @@ export const HE_DICTIONARY: Record<string, string> = {
   "© {year} GESA (Global Emotional Support Alliance). A registered non-profit organization.":
     "© {year} GESA (הברית העולמית לתמיכה נפשית). עמותה רשומה.",
   "Made with care for those on the path to healing.": "נבנה בתשומת לב לכל מי שבדרך להחלמה.",
+  "Connect with Us": "התחברו אלינו",
+  "Our Trusted Partners": "השותפים המהימנים שלנו",
+  "Global Mental Health Alliance": "הברית העולמית לבריאות הנפש",
+  "Validated Therapist Network": "רשת מטפלים מאומתת",
+  "Crisis Support International": "תמיכה בינלאומית במשברים",
+  "GESA is a registered 501(c)(3) non-profit in the United States.":
+    "GESA היא עמותה רשומה 501(c)(3) בארצות הברית.",
+
+  // --- Footer "Help us grow" inquiry card (components/footer/HelpUsGrowForm.tsx) ---
+  "Help us grow": "עזרו לנו לצמוח",
+  "We will continue to contribute and succeed, also thanks to you.":
+    "נמשיך לתרום ולהצליח, גם בזכותכם.",
+  Sent: "נשלח",
+  "Sending…": "שולח…",
+  "Thank you — we've received your message and will be in touch soon.":
+    "תודה — קיבלנו את הודעתכם ונחזור אליכם בקרוב.",
+  "Please confirm you're over 18 and have read the Privacy Policy.":
+    "אנא אשרו שאתם מעל גיל 18 וקראתם את מדיניות הפרטיות.",
+  "Something went wrong sending your message. Please try again.":
+    "משהו השתבש בשליחת ההודעה. נסו שוב.",
+  Phone: "טלפון",
+  Subject: "נושא",
+  "Partnership": "שותפות",
+  "General inquiry": "פנייה כללית",
+  "I confirm that I am over 18 years of age and have read the": "אני מאשר/ת שאני מעל גיל 18 וקראתי את",
 
   // --- Home (components/home/Paths.tsx) ---
   "A global volunteer support alliance": "ברית עולמית של מתנדבים לתמיכה נפשית",
@@ -149,7 +186,38 @@ export const HE_DICTIONARY: Record<string, string> = {
   "No therapists match your search right now. Try clearing a filter, or contact us and we'll help you find the right person.":
     "אין כרגע מטפלים שמתאימים לחיפוש שלכם. ניתן לנקות מסנן, או לפנות אלינו ואנחנו נעזור לכם למצוא את האדם המתאים.",
 
-  // --- Support Groups page (lib/content.ts + SupportGroupsInteractive.tsx) ---
+  // --- Support Groups / "Community" page (lib/content.ts +
+  // SupportGroupsInteractive.tsx). Phase 107 replaced this page's own
+  // eyebrow/title/description with new hero copy and added the
+  // CommunityIntro block (hero buttons, tagline links, mission blurb,
+  // three pathway cards) — these entries are that current text, not the
+  // page's original Phase-35-era banner copy. ---
+  "A Global Emotional Support Ecosystem": "מערכת אקולוגית עולמית לתמיכה נפשית",
+  "Wherever you are, there is a pathway forward.": "בכל מקום שבו אתם נמצאים, יש דרך קדימה.",
+  "GESA brings people, professionals and communities together across languages, cultures and borders. Choose the kind of emotional support that fits where you are today and where you want to go next.":
+    "GESA מחברת אנשים, אנשי מקצוע וקהילות מעבר לשפות, תרבויות וגבולות. בחרו את סוג התמיכה הנפשית שמתאים למקום שבו אתם נמצאים היום ולאן תרצו להגיע.",
+  "Explore Your Options": "גלו את האפשרויות שלכם",
+  "Join The Movement": "הצטרפו לתנועה",
+  "Independent Professionals": "אנשי מקצוע עצמאיים",
+  "Gifted Support": "תמיכה בתרומת זמן",
+  "Every person deserves space to feel seen, supported and empowered to grow. GESA was created to make emotional support easier to discover and access. We bring together independent professionals, gifted professional time and supportive communities within one global ecosystem, so more people can choose a meaningful next step.":
+    "כל אדם ראוי למרחב שבו הוא נראה, נתמך ומועצם לצמוח. GESA נוצרה כדי להפוך תמיכה נפשית לנגישה וקלה יותר לגילוי. אנחנו מחברים אנשי מקצוע עצמאיים, זמן מקצועי בתרומה וקהילות תומכות בתוך מערכת אקולוגית עולמית אחת, כדי שיותר אנשים יוכלו לבחור את הצעד הבא המשמעותי עבורם.",
+  "Choose your pathway": "בחרו את המסלול שלכם",
+  "Support after a crisis": "תמיכה אחרי משבר",
+  "Access gifted professional support": "קבלו תמיכה מקצועית בתרומת זמן",
+  "For eligible people and communities affected by crisis, verified professionals contribute their time and expertise through a limited number of gifted sessions.":
+    "לאנשים וקהילות זכאים שנפגעו ממשבר, אנשי מקצוע מאושרים תורמים מזמנם ומומחיותם באמצעות מספר מוגבל של פגישות בתרומה.",
+  "Explore Gifted Support": "גלו תמיכה בתרומת זמן",
+  "Find independent support": "מצאו תמיכה עצמאית",
+  "Choose the professional who feels right for you": "בחרו את איש/אשת המקצוע שמתאימים לכם",
+  "Explore independent professionals by area of support, language, approach, availability and fee.":
+    "עיינו באנשי מקצוע עצמאיים לפי תחום תמיכה, שפה, גישה, זמינות ותעריף.",
+  "Find My Support": "מצאו את התמיכה שלי",
+  "Grow in community": "צמחו בקהילה",
+  "Connect, participate and move forward together": "התחברו, השתתפו והתקדמו יחד",
+  "Discover groups, conversations and shared spaces created to support connection, strength and growth.":
+    "גלו קבוצות, שיחות ומרחבים משותפים שנוצרו כדי לתמוך בחיבור, בחוזק ובצמיחה.",
+  "Explore Community": "גלו את הקהילה",
   "Facilitated circles for collective healing": "מעגלים בהנחיה להחלמה קולקטיבית",
   "Online and in-person groups, guided by verified facilitators. You are welcome exactly as you are.":
     "קבוצות מקוונות ופרונטליות, בהנחיית מנחים מאושרים. אתם מוזמנים בדיוק כמו שאתם.",
@@ -208,6 +276,87 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Languages supported": "שפות נתמכות",
   "Support circles": "מעגלי תמיכה",
   Global: "עולמי",
+
+  // --- Donate page (components/donate/DonatePage.tsx DONATE_PAGE_FALLBACK) ---
+  "Your Choice Creates Impact": "הבחירה שלכם יוצרת השפעה",
+  "You can help meaningful support reach someone.": "אתם יכולים לעזור לתמיכה משמעותית להגיע למישהו.",
+  "Across the world, professionals are choosing to gift their time, experience and expertise. Your contribution helps GESA bring that support to eligible people and communities across languages, cultures and borders.":
+    "ברחבי העולם, אנשי מקצוע בוחרים לתרום מזמנם, מניסיונם ומהמומחיות שלהם. התרומה שלכם עוזרת ל-GESA להביא את התמיכה הזו לאנשים וקהילות זכאים מעבר לשפות, תרבויות וגבולות.",
+  "Their time is the gift. Your support helps it reach further.": "הזמן שלהם הוא המתנה. התמיכה שלכם עוזרת לה להגיע רחוק יותר.",
+  "Make support possible": "אפשרו תמיכה",
+  "Choose how you would like to contribute": "בחרו כיצד תרצו לתרום",
+  "Give once": "תרמו פעם אחת",
+  "Give monthly": "תרמו מדי חודש",
+  "Custom amount": "סכום אחר",
+  "Every contribution helps move gifted professional support from intention into action.":
+    "כל תרומה עוזרת להפוך תמיכה מקצועית בתרומה מכוונה למעשה.",
+  "Make my gift": "בצעו את התרומה שלי",
+  "What your gift helps make possible": "מה התרומה שלכם עוזרת להפוך לאפשרי",
+  Access: "גישה",
+  "Helping eligible people discover and enter the right support pathway.":
+    "עוזר לאנשים זכאים לגלות ולהיכנס למסלול התמיכה הנכון.",
+  Connection: "חיבור",
+  "Bringing people and professionals together across language and distance.":
+    "מחבר אנשים ואנשי מקצוע מעבר לשפה ולמרחק.",
+  Continuity: "רציפות",
+  "Supporting the coordination and delivery of gifted support programmes.":
+    "תומך בתיאום ובמסירה של תוכניות תמיכה בתרומה.",
+  "One choice can carry support across the world.": "בחירה אחת יכולה לשאת תמיכה ברחבי העולם.",
+  "Your contribution becomes part of a global movement built by people who choose to give, participate and create meaningful change.":
+    "התרומה שלכם הופכת לחלק מתנועה עולמית שנבנתה על ידי אנשים שבוחרים לתת, להשתתף וליצור שינוי משמעותי.",
+  "Be part of the movement": "היו חלק מהתנועה",
+  "Clear Impact": "השפעה ברורה",
+  "Secure Contribution": "תרומה מאובטחת",
+  "Global Reach": "פריסה עולמית",
+  "Professional Time, Gifted": "זמן מקצועי, בתרומה",
+  "Need immediate emergency support?": "זקוקים לתמיכה דחופה מיידית?",
+  "Find local crisis services.": "מצאו שירותי משבר מקומיים.",
+
+  // --- Donate confirm-gift modal & error states (components/donate/DonateForm.tsx) ---
+  "Confirm your gift": "אשרו את תרומתכם",
+  Monthly: "חודשי",
+  "One-time": "חד פעמי",
+  "Continue to payment": "המשך לתשלום",
+  "Redirecting to checkout…": "מפנה לקופה…",
+
+  // --- Donate thank-you page (app/donate/thank-you/thankYouContent.ts) ---
+  "Thank you for your gift": "תודה על תרומתכם",
+  "Your payment has been confirmed. A receipt and confirmation email are on their way — your generosity helps gifted professional support reach more people, across borders.":
+    "התשלום שלכם אושר. קבלה ואימייל אישור בדרך אליכם — הנדיבות שלכם עוזרת לתמיכה מקצועית בתרומה להגיע ליותר אנשים, מעבר לגבולות.",
+  "Your payment didn't go through": "התשלום שלכם לא עבר",
+  "No charge was made. If this wasn't intentional, you're welcome to try again — or reach out and we'll help directly.":
+    "לא בוצע חיוב. אם זה לא היה מכוון, אתם מוזמנים לנסות שוב — או לפנות אלינו ואנחנו נעזור ישירות.",
+  "Finishing up your gift": "משלימים את התרומה שלכם",
+  "We're confirming your payment with our payment provider — this only takes a moment. You'll receive a confirmation email as soon as it clears.":
+    "אנחנו מאשרים את התשלום שלכם מול ספק התשלומים — זה ייקח רק רגע. תקבלו אימייל אישור ברגע שהוא יאושר.",
+  "Back to GESA": "חזרה ל-GESA",
+
+  // --- Crisis Button (components/CrisisButton.tsx) ---
+  "In crisis? Get help": "במשבר? קבלו עזרה",
+  "You are not alone": "אתם לא לבד",
+  "If you are struggling right now, help is available. Reach out to one of these resources.":
+    "אם אתם מתקשים כרגע, יש עזרה זמינה. פנו לאחד המשאבים הבאים.",
+  "988 Suicide & Crisis Lifeline": "קו החירום למשבר והתאבדות 988",
+  "24/7 free & confidential": "חינם וחסוי, 24/7",
+  "Crisis Text Line": "קו הודעות טקסט למשבר",
+  "Text HOME to 741741": "שלחו HOME למספר 741741",
+  "988 Lifeline Chat": "צ'אט קו החירום 988",
+  "Chat online now": "צ'אט מקוון עכשיו",
+  "Find a helpline worldwide": "מצאו קו חירום ברחבי העולם",
+  "International directory": "מדריך בינלאומי",
+  "GESA is not an emergency service. If you are in immediate danger, call your local emergency number.":
+    "GESA אינה שירות חירום. אם אתם בסכנה מיידית, התקשרו למספר החירום המקומי שלכם.",
+
+  // --- Volunteer application modal (components/volunteer/VolunteerApplicationModal.tsx) ---
+  "Tell us about yourself — our team reviews every application before you're listed on the site.":
+    "ספרו לנו על עצמכם — הצוות שלנו בוחן כל בקשה לפני שתופיעו באתר.",
+  "Submit application": "שליחת הבקשה",
+  "Submitting…": "שולח…",
+  "Full name": "שם מלא",
+  "Proof of license / verification": "הוכחת רישיון / אימות",
+  Specialties: "תחומי התמחות",
+  Languages: "שפות",
+  Bio: "ביוגרפיה",
 };
 
 // Any 4-digit year (1900–2099) — used to normalize a string like

@@ -2,7 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Caveat:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,600;6..12,700&family=Caveat:wght@500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap');
+/* Phase 111 — added Heebo (Hebrew + Latin webfont) to this same request so
+   there's no second network round trip for it. Neither "Nunito Sans" nor
+   "Cormorant Garamond" (this site's --font-sans/--font-serif) ship Hebrew
+   glyphs, so before this, Hebrew text silently fell through to whatever
+   Hebrew-capable font the visitor's OS happened to have — inconsistent
+   across devices, and never the site's own designed look. See the
+   `html[dir="rtl"]` override further down, which points both font
+   variables at Heebo only when Hebrew is active — English stays exactly as
+   it was. */
 
 /* Phase 45 — global smooth scrolling (motion spec section 1). Native
    `scroll-behavior`, not a scroll-hijacking JS library — see the long
@@ -252,6 +261,46 @@
 [dir="rtl"] .lucide-chevron-right,
 [dir="rtl"] .lucide-chevron-left {
   transform: scaleX(-1);
+}
+
+/* Phase 111 — Hebrew typography pass.
+   1. Point both font variables at Heebo (a Hebrew+Latin webfont, added to
+      the @import above) whenever the document is RTL — neither
+      --font-sans (Nunito Sans) nor --font-serif (Cormorant Garamond) ship
+      Hebrew glyphs, so Hebrew text was previously falling through to
+      whatever Hebrew font happened to be installed on the visitor's own
+      device, rendering inconsistently (or not at all) from one device to
+      the next.
+   2. Hebrew doesn't have letter-case, so `text-transform: uppercase` is
+      already a no-op on it — nothing to fix there. Wide tracking
+      (letter-spacing) is a different problem though: it's a deliberate
+      Latin design choice throughout this site (.eyebrow, and the
+      `tracking-wide`/`uppercase` classes on most CTA buttons) that reads
+      as unnaturally sparse on Hebrew script, which isn't designed for
+      it — normalized back to 0 under RTL so Hebrew labels/buttons read
+      naturally instead of visibly stretched.
+   3. A short, deliberately conservative set of directional-utility
+      overrides for the small number of *safe*, high-frequency cases
+      (plain text alignment) — see the "known limitation" note in
+      TranslationProvider.tsx for why this isn't (and safely can't be, via
+      blanket CSS alone) a full site-wide left/right → logical-property
+      conversion; components using absolute left-*/right-* positioning or
+      ml-*/mr-*/pl-*/pr-* spacing still need a real, targeted pass. */
+[dir="rtl"] {
+  --font-sans: "Heebo", "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: "Heebo", "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
+}
+[dir="rtl"] .eyebrow,
+[dir="rtl"] .tracking-wide,
+[dir="rtl"] .tracking-wider,
+[dir="rtl"] .tracking-widest {
+  letter-spacing: normal;
+}
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+[dir="rtl"] .text-right {
+  text-align: left;
 }
 
 /* Phase 48 — Roy sent a reference mockup for the Support Groups page's

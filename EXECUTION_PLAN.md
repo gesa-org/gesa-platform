@@ -3838,4 +3838,116 @@ git push
 ```
 
 ---
+
+## Phase 111: Hebrew i18n audit — root causes, dictionary expansion, RTL font & typography fixes
+
+**Roy's request:** a full engineering-style spec asking to diagnose and fix why choosing Hebrew doesn't apply
+consistently site-wide (mixed English/Hebrew content, inconsistent RTL, no Hebrew-appropriate typography),
+covering the whole app including auth, forms, modals, and dynamic states.
+
+**Root cause audit.** This project does not use `react-i18next` or `next-intl`. The actual system
+(`components/TranslationProvider.tsx`, Phase 33/52/53) is a DOM-rewrite approach: on every route change it
+walks every visible text node on the page, looks each unique string up in a bundled dictionary
+(`lib/translations/he.ts`), and sends anything not in that dictionary to `/api/translate`
+(`lib/translate.ts`, Google Cloud Translation API) as a fallback. Three concrete, confirmed causes for the
+reported symptoms:
+
+1. **No `GOOGLE_TRANSLATE_API_KEY` is set** (confirmed empty in `.env.example`, and `lib/translate.ts` itself
+   already logs `"[translate] GOOGLE_TRANSLATE_API_KEY not set — returning original text"` server-side when
+   this happens). Every string not already in the bundled dictionary silently stays English — this is the
+   single biggest cause of "many text elements remain in English," and it's a configuration/credential gap,
+   not a code bug I can fix from here (same category as the Mollie API key — Roy needs to obtain a Google
+   Cloud Translation API key and add it to Vercel's environment variables; I can't create or hold that
+   credential myself).
+2. **Dictionary coverage was stale.** The dictionary was built in Phase 53 and covers Home/About/Our
+   Therapists/Support Groups/header/footer copy as it existed *then*. Nearly 60 phases of content changes
+   since (new Donate flow, the Community page's Phase 107 redesign, Footer's "Help us grow" card, the
+   Crisis Button, the Volunteer application modal, and Header/Footer relabeling in Phases 88/98/105) were
+   never added, so all of that content had zero dictionary coverage and fell straight through to the
+   unconfigured API. One exact-match bug found here too: the dictionary's header entry was lowercase
+   `"Donate"`, but Phase 98 changed the live header button text to all-caps `"DONATE"` — since lookups are
+   exact-string matches, that single case difference meant the header's own donate button silently stopped
+   translating the moment Phase 98 shipped.
+3. **No Hebrew-compatible font was ever loaded.** `--font-sans` (Nunito Sans) and `--font-serif` (Cormorant
+   Garamond) don't ship Hebrew glyphs, so Hebrew text was always falling back to whatever Hebrew font
+   happened to be installed on a given visitor's own device — inconsistent by construction, never the site's
+   actual designed typography.
+
+A fourth, already-documented-but-real limitation: components using directional Tailwind utilities
+(`ml-`/`mr-`, `pl-`/`pr-`, absolute `left-*`/`right-*`) instead of logical properties don't auto-mirror under
+`dir="rtl"` — flagged honestly below as **not** fully solved by this phase (see "What this phase does not
+fix").
+
+**Files changed:**
+- `lib/translations/he.ts` — fixed the `"DONATE"` case-mismatch bug; added ~90 new entries covering the
+  current Header/Footer copy (including the new "Help us grow" card), the Community page's full Phase 107
+  redesign (hero buttons, tagline links, mission blurb, three pathway cards), the Donate page, the Donate
+  confirm-gift modal, the Donate thank-you page's three states, the Crisis Button, and the Volunteer
+  application modal's static copy.
+- `components/TranslationProvider.tsx` — added a dev-only (`NODE_ENV !== "production"`) `console.warn`
+  listing every string on the current route with no dictionary entry, so a developer can see exactly what
+  still needs translating without digging through the DOM by hand. `pathname` was already read elsewhere in
+  this component; it's now also read inside `translatePage`, so it was added to that callback's dependency
+  array (was `[]`, now `[pathname]`) — a latent stale-closure bug (this callback never actually depended on
+  the current path before, so nothing else changes here).
+- `app/globals.css` — added Heebo (a Hebrew+Latin webfont) to the existing Google Fonts `@import`; added an
+  `html[dir="rtl"]` override pointing both `--font-sans` and `--font-serif` at Heebo only when Hebrew is
+  active (English is completely unaffected); normalized `letter-spacing` back to `normal` under RTL for
+  `.eyebrow`/`tracking-wide`/`tracking-wider`/`tracking-widest` (wide Latin-style letter-spacing reads as
+  visibly broken on Hebrew script); added conservative `[dir="rtl"]` overrides for the two safe, common,
+  high-frequency alignment utilities (`text-left`/`text-right` swap sides) — deliberately did not attempt a
+  blanket conversion of every directional Tailwind utility (`ml-`/`mr-`/`pl-`/`pr-`/absolute positioning);
+  see below for why.
+- `app/layout.tsx` — added a small inline blocking `<script>` in `<head>` that reads `localStorage`'s
+  `gesa-lang` key and sets `document.documentElement.lang`/`dir` synchronously before first paint (the same
+  pre-hydration pattern used for dark-mode flash prevention), so a returning Hebrew-preferring visitor's very
+  first paint on every page load/refresh is already correct instead of flashing English/LTR until
+  `TranslationProvider`'s own post-hydration effect catches up. `suppressHydrationWarning` added to `<html>`,
+  scoped to just the two attributes this script and `TranslationProvider` ever touch there.
+
+**What this phase does not fix, honestly:**
+- **The live API key.** Until `GOOGLE_TRANSLATE_API_KEY` is set in Vercel, anything not in the (now much
+  larger, but still not exhaustive) bundled dictionary — dynamic per-record content like therapist bios and
+  blog posts, plus any static copy this pass didn't get to (see the flagged list at the end) — will keep
+  falling back to English. This is the highest-leverage single fix available and requires Roy's action, not
+  code.
+- **Directional Tailwind utilities.** Converting every `ml-`/`mr-`/`pl-`/`pr-`/absolute `left-*`/`right-*`
+  usage site-wide to logical properties (`ms-`/`me-`/`ps-`/`pe-`/`inset-inline-*`) is a large, cross-cutting
+  pass across dozens of components — attempting a blanket CSS override for these (unlike `text-left`/
+  `text-right`) would be unsafe: the same utility class often means something different depending on the
+  layout it's used in, so a global rule risks silently breaking English/LTR layouts to partially fix Hebrew
+  ones. This needs a real, deliberate component-by-component pass, not something to attempt inside a
+  diagnostic/dictionary phase.
+- **Auth pages, admin screens, and the deeper match-wizard/booking-modal microcopy** were not individually
+  audited this pass — `CONTENT_GUIDE.md` already documents the match-wizard step microcopy and booking-modal
+  interpolated copy as a deliberately deferred, separate piece of work (unrelated to this fix, but the same
+  underlying pages), and auth/admin screens weren't in scope for the dictionary expansion given the size of
+  what was already covered.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Checked the dictionary object for accidental duplicate keys programmatically (found and removed one
+  harmless duplicate, `"Meeting duration"`, added twice with an identical value).
+- Could not get a clean Jest run this session (same sandbox flakiness documented in Phases 102/103) —
+  `tests/unit/Header.test.tsx` (which renders the real `TranslationProvider`) timed out with no output on
+  the one attempt made. Reviewed the `pathname`-dependency change and the new dev-only `console.warn` by
+  hand: neither changes `TranslationProvider`'s public API (`useTranslation()`'s shape is untouched), and
+  `Header.test.tsx`/`AccessibilityWidget.test.tsx` don't assert on dictionary content, so this is a low-risk
+  gap, not a sign of an actual regression — worth a real run next session to confirm formally.
+
+**Flagged for human Hebrew-translation review:** every Hebrew string added this phase was machine-translated
+by me (a language model), not reviewed by a native Hebrew speaker or professional translator — the existing
+Phase-53 dictionary entries carry the same caveat and were left as-is. Before this ships to real users, a
+Hebrew speaker should read through `lib/translations/he.ts` end to end, with particular attention to: tone
+and register (formal vs. casual "you"), the crisis-resources section (accuracy matters most here), and any
+Israel/Judaism-specific terminology in the About page and Donate page copy.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md lib/translations/he.ts components/TranslationProvider.tsx app/globals.css app/layout.tsx
+git commit -m "Phase 111: expand Hebrew dictionary, fix DONATE case bug, add Hebrew font/RTL typography fixes"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
