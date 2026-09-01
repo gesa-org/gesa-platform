@@ -4495,3 +4495,41 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 121 — revert Phase 120 (About hero)
+
+**Request:** "revert the Phase 120 the implementation is wrong."
+
+**Action:** restored `components/Hero.tsx` to its exact pre-Phase-120 content (byte-for-byte diffed against
+the commit before Phase 120, `e092b70^`, to confirm) — the two-column layout with the painting/media panel is
+back. `components/admin/content/HeroEditor.tsx` had a small Phase 120 label edit that was never actually
+committed (see note below); that uncommitted edit was discarded the same way, restoring its original
+"Background image" label.
+
+**Verification:**
+- `diff` against `e092b70^:components/Hero.tsx` — identical, zero difference.
+- `tsc --noEmit` — same 16-line pre-existing baseline, zero new errors.
+- No confirmation was given on what specifically was wrong about Phase 120's implementation — if it's a
+  narrower issue than "revert the whole thing" (e.g. just the centered-copy part, or just the spacing), happy
+  to take another pass once you can point at what to fix instead of undo.
+
+**Also found while doing this revert, unrelated to Phase 120 itself:** Phase 117's commit (`119eeb1`) only
+included `EXECUTION_PLAN.md`, `components/Header.tsx`, and `lib/navigation.ts` — the matching changes to
+`app/layout.tsx`, `components/Footer.tsx`, `components/SiteFooterSlot.tsx`, and
+`components/admin/content/FooterEditor.tsx` were never committed (they're still sitting as uncommitted local
+changes, not lost — just never pushed). That means the currently-deployed site has Header.tsx reading nav
+labels from the new shared `lib/navigation.ts` config, but Footer.tsx is still on its own old, separate
+`exploreAboutLabel`/etc. fields — i.e. Phase 117 landed half-finished, and header/footer are currently *more*
+out of sync in production than before that phase, not less. This revert did not touch those four files (out of
+scope for "revert Phase 120") — flagging so it isn't missed. The fix is simply to commit them; see the command
+block below, which includes them alongside this phase's revert.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/Hero.tsx components/admin/content/HeroEditor.tsx app/layout.tsx components/Footer.tsx components/SiteFooterSlot.tsx components/admin/content/FooterEditor.tsx
+git commit -m "Phase 121: revert Phase 120 (About hero); also commit Phase 117's missed Footer/layout files"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
