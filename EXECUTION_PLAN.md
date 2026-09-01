@@ -3320,4 +3320,59 @@ git push
 ```
 
 ---
+
+## Phase 100: Recolor the Home path cards' front face with a new abstract "swirl" mark
+
+**Roy's request:** a reference image of three cards (cream/olive/slate-blue backgrounds) each showing an
+abstract recolored "swirl" mark — three nested crescents opening onto a small dot — with a gold badge
+overlapping the bottom edge reading "CRISIS"/"VETERANS"/"SJPPORT" (a typo for "SUPPORT"). Asked to copy this
+as the new front-face design for the three cards, same layout/color palette/card design.
+
+- **New `components/home/GesaMark.tsx`**: the swirl mark itself, coded as a real SVG component rather than a
+  sourced/generated raster image — scalable, and recolored per-card via four color props (`outerRing`/
+  `middleRing`/`innerRing`/`dot`) instead of managing three near-duplicate image files. Built the same way the
+  accessibility launcher icon was (Phase 90/94): plain stroked/filled SVG path primitives approximating the
+  reference art, verified visually by rendering candidate coordinates to PNG via `cairosvg` and comparing
+  side-by-side with the reference before landing on the final path data. The three rings are literally one
+  circle at three radii swept through the same gap angle, plus a small filled "tail" shape and a dot closing
+  the innermost ring.
+- `components/home/Paths.tsx`:
+  - The front face's framed-painting box (Phase 97 — a mat/frame around the actual card artwork) is replaced
+    with a solid-color card background (cream, a true olive — this site's existing `--accent` token, "Sage/
+    Olive," previously only used for small accents — and a new slate-blue) with `GesaMark` centered on top,
+    per-card colors defined in `PATH_FRONT_STYLES`. The gold badge dome overlapping the bottom edge is
+    unchanged from Phase 97 — same mechanism, only what's inside the frame changed. All three cards now share
+    one gold border color (the reference's borders are consistently gold, not alternating like Phase 97's).
+  - `card1FrontLabel`/`card2FrontLabel`/`card3FrontLabel` fallback defaults changed from the Phase 97 art-piece
+    names ("Grounded"/"Service Remembrance"/"Life from the Deep") to each card's own category — "Crisis"/
+    "Veterans"/"Support" — matching the reference badges exactly (corrected for its "SJPPORT" typo). These are
+    the same Content-Manager-editable fields introduced in Phase 97, just new default values.
+  - `PATH_FRONT_BADGE_ICONS` swapped `Footprints` for `Tags` on the Veterans badge (the reference's badge shows
+    two overlapping tag/dog-tag shapes, closer to actual military dog tags than footprints were); `Sprout`
+    (Crisis) and `Waves` (Support) stayed, already matching the reference's leaf and wave glyphs.
+  - The back face (title/description/CTA, `PATH_BADGE_ICONS`, gold corner brackets) and the flip mechanic
+    itself are untouched, per the same "front face only" convention Roy established in Phase 97.
+- `tests/unit/Paths.test.tsx`: updated for the new front face — the "-artwork.png" image count assertion
+  dropped from 6 to 3 (the front face no longer renders those image files at all, only the hero gallery wall
+  still does), the flip-card test now asserts three `GesaMark` `<svg>` elements instead of three "artwork"-alt
+  images, and the badge-label test now checks for "Crisis"/"Veterans"/"Support" instead of the old art-piece
+  names. All back-face assertions carried over unchanged.
+- Updated the already-published `page_home` row directly in both the Dev and Production Supabase databases
+  with the three new front-label values, same reasoning as every prior CMS-field phase.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- `tests/unit/Paths.test.tsx` — 4/4 passed (needed a couple of retries due to this sandbox's documented Jest
+  flakiness, not a real failure — confirmed passing cleanly on the successful run).
+- Confirmed via direct query that both databases' `page_home.card1FrontLabel`/`card2FrontLabel`/
+  `card3FrontLabel` now read "Crisis" / "Veterans" / "Support".
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 100: recolor Home path cards' front face with new GesaMark swirl design"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

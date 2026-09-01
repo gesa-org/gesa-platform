@@ -20,11 +20,12 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("100% Free Sessions")).toBeInTheDocument();
     expect(screen.getByText("Global Community")).toBeInTheDocument();
 
-    // Gallery wall renders the same three artwork files decoratively
-    // (aria-hidden, empty alt) alongside the cards' own non-empty-alt copies
-    // further down — six total <img> renders of the three artworks combined.
+    // Gallery wall renders the three artwork files decoratively (aria-hidden,
+    // empty alt). Phase 100 removed the cards' own copies of these same
+    // images from the front face (replaced by the GesaMark graphic), so
+    // these three are the only "-artwork.png" renders left on the page.
     const allArtworkImgs = document.querySelectorAll('img[src*="-artwork.png"]');
-    expect(allArtworkImgs.length).toBe(6);
+    expect(allArtworkImgs.length).toBe(3);
   });
 
   it("still renders the three real path cards", () => {
@@ -37,18 +38,21 @@ describe("Paths (Home)", () => {
   });
 
   // Phase 72 — each card is now a real 3D flip: the front face shows the
-  // full painting, the back face (title/description/CTA) only becomes
+  // card's own art, the back face (title/description/CTA) only becomes
   // visible on hover/focus via a CSS rotateY transform on a shared
   // group-hover wrapper. jsdom doesn't compute CSS transforms, so this
   // can't assert visual visibility directly — instead it confirms both
-  // faces are actually in the DOM (three artworks + three sets of text),
-  // and that the flip wrapper carries the hover/focus rotate classes that
-  // drive the effect.
-  it("renders both the front (painting) and back (text/CTA) faces of each flip card", () => {
+  // faces are actually in the DOM, and that the flip wrapper carries the
+  // hover/focus rotate classes that drive the effect.
+  // Phase 100 — the front face's painting (asserted here via its "artwork"
+  // alt text through Phase 97/99) was replaced by the GesaMark graphic, an
+  // inline SVG with no alt text of its own; this now asserts the mark
+  // renders (three <svg> front faces) instead.
+  it("renders both the front (GesaMark) and back (text/CTA) faces of each flip card", () => {
     render(<Paths />);
 
-    const artworkImages = screen.getAllByAltText(/artwork$/);
-    expect(artworkImages).toHaveLength(3);
+    const frontMarks = document.querySelectorAll('.gold-card-hover svg[viewBox="0 0 200 220"]');
+    expect(frontMarks.length).toBe(3);
 
     const flipWrapper = screen.getByText("In crisis right now").closest('[class*="transform-style"]') as HTMLElement;
     // Tailwind arbitrary-property classes render literally in the DOM —
@@ -59,18 +63,20 @@ describe("Paths (Home)", () => {
     expect(flipWrapper).toBeTruthy();
   });
 
-  // Phase 97 — Roy sent a reference image restyling the front face of each
-  // card (framed artwork + gold badge dome) while explicitly asking to keep
-  // the flip effect and the back face's own title/description/CTA content
-  // untouched. This confirms the new front-face badge labels render
-  // alongside the still-unchanged back-face titles from the previous test,
-  // rather than replacing them.
+  // Phase 97 first restyled the front face as framed artwork + gold badge
+  // dome, explicitly keeping the flip effect and the back face's own
+  // title/description/CTA content untouched.
+  // Phase 100 — Roy sent a new reference recoloring an abstract mark per
+  // card instead of a painting, with new badge labels matching each card's
+  // own category ("Crisis"/"Veterans"/"Support") rather than art-piece
+  // names. This confirms the new labels render alongside the
+  // still-unchanged back-face titles from the previous test.
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Grounded")).toBeInTheDocument();
-    expect(screen.getByText("Service Remembrance")).toBeInTheDocument();
-    expect(screen.getByText("Life from the Deep")).toBeInTheDocument();
+    expect(screen.getByText("Crisis")).toBeInTheDocument();
+    expect(screen.getByText("Veterans")).toBeInTheDocument();
+    expect(screen.getByText("Support")).toBeInTheDocument();
 
     // Back face content from the earlier test is still present, unchanged.
     expect(screen.getByText("In crisis right now")).toBeInTheDocument();

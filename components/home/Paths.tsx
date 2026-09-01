@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Footprints, Waves } from "lucide-react";
+import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Tags, Waves } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
+import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
 import type { HomeContent } from "@/lib/content";
 
 export const HOME_CONTENT_FALLBACK: HomeContent = {
@@ -35,12 +36,15 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   card3CtaLabel: "Reach out now",
   card3CtaLink: "/intake?path=general",
   // Phase 97 — front-face badge labels (see the HomeContent type comment
-  // in lib/content.ts). Reuses the same art-piece names from the Phase 95
-  // attempt Roy asked to revert — that redesign's *titles* were fine, it
-  // was applying them in place of the back face's own content that wasn't.
-  card1FrontLabel: "Grounded",
-  card2FrontLabel: "Service Remembrance",
-  card3FrontLabel: "Life from the Deep",
+  // in lib/content.ts).
+  // Phase 100 — Roy sent a new reference image for the front face (see the
+  // GesaMark component below) whose own gold badges read "CRISIS,"
+  // "VETERANS," and "SJPPORT" (a typo for "SUPPORT") — matching each card's
+  // actual category rather than an abstract art-piece name, so these three
+  // labels changed to match that reference exactly, corrected for the typo.
+  card1FrontLabel: "Crisis",
+  card2FrontLabel: "Veterans",
+  card3FrontLabel: "Support",
 };
 
 // Phase 16 — replaced the scroll-pinned, 300vh-tall crossfade showcase
@@ -136,25 +140,48 @@ const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 // overlapping the frame's bottom edge — explicitly keeping the flip effect
 // and the back face's existing content untouched, only the front face's
 // look changes. Icons here are separate from PATH_BADGE_ICONS above (which
-// stay on the unchanged back face) — re-picked to match the front badge's
-// new labels: a sprouting plant for "Grounded" (growth/rootedness),
-// footprints for "Service Remembrance" (military boots/journey — closest
-// available lucide icon to the reference's boots-and-sprig badge), and
-// waves for "Life from the Deep" (the ocean imagery in that card's own
-// artwork and reference badge).
-const PATH_FRONT_BADGE_ICONS = [Sprout, Footprints, Waves];
+// stay on the unchanged back face).
+// Phase 100 — front labels changed from art-piece names to each card's own
+// category ("Crisis"/"Veterans"/"Support" — see HOME_CONTENT_FALLBACK), so
+// the icons were re-picked to match: a sprouting plant stays for "Crisis"
+// (matches the reference badge's small leaf glyph), swapped footprints for
+// "Tags" on "Veterans" (the reference badge shows two overlapping tag/
+// dog-tag shapes — closer to actual military dog tags than footprints
+// were), and waves stays for "Support" (matches the reference's tilde/wave
+// glyph and that card's own artwork).
+const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 
-// Phase 97 — each card's mat/frame color loosely follows Roy's reference
-// (cream, sage, and a cool slate-blue mat), built from this site's existing
-// palette tokens rather than picking arbitrary new colors, except the third
-// mat — no existing token was close to the reference's blue-gray, so that
-// one is a new hardcoded value matched to the Footer's own long-standing
-// slate-blue text color (#c7d0de) for consistency with a color already
-// established elsewhere on the site.
-const PATH_FRONT_STYLES: { mat: string; frame: string }[] = [
-  { mat: "bg-clay-soft", frame: "border-clay" },
-  { mat: "bg-sage-soft", frame: "border-espresso" },
-  { mat: "bg-[#c7d0de]", frame: "border-clay" },
+// Phase 97 — each card's mat/frame color loosely followed Roy's first
+// reference (cream, sage, and a cool slate-blue mat around a painting).
+// Phase 100 — Roy sent a new reference replacing the painting entirely with
+// an abstract "swirl" mark (see components/home/GesaMark.tsx) recolored per
+// card on a solid, more saturated background — cream, a true olive-green
+// (this site's existing `--accent` token, described in globals.css as
+// "Sage/Olive," is exactly this tone and was previously only used for small
+// accents, not a full card background), and a deeper slate-blue. All three
+// cards use the same gold border in the new reference (not alternating
+// clay/espresso like Phase 97's mat), so `frame` is now one shared value.
+// `mark` supplies GesaMark's four ring/dot colors, picked to echo each
+// card's own background the way the reference's three mark recolors do —
+// none of these four-per-card tones exist as design tokens already, so
+// (consistent with Phase 97's own precedent of hardcoding the one color no
+// token fit) they're hardcoded here rather than force-fit to existing ones.
+const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] = [
+  {
+    bg: "bg-clay-soft",
+    frame: "border-clay",
+    mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
+  },
+  {
+    bg: "bg-accent",
+    frame: "border-clay",
+    mark: { outerRing: "#c9d3e0", middleRing: "#9db99f", innerRing: "#f0c49a", dot: "#f0c49a" },
+  },
+  {
+    bg: "bg-[#5f7a91]",
+    frame: "border-clay",
+    mark: { outerRing: "#a8c49a", middleRing: "#d9a6c2", innerRing: "#f2e2a0", dot: "#f2e2a0" },
+  },
 ];
 
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
@@ -329,25 +356,25 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
             <StaggerItem key={i}>
               <div className="gold-card-hover group h-[420px] [perspective:1400px]">
                 <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
-                  {/* Front face — Phase 97: Roy sent a reference image
-                      restyling the front face as framed/matted artwork with
-                      a small gold badge dome overlapping the frame's bottom
-                      edge, explicitly asking to keep the flip effect and the
-                      back face's own content untouched — only this front
-                      face's look changes. The painting still renders full
-                      and uncropped (`object-contain`) inside its own
-                      overflow-hidden inner box; the outer face wrapper is
-                      `overflow-visible` so the badge dome below can extend
-                      outside the frame without being clipped. */}
+                  {/* Front face — Phase 97 first restyled this as framed/
+                      matted artwork with a gold badge dome overlapping the
+                      frame's bottom edge, explicitly keeping the flip effect
+                      and the back face's own content untouched. Phase 100:
+                      Roy sent a new reference replacing the painting itself
+                      with an abstract recolored "swirl" mark
+                      (GesaMark) centered on a solid card background —
+                      same gold border, same overlapping badge dome
+                      mechanism, only what's inside the frame changed. The
+                      outer face wrapper stays `overflow-visible` so the
+                      badge dome can extend past the frame without being
+                      clipped. */}
                   {(() => {
                     const FrontIcon = PATH_FRONT_BADGE_ICONS[i] ?? PATH_FRONT_BADGE_ICONS[PATH_FRONT_BADGE_ICONS.length - 1];
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     return (
                       <div className="absolute inset-0 overflow-visible rounded-[24px] [backface-visibility:hidden]">
-                        <div className={`h-full w-full overflow-hidden rounded-[24px] border-[10px] ${frontStyle.frame} ${frontStyle.mat} p-3 shadow-lg`}>
-                          <div className="relative h-full w-full overflow-hidden rounded-[10px] bg-white/40">
-                            <Image src={PATH_IMAGES[i]} alt={`${p.title} artwork`} fill className="object-contain" />
-                          </div>
+                        <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[24px] border-[10px] ${frontStyle.frame} ${frontStyle.bg} p-6 shadow-lg`}>
+                          <GesaMark colors={frontStyle.mark} className="h-[70%] w-[70%]" />
                         </div>
                         {/* Gold badge dome — overlaps the frame's bottom edge,
                             per the reference image. Icon + label are separate
