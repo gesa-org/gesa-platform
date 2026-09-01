@@ -34,6 +34,12 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Our Therapists": "המטפלים שלנו",
   "Support Groups": "קבוצות תמיכה",
   Donate: "תרומה",
+  // Phase 115 — Header.tsx's actual live CTA label is the fully-uppercase
+  // literal "DONATE" (see HEADER_CONTENT_FALLBACK.donateLabel), a different
+  // exact string than the sentence-case "Donate" above (dictionary lookup
+  // is exact-string, not case-insensitive) — this was the concrete
+  // regression a prior phase's audit found and this restores.
+  DONATE: "תרומה",
 
   // --- Footer ---
   "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer therapists.":
@@ -208,6 +214,123 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Languages supported": "שפות נתמכות",
   "Support circles": "מעגלי תמיכה",
   Global: "עולמי",
+
+  // --- Donate page (components/donate/DonatePage.tsx DONATE_PAGE_FALLBACK) ---
+  "Your Choice Creates Impact": "הבחירה שלכם יוצרת השפעה",
+  "You can help meaningful support reach someone.": "אתם יכולים לעזור לתמיכה משמעותית להגיע למישהו.",
+  "Across the world, professionals are choosing to gift their time, experience and expertise. Your contribution helps GESA bring that support to eligible people and communities across languages, cultures and borders.":
+    "ברחבי העולם, אנשי מקצוע בוחרים לתרום מזמנם, מניסיונם ומהמומחיות שלהם. התרומה שלכם עוזרת ל-GESA להביא את התמיכה הזו לאנשים ולקהילות זכאיות, מעבר לשפות, תרבויות וגבולות.",
+  "Their time is the gift. Your support helps it reach further.": "הזמן שלהם הוא המתנה. התמיכה שלכם עוזרת לה להגיע רחוק יותר.",
+  "Make support possible": "אפשרו תמיכה",
+  "Choose how you would like to contribute": "בחרו כיצד תרצו לתרום",
+  "Give once": "תרומה חד פעמית",
+  "Give monthly": "תרומה חודשית",
+  "Custom amount": "סכום אחר",
+  "Every contribution helps move gifted professional support from intention into action.":
+    "כל תרומה עוזרת להפוך תמיכה מקצועית מתנדבת מכוונה למעשה.",
+  "Make my gift": "בצעו את התרומה שלי",
+  "What your gift helps make possible": "מה התרומה שלכם עוזרת לאפשר",
+  Access: "נגישות",
+  "Helping eligible people discover and enter the right support pathway.":
+    "עוזר לאנשים זכאים לגלות ולהיכנס למסלול התמיכה הנכון.",
+  Connection: "חיבור",
+  "Bringing people and professionals together across language and distance.":
+    "מחבר בין אנשים ואנשי מקצוע מעבר לשפה ולמרחק.",
+  Continuity: "המשכיות",
+  "Supporting the coordination and delivery of gifted support programmes.":
+    "תומך בתיאום ובמסירה של תוכניות תמיכה מתנדבות.",
+  "One choice can carry support across the world.": "בחירה אחת יכולה לשאת תמיכה סביב העולם.",
+  "Your contribution becomes part of a global movement built by people who choose to give, participate and create meaningful change.":
+    "התרומה שלכם הופכת לחלק מתנועה עולמית שנבנתה על ידי אנשים שבוחרים לתת, להשתתף וליצור שינוי משמעותי.",
+  "Be part of the movement": "היו חלק מהתנועה",
+  "Clear Impact": "השפעה ברורה",
+  "Secure Contribution": "תרומה מאובטחת",
+  "Global Reach": "פריסה עולמית",
+  "Professional Time, Gifted": "זמן מקצועי, במתנה",
+  "Need immediate emergency support?": "זקוקים לתמיכת חירום מיידית?",
+  "Find local crisis services.": "מצאו שירותי חירום מקומיים.",
+
+  // --- Donate giving box (components/donate/DonateForm.tsx) ---
+  "Confirm your gift": "אשרו את התרומה שלכם",
+  Monthly: "חודשית",
+  "One-time": "חד פעמית",
+  "Please choose or enter a gift amount.": "בחרו או הזינו סכום תרומה.",
+  "Something went wrong starting your donation. Please try again.": "משהו השתבש בהתחלת התרומה. נסו שוב.",
+  "Redirecting to checkout…": "מפנה אתכם לתשלום…",
+  "Continue to payment": "המשך לתשלום",
+  "Message (optional)": "הודעה (לא חובה)",
+
+  // --- Donate thank-you page (app/donate/thank-you/thankYouContent.ts) ---
+  "Thank you for your gift": "תודה על התרומה שלכם",
+  "Your payment has been confirmed. A receipt and confirmation email are on their way — your generosity helps gifted professional support reach more people, across borders.":
+    "התשלום שלכם אושר. קבלה ואימייל אישור בדרך אליכם — הנדיבות שלכם עוזרת לתמיכה מקצועית מתנדבת להגיע ליותר אנשים, מעבר לגבולות.",
+  "Your payment didn't go through": "התשלום שלכם לא הושלם",
+  "No charge was made. If this wasn't intentional, you're welcome to try again — or reach out and we'll help directly.":
+    "לא בוצע חיוב. אם זה לא היה מכוון, אתם מוזמנים לנסות שוב — או לפנות אלינו ואנחנו נעזור ישירות.",
+  "Finishing up your gift": "משלימים את התרומה שלכם",
+  "We're confirming your payment with our payment provider — this only takes a moment. You'll receive a confirmation email as soon as it clears.":
+    "אנחנו מאשרים את התשלום שלכם מול ספק הסליקה — זה ייקח רק רגע. תקבלו אימייל אישור ברגע שהתשלום יאושר.",
+  "Back to GESA": "חזרה ל-GESA",
+
+  // --- Crisis Button (components/CrisisButton.tsx CRISIS_BUTTON_CONTENT_FALLBACK) ---
+  "In crisis? Get help": "במשבר? קבלו עזרה",
+  "You are not alone": "אתם לא לבד",
+  "If you are struggling right now, help is available. Reach out to one of these resources.":
+    "אם אתם מתקשים כרגע, יש עזרה זמינה. פנו לאחד מהמשאבים הבאים.",
+  "988 Suicide & Crisis Lifeline": "הקו החם למניעת התאבדויות ומשברים 988",
+  "24/7 free & confidential": "חינם וחסוי, 24/7",
+  "Crisis Text Line": "קו הודעות טקסט למשבר",
+  "Text HOME to 741741": "שלחו HOME למספר 741741",
+  "988 Lifeline Chat": "צ'אט הקו החם 988",
+  "Chat online now": "התחילו צ'אט עכשיו",
+  "Find a helpline worldwide": "מצאו קו סיוע ברחבי העולם",
+  "International directory": "מדריך בינלאומי",
+  "GESA is not an emergency service. If you are in immediate danger, call your local emergency number.":
+    "GESA אינה שירות חירום. אם אתם בסכנה מיידית, התקשרו למספר החירום המקומי שלכם.",
+
+  // --- Volunteer application modal (components/volunteer/VolunteerApplicationModal.tsx) ---
+  // "Become a volunteer therapist" already has an entry above (About
+  // sections) with the identical English source string and Hebrew value —
+  // reused there, not duplicated here.
+  "Tell us about yourself — our team reviews every application before you're listed on the site.":
+    "ספרו לנו על עצמכם — הצוות שלנו בודק כל בקשה לפני שהיא מפורסמת באתר.",
+  "Submit application": "שליחת הבקשה",
+  "Submitting…": "שולח…",
+  "Full name": "שם מלא",
+  Phone: "טלפון",
+  "Phone (optional)": "טלפון (לא חובה)",
+  "Proof of license / verification": "הוכחת רישיון / אימות",
+  "Your license number, certifying body/institution, and any other credential details our team can verify.":
+    "מספר הרישיון שלכם, הגוף/המוסד המסמיך, וכל פרט הסמכה נוסף שהצוות שלנו יכול לאמת.",
+  "Our team reviews this before you're listed as a verified volunteer.":
+    "הצוות שלנו בודק זאת לפני שאתם מפורסמים כמתנדבים מאושרים.",
+  Specialties: "תחומי התמחות",
+  "Other specialty…": "התמחות אחרת…",
+  "Pick any that apply, or add your own — at least one is required.":
+    "בחרו כל מה שרלוונטי, או הוסיפו משלכם — נדרש לפחות אחד.",
+  Languages: "שפות",
+  "Other language…": "שפה אחרת…",
+  "Add every language you can work in — no limit, and not restricted to the list above.":
+    "הוסיפו כל שפה שבה תוכלו לעבוד — ללא הגבלה, ולא רק מהרשימה למעלה.",
+  // "Meeting duration" already has an entry above (Our Therapists page
+  // filters) with the identical English source string and Hebrew value.
+  "60 min": "60 דקות",
+  "45 min": "45 דקות",
+  "30 min": "30 דקות",
+  "Specify time": "ציינו זמן",
+  "How long a session are you able to commit to volunteering. Pick a preset, or Specify time to enter your own — this is shown on your public profile once you're listed.":
+    "כמה זמן תוכלו להתחייב לפגישת התנדבות. בחרו אפשרות קיימת, או ציינו זמן להזנת משך משלכם — זה יוצג בפרופיל הציבורי שלכם ברגע שתפורסמו.",
+  Bio: "ביוגרפיה",
+  "Tell us about your background and why you'd like to volunteer with GESA.":
+    "ספרו לנו על הרקע שלכם ומדוע תרצו להתנדב עם GESA.",
+  "Please select or add at least one specialty.": "בחרו או הוסיפו לפחות תחום התמחות אחד.",
+  "Please select or add at least one language.": "בחרו או הוסיפו לפחות שפה אחת.",
+  "Please select a meeting duration.": "בחרו משך פגישה.",
+  "Please specify how long you'd like your sessions to be.": "ציינו כמה זמן תרצו שהפגישות שלכם יימשכו.",
+  "Something went wrong submitting your application. Please try again.": "משהו השתבש בשליחת הבקשה. נסו שוב.",
+
+  // --- Shared UI chrome (components/ui/Modal.tsx close button aria-label) ---
+  Close: "סגירה",
 };
 
 // Any 4-digit year (1900–2099) — used to normalize a string like

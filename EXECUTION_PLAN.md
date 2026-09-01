@@ -4081,3 +4081,74 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 115 — Hebrew i18n/RTL fix, rebuilt from a clean baseline
+
+**Request:** Same Hebrew localization/RTL bug report as Phases 111 and 113, sent again right after Phase 114's
+revert. Rebuilt the fix from the current (post-revert) file state rather than replaying the old commits, with
+one deliberate change to reduce the chance of another failed Vercel build: the pre-hydration `lang`/`dir` sync
+script goes in from the start using `next/script`'s `beforeInteractive` strategy (the fix Phase 112 applied
+reactively last time), not the raw `<script dangerouslySetInnerHTML>` tag Phase 111 originally shipped.
+
+**Root causes addressed (same three as before, since reverting undid the fixes, not the underlying gaps):**
+1. Dictionary coverage gap — `lib/translations/he.ts` was frozen at Phase 53 while later phases (Donate page,
+   Donate thank-you page, Crisis Button, Volunteer application modal) shipped new copy with no Hebrew entry.
+2. Attribute-only text (placeholders, aria-labels, titles) was never translated — the DOM-rewrite translator
+   only ever walked text nodes.
+3. No Hebrew-shaped webfont — Hebrew text fell back to the browser default font, inconsistent device to device.
+
+**Files changed:**
+- `lib/translations/he.ts` — fixed the `Donate`/`DONATE` case mismatch (Header's live CTA renders the literal
+  uppercase `"DONATE"`, a different exact string from the sentence-case entry already present). Added ~90
+  new entries for the Donate page (`DonatePage.tsx`, `DonateForm.tsx`), the Donate thank-you page's three
+  states, the Crisis Button, and the Volunteer application modal — pulled directly from each component's
+  current live fallback copy, not reconstructed from memory. Ran a duplicate-key scan afterward (see
+  Verification) and found/removed two accidental duplicates (`"Become a volunteer therapist"`,
+  `"Meeting duration"` — both already had identical entries from earlier sections).
+- `components/TranslationProvider.tsx` — added `TRANSLATABLE_ATTRS` (`placeholder`, `aria-label`, `title`),
+  `collectTranslatableAttributes()`, and `originalAttrRef` (the attribute-level equivalent of the existing
+  `originalTextRef`), wired into `translatePage` alongside the existing text-node pass: attribute values join
+  the same dedup `Set` and dictionary/API lookup as text, and revert to their original value the same way text
+  nodes do when switching back to English.
+- `app/globals.css` — added Heebo to the Google Fonts `@import` and a `html[dir="rtl"]` block that (a) points
+  `--font-sans`/`--font-serif` at Heebo only under RTL, (b) strips `text-transform: uppercase` and letter-
+  spacing from `.eyebrow`/`tracking-wide/-wider/-widest` under RTL (Hebrew has no case, so uppercase+wide-
+  tracking just adds uneven gaps), and (c) mirrors `Modal.tsx`'s `float-right` close button to `float-left`
+  under RTL — float is a physical CSS property, so it doesn't auto-reverse under `dir="rtl"` the way flex
+  does, and was a concrete case of the "close-button placement" issue called out in the request.
+- `app/layout.tsx` — added `suppressHydrationWarning` on `<html>` and a `next/script` `beforeInteractive`
+  script (placed inside `<body>`, per Next's own documented pattern — Next hoists it into `<head>` regardless)
+  that reads `localStorage`'s saved language and sets `dir`/`lang` before hydration, avoiding a flash of
+  LTR/English layout on first paint for a returning Hebrew-language visitor. Uses the `<Script>` component's
+  `children` prop for the script body, not `dangerouslySetInnerHTML` — a raw `<script dangerouslySetInnerHTML>`
+  tag is what eslint-config-next's Core Web Vitals rule flags in the App Router, and Next fails `next build`
+  on lint errors by default; this is the specific thing believed to have caused Phase 111's Vercel build error.
+
+**Verification:**
+- `tsc --noEmit`: zero new errors in any of the four changed files — the only errors reported are the same
+  pre-existing, unrelated test-file type errors seen before this phase (unchanged list).
+- Ran a standalone duplicate-key scan across the full `HE_DICTIONARY` object (208 keys) — zero duplicates
+  after removing the two found above.
+- `git diff --stat` shows changes confined to the four intended files.
+- **Not verified this session:** a full `next build` / ESLint pass. `npx next build` does not complete inside
+  this sandbox in the time available (hangs past the tool's time limit with no further output after the
+  startup banner), and `npx eslint` fails outright here on a broken `tsconfig-paths` dependency unrelated to
+  this code. The `next/script`-from-the-start approach is used specifically because it's Next's documented,
+  ESLint-clean pattern (unlike the raw `<script>` tag Phase 111 shipped), but if Vercel still reports an error
+  after this deploys, please paste the actual build log text (not just the red "Error" status) so the real
+  reported line/rule can be fixed directly instead of guessed again.
+- **Still not translatable automatically** (unchanged from prior phases' disclosure): anything from the CMS
+  (site_content rows an admin has edited away from the fallback), the two Book-a-Session consent checkboxes
+  (each splits across multiple text nodes around an embedded link), and anything rendered after an in-page
+  fetch with no route change (e.g. live wizard results) — these still fall through to the (still unconfigured)
+  `GOOGLE_TRANSLATE_API_KEY`-gated live API, which currently no-ops to the original English text.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/TranslationProvider.tsx app/layout.tsx app/globals.css lib/translations/he.ts
+git commit -m "Phase 115: Hebrew i18n dictionary expansion, attribute translation, RTL font/CSS, safe pre-hydration dir sync"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

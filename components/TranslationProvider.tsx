@@ -26,6 +26,33 @@ const STORAGE_KEY = "gesa-lang";
 const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "TITLE"]);
 const BATCH_SIZE = 100;
 
+// Phase 115 — the DOM-rewrite translator above only ever walked Text nodes,
+// so a purely-attribute string (an <input placeholder>, an icon-only
+// button's aria-label, a native title tooltip) never translated no matter
+// how complete the dictionary was — a real gap flagged in the i18n audit
+// (e.g. VolunteerApplicationModal's phone-number placeholder, Modal's
+// "Close" aria-label). This mirrors the existing text-node approach one
+// level down: collect the current value of each attribute in
+// TRANSLATABLE_ATTRS, translate it exactly like a text node's content
+// (same dictionary-first-then-API path, same dedup Set), and cache the
+// original so switching back to English restores it — via originalAttrRef,
+// the attribute equivalent of originalTextRef.
+const TRANSLATABLE_ATTRS = ["placeholder", "aria-label", "title"] as const;
+type TranslatableAttr = (typeof TRANSLATABLE_ATTRS)[number];
+
+function collectTranslatableAttributes(root: ParentNode): { el: Element; attr: TranslatableAttr; value: string }[] {
+  const found: { el: Element; attr: TranslatableAttr; value: string }[] = [];
+  const elements = root.querySelectorAll(`[${TRANSLATABLE_ATTRS.join("],[")}]`);
+  elements.forEach((el) => {
+    if (el.closest("[data-no-translate]")) return;
+    TRANSLATABLE_ATTRS.forEach((attr) => {
+      const value = el.getAttribute(attr);
+      if (value && value.trim()) found.push({ el, attr, value });
+    });
+  });
+  return found;
+}
+
 // Site-wide, DOM-level translation: walks all visible text on the page and
 // swaps it for machine-translated text via /api/translate (Google Cloud
 // Translation, cached in Postgres — see lib/translate.ts). This is
@@ -81,6 +108,11 @@ export default function TranslationProvider({ children }: { children: React.Reac
   // in place instead of reloading. Cleared out (not just left stale) once
   // a revert actually happens — see translatePage's "en" branch below.
   const originalTextRef = useRef<Map<Text, string>>(new Map());
+  // Phase 115 — attribute equivalent of originalTextRef above. Keyed by
+  // element (not by a single string) since one element can have more than
+  // one translatable attribute (e.g. an icon button with both a
+  // placeholder and an aria-label).
+  const originalAttrRef = useRef<Map<Element, Partial<Record<TranslatableAttr, string>>>>(new Map());
 
   useEffect(() => {
     // Phase 33 — the picker only offers English and Hebrew now, but
@@ -147,6 +179,14 @@ export default function TranslationProvider({ children }: { children: React.Reac
         if (node.isConnected) node.textContent = original;
       });
       originalTextRef.current.clear();
+      // Phase 115 — revert translated attributes the same way, in place.
+      originalAttrRef.current.forEach((attrs, el) => {
+        if (!el.isConnected) return;
+        (Object.entries(attrs) as [TranslatableAttr, string][]).forEach(([attr, original]) => {
+          el.setAttribute(attr, original);
+        });
+      });
+      originalAttrRef.current.clear();
       return;
     }
     setTranslating(true);
@@ -161,7 +201,16 @@ export default function TranslationProvider({ children }: { children: React.Reac
           originalTextRef.current.set(node, node.textContent || "");
         }
       });
-      const uniqueTexts = Array.from(new Set(nodes.map((n) => n.textContent || "")));
+      // Phase 115 — same caching pass for attributes.
+      const attrEntries = collectTranslatableAttributes(document.body);
+      attrEntries.forEach(({ el, attr, value }) => {
+        const existing = originalAttrRef.current.get(el);
+        if (existing && existing[attr] !== undefined) return;
+        originalAttrRef.current.set(el, { ...existing, [attr]: value });
+      });
+      const uniqueTexts = Array.from(
+        new Set([...nodes.map((n) => n.textContent || ""), ...attrEntries.map((a) => a.value)])
+      );
       if (uniqueTexts.length === 0) return;
 
       // Phase 53 — check the bundled dictionary (lib/translations/he.ts)
@@ -217,6 +266,11 @@ export default function TranslationProvider({ children }: { children: React.Reac
       nodes.forEach((node) => {
         const translated = translatedMap.get(node.textContent || "");
         if (translated) node.textContent = translated;
+      });
+      // Phase 115 — apply translated attribute values the same way.
+      attrEntries.forEach(({ el, attr, value }) => {
+        const translated = translatedMap.get(value);
+        if (translated) el.setAttribute(attr, translated);
       });
     } finally {
       setTranslating(false);

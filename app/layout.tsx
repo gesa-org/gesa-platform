@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
@@ -33,8 +34,36 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
+        {/* Phase 115 — without this, the document renders lang="en"/dir
+            (implicitly ltr) for the first paint on every request, even for
+            a returning visitor who already chose Hebrew, and only flips to
+            rtl/he once TranslationProvider's client-side effect runs a
+            moment after hydration — a visible flash of LTR English-shaped
+            layout on every navigation for Hebrew users. next/script's
+            `beforeInteractive` strategy is Next's own supported way to run
+            a script before hydration in the App Router (valid only in this
+            root layout, placed in `<body>` per Next's own docs — Next
+            hoists it into `<head>` at build time regardless of where it's
+            written here); this only reads localStorage and flips two
+            attributes — no state, no React — so it can't drift from what
+            TranslationProvider itself does on mount. Uses the component's
+            `children` (a JSX-embedded string), not
+            `dangerouslySetInnerHTML`, since a raw `<script
+            dangerouslySetInnerHTML>` tag is what eslint-config-next's Core
+            Web Vitals ruleset flags in the App Router — Next runs ESLint
+            during `next build` by default and fails the build on lint
+            errors, which is what broke a prior attempt at this exact fix. */}
+        <Script id="gesa-sync-lang-dir" strategy="beforeInteractive">
+          {`try {
+            var l = localStorage.getItem("gesa-lang");
+            if (l === "he") {
+              document.documentElement.dir = "rtl";
+              document.documentElement.lang = "he";
+            }
+          } catch (e) {}`}
+        </Script>
         {/* Phase 45 — SmoothScroll only provides a spring-smoothed scroll-
             progress value via React context (see the long comment in
             components/motion/SmoothScroll.tsx for why it deliberately
