@@ -3814,4 +3814,28 @@ git push
 ```
 
 ---
+
+## Phase 110: Use the exact "Warm Ivory" swatch for the mission section
+
+**Roy's request:** re-sent the same "Why GESA exists" section (still showing the old blue-gray — Phase 109
+hadn't been pushed/deployed yet) along with a specific color swatch: "Warm Ivory," `#F2EFE6`.
+
+- `components/support-groups/CommunityIntro.tsx`: `bg-background` → `bg-[#F2EFE6]`. This exact hex doesn't
+  match any existing design token — `--background` is `#eef1f6` (a close but different color) and the
+  closest named token, `--clay-soft`, is `#f5eeda` — so it's hardcoded as a literal value rather than forced
+  onto a token that isn't actually this color, same precedent as `GesaMark`'s per-card colors.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- Double-checked `app/globals.css` for an existing token matching `#F2EFE6` exactly before hardcoding it —
+  none exists.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/support-groups/CommunityIntro.tsx
+git commit -m "Phase 110: use exact Warm Ivory swatch for Community page mission section"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

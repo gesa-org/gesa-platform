@@ -127,13 +127,19 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
 
   return (
     <>
-      {/* Phase 109 — Roy asked for this section's background to match the
-          "ivory" tone used elsewhere on the site. `bg-muted` maps to
-          --muted (#b7c3d6, the darker "extracted wall color" blue-gray),
-          not the site's actual ivory — that's `bg-background`
-          (--background: #eef1f6, labeled "Powder Ivory" in globals.css),
-          the same token most other plain sections already use. */}
-      <section className="section bg-background">
+      {/* Phase 109 — Roy first asked for this section's background to
+          match the site's ivory tone; switched bg-muted (--muted:
+          #b7c3d6, a real blue-gray, not ivory) to bg-background
+          (--background: #eef1f6, "Powder Ivory" in globals.css).
+          Phase 110 — Roy then sent a specific swatch, "Warm Ivory"
+          #F2EFE6, which is a distinct color from --background (close, but
+          not the same value) and doesn't match any existing design token
+          (closest is --clay-soft at #f5eeda, still a different color) — so
+          this is hardcoded as a literal arbitrary value rather than
+          force-fit to a token that isn't actually this color, same
+          precedent as GesaMark's per-card colors having no matching token
+          either. */}
+      <section className="section bg-[#F2EFE6]">
         <Reveal type="fade-up" as="div" className="wrap max-w-[720px] text-center">
           <h2 className="mb-3 text-[30px]">{content.missionHeading}</h2>
           <p className="text-[15.5px] leading-relaxed text-muted-fg">{content.missionBody}</p>
