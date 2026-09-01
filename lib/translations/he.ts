@@ -331,6 +331,113 @@ export const HE_DICTIONARY: Record<string, string> = {
 
   // --- Shared UI chrome (components/ui/Modal.tsx close button aria-label) ---
   Close: "סגירה",
+
+  // --- Phase 116 — the live Content Manager rows for page_home,
+  // site_header, page_about_hero, page_footer, and page_support_groups
+  // (checked directly against the production `site_content` table, not
+  // guessed from the code fallbacks above) hold copy an admin has since
+  // edited away from HOME_CONTENT_FALLBACK/HERO_CONTENT_FALLBACK/etc. The
+  // dictionary is keyed by exact live text, so once that live text diverges
+  // from the fallback, no amount of dictionary work against the fallback
+  // strings ever covers it — this is the actual, structural reason things
+  // like "A GLOBAL EMOTIONAL SUPPORT ECOSYSTEM" and "The right support
+  // changes what becomes possible." stayed English through two prior
+  // phases: those exact sentences don't exist anywhere in the codebase to
+  // find by reading components, only in the database. Entries below are
+  // transcribed directly from today's live rows.
+  Community: "קהילה",
+  "A GLOBAL EMOTIONAL SUPPORT ECOSYSTEM": "מערכת עולמית של תמיכה נפשית",
+  "The right support changes what becomes possible.": "התמיכה הנכונה משנה את מה שאפשרי.",
+  "GESA (Global Emotional Support Alliance) brings people and professionals together across the world, offering clear pathways to meaningful emotional support.":
+    "GESA (הברית העולמית לתמיכה נפשית) מחברת בין אנשים ואנשי מקצוע ברחבי העולם, ומציעה מסלולים ברורים לתמיכה נפשית משמעותית.",
+  "I've been affected by a crisis": "נפגעתי ממשבר",
+  "I serve, or support someone who serves": "אני משרת/ת, או תומך/ת במי שמשרת/ת",
+  "I'm looking for professional support": "אני מחפש/ת תמיכה מקצועית",
+  "Every gifted session carries real professional value. It is made possible by people who choose to share their time, experience and expertise.":
+    "לכל פגישה מוענקת יש ערך מקצועי אמיתי. היא מתאפשרת בזכות אנשים שבוחרים לחלוק מזמנם, מניסיונם ומהמומחיות שלהם.",
+  "Making space": "פינוי מקום",
+  "Building strength": "בניית חוסן",
+  "Moving forward": "צעד קדימה",
+  "EXPLORE GIFTED SUPPORT": "גלו תמיכה מוענקת",
+  "EXPLORE PROFESSIONAL SUPPORT": "גלו תמיכה מקצועית",
+  "Professional time and emotional support, generously gifted to eligible people and communities affected by war, terror, displacement or disaster.":
+    "זמן מקצועי ותמיכה נפשית, המוענקים ביד רחבה לאנשים ולקהילות זכאיות שנפגעו ממלחמה, טרור, עקירה או אסון.",
+  "Dedicated professional time, gifted to service members, veterans, reservists, first responders and their families.":
+    "זמן מקצועי ייעודי, המוענק לאנשי ונשות שירות, חיילים משוחררים, מילואימניקים, כוחות חירום ראשונים ומשפחותיהם.",
+  "Explore independent professionals on GESA by language, location, speciality and approach. Fees, session length and credentials are displayed before booking.":
+    "גלו אנשי מקצוע עצמאיים ב-GESA לפי שפה, מיקום, תחום התמחות וגישה. עלויות, אורך הפגישה והסמכות מוצגים לפני הזמנה.",
+
+  "Emotional support should feel human, accessible and within reach.":
+    "תמיכה נפשית צריכה להרגיש אנושית, נגישה ובהישג יד.",
+  "GESA was created to bring people and professionals together across languages, cultures and borders, creating meaningful pathways for support, growth and connection.\n":
+    "GESA נוצרה כדי לחבר בין אנשים ואנשי מקצוע מעבר לשפות, תרבויות וגבולות, ולייצר מסלולים משמעותיים לתמיכה, צמיחה וחיבור.\n",
+  "FIND SUPPORT": "מצאו תמיכה",
+  "jOIN THE MOVEMENT": "הצטרפו לתנועה",
+
+  "Global Emotional Support Alliance": "הברית העולמית לתמיכה נפשית",
+  "A registered non-profit organization.": "עמותה רשומה.",
+  "© {year} GESA. All rights reserved. ": "© {year} GESA. כל הזכויות שמורות. ",
+
+  "Wherever you are, there is a pathway forward.": "בכל מקום שבו אתם נמצאים, יש מסלול קדימה.",
+  "A Global Emotional Support Ecosystem": "מערכת עולמית של תמיכה נפשית",
+  "GESA brings people, professionals and communities together across languages, cultures and borders. Choose the kind of emotional support that fits where you are today and where you want to go next.":
+    "GESA מחברת בין אנשים, אנשי מקצוע וקהילות מעבר לשפות, תרבויות וגבולות. בחרו את סוג התמיכה הנפשית שמתאים למקום שבו אתם נמצאים היום ולאן תרצו להגיע הלאה.",
+
+  // --- CommunityIntro's own literal (non-content-driven) heading ---
+  "Choose your pathway": "בחרו את המסלול שלכם",
+
+  // --- AuthStatus (components/AuthStatus.tsx) ---
+  "Sign In": "התחברות",
+  Account: "חשבון",
+  "My account": "החשבון שלי",
+  "Sign out": "התנתקות",
+
+  // --- Contact form (app/contact/ContactForm.tsx) ---
+  Subject: "נושא",
+  Message: "הודעה",
+  "General inquiry": "פנייה כללית",
+  Donation: "תרומה",
+  "Volunteer as a therapist": "התנדבות כמטפל/ת",
+  "I need support": "אני זקוק/ה לתמיכה",
+  "Send message": "שליחת הודעה",
+  "Sending…": "שולח…",
+  "Something went wrong sending your message. Please try again.": "משהו השתבש בשליחת ההודעה. נסו שוב.",
+  "Thank you — your message has been received. We'll be in touch soon.":
+    "תודה — ההודעה שלכם התקבלה. ניצור קשר בקרוב.",
+
+  // --- Help us grow form (components/footer/HelpUsGrowForm.tsx) ---
+  "Help us grow": "עזרו לנו לצמוח",
+  "We will continue to contribute and succeed, also thanks to you.": "נמשיך לתרום ולהצליח, גם בזכותכם.",
+  Sent: "נשלח",
+  "Thank you — we've received your message and will be in touch soon.": "תודה — קיבלנו את ההודעה שלכם וניצור קשר בקרוב.",
+  Partnership: "שותפות",
+  "Please confirm you're over 18 and have read the Privacy Policy.": "אנא אשרו שאתם מעל גיל 18 וקראתם את מדיניות הפרטיות.",
+  "I confirm that I am over 18 years of age and have read the": "אני מאשר/ת שאני מעל גיל 18 וקראתי את",
+
+  // --- Volunteer application modal option lists (SPECIALTY_OPTIONS /
+  // LANGUAGE_OPTIONS in components/volunteer/VolunteerApplicationModal.tsx)
+  // — each option renders as its own plain text node inside a TagPicker
+  // button, so these translate the same exact-match way as any other text.
+  CBT: "טיפול קוגניטיבי-התנהגותי (CBT)",
+  "Trauma Support": "תמיכה בטראומה",
+  "Emotional Support for Couples": "תמיכה נפשית לזוגות",
+  Psychiatry: "פסיכיאטריה",
+  "Group Sessions": "פגישות קבוצתיות",
+  "Coach (Life Coach)": "מאמן/ת (לייף קואצ'ר)",
+  "Guided Meditation": "מדיטציה מודרכת",
+  "Social Work": "עבודה סוציאלית",
+  "Children and Adolescents": "ילדים ובני נוער",
+  "Mindful Self Compassion": "חמלה עצמית מודעת",
+  English: "אנגלית",
+  Hebrew: "עברית",
+  Spanish: "ספרדית",
+  French: "צרפתית",
+  Arabic: "ערבית",
+  Russian: "רוסית",
+  Portuguese: "פורטוגזית",
+  German: "גרמנית",
+  Amharic: "אמהרית",
+  Ukrainian: "אוקראינית",
 };
 
 // Any 4-digit year (1900–2099) — used to normalize a string like
