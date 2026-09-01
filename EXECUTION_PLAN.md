@@ -3558,4 +3558,46 @@ the new `helpGrow*` fields on the existing `page_footer` row) don't need any man
 simply use the code fallback (today's exact live copy) until you open the Content Manager and edit them.
 
 ---
+
+## Phase 104: Remove the "OUR STORY" mission banner from the About page
+
+**Roy's request:** a screenshot of the centered "OUR STORY" eyebrow / "Emotional support should feel human,
+accessible and within reach." heading / "GESA was created to bring people..." body section (on a soft sage-
+green background), asking to remove it from the site entirely and also remove it from the Content Manager.
+Confirmed via the live database that this text is the admin-edited value of the "Our Mission" section added
+in Phase 70 (`page_about_sections`' `ourMissionEyebrow`/`ourMissionHeading`/`ourMissionBody` fields) — the
+fallback copy differs, but the live published row had already been edited to this text.
+
+This is a deliberate departure from the site's usual "unpublish/stop-rendering but keep the field" precedent
+(Phase 77's `missionHeading`/`missionParagraphs`, Phase 85's volunteer CTA/legal blurb) — Roy explicitly asked
+for the Content Manager fields gone too, so this phase removes the fields themselves, not just the render.
+
+- `app/about/page.tsx`: removed the `<section className="section bg-sage-soft">` block entirely (the whole
+  Our Mission banner) and its render call (`sections.ourMissionEyebrow`/`ourMissionHeading`/`ourMissionBody`).
+- `lib/content.ts`: removed `ourMissionEyebrow`/`ourMissionHeading`/`ourMissionBody` from `AboutSectionsContent`
+  and their literals from `ABOUT_SECTIONS_FALLBACK`.
+- `components/admin/content/AboutSectionsEditor.tsx`: removed the "Our Mission" field group (state hooks,
+  the three `<input>`/`<textarea>` fields, and the corresponding keys in the saved `value` object) — the
+  About tab in the Content Manager no longer has anything for this section, since there's nothing left to
+  edit.
+- `tests/unit/AboutPage.test.tsx`: removed the one test that asserted this section rendered
+  (`"renders the dedicated Mission section (Phase 70)"`), since the section and the fields it checked no
+  longer exist. No other test in that file referenced these fields.
+
+**Verification:**
+- `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors, and confirmed no
+  other file in the repo still references `ourMissionEyebrow`/`ourMissionHeading`/`ourMissionBody`.
+- Could not get a clean Jest run this session (same sandbox flakiness noted in Phases 102/103) — reviewed
+  `tests/unit/AboutPage.test.tsx` by hand instead: the removed test was the only one touching these fields,
+  and every remaining test in that file asserts on different, untouched fields (volunteer CTA, legal blurb,
+  "Why GESA exists", founders), so removing it doesn't risk masking an unrelated failure.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md app/about/page.tsx lib/content.ts components/admin/content/AboutSectionsEditor.tsx tests/unit/AboutPage.test.tsx
+git commit -m "Phase 104: remove Our Story mission banner from About page and Content Manager"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

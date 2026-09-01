@@ -93,13 +93,10 @@ describe("AboutPage — founders photo/initials fallback", () => {
     expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.legalBlurb)).not.toBeInTheDocument();
   });
 
-  it("renders the dedicated Mission section (Phase 70)", async () => {
-    const jsx = await AboutPage();
-    render(jsx);
-
-    expect(screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionHeading)).toBeInTheDocument();
-    expect(screen.getByText(ABOUT_SECTIONS_FALLBACK.ourMissionBody)).toBeInTheDocument();
-  });
+  // Phase 104 — Roy asked to remove the "Our Story"/"Our Mission" banner
+  // (added Phase 70) entirely, including its Content Manager fields — so
+  // the test that used to assert it rendered here is gone too, rather than
+  // asserting on a field that no longer exists.
 
   // Phase 77 — Roy asked to remove the "Why GESA exists" section entirely.
   // `missionHeading`/`missionParagraphs` still exist in the content model

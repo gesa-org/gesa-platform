@@ -108,9 +108,11 @@ export type HeroContent = {
 
 export type AboutSectionsContent = {
   published: boolean;
-  ourMissionEyebrow: string;
-  ourMissionHeading: string;
-  ourMissionBody: string;
+  // Phase 104 — the "Our Story"/"Our Mission" banner (ourMissionEyebrow/
+  // ourMissionHeading/ourMissionBody) was removed from both the page and
+  // the Content Manager per Roy's explicit request — unlike every other
+  // "stop rendering but keep the field" precedent on this page (Phase 77,
+  // 85), this one asked for the field itself gone too.
   missionHeading: string;
   missionParagraphs: string[];
   howItWorksHeading: string;
@@ -501,10 +503,6 @@ export const FIND_YOUR_THERAPIST_CONTENT_FALLBACK: SimplePageContent = {
 
 export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
   published: true,
-  ourMissionEyebrow: "Our Mission",
-  ourMissionHeading: "Care shouldn't depend on where you were born or what you can afford.",
-  ourMissionBody:
-    "GESA connects people carrying real emotional weight with real, qualified therapists — free of charge, wherever they are. We measure our work by one thing: whether someone who couldn't otherwise reach support, reached it.",
   missionHeading: "Why GESA exists",
   missionParagraphs: [
     "Millions of people carry pain that has nowhere to go — after displacement, loss, or the quiet exhaustion of staying strong for others. GESA exists to meet that pain with warmth, dignity, and real professional care.",

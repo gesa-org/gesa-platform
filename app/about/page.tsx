@@ -57,22 +57,15 @@ export default async function AboutPage() {
     <div className="reveal-page__main">
       <Hero content={heroContent} />
 
-      {/* Phase 70 — Roy asked for a dedicated "Mission" section, distinct
-          from the section just below it (which is headed "Why GESA
-          exists" in copy, but is internally named "mission" in the schema
-          from an earlier phase — kept as-is per "text details is as is"
-          precedent, not renamed, to avoid touching already-published
-          copy). This new section is a short, standalone mission statement
-          set apart on the sage-soft wash already used elsewhere on this
-          page (Phase 68), so it doesn't visually blend into the wrap
-          max-w-[760px] section directly under it. */}
-      <section className="section bg-sage-soft">
-        <Reveal type="fade-up" as="div" className="wrap max-w-[760px] text-center">
-          <span className="eyebrow">{sections.ourMissionEyebrow}</span>
-          <h2 className="my-2.5 text-[30px]">{sections.ourMissionHeading}</h2>
-          <p className="mx-auto max-w-[620px] text-[15.5px] text-muted-fg">{sections.ourMissionBody}</p>
-        </Reveal>
-      </section>
+      {/* Phase 104 — Roy sent a screenshot of the "OUR STORY" mission
+          section (eyebrow/heading/body, on the sage-soft wash) and asked to
+          remove it from the page entirely. This was the "Our Mission"
+          section added in Phase 70 (`sections.ourMissionEyebrow/
+          ourMissionHeading/ourMissionBody`) — unlike Phase 77/85's removals,
+          Roy also explicitly asked to remove it from the Content Manager,
+          so — unusually — this one drops the fields from the type/fallback/
+          admin editor too, not just the render. See lib/content.ts and
+          components/admin/content/AboutSectionsEditor.tsx. */}
 
       {/* Phase 77 — Roy asked to remove the "Why GESA exists" section
           entirely. `sections.missionHeading`/`missionParagraphs` and their
