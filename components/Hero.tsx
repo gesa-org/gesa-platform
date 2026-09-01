@@ -202,15 +202,12 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
                 className="w-full h-full object-cover relative"
               />
             </ParallaxMedia>
-            <div className="absolute left-5 bottom-5 bg-[#e3e8ef]/95 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 shadow-soft z-20">
-              <div className="w-10 h-10 rounded-xl bg-accent-soft text-primary flex items-center justify-center shadow-inner">
-                <HeartHandshake size={20} />
-              </div>
-              <div className="text-[13px] font-semibold text-foreground">
-                Over <span className="text-primary font-bold">5,000+</span><br/>
-                Sessions Completed
-              </div>
-            </div>
+            {/* Phase 102 — Roy asked to remove the floating "Over 5,000+
+                Sessions Completed" stat badge that used to sit over the
+                bottom-left corner of this image, keeping the picture itself
+                clean/unobstructed. This was a hardcoded stat (no
+                Content-Manager field backed it — HeroContent has no matching
+                key), so removing it here is the whole change. */}
           </div>
         </div>
       </div>

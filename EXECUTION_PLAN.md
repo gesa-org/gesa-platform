@@ -3411,4 +3411,37 @@ git push
 ```
 
 ---
+
+## Phase 102: Remove the "Over 5,000+ Sessions Completed" floating badge from the About hero image
+
+**Roy's request:** a screenshot of the small floating stat card (heart-in-a-rounded-square icon + "Over
+5,000+ Sessions Completed") that sits over the bottom-left corner of the About page's hero image, asking to
+remove it and keep the picture clean.
+
+- `components/Hero.tsx`: removed the `<div className="absolute left-5 bottom-5 ...">` block entirely — the
+  self-contained floating badge (icon + stat text), positioned over the hero's square image panel. This was
+  a hardcoded stat with no Content Manager field behind it (`HeroContent` in `lib/content.ts` has no matching
+  key), so deleting it from this one component is the entire change — no data model, admin editor, or other
+  page affected. `HeartHandshake` (the badge's icon) stays imported since it's still used elsewhere in this
+  same file (the "100% Free Sessions" trust badge in the hero's text column).
+- This only affects the About page (`Hero` was moved off Home entirely back in Phase 30 and is now
+  About-only) — no other page showed this badge.
+
+**Verification:**
+- Scoped `tsc --noEmit`: identical pre-existing error list to before this phase — zero new errors.
+- No test in `tests/unit/` asserted on this badge's text or markup, so no test file needed updating.
+- `tests/unit/AboutPage.test.tsx` could not be run to completion in this session — the sandbox's Jest runs
+  hit its documented flakiness (timing out mid-run several attempts in a row) rather than failing on an
+  actual assertion. The change itself is a single self-contained JSX block removed with no props/logic/
+  imports otherwise touched, so this is a low-risk gap — worth a quick manual check on the live About page
+  after deploying, and re-running that suite next session to confirm formally.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/Hero.tsx
+git commit -m "Phase 102: remove Sessions Completed badge from About hero image"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
