@@ -4723,3 +4723,127 @@ actually gets run.
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 125 — CRM: "Therapists" -> "Our Professionals" rename; international phone field
+
+**Request:** two parts. (1) Rename the CRM dashboard's "Therapists" section to "Our Professionals" everywhere
+admin-facing — sidebar, page titles, breadcrumbs, empty states, buttons, modals, toasts — without touching
+public routes, the `therapists` table name, or other internal identifiers. (2) Add a phone-number field to the
+professional edit form with a country selector, automatic country detection from a pasted international
+number, E.164 normalization/validation via a real phone library (not hand-rolled regex), and graceful handling
+of records with no phone number.
+
+**Part 1 — rename.** Checked first whether the admin dashboard has its own translation/i18n system to update in
+parallel (per Roy's "through the current translation system rather than hardcoded" instruction) — it doesn't;
+only the public site has one (`components/TranslationProvider.tsx` + `lib/translations/he.ts`). Every string
+under `app/admin/**` and `components/admin/**` is a hardcoded English literal, so this is a plain text rename,
+not a dictionary-key update. Flagging this rather than silently building a parallel admin i18n system nobody
+asked for — that would be a substantial, separate undertaking if Roy wants the CRM itself localized later.
+
+Renamed (admin-facing text only — routes, the `therapists` table/columns, the `therapist` role value, and the
+`AddTherapistModal`/`TherapistsTable`/`TherapistEditForm` component/file names are all left as internal
+identifiers, per Roy's explicit instruction):
+- `app/admin/layout.tsx` — sidebar label "Therapists" -> "Our Professionals" (`/admin/match-requests`'s
+  separate "Find Your Therapist" sidebar item is a different feature, left alone).
+- `app/admin/therapists/page.tsx` — heading + body copy.
+- `app/admin/therapists/[id]/page.tsx` — back-link, page heading.
+- `components/admin/AddTherapistModal.tsx` — button, modal title, body copy, error toast.
+- `components/admin/TherapistEditForm.tsx` — contact-email help text, Danger Zone copy, deactivate/reactivate
+  button.
+- `components/admin/TherapistsTable.tsx` — "select all" aria-label, bulk-update error toast.
+- `components/admin/NotificationBell.tsx` — notification-detail "Therapist:" label, volunteer-application
+  fallback subtitle.
+- `components/admin/AddUserModal.tsx` — role-picker label (the underlying `AppRole` value `"therapist"` is
+  unchanged).
+- `components/admin/AdminNav.tsx` — a stale comment referencing the old label.
+- `app/admin/messages/page.tsx`, `app/admin/sessions/page.tsx`, `app/admin/bookings/page.tsx`,
+  `app/admin/match-requests/page.tsx`, `app/admin/page.tsx`, `app/admin/volunteer-applications/page.tsx` —
+  table headers and fallback labels that describe a professional's role in other CRM tables (messages,
+  bookings, sessions, match requests, the overview activity feed, volunteer applications), which Roy's "apply
+  consistently everywhere in the CRM dashboard" instruction reads as in-scope alongside the Therapists page
+  itself. Left `"Find Your Therapist"` alone everywhere it appears — that's a different, separately-named
+  feature (the match-request intake flow), not a generic reference to the word being renamed.
+- Updated 3 existing unit tests (`TherapistsTable.test.tsx`, `AddTherapistModal.test.tsx`,
+  `AdminMatchRequestsPage.test.tsx`) whose assertions matched the old strings verbatim, so they'd have started
+  failing against the renamed UI.
+
+**Part 2 — phone field.** Checked the database directly (Production Supabase project `iddeoavrlnvwwfopsacy`)
+before writing any code: the `therapists` table already has a nullable `contact_phone text` column — it just
+had no UI. **No migration needed** — the existing column stores the E.164-normalized value directly, satisfying
+Roy's "preserve existing records, avoid destructive schema changes" instruction by construction.
+
+Built `components/ui/PhoneNumberInput.tsx`, a new reusable field:
+- **Library**: `libphonenumber-js` (added to `package.json`, `^1.13.12`) — used for all parsing, country
+  detection, validation, and E.164 formatting, per Roy's explicit instruction to use a maintained library
+  instead of regex. Country *names* come from the browser-native `Intl.DisplayNames` API (the one thing
+  `libphonenumber-js` doesn't provide) rather than a second hand-written country-code-to-name list — so there's
+  no manually-maintained country dataset anywhere in this feature. Flags are computed as emoji from each ISO
+  code (a regional-indicator Unicode trick), not 240+ image assets.
+- **Country dropdown**: a native `<select>` (not a custom fuzzy-search combobox) listing all
+  `libphonenumber-js`-supported countries/territories, each showing flag + name + dial code, sorted
+  alphabetically. Native `<select>` already supports type-to-jump search and is fully keyboard-operable for
+  free; a custom searchable combobox would be a bigger, separate build if Roy wants fancier search/filtering
+  than a browser's native typeahead.
+- **Auto-detection**: typing or pasting a number starting with `+` re-parses without a country hint and
+  updates the dropdown to whatever country `libphonenumber-js` resolves it to. Picking a country manually
+  re-validates whatever national number is already typed against the new country without clearing it.
+- **Validation**: friendly inline error only once the field has been touched and is non-empty and invalid;
+  an empty field is always valid (never blocks saving a professional with no phone number). `TherapistEditForm`
+  gates its own save on this validity flag, separately from the existing free-text fields.
+- **Reopening the form**: the saved E.164 value is parsed once on mount to preselect the country and show a
+  readable national-format number (e.g. "0917 123 4567"), not the raw "+639171234567" string. An unparsable
+  legacy value (there shouldn't be any today, since the column was never exposed before) is shown as-is rather
+  than silently blanked.
+- **RTL**: the admin dashboard has no RTL/i18n today (see Part 1), so there's nothing to mirror — but both the
+  country `<select>` and the number `<input>` are set `dir="ltr"` explicitly regardless, so numbers stay
+  left-to-right if the document direction ever flips.
+- Wired into `TherapistEditForm.tsx` right after "Contact email"; `onSubmit` now also writes `contact_phone`.
+
+**Deliverables (per Roy's request):**
+1. *Changed files* — frontend: all the Part 1 files listed above, plus `components/ui/PhoneNumberInput.tsx`
+   (new) and `components/admin/TherapistEditForm.tsx` (phone field wiring). Backend/schema: none — no
+   migration, `contact_phone` already existed. Tests: `tests/unit/TherapistsTable.test.tsx`,
+   `tests/unit/AddTherapistModal.test.tsx`, `tests/unit/AdminMatchRequestsPage.test.tsx`. Translation files:
+   none exist for the admin dashboard (see Part 1).
+2. *Library*: `libphonenumber-js` — maintained, ships full ISO calling-code/validation metadata, matches Roy's
+   explicit preference over hand-rolled regex.
+3. *Data format*: `therapists.contact_phone` stores the number as E.164 (e.g. `"+639171234567"`) or `NULL`.
+   No separate country/dial-code columns — country is re-derived from the E.164 value on read via
+   `libphonenumber-js`, so there's exactly one source of truth and nothing to keep in sync.
+4. *QA*:
+   - Verified with a standalone script against the actual `libphonenumber-js` install (not just reading the
+     code): `+639171234567` -> Philippines, valid, round-trips to the same E.164. `+61412345678` -> Australia,
+     valid, round-trips. `+14155552671` -> United States (the sensible NANP default for an ambiguous `+1`
+     number), valid, round-trips. `09171234567` typed with Philippines already selected -> correctly
+     normalizes to `+639171234567` (trunk-prefix stripping is handled by the library's country metadata, not
+     custom code). Free text (`"not a number"`) and a too-short number (`"12345"`) both correctly fail
+     validation and are not treated as save-able values.
+   - One real ambiguity surfaced during this testing, worth flagging rather than hiding: `+447911123456`
+     resolves to **Guernsey (GG)**, not United Kingdom, because Guernsey shares the `+44` calling code and this
+     particular mobile-number pattern falls in a range libphonenumber-js's metadata attributes to Guernsey —
+     this is exactly the "some calling codes are shared by multiple territories" case Roy's own spec called
+     out, and the country dropdown lets an admin correct it to United Kingdom in one click if that's what was
+     meant.
+   - `tsc --noEmit`: identical to the established 16-line pre-existing baseline (same errors, only line-number
+     shifts from the added comments) — no new type errors anywhere in this phase's changes.
+   - `npx jest` does not complete in this sandbox (a pre-existing, previously-documented limitation of this
+     environment, not specific to this phase) — could not run the actual React Testing Library suite here.
+     The 3 updated test files were reviewed by hand against the renamed strings/aria-labels they assert on.
+   - Not tested here: the actual desktop/mobile/RTL rendering of the new field in a running browser (no dev
+     server in this sandbox) — worth a quick visual check on Roy's end after deploying, particularly the
+     mobile stacked layout (`sm:flex-row` breakpoint) mentioned in his spec.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md package.json package-lock.json components/ui/PhoneNumberInput.tsx components/admin/TherapistEditForm.tsx components/admin/AddTherapistModal.tsx components/admin/TherapistsTable.tsx components/admin/AddUserModal.tsx components/admin/NotificationBell.tsx components/admin/AdminNav.tsx app/admin/layout.tsx app/admin/therapists/page.tsx "app/admin/therapists/[id]/page.tsx" app/admin/messages/page.tsx app/admin/sessions/page.tsx app/admin/bookings/page.tsx app/admin/match-requests/page.tsx app/admin/page.tsx app/admin/volunteer-applications/page.tsx tests/unit/TherapistsTable.test.tsx tests/unit/AddTherapistModal.test.tsx tests/unit/AdminMatchRequestsPage.test.tsx components/Footer.tsx components/admin/content/AboutSectionsEditor.tsx components/admin/content/HomeEditor.tsx app/layout.tsx components/SiteFooterSlot.tsx components/admin/content/FooterEditor.tsx
+git commit -m "Phase 125: CRM Therapists -> Our Professionals rename + international phone field; also commit still-pending files from earlier phases"
+git push
+```
+
+Note: `npm install libphonenumber-js` was already run in this environment (it's reflected in the
+`package.json`/`package-lock.json` changes in the command above) — running `npm install` again after pulling
+is still worth doing on Roy's end to make sure the `node_modules` folder actually has it before the next
+`next build`/deploy.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
