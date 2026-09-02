@@ -4674,17 +4674,44 @@ an approximation.
 - Also added a directional drop shadow (offset down-right) on the frame itself so it reads as hanging on a
   wall, closer to the reference's lighting, instead of the flat `shadow-xl` round 1 used.
 
-The back face (certificate-style title/description/CTA on hover) and all card copy/links are untouched in both
-rounds — every change is to the front face's visual treatment only.
+**Request (round 3):** Roy reported the live cards still didn't match the reference — asked to treat the
+reference photo as the source of truth and match its layout, colors, margins, and frame exactly.
+
+**Round 3 investigation and implementation:** Checked the live site first (git log confirmed round 2 was
+committed and pushed, so this wasn't a deploy problem) and compared it directly against the reference,
+pixel-sampling the reference image with PIL rather than eyeballing it. Two real gaps:
+- **Proportions were the actual bug.** The wood frame and cream mat were both a flat 10px, which is
+  imperceptible on a card-sized box — on the live site the colored canvas visually ran almost edge-to-edge
+  inside the frame with no visible mat. Sampling the reference directly: its wood frame is ~4% of the frame's
+  own width/height and its mat a further ~9% — both far thicker than 10px flat. Switched both to
+  percentage-based sizing (`inset-[6%]` for the wood border, `p-[9%]` on the mat) so the border stays
+  proportional at any card size instead of reading as a hairline.
+- **Wood tone trended too dark.** The frame gradient's third stop (`#8c6339`, a dark espresso-brown) doesn't
+  match the reference, which sampled as a fairly uniform light honey-oak (~#d2b494) with no strong dark
+  corner. Lightened the gradient to `#e0c193 → #cea877 → #c39a6c`.
+- **Colors were already correct — verified, not assumed.** Pixel-sampled all three canvas backgrounds against
+  the live site's actual token values: card 1 (`--clay-soft` `#f5eeda` vs. reference ~`#f0e6d8`), card 2
+  (`--accent` `#9ba283` vs. reference `#9b9f82` — a near-exact match), card 3 (`#5f7a91` vs. reference
+  `#627a90`). Same for the gold label pill's gradient stops (`#ecd48f`/`--clay` `#bfa046`/`--amber` `#8c6f1f`
+  vs. the reference's sampled light-to-dark gold range). None of these needed changing — confirmed before
+  touching anything, rather than re-guessing colors that were already right.
+- Verified the fix visually before committing: patched the live page's DOM/CSS directly in the browser to the
+  new values and screenshotted the result, confirming the mat and frame both read as distinct, proportional
+  layers before writing the same values into the source file.
+
+The back face (certificate-style title/description/CTA on hover) and all card copy/links are untouched across
+all three rounds — every change across this phase is to the front face's visual treatment only.
 
 **Verification:**
 - `tsc --noEmit`: same 16-line pre-existing baseline, no new errors (checked after each round).
 - No `HomeContent` fields, card copy, links, or the back-face flip content changed.
+- Round 3's proportional/color fix was visually confirmed against the live page (via a DOM patch + screenshot)
+  before landing in the source file, not just inferred from reading the code.
 
 ```
 del .git\index.lock
 git add EXECUTION_PLAN.md components/home/Paths.tsx components/Footer.tsx components/admin/content/AboutSectionsEditor.tsx components/admin/content/HomeEditor.tsx app/layout.tsx components/SiteFooterSlot.tsx components/admin/content/FooterEditor.tsx
-git commit -m "Phase 124: picture-frame front face for Home path cards (exact match to reference); also commit Phase 117/123's still-pending files"
+git commit -m "Phase 124 (round 3): fix path-card frame/mat proportions to match reference exactly; also commit Phase 117/123's still-pending files"
 git push
 ```
 

@@ -397,12 +397,23 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                           className="relative w-full flex-1 min-h-0"
                           style={{
                             background:
-                              "repeating-linear-gradient(95deg, rgba(255,255,255,0.16) 0px, rgba(255,255,255,0.16) 2px, transparent 2px, transparent 7px), linear-gradient(135deg, #ddb684 0%, #c99a63 45%, #8c6339 100%)",
+                              "repeating-linear-gradient(95deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 7px), linear-gradient(120deg, #e0c193 0%, #cea877 50%, #c39a6c 100%)",
                             boxShadow: "10px 14px 22px -8px rgba(35,25,15,0.4)",
                           }}
                         >
-                          {/* Mat */}
-                          <div className="absolute inset-[10px] flex items-center justify-center bg-[#f4efe3] p-2.5">
+                          {/* Mat — Phase 124 (round 3): Roy flagged the live
+                              cards as not matching the reference photo. Pixel-
+                              sampled the reference directly: the wood frame is
+                              ~4% of the frame's own width/height thick and the
+                              cream mat a further ~9% — both far thicker than
+                              this had (a flat 10px each, which read as barely
+                              a hairline on an actual card-sized box). Switched
+                              both to percentage-based sizing so the border
+                              stays proportional at any card size, and lightened
+                              the wood gradient to match the reference's fairly
+                              uniform honey-oak tone (sampled ~#d2b494) instead
+                              of trending into a dark espresso-brown corner. */}
+                          <div className="absolute inset-[6%] flex items-center justify-center bg-[#f4efe3] p-[9%]">
                             {/* Canvas */}
                             <div className={`flex h-full w-full items-center justify-center overflow-hidden ${frontStyle.bg} p-4`}>
                               <GesaMark colors={frontStyle.mark} className="h-[64%] w-[64%]" />
