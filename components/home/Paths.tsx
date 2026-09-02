@@ -370,13 +370,38 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                       outer face wrapper stays `overflow-visible` so the
                       badge dome can extend past the frame without being
                       clipped. */}
+                  {/* Phase 124 — Roy sent a new reference photo of the three
+                      cards' front face: an actual wall-hung picture frame
+                      (wood frame, cream mat, canvas, soft drop shadow) rather
+                      than the flat gold-bordered swatch used since Phase 100.
+                      Nested three layers to match — wood frame (gradient,
+                      simulating grain/bevel), a cream mat, then the existing
+                      per-card colored canvas with GesaMark centered — and
+                      swapped the 20px rounded corners for a slightly squared
+                      picture-frame corner (6px) to match the reference.
+                      `frontStyle.frame` (the old gold border color) is no
+                      longer used here since the wood frame replaces it, but
+                      the value is left in PATH_FRONT_STYLES rather than
+                      removed in case a future design reverts to a plain
+                      border. The gold badge dome mechanism (unchanged) still
+                      overlaps the frame's bottom edge. */}
                   {(() => {
                     const FrontIcon = PATH_FRONT_BADGE_ICONS[i] ?? PATH_FRONT_BADGE_ICONS[PATH_FRONT_BADGE_ICONS.length - 1];
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     return (
-                      <div className="absolute inset-0 overflow-visible rounded-[20px] [backface-visibility:hidden]">
-                        <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[20px] border-[7px] ${frontStyle.frame} ${frontStyle.bg} p-4 shadow-lg`}>
-                          <GesaMark colors={frontStyle.mark} className="h-[68%] w-[68%]" />
+                      <div className="absolute inset-0 overflow-visible rounded-[6px] [backface-visibility:hidden]">
+                        {/* Wood frame */}
+                        <div
+                          className="flex h-full w-full items-center justify-center rounded-[6px] p-[9px] shadow-xl"
+                          style={{ background: "linear-gradient(135deg, #dcb583 0%, #b98a56 45%, #8c6339 100%)" }}
+                        >
+                          {/* Mat */}
+                          <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-[#f4efe3] p-2.5">
+                            {/* Canvas */}
+                            <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[2px] ${frontStyle.bg} p-4`}>
+                              <GesaMark colors={frontStyle.mark} className="h-[64%] w-[64%]" />
+                            </div>
+                          </div>
                         </div>
                         {/* Gold badge dome — overlaps the frame's bottom edge,
                             per the reference image. Icon + label are separate

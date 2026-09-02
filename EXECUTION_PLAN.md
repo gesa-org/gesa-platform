@@ -4648,3 +4648,41 @@ production any longer.
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 124 — Home path cards: picture-frame front face
+
+**Request:** Roy sent a reference photo of the three "Choose your pathway" cards' front face — a wall-hung
+picture frame (light wood frame, cream mat, canvas, soft drop shadow) around each card's GesaMark artwork —
+and asked for the site's cards updated to match.
+
+**Implementation:** `components/home/Paths.tsx` — the front face of each flip card (Crisis/Veterans/Support,
+visible before hover) previously rendered as a single flat swatch: a 7px solid gold-toned border directly
+around the colored GesaMark canvas. Rebuilt as three nested layers to match the reference: an outer "wood
+frame" (a brown gradient standing in for grain/bevel), a cream "mat" inside it, and the existing per-card
+colored canvas with GesaMark centered inside that. Corner radius went from 20px to 6px to read as a picture
+frame rather than a rounded card. The gold badge dome (Crisis/Veterans/Support label, overlapping the frame's
+bottom edge) is unchanged — same mechanism, same position, same text. The back face (the certificate-style
+title/description/CTA shown on hover) is untouched. `PATH_FRONT_STYLES`' `frame` value (the old gold border
+color) is no longer read by this code path but was left in place rather than deleted, in case a future design
+brings back a plain border.
+
+**Verification:**
+- `tsc --noEmit`: same 16-line pre-existing baseline, no new errors.
+- No `HomeContent` fields, card copy, links, or the back-face flip content changed — this phase is a front-face
+  visual treatment only.
+
+```
+del .git\index.lock
+git add EXECUTION_PLAN.md components/home/Paths.tsx components/Footer.tsx components/admin/content/AboutSectionsEditor.tsx components/admin/content/HomeEditor.tsx app/layout.tsx components/SiteFooterSlot.tsx components/admin/content/FooterEditor.tsx
+git commit -m "Phase 124: picture-frame front face for Home path cards; also commit Phase 117/123's still-pending files"
+git push
+```
+
+Note: this command still bundles in `app/layout.tsx`, `components/SiteFooterSlot.tsx`,
+`components/admin/content/FooterEditor.tsx`, `components/Footer.tsx`, `components/admin/content/
+AboutSectionsEditor.tsx`, and `components/admin/content/HomeEditor.tsx` — all of Phase 117/123's work is still
+sitting uncommitted locally, so each phase's command block keeps re-including them until one of these commits
+actually gets run.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
