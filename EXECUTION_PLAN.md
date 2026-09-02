@@ -4651,30 +4651,40 @@ production any longer.
 
 ## Phase 124 — Home path cards: picture-frame front face
 
-**Request:** Roy sent a reference photo of the three "Choose your pathway" cards' front face — a wall-hung
-picture frame (light wood frame, cream mat, canvas, soft drop shadow) around each card's GesaMark artwork —
-and asked for the site's cards updated to match.
+**Request (round 1):** Roy sent a reference photo of the three "Choose your pathway" cards' front face — a
+wall-hung picture frame (light wood frame, cream mat, canvas, soft drop shadow) around each card's GesaMark
+artwork — and asked for the site's cards updated to match.
 
-**Implementation:** `components/home/Paths.tsx` — the front face of each flip card (Crisis/Veterans/Support,
-visible before hover) previously rendered as a single flat swatch: a 7px solid gold-toned border directly
-around the colored GesaMark canvas. Rebuilt as three nested layers to match the reference: an outer "wood
-frame" (a brown gradient standing in for grain/bevel), a cream "mat" inside it, and the existing per-card
-colored canvas with GesaMark centered inside that. Corner radius went from 20px to 6px to read as a picture
-frame rather than a rounded card. The gold badge dome (Crisis/Veterans/Support label, overlapping the frame's
-bottom edge) is unchanged — same mechanism, same position, same text. The back face (the certificate-style
-title/description/CTA shown on hover) is untouched. `PATH_FRONT_STYLES`' `frame` value (the old gold border
-color) is no longer read by this code path but was left in place rather than deleted, in case a future design
-brings back a plain border.
+**Round 1 implementation:** `components/home/Paths.tsx` — rebuilt the front face as three nested layers (wood
+frame, cream mat, colored canvas with GesaMark), corner radius 20px → 6px, gold label kept as an overlapping
+dome on the frame's bottom edge (unchanged mechanism/position from Phase 100).
+
+**Request (round 2):** Roy sent the identical reference image again, asking for an *exact* match rather than
+an approximation.
+
+**Round 2 implementation:** Compared side-by-side against the reference and closed three remaining gaps:
+- **Corners** — the reference's frame/mat/canvas all have sharp, square corners, not the 6px rounding round 1
+  kept. Removed all `border-radius` from this element.
+- **Frame texture** — was a single flat gradient; added a second, repeating diagonal gradient layered on top
+  (`repeating-linear-gradient`) to suggest wood grain, so the frame isn't a flat color block.
+- **Label position** — the biggest miss: the reference's gold label is a separate pill sitting *below* the
+  frame with a real gap, not a dome overlapping the frame's bottom edge. Restructured the front face from one
+  absolutely-positioned image with an overlay into a column (`flex flex-col`: frame fills the available height,
+  then a `gap-3`, then the pill in normal flow below it).
+- Also added a directional drop shadow (offset down-right) on the frame itself so it reads as hanging on a
+  wall, closer to the reference's lighting, instead of the flat `shadow-xl` round 1 used.
+
+The back face (certificate-style title/description/CTA on hover) and all card copy/links are untouched in both
+rounds — every change is to the front face's visual treatment only.
 
 **Verification:**
-- `tsc --noEmit`: same 16-line pre-existing baseline, no new errors.
-- No `HomeContent` fields, card copy, links, or the back-face flip content changed — this phase is a front-face
-  visual treatment only.
+- `tsc --noEmit`: same 16-line pre-existing baseline, no new errors (checked after each round).
+- No `HomeContent` fields, card copy, links, or the back-face flip content changed.
 
 ```
 del .git\index.lock
 git add EXECUTION_PLAN.md components/home/Paths.tsx components/Footer.tsx components/admin/content/AboutSectionsEditor.tsx components/admin/content/HomeEditor.tsx app/layout.tsx components/SiteFooterSlot.tsx components/admin/content/FooterEditor.tsx
-git commit -m "Phase 124: picture-frame front face for Home path cards; also commit Phase 117/123's still-pending files"
+git commit -m "Phase 124: picture-frame front face for Home path cards (exact match to reference); also commit Phase 117/123's still-pending files"
 git push
 ```
 

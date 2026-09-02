@@ -366,49 +366,57 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                       with an abstract recolored "swirl" mark
                       (GesaMark) centered on a solid card background —
                       same gold border, same overlapping badge dome
-                      mechanism, only what's inside the frame changed. The
-                      outer face wrapper stays `overflow-visible` so the
-                      badge dome can extend past the frame without being
-                      clipped. */}
-                  {/* Phase 124 — Roy sent a new reference photo of the three
-                      cards' front face: an actual wall-hung picture frame
-                      (wood frame, cream mat, canvas, soft drop shadow) rather
-                      than the flat gold-bordered swatch used since Phase 100.
-                      Nested three layers to match — wood frame (gradient,
-                      simulating grain/bevel), a cream mat, then the existing
-                      per-card colored canvas with GesaMark centered — and
-                      swapped the 20px rounded corners for a slightly squared
-                      picture-frame corner (6px) to match the reference.
-                      `frontStyle.frame` (the old gold border color) is no
-                      longer used here since the wood frame replaces it, but
-                      the value is left in PATH_FRONT_STYLES rather than
-                      removed in case a future design reverts to a plain
-                      border. The gold badge dome mechanism (unchanged) still
-                      overlaps the frame's bottom edge. */}
+                      mechanism, only what's inside the frame changed.
+                      Phase 124 (round 1) approximated a new reference photo
+                      (a wall-hung picture frame) as a rounded, overlapping-
+                      badge treatment. Phase 124 (round 2) — Roy sent the same
+                      reference again asking for an exact match, so this now
+                      follows it literally: square (not rounded) corners on
+                      the frame/mat/canvas, a textured wood-grain frame
+                      (layered gradients, not a flat one), a directional
+                      drop shadow like a hung painting, and — the biggest
+                      change — the gold label is no longer a dome overlapping
+                      the frame's bottom edge; it's the reference's own
+                      separate pill sitting below the frame with a real gap,
+                      so the face is now a column (frame, then gap, then
+                      pill) instead of one absolutely-positioned image with
+                      an overlay. `frontStyle.frame` (the old gold border
+                      color) is still unused here, kept in PATH_FRONT_STYLES
+                      in case a future design reverts to a plain border. */}
                   {(() => {
                     const FrontIcon = PATH_FRONT_BADGE_ICONS[i] ?? PATH_FRONT_BADGE_ICONS[PATH_FRONT_BADGE_ICONS.length - 1];
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     return (
-                      <div className="absolute inset-0 overflow-visible rounded-[6px] [backface-visibility:hidden]">
-                        {/* Wood frame */}
+                      <div className="absolute inset-0 flex flex-col items-center gap-3 [backface-visibility:hidden]">
+                        {/* Wood frame — layered gradients approximate grain
+                            instead of one flat tone, sharp corners (no
+                            border-radius) to match the reference exactly,
+                            and an offset directional shadow so it reads as
+                            hanging on a wall rather than sitting flush. */}
                         <div
-                          className="flex h-full w-full items-center justify-center rounded-[6px] p-[9px] shadow-xl"
-                          style={{ background: "linear-gradient(135deg, #dcb583 0%, #b98a56 45%, #8c6339 100%)" }}
+                          className="relative w-full flex-1 min-h-0"
+                          style={{
+                            background:
+                              "repeating-linear-gradient(95deg, rgba(255,255,255,0.16) 0px, rgba(255,255,255,0.16) 2px, transparent 2px, transparent 7px), linear-gradient(135deg, #ddb684 0%, #c99a63 45%, #8c6339 100%)",
+                            boxShadow: "10px 14px 22px -8px rgba(35,25,15,0.4)",
+                          }}
                         >
                           {/* Mat */}
-                          <div className="flex h-full w-full items-center justify-center rounded-[2px] bg-[#f4efe3] p-2.5">
+                          <div className="absolute inset-[10px] flex items-center justify-center bg-[#f4efe3] p-2.5">
                             {/* Canvas */}
-                            <div className={`flex h-full w-full items-center justify-center overflow-hidden rounded-[2px] ${frontStyle.bg} p-4`}>
+                            <div className={`flex h-full w-full items-center justify-center overflow-hidden ${frontStyle.bg} p-4`}>
                               <GesaMark colors={frontStyle.mark} className="h-[64%] w-[64%]" />
                             </div>
                           </div>
                         </div>
-                        {/* Gold badge dome — overlaps the frame's bottom edge,
-                            per the reference image. Icon + label are separate
-                            from the back face's badge/title (PATH_BADGE_ICONS /
-                            p.title) since they show at different flip states. */}
-                        <div className="pointer-events-none absolute bottom-0 left-1/2 flex w-[76%] -translate-x-1/2 translate-y-1/2 flex-col items-center gap-0.5 rounded-full px-3 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
-                          <FrontIcon size={16} className="text-espresso" aria-hidden="true" />
+                        {/* Gold label pill — sits below the frame with a
+                            visible gap, per the reference, rather than
+                            overlapping it. Icon + label are separate from
+                            the back face's badge/title (PATH_BADGE_ICONS /
+                            p.title) since they show at different flip
+                            states. */}
+                        <div className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
+                          <FrontIcon size={14} className="text-espresso" aria-hidden="true" />
                           <span className="text-[11px] font-semibold uppercase tracking-wide text-espresso">{p.frontLabel}</span>
                         </div>
                       </div>
