@@ -26,6 +26,12 @@ export async function POST(request: Request) {
   const clientPhone = (body?.clientPhone as string | undefined)?.trim() || null;
   const timeZone = (body?.timeZone as string | undefined) || null;
   const therapistName = (body?.therapistName as string | undefined) || "your matched therapist";
+  // Phase 128 — set when this handoff follows the new intake step (see
+  // /api/booking-intake and BookSessionButton.tsx). Links this event back
+  // to that submission, and flips its status from "intake_completed" to
+  // "diary_opened" so the intake record's own status reflects how far the
+  // booking flow actually got, not just that a form was filled in.
+  const intakeSubmissionId = (body?.intakeSubmissionId as string | undefined) || null;
 
   if (!therapistId || !diaryLink) {
     return NextResponse.json({ error: "therapistId and diaryLink are required" }, { status: 400 });
@@ -41,6 +47,7 @@ export async function POST(request: Request) {
       client_email: clientEmail,
       client_phone: clientPhone,
       time_zone: timeZone,
+      intake_submission_id: intakeSubmissionId,
     })
     .select("id")
     .maybeSingle();
@@ -53,6 +60,19 @@ export async function POST(request: Request) {
   // a server-only lookup to notify the therapist about a handoff this same
   // request just recorded, not a client-facing read.
   const adminSupabase = createAdminClient();
+
+  if (intakeSubmissionId) {
+    // booking_intake_forms has no public UPDATE policy at all (see the
+    // create_booking_intake_forms migration) — this admin-client write is
+    // the one sanctioned path, and only ever advances status forward
+    // (intake_completed -> diary_opened), never the reverse.
+    await adminSupabase
+      .from("booking_intake_forms")
+      .update({ status: "diary_opened" })
+      .eq("id", intakeSubmissionId)
+      .eq("status", "intake_completed");
+  }
+
   const { data: therapist } = await adminSupabase
     .from("therapists")
     .select("contact_email")

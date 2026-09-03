@@ -318,6 +318,41 @@ export type DiarySchedulingEventRow = {
   diary_link: string;
   status: DiarySchedulingStatus;
   created_at: string;
+  // Phase 128 — links back to the intake form the client completed right
+  // before being sent here. Nullable because it's backfilled going forward
+  // only, not retroactively on rows recorded before Phase 128 shipped.
+  intake_submission_id: string | null;
+};
+
+export type ParticipatedBefore = "yes" | "no";
+export type SessionsCount = "1" | "2" | "3" | "4" | "5" | "6" | "over_6";
+export type BookingIntakeStatus = "intake_completed" | "diary_opened";
+
+// Phase 128 — the new client-intake step required before a client reaches a
+// therapist's diary-link scheduler (see components/booking/BookingIntakeModal
+// and app/api/booking-intake/route.ts). Writes only ever happen server-side
+// via the service-role client, never a direct browser insert — deliberately
+// a stricter posture than the other public-facing tables in this schema,
+// given how much more personal data this one form collects at once (city,
+// birth year, phone, participation history) alongside the two consent
+// timestamps.
+export type BookingIntakeFormRow = {
+  id: string;
+  therapist_id: string;
+  therapist_name: string;
+  profile_id: string | null;
+  client_name: string;
+  client_email: string;
+  client_phone: string;
+  client_city: string;
+  client_birth_year: number;
+  participated_before: ParticipatedBefore;
+  sessions_count: SessionsCount;
+  agreed_terms_at: string;
+  agreed_privacy_at: string;
+  status: BookingIntakeStatus;
+  idempotency_key: string;
+  created_at: string;
 };
 
 // Phase 63 — a real, structured intake for the "become a volunteer
@@ -528,6 +563,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "diary_scheduling_events_therapist_id_fkey";
+            columns: ["therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      booking_intake_forms: {
+        Row: BookingIntakeFormRow;
+        Insert: Partial<BookingIntakeFormRow> &
+          Pick<
+            BookingIntakeFormRow,
+            | "therapist_id"
+            | "therapist_name"
+            | "client_name"
+            | "client_email"
+            | "client_phone"
+            | "client_city"
+            | "client_birth_year"
+            | "participated_before"
+            | "sessions_count"
+            | "agreed_terms_at"
+            | "agreed_privacy_at"
+            | "idempotency_key"
+          >;
+        Update: Partial<BookingIntakeFormRow>;
+        Relationships: [
+          {
+            foreignKeyName: "booking_intake_forms_therapist_id_fkey";
             columns: ["therapist_id"];
             isOneToOne: false;
             referencedRelation: "therapists";
