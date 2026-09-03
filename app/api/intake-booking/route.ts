@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmailSafely } from "@/lib/email/resend";
 import {
   sessionBookingConfirmationEmail,
@@ -109,9 +110,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "could not save booking" }, { status: 500 });
   }
 
+  // Phase 126 — this used the cookie-based `supabase` client (the `anon`
+  // Postgres role for an unauthenticated booker, which is the normal case
+  // here). Since contact_email/contact_phone had column-level SELECT
+  // revoked from `anon` as part of locking down the public directory/
+  // profile pages, that query would now silently return null for both
+  // fields on every guest booking — quietly breaking the therapist's own
+  // notification email and the post-booking WhatsApp link below. Switched
+  // to the service-role admin client for this one lookup: it's server-only
+  // code (never reaches the browser) doing a legitimate system operation
+  // — looking up who to notify after a booking THIS SAME REQUEST just
+  // created — not a client-facing read, so bypassing RLS/column grants
+  // here is correct, not a hole.
+  const adminSupabase = createAdminClient();
   let therapistContactEmail: string | null = null;
   let therapistContactPhone: string | null = null;
-  const { data: therapist } = await supabase
+  const { data: therapist } = await adminSupabase
     .from("therapists")
     .select("contact_email, contact_phone")
     .eq("id", therapistId)

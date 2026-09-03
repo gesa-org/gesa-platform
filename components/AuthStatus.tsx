@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { User, ChevronDown, ShieldCheck } from "lucide-react";
+import { User, ChevronDown, ShieldCheck, CalendarClock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthStatus() {
   const [email, setEmail] = useState<string | null | undefined>(undefined);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTherapist, setIsTherapist] = useState(false);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -17,6 +18,7 @@ export default function AuthStatus() {
     async function loadRole(userId: string) {
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
       setIsAdmin(profile?.role === "admin");
+      setIsTherapist(profile?.role === "therapist");
     }
 
     supabase.auth.getUser().then(({ data }) => {
@@ -26,7 +28,10 @@ export default function AuthStatus() {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setEmail(session?.user?.email ?? null);
       if (session?.user) loadRole(session.user.id);
-      else setIsAdmin(false);
+      else {
+        setIsAdmin(false);
+        setIsTherapist(false);
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -82,6 +87,15 @@ export default function AuthStatus() {
               className="flex items-center gap-1.5 border-t border-border px-4 py-2.5 text-[14px] font-medium text-primary transition-colors hover:bg-secondary"
             >
               <ShieldCheck size={15} /> CRM Dashboard
+            </Link>
+          )}
+          {isTherapist && (
+            <Link
+              href="/therapist"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-1.5 border-t border-border px-4 py-2.5 text-[14px] font-medium text-primary transition-colors hover:bg-secondary"
+            >
+              <CalendarClock size={15} /> My Dashboard
             </Link>
           )}
           <button

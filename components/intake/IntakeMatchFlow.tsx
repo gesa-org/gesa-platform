@@ -5,9 +5,9 @@ import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import IntakeBookingModal from "@/components/intake/IntakeBookingModal";
-import type { Tables } from "@/lib/database.types";
+import type { PublicTherapistRow } from "@/lib/database.types";
 
-type Match = { therapist: Tables<"therapists">; reasoning: string };
+type Match = { therapist: PublicTherapistRow; reasoning: string };
 
 // Phase 20 — replaced the old single-random-therapist assignment with a
 // short list (up to 3, from the same AI matching engine the Find Your

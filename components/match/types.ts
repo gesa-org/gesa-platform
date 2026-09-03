@@ -9,6 +9,9 @@ export type WizardAnswers = {
 };
 
 export type TherapistMatch = {
+  // Phase 126 — was `contact_phone` directly; the /api/match route no
+  // longer sends the raw number to the browser at all (see that route's
+  // comment), only this derived boolean.
   therapist: Pick<
     Tables<"therapists">,
     | "id"
@@ -20,8 +23,7 @@ export type TherapistMatch = {
     | "languages"
     | "gender"
     | "is_verified"
-    | "contact_phone"
-  >;
+  > & { has_whatsapp: boolean };
   reasoning: string;
 };
 

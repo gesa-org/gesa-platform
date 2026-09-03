@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Clock, Globe2, GraduationCap, ArrowLeft } from "lucide-react";
+import { BadgeCheck, Clock, Globe2, GraduationCap, ArrowLeft, MapPin, HeartHandshake } from "lucide-react";
 import { getTherapistBySlug } from "@/lib/queries";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
+import BookSessionButton from "@/components/therapists/BookSessionButton";
 
 export const revalidate = 60;
 
@@ -92,15 +93,37 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
             {therapist.gender && (
               <div className="flex items-center gap-2">{GENDER_LABEL[therapist.gender] ?? therapist.gender}</div>
             )}
+            {/* Phase 126 — country and fee/price note are new, non-
+                confidential fields from the source data; shown here using
+                the same icon-plus-text pattern as the fields above, and
+                simply omitted (not shown blank) when a record doesn't have
+                one yet. */}
+            {therapist.country && (
+              <div className="flex items-center gap-2">
+                <MapPin size={16} className="text-primary" />
+                {therapist.country}
+              </div>
+            )}
+            {therapist.price_note && (
+              <div className="flex items-center gap-2">
+                <HeartHandshake size={16} className="text-primary" />
+                {therapist.price_note}
+              </div>
+            )}
           </div>
 
+          {/* Phase 126 — was a plain <Link href="/intake">, which sent
+              every profile-page visitor into the generic intake flow
+              regardless of which therapist's page they were on. Swapped for
+              the same BookSessionButton the directory card uses, so this
+              page's booking action is this specific therapist's actual
+              diary-link-or-native flow, not a disconnected generic one —
+              matching Roy's "directory cards and individual profile pages
+              show consistent information" instruction. */}
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/intake"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-[15px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
-            >
-              Book a free session
-            </Link>
+            <div className="w-[220px]">
+              <BookSessionButton therapist={therapist} />
+            </div>
             <div className="w-[160px]">
               <MessageTherapistButton therapistId={therapist.id} />
             </div>

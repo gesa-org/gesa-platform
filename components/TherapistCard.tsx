@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck } from "lucide-react";
-import type { Tables } from "@/lib/database.types";
+import { BadgeCheck, MapPin } from "lucide-react";
+import type { PublicTherapistRow } from "@/lib/database.types";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
 import BookSessionButton from "@/components/therapists/BookSessionButton";
 
-export default function TherapistCard({ t }: { t: Tables<"therapists"> }) {
+export default function TherapistCard({ t }: { t: PublicTherapistRow }) {
   const initials = t.full_name
     .split(" ")
     .map((w) => w[0])
@@ -37,7 +37,17 @@ export default function TherapistCard({ t }: { t: Tables<"therapists"> }) {
         </div>
         <div className="flex-1 px-[18px] pb-1 pt-4">
           <h3 className="text-base font-semibold">{t.full_name}</h3>
-          <div className="mb-2 text-[13px] font-medium text-primary">{t.specialties?.[0] ?? ""}</div>
+          <div className="mb-1 text-[13px] font-medium text-primary">{t.specialties?.[0] ?? ""}</div>
+          {/* Phase 126 — country is new, non-confidential, shown so visitors
+              can tell where a therapist is based (matches the source data's
+              own "Country" field). Omitted entirely rather than shown blank
+              when a record doesn't have one yet. */}
+          {t.country && (
+            <div className="mb-2 flex items-center gap-1 text-[12px] text-muted-fg">
+              <MapPin size={12} className="flex-none" aria-hidden="true" />
+              {t.country}
+            </div>
+          )}
           <p className="mb-3 line-clamp-2 text-[13.5px] text-muted-fg">{t.short_summary}</p>
           <div className="flex flex-wrap gap-1.5">
             {t.languages.map((l) => (

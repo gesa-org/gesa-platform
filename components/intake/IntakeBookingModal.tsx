@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Mail, MessageCircle, Video, ArrowLeft, CalendarDays, CalendarCheck2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import type { ContactChannel, Tables } from "@/lib/database.types";
+import type { ContactChannel, PublicTherapistRow } from "@/lib/database.types";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const MIN_BIRTH_YEAR = CURRENT_YEAR - 100;
@@ -55,7 +55,7 @@ export default function IntakeBookingModal({
   onClose,
   onPickDifferentTherapist,
 }: {
-  therapist: Tables<"therapists">;
+  therapist: PublicTherapistRow;
   pathKey: string;
   onClose: () => void;
   onPickDifferentTherapist: () => void;
@@ -122,7 +122,14 @@ export default function IntakeBookingModal({
       setError("Please choose a time.");
       return;
     }
-    if (channel === "whatsapp" && !therapist.contact_phone) {
+    // Phase 126 — was `!therapist.contact_phone`. The public therapist
+    // object no longer carries the raw phone number at all (it comes from
+    // `therapists_public`, which doesn't select contact_phone/
+    // contact_email); `has_whatsapp` is a plain boolean computed
+    // server-side for exactly this check, so the UI can still gate the
+    // WhatsApp option without the number ever reaching the browser before
+    // a booking exists.
+    if (channel === "whatsapp" && !therapist.has_whatsapp) {
       setError("This therapist doesn't have WhatsApp connected yet — please choose Email or Zoom.");
       return;
     }

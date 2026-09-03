@@ -34,6 +34,11 @@ export default function BookingModal({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  // Phase 126 — the match object no longer carries a raw phone number
+  // (only the has_whatsapp boolean, for the pre-booking gate). The actual
+  // number, if there is one, only comes back from /api/match-booking after
+  // a real booking is created — never before.
+  const [therapistContactPhone, setTherapistContactPhone] = useState<string | null>(null);
 
   const t = match.therapist;
 
@@ -61,6 +66,8 @@ export default function BookingModal({
         }),
       });
       if (!res.ok) throw new Error("failed");
+      const data = await res.json().catch(() => null);
+      setTherapistContactPhone(data?.therapistContactPhone ?? null);
       setDone(true);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -92,10 +99,10 @@ export default function BookingModal({
               We&apos;ve sent your request to {t.full_name}. Check your email — you&apos;ll hear from us shortly to
               confirm your session.
             </p>
-            {answers.sessionFormat === "call" && t.contact_phone && (
+            {answers.sessionFormat === "call" && therapistContactPhone && (
               <a
                 href={whatsappLink(
-                  t.contact_phone,
+                  therapistContactPhone,
                   `Hi ${t.full_name}, I just requested a call session with GESA and wanted to reach out directly.`
                 )}
                 target="_blank"

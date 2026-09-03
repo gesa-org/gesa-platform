@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TherapistsDirectory from "@/components/TherapistsDirectory";
-import type { Tables } from "@/lib/database.types";
+import type { PublicTherapistRow } from "@/lib/database.types";
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
@@ -14,14 +14,12 @@ jest.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-function makeTherapist(overrides: Partial<Tables<"therapists">>): Tables<"therapists"> {
+function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistRow {
   return {
     id: overrides.id ?? "1",
     slug: "jane-doe",
     full_name: "Jane Doe",
     bio: null,
-    contact_email: null,
-    contact_phone: null,
     short_summary: "Warm, trauma-informed support.",
     specialties: ["Trauma Support"],
     languages: ["English"],
@@ -32,11 +30,12 @@ function makeTherapist(overrides: Partial<Tables<"therapists">>): Tables<"therap
     years_experience: null,
     credentials: null,
     is_verified: true,
-    is_active: true,
-    verified_at: null,
-    verified_by: null,
-    profile_id: null,
     photo_url: null,
+    country: null,
+    diary_link: null,
+    diary_link_status: "unset",
+    price_note: null,
+    has_whatsapp: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmailSafely } from "@/lib/email/resend";
 import {
   bookingConfirmationEmail,
@@ -49,9 +50,16 @@ export async function POST(request: Request) {
   // trusting anything the client sent — most of the 145 real therapists
   // don't have a linked Supabase Auth login yet, so this plain email column
   // (added in Phase 8) is the only reliable way to reach them directly.
+  //
+  // Phase 126 — switched from the cookie-based `supabase` client (anon role
+  // for this public request, now revoked SELECT on contact_email/
+  // contact_phone) to the service-role admin client. Same rationale as the
+  // identical fix in /api/intake-booking and /api/match-booking: this is a
+  // server-only notification lookup, not a client-facing read.
   let therapistContactEmail: string | null = null;
   if (matchedTherapistId) {
-    const { data: therapist } = await supabase
+    const adminSupabase = createAdminClient();
+    const { data: therapist } = await adminSupabase
       .from("therapists")
       .select("contact_email")
       .eq("id", matchedTherapistId)

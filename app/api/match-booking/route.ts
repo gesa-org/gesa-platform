@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmailSafely } from "@/lib/email/resend";
 import { matchConfirmationEmail, matchTeamNotificationEmail, therapistNewMatchEmail } from "@/lib/email/templates";
 import type { GenderPreference, SessionFormat } from "@/lib/database.types";
@@ -61,14 +62,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "could not save match request" }, { status: 500 });
   }
 
+  // Phase 126 — same issue and fix as /api/intake-booking: the cookie-based
+  // `supabase` client runs as `anon` for this public wizard, and
+  // contact_email/contact_phone had column-level SELECT revoked from `anon`.
+  // Using the service-role admin client here is a legitimate server-only
+  // lookup (notifying the therapist about a booking this same request just
+  // created), not a client-facing read.
   let therapistContactEmail: string | null = null;
+  let therapistContactPhone: string | null = null;
   if (selectedTherapistId) {
-    const { data: therapist } = await supabase
+    const adminSupabase = createAdminClient();
+    const { data: therapist } = await adminSupabase
       .from("therapists")
-      .select("contact_email")
+      .select("contact_email, contact_phone")
       .eq("id", selectedTherapistId)
       .maybeSingle();
     therapistContactEmail = therapist?.contact_email ?? null;
+    therapistContactPhone = therapist?.contact_phone ?? null;
   }
 
   const label = ENTRY_ROUTE_LABELS[sessionFormat] ?? sessionFormat;
@@ -102,5 +112,14 @@ export async function POST(request: Request) {
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
   ]);
 
-  return NextResponse.json({ toClient, toTeam, toTherapist });
+  return NextResponse.json({
+    toClient,
+    toTeam,
+    toTherapist,
+    // Only handed back to the browser when the client actually needs it for
+    // a WhatsApp deep link (a "call" session format), and only after a real
+    // match request row has been saved — never earlier, never for every
+    // visitor (mirrors /api/intake-booking's therapistContactPhone field).
+    therapistContactPhone: sessionFormat === "call" ? therapistContactPhone : null,
+  });
 }

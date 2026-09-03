@@ -5,7 +5,7 @@ import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
 import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
-import type { Tables } from "@/lib/database.types";
+import type { PublicTherapistRow } from "@/lib/database.types";
 import type { TherapistsDirectoryContent } from "@/lib/content";
 
 export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent = {
@@ -69,7 +69,7 @@ export default function TherapistsDirectory({
   therapists,
   content = THERAPISTS_DIRECTORY_CONTENT_FALLBACK,
 }: {
-  therapists: Tables<"therapists">[];
+  therapists: PublicTherapistRow[];
   content?: TherapistsDirectoryContent;
 }) {
   const [name, setName] = useState("");
@@ -93,7 +93,7 @@ export default function TherapistsDirectory({
       (!name || t.full_name.toLowerCase().includes(name.toLowerCase())) &&
       (!role || t.specialties.includes(role)) &&
       (!lang || t.languages.includes(lang)) &&
-      (!duration || t.session_lengths.includes(duration as Tables<"therapists">["session_lengths"][number])) &&
+      (!duration || t.session_lengths.includes(duration as PublicTherapistRow["session_lengths"][number])) &&
       (!gender || t.gender === gender)
   );
 
