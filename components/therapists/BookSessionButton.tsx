@@ -1,11 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { CalendarClock, ExternalLink, RefreshCcw } from "lucide-react";
 import IntakeBookingModal from "@/components/intake/IntakeBookingModal";
-import BookingIntakeModal from "@/components/booking/BookingIntakeModal";
+import BookingIntakeModal, { type IntakeSuccessDetails } from "@/components/booking/BookingIntakeModal";
+import SlotSelectionModal from "@/components/booking/SlotSelectionModal";
+import ScheduleReviewModal, { type ReviewDetails } from "@/components/booking/ScheduleReviewModal";
+import BookingSuccessModal from "@/components/booking/BookingSuccessModal";
 import Button from "@/components/ui/Button";
-import type { PublicTherapistRow } from "@/lib/database.types";
+import type { PublicTherapistRow, SessionFormat } from "@/lib/database.types";
 
 // "Book a Session" from the Our Therapists directory. Reuses the same
 // conflict-free scheduling flow built for the homepage's "Reach out now"
@@ -16,59 +19,87 @@ import type { PublicTherapistRow } from "@/lib/database.types";
 // session_bookings table (visible in the CRM at /admin/sessions). Tagged with
 // path "directory" so admins can tell it apart from the homepage entry paths.
 //
-// Phase 126 — branches on whether the therapist has a scheduling link:
-//   - diary_link set and diary_link_status !== "invalid": send the client
-//     straight to the therapist's own scheduling page in a new tab. We don't
-//     embed it — none of the three providers in use (Google Calendar
-//     appointment schedules, Calendly, simplybook.it) reliably support being
-//     framed, and a broken iframe is worse than a new tab. Recorded as a
-//     "opened" diary_scheduling_events row, never "confirmed" — there's no
-//     callback from any of these providers telling us the client actually
-//     picked a slot.
-//   - otherwise: unchanged native date/time picker flow below.
-//
-// Phase 128 — the diary-link branch no longer opens the scheduler
-// immediately on click. It now opens BookingIntakeModal first ("Before you
-// book your session"); only once that intake form is validated and saved
-// does this component open the therapist's actual scheduler — the same
-// `openDiaryLink` function as before, just called from `onSuccess` instead
-// of directly from the button's `onClick`. The therapist this opens is
-// always whichever `therapist` prop this specific button instance was
-// rendered with — there's exactly one BookSessionButton per therapist card/
-// profile, so there's no shared state that could point the modal at the
-// wrong professional's calendar.
+// Phase 126 — branches on whether the therapist has a scheduling link.
+// Phase 128 — the diary-link branch requires the intake modal first.
+// Phase 129 — the full flow after intake: open the therapist's own
+// calendar -> client returns and self-reports the slot they picked (no
+// diary provider in use gives this app a webhook for the real selection) ->
+// review screen -> Confirm schedule -> success screen. Every step below is
+// scoped to this one `therapist` prop; there is exactly one
+// BookSessionButton per therapist card/profile, so there is no shared state
+// that could point any of these modals at a different professional's
+// calendar or confirmation.
+type Stage =
+  | "idle"
+  | "intake"
+  | "openingCalendar"
+  | "awaitingReturn"
+  | "calendarError"
+  | "selectingSlot"
+  | "reviewing"
+  | "success";
+
+type SlotSelection = {
+  selectedDate: string;
+  selectedStartTime: string;
+  selectedEndTime: string;
+  durationMinutes: number;
+  timeZone: string;
+  appointmentType: SessionFormat;
+};
+
 export default function BookSessionButton({ therapist }: { therapist: PublicTherapistRow }) {
-  const [open, setOpen] = useState(false);
-  const [showIntake, setShowIntake] = useState(false);
-  const [calendarError, setCalendarError] = useState(false);
-  const [pendingIntakeId, setPendingIntakeId] = useState<string | null>(null);
-  // Guards against firing a duplicate diary_scheduling_events row if
-  // someone double-clicks "Try again" after the calendar already opened
-  // once, or comes back and re-triggers the same successful intake.
-  const recordedRef = useRef(false);
+  const [open, setOpen] = useState(false); // native flow modal
+  const [stage, setStage] = useState<Stage>("idle");
+  // The intake record's id — kept around separately from `eventId` because
+  // a popup-blocked retry can happen *before* `/api/diary-scheduling` ever
+  // returns an event id (the failure is in opening the window itself, not
+  // in recording it), so retrying still needs to know which already-saved
+  // intake to hand off.
+  const [intakeId, setIntakeId] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
+  const [clientDetails, setClientDetails] = useState<IntakeSuccessDetails | null>(null);
+  const [slot, setSlot] = useState<SlotSelection | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmPending, setConfirmPending] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    therapistName: string;
+    date: string;
+    startTime: string;
+    durationMinutes: number | null;
+    timeZone: string | null;
+    referenceNumber: string;
+    clientEmail: string;
+  } | null>(null);
 
   const hasDiaryLink = Boolean(therapist.diary_link) && therapist.diary_link_status !== "invalid";
 
-  function openDiaryLink(intakeId: string) {
+  function resetAll() {
+    setStage("idle");
+    setIntakeId(null);
+    setEventId(null);
+    setClientDetails(null);
+    setSlot(null);
+    setConfirmError(null);
+  }
+
+  // Opens the therapist's own calendar and records the handoff. Called both
+  // right after a successful intake submission, and again from "Try again"
+  // if the popup was blocked the first time, and again from "Back to
+  // calendar" on the review screen — always the same therapist's diary_link,
+  // never anything else.
+  async function openCalendar(forIntakeId: string) {
     if (!therapist.diary_link) return;
+    setIntakeId(forIntakeId);
+    setStage("openingCalendar");
     const popup = window.open(therapist.diary_link, "_blank", "noopener,noreferrer");
     if (!popup) {
-      // Most likely a popup blocker — the intake record is already saved
-      // (intakeId proves it), so this is purely "try opening the calendar
-      // again," not "fill out the form again."
-      setPendingIntakeId(intakeId);
-      setCalendarError(true);
+      setStage("calendarError");
       return;
     }
-    setCalendarError(false);
-    setPendingIntakeId(null);
-    if (!recordedRef.current) {
-      recordedRef.current = true;
-      const timeZone = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
-      // Fire-and-forget — a failed notification shouldn't block the client
-      // from reaching the therapist's scheduling page, which already
-      // happened above.
-      fetch("/api/diary-scheduling", {
+    const timeZone = typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : null;
+    try {
+      const res = await fetch("/api/diary-scheduling", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -76,52 +107,176 @@ export default function BookSessionButton({ therapist }: { therapist: PublicTher
           diaryLink: therapist.diary_link,
           therapistName: therapist.full_name,
           timeZone,
-          intakeSubmissionId: intakeId,
+          intakeSubmissionId: forIntakeId,
         }),
-      }).catch(() => {});
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.id) throw new Error("no id");
+      setEventId(data.id as string);
+      setStage("awaitingReturn");
+    } catch {
+      setStage("calendarError");
     }
   }
 
-  function onIntakeSuccess(intakeId: string) {
-    setShowIntake(false);
-    openDiaryLink(intakeId);
+  function onIntakeSuccess(newIntakeId: string, details: IntakeSuccessDetails) {
+    setClientDetails(details);
+    openCalendar(newIntakeId);
+  }
+
+  function onSlotSelected(selection: SlotSelection) {
+    setSlot(selection);
+    setStage("reviewing");
+  }
+
+  async function onConfirm() {
+    if (!eventId) return;
+    setConfirmPending(true);
+    setConfirmError(null);
+    try {
+      const res = await fetch("/api/diary-appointment/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setConfirmError(data?.error || "Something went wrong — please try again.");
+        return;
+      }
+      setSuccessData({
+        therapistName: data.therapistName ?? therapist.full_name,
+        date: data.selectedDate ?? slot?.selectedDate ?? "",
+        startTime: data.selectedStartTime ?? slot?.selectedStartTime ?? "",
+        durationMinutes: data.durationMinutes ?? slot?.durationMinutes ?? null,
+        timeZone: data.timeZone ?? slot?.timeZone ?? null,
+        referenceNumber: data.referenceNumber ?? `GESA-${eventId.slice(0, 8).toUpperCase()}`,
+        clientEmail: data.clientEmail ?? clientDetails?.clientEmail ?? "",
+      });
+      setStage("success");
+    } catch {
+      setConfirmError("Something went wrong — please try again.");
+    } finally {
+      setConfirmPending(false);
+    }
+  }
+
+  async function onCancelBooking() {
+    if (eventId) {
+      fetch("/api/diary-appointment/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId }),
+      }).catch(() => {});
+    }
+    resetAll();
   }
 
   if (hasDiaryLink) {
+    const specialty = therapist.specialties?.[0] ?? null;
+    const reviewDetails: ReviewDetails | null =
+      slot && clientDetails
+        ? {
+            therapistName: therapist.full_name,
+            therapistSpecialty: specialty,
+            selectedDate: slot.selectedDate,
+            selectedStartTime: slot.selectedStartTime,
+            selectedEndTime: slot.selectedEndTime,
+            timeZone: slot.timeZone,
+            appointmentType: slot.appointmentType,
+            clientName: clientDetails.clientName,
+            clientEmail: clientDetails.clientEmail,
+            clientPhone: clientDetails.clientPhone,
+            clientCity: clientDetails.clientCity,
+          }
+        : null;
+
     return (
       <>
         <button
-          onClick={() => {
-            setCalendarError(false);
-            setShowIntake(true);
-          }}
+          onClick={() => setStage("intake")}
           className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-600"
         >
           <CalendarClock size={14} /> Choose a date and time <ExternalLink size={12} />
         </button>
-        {showIntake && (
+
+        {stage === "intake" && (
           <BookingIntakeModal
             therapistId={therapist.id}
             therapistName={therapist.full_name}
-            onClose={() => setShowIntake(false)}
+            onClose={resetAll}
             onSuccess={onIntakeSuccess}
           />
         )}
-        {calendarError && !showIntake && (
+
+        {stage === "openingCalendar" && (
+          <div className="mt-2 rounded-xl bg-secondary/60 px-3.5 py-3 text-[13px] text-muted-fg" role="status">
+            Opening {therapist.full_name}&apos;s calendar…
+          </div>
+        )}
+
+        {stage === "calendarError" && (
           <div className="mt-2 flex flex-col items-start gap-2 rounded-xl bg-destructive/10 px-3.5 py-3">
             <p className="text-[13px] text-destructive">
               We couldn&apos;t open {therapist.full_name}&apos;s calendar — your details are already saved, so
               you won&apos;t need to fill out the form again.
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => pendingIntakeId && openDiaryLink(pendingIntakeId)}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => intakeId && openCalendar(intakeId)}>
               <RefreshCcw size={13} /> Try again
             </Button>
           </div>
+        )}
+
+        {stage === "awaitingReturn" && (
+          <div className="mt-2 flex flex-col items-start gap-2 rounded-xl border border-border bg-secondary/50 px-3.5 py-3">
+            <p className="text-[13px] text-muted-fg">
+              Once you&apos;ve picked a time on {therapist.full_name}&apos;s calendar tab, come back here to
+              finish your booking.
+            </p>
+            <Button type="button" size="sm" onClick={() => setStage("selectingSlot")}>
+              I selected a time — continue
+            </Button>
+          </div>
+        )}
+
+        {stage === "selectingSlot" && eventId && (
+          <SlotSelectionModal
+            eventId={eventId}
+            therapistName={therapist.full_name}
+            onClose={() => setStage("awaitingReturn")}
+            onSuccess={onSlotSelected}
+          />
+        )}
+
+        {stage === "reviewing" && reviewDetails && (
+          <ScheduleReviewModal
+            details={reviewDetails}
+            pending={confirmPending}
+            error={confirmError}
+            onConfirm={onConfirm}
+            onBackToCalendar={() => {
+              setConfirmError(null);
+              // Literally reopens the therapist's own calendar tab again
+              // (same diary_link, same intake record) rather than just
+              // re-showing the self-report form — "back to calendar" should
+              // actually go back to the calendar.
+              if (intakeId) openCalendar(intakeId);
+            }}
+            onCancel={onCancelBooking}
+          />
+        )}
+
+        {stage === "success" && successData && (
+          <BookingSuccessModal
+            therapistName={successData.therapistName}
+            date={successData.date}
+            startTime={successData.startTime}
+            durationMinutes={successData.durationMinutes}
+            timeZone={successData.timeZone}
+            referenceNumber={successData.referenceNumber}
+            clientEmail={successData.clientEmail}
+            onClose={resetAll}
+          />
         )}
       </>
     );

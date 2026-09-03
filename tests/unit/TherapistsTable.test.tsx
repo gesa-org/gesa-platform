@@ -18,9 +18,9 @@ jest.mock("@/lib/supabase/client", () => ({
 }));
 
 const THERAPISTS: TherapistListRow[] = [
-  { id: "t1", photo_url: null, full_name: "Karin Horen", languages: ["English", "Hebrew"], is_active: true },
-  { id: "t2", photo_url: null, full_name: "Dana Cohen", languages: ["English"], is_active: true },
-  { id: "t3", photo_url: null, full_name: "Yossi Levi", languages: ["Hebrew"], is_active: false },
+  { id: "t1", photo_url: null, full_name: "Karin Horen", languages: ["English", "Hebrew"], is_active: true, diary_link: null, diary_link_status: "unset" },
+  { id: "t2", photo_url: null, full_name: "Dana Cohen", languages: ["English"], is_active: true, diary_link: null, diary_link_status: "unset" },
+  { id: "t3", photo_url: null, full_name: "Yossi Levi", languages: ["Hebrew"], is_active: false, diary_link: null, diary_link_status: "unset" },
 ];
 
 describe("TherapistsTable", () => {

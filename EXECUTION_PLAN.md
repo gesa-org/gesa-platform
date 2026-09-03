@@ -5162,4 +5162,252 @@ Phase 126 before either was pushed. Two leftover scratch files from earlier phon
 the folder directly whenever convenient; they're deliberately left out of the `git add` above.
 
 ---
+
+## Phase 128 — required client-intake step before the diary-link scheduler
+
+**Request:** insert a mandatory client-intake modal between clicking "Choose a date and time" on a therapist
+profile/card and actually reaching that therapist's diary-link scheduler — the scheduler must not open until
+the intake form is validated and saved, and must always be the same therapist's own scheduler the button was
+clicked on.
+
+**Inspected first, per Roy's request, before changing anything:** the booking button is
+`components/therapists/BookSessionButton.tsx` — a single shared component rendered once per therapist (on both
+the directory card and the profile page), so there's exactly one component instance per therapist and no shared
+state that could point a modal at the wrong professional's calendar. Its diary-link branch (`hasDiaryLink`) was
+calling `window.open(therapist.diary_link, ...)` directly from the button's `onClick`, then a fire-and-forget
+`POST /api/diary-scheduling` to log the handoff (Phase 126). The data model already had a client-intake pattern
+to follow — `session_bookings` (via `components/intake/IntakeBookingModal.tsx` + `/api/intake-booking`) already
+collects name/email/phone/city/birth-year plus two consent timestamps for the *native* date/time-picker flow —
+so this phase is that same shape, applied to the diary-link flow, plus the two new dropdowns Roy's spec asked
+for. Auth: `lib/supabase/server.ts`'s cookie-based client can identify a signed-in user via `auth.getUser()`
+without requiring one — exactly what "client/user ID when logged in" needed, no new auth work required.
+
+**New table, `booking_intake_forms`** (migration `create_booking_intake_forms`): `therapist_id`, `therapist_name`
+(denormalized snapshot), `profile_id` (nullable — set from the signed-in user, if any), `client_name`,
+`client_email`, `client_phone`, `client_city`, `client_birth_year`, `participated_before` (`'yes'|'no'`),
+`sessions_count` (`'1'..'6'|'over_6'`), `agreed_terms_at`/`agreed_privacy_at` (timestamps, not booleans — same
+"record *when* consent was given" pattern as `session_bookings`), `status` (`'intake_completed'` ->
+`'diary_opened'`), and `idempotency_key` (unique). **Deliberately stricter RLS than every other public-facing
+table in this schema**: no public INSERT or UPDATE policy at all — only `booking_intake_forms_admin_read` and a
+`booking_intake_forms_therapist_read` (own therapist's rows only), both keyed the same way as every other
+`*_therapist_read` policy in this schema. All writes happen through the service-role client inside the new
+`/api/booking-intake` route — the browser never talks to this table directly. This is a tighter posture than
+`session_bookings`/`match_requests`/`diary_scheduling_events` (which do allow public INSERT), a deliberate choice
+given how much more personal data lands in one row here (city, birth year, phone, participation history)
+alongside two consent timestamps — flagging this as a judgment call, not something Roy specifically asked for,
+because it's worth knowing this table behaves differently from its siblings. Also added
+`diary_scheduling_events.intake_submission_id` (nullable FK) so a diary-open event can point back at the intake
+that preceded it, per "ensure the intake data is included or linked to the final appointment booking record."
+
+**`app/api/booking-intake/route.ts` (new):** re-validates everything the client already validated (name, email
+format, phone via digit-count, city, birth year + the same 18-and-over rule as `/api/intake-booking`, both
+dropdowns against their allowed values, both consent booleans) — a direct API call could otherwise skip every
+client-side check. Looks up the signed-in user (if any) via the normal cookie-based client purely to get
+`profile_id`, then does the actual write via `createAdminClient()`. **Idempotent by upsert on `idempotency_key`**:
+the client generates one opaque token per therapist (persisted in `sessionStorage`, not sent anywhere until
+the first real submit) and resends the same token on every retry for that therapist in that browser session —
+a resubmit after a validation fix, or reopening the modal after closing it, updates the one existing row instead
+of creating a second one. This is "idempotent where feasible," not absolute: a hard page reload clears
+`sessionStorage`, so a genuinely new browser session generates a new token and thus a new row if the client
+starts over from scratch — an accepted, documented limit rather than a hidden gap.
+
+**New components**, following the structure Roy suggested:
+- `components/booking/BookingIntakeModal.tsx` — wraps the site's one existing shared `Modal`
+  (`components/ui/Modal.tsx`, already used by every other modal on the site: portal-to-`document.body`,
+  backdrop-click-to-close, Escape-to-close, enter/exit transition) rather than building a second modal shell.
+  Adds one thing `Modal` doesn't already do for any of its callers: a focus trap scoped to this dialog's own
+  content (Tab/Shift+Tab wraps within the modal instead of escaping to the page behind it). Built as a local
+  addition inside this new component specifically so it doesn't change focus behavior for every other modal on
+  the site at once — a deliberately narrow, low-risk way to meet the accessibility requirement for *this* flow
+  without touching a component nine other flows depend on.
+- `components/booking/BookingIntakeForm.tsx` — all seven fields plus both dropdowns plus both consent
+  checkboxes, inline per-field error messages (`aria-invalid`/`aria-describedby` wired to each), the phone field
+  reusing the existing `PhoneNumberInput` (Phase 125's libphonenumber-js-backed component, not a second
+  hand-rolled phone field), "Continue to calendar" as the primary CTA (disabled while submitting), and a
+  "Cancel" secondary action. The sessions-count dropdown is always visible and always required regardless of
+  the "Did you participate in a meeting?" answer, exactly as specified — no conditional hide/show logic exists
+  for it. On a save failure, the already-typed values are never cleared and a "Try again" button re-sends the
+  exact same payload (the upsert-by-`idempotency_key` behavior above) rather than asking the client to retype
+  anything.
+- `components/therapists/BookSessionButton.tsx` (updated, not replaced) — the diary-link branch's button now
+  opens `BookingIntakeModal` instead of calling `window.open` directly. `onSuccess` (fired once the intake API
+  call returns a real id) is what now calls the *same* `openDiaryLink` function this component already had —
+  unchanged apart from now also passing `intakeSubmissionId` through to `/api/diary-scheduling`. If
+  `window.open` returns null (popup blocked — the closest thing to a detectable "calendar failed to load" in a
+  same-tab flow with no iframe), the component shows an inline error with its own "Try again" button that calls
+  `openDiaryLink` again with the already-saved `intakeId` — the intake form is never shown a second time, since
+  the data behind it was already saved successfully.
+
+**Flagging one thing rather than silently applying it:** Roy's spec's consent-checkbox links point to
+`https://planetherapyglobal.org/en/terms-and-conditions-of-website/` and
+`https://planetherapyglobal.org/en/our-privacy-policy/` — a different domain than gesa-platform.vercel.app
+itself (which has its own `/terms-and-conditions` and `/privacy-policy` pages, still used unchanged by the
+*native* booking flow's `IntakeBookingModal`). Implemented exactly as specified — both links open in a new tab
+to those exact `planetherapyglobal.org` URLs — but flagging this cross-domain difference explicitly in case it
+was a copy-paste from a different organization's template rather than intentional; easy to swap to GESA's own
+pages if that's the case.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline as every prior phase, zero new
+errors. Not tested: an actual click-through in a live browser (no dev server in this sandbox) — particularly
+worth checking on Roy's end after deploying: the focus trap actually cycles correctly with a screen reader/
+keyboard-only pass, the popup-blocked "Try again" path in a browser that actually blocks the `window.open` call,
+and that a real diary link (e.g. Bertrand Finckler's) opens correctly after intake completes.
+
+**Files changed:** `lib/database.types.ts` (new `BookingIntakeFormRow`/`ParticipatedBefore`/`SessionsCount`/
+`BookingIntakeStatus` types, `diary_scheduling_events.intake_submission_id`), `app/api/booking-intake/route.ts`
+(new), `app/api/diary-scheduling/route.ts` (accepts/links `intakeSubmissionId`, advances the intake row's
+status), `components/booking/BookingIntakeModal.tsx` (new), `components/booking/BookingIntakeForm.tsx` (new),
+`components/therapists/BookSessionButton.tsx`. Database: 1 migration (`create_booking_intake_forms`) against
+Production project `iddeoavrlnvwwfopsacy`.
+
+```
+del .git\index.lock
+git add lib/database.types.ts app/api/booking-intake app/api/diary-scheduling/route.ts components/booking components/therapists/BookSessionButton.tsx EXECUTION_PLAN.md
+git commit -m "Phase 128: required client-intake modal before diary-link scheduler handoff"
+git push
+```
+
+---
+
+## Phase 129 — diary-link connection, schedule review, confirm, and success notification
+
+**Request:** complete the diary-link booking journey Phase 128 started — connect "Continue to calendar" to the
+selected therapist's actual diary link, add a "Review your appointment" screen once the client picks a time, a
+real "Confirm schedule" step that only then creates the appointment record, and a "Your session has been
+scheduled" success screen — plus admin visibility into which professionals have a working diary link.
+
+**Inspected first, per Roy's request:** the "Continue to calendar" -> diary-link connection Roy's spec described
+as missing was **already built in Phase 128** (`BookSessionButton.tsx`'s `onIntakeSuccess` already called
+`openDiaryLink`, opening `therapist.diary_link` in a new tab, scoped per-component so it's always the correct
+therapist). That phase just hadn't been pushed/deployed yet when this request came in, which is almost
+certainly why it read as missing from the live site. The genuinely new asks — review, confirm, and success
+screens tied to a *real selected time* — ran into a hard technical wall that needed resolving before writing
+any code: **none of the three diary providers in use (Google Calendar appointment schedules, Calendly,
+simplybook.it) are connected to this app via API, OAuth, or webhook.** They're public links a therapist pasted
+into their own profile, not integrated accounts. So there is no way for this app to know what date/time a
+client actually picked on that external page, or whether they finished booking at all.
+
+**Presented this to Roy as a decision before building anything** (per this engagement's "flag rather than
+silently build the wrong thing" pattern) — three options: (1) have the client self-report the slot they picked
+after returning from the calendar tab, honestly labeled as client-reported rather than verified; (2) build a
+real Calendly-only webhook integration (technically possible, but a much bigger, separate multi-phase project,
+and wouldn't cover the majority of therapists who use Google Calendar or simplybook.it links instead); (3) skip
+a fake "confirmed" state for the diary-link flow entirely and reserve real confirmation for the native
+date/time-picker flow, which already has it. **Roy chose option 1.** Every design decision below flows from
+that: "confirmed" in this flow means *the client told GESA they booked this time*, not something GESA verified
+against the therapist's real calendar — and that distinction is stated explicitly in the UI, the emails, and a
+new `slot_source` column, specifically so nobody downstream (Roy, an admin, a therapist, or a future developer)
+mistakes this data for provider-verified.
+
+**Extended `diary_scheduling_events`** (migration `extend_diary_scheduling_events_full_lifecycle`) rather than
+creating a separate "appointments" table — it was already the row Phase 126/128 created the moment a client is
+handed off, and already the thing the therapist dashboard reads, so a new table would have just duplicated it
+under a different name. Renamed its `status` values from the old two-state `opened`/`confirmed` to the full
+six-state lifecycle Roy's spec asked for: `calendar_opened -> slot_selected -> pending_confirmation -> confirmed`,
+or `cancelled`/`failed` off any of those (existing rows with `status = 'opened'` were migrated to
+`calendar_opened` in the same migration). Added `selected_date`/`selected_start_time`/`selected_end_time`/
+`duration_minutes`/`appointment_type`/`external_booking_id`/`confirmed_at`, and — the important one —
+`slot_source`, currently always `'client_reported'` (a `check` constraint only allows that one value today; a
+real future provider integration would add `'provider_webhook'` as a second, and this is the column that would
+let the UI/emails tell the two apart going forward).
+
+**New API routes**, both writing exclusively through the service-role client (this table has no public UPDATE
+policy, same posture as `booking_intake_forms`):
+- `POST /api/diary-appointment/select-slot` — the "otherwise capture the selected slot" fallback the spec
+  itself anticipated needing for a provider with no callback. Takes the client's self-reported date/start-end
+  time/duration/timezone/appointment type, validates the date isn't in the past, and advances the event to
+  `slot_selected`. Rejects if the event is already `confirmed`/`cancelled`, but otherwise allows re-reporting
+  (covers "Back to calendar" from the review screen).
+- `POST /api/diary-appointment/confirm` — the actual "Confirm schedule" write. Validates a therapist, a
+  completed intake record (with both consent timestamps — not just any intake row), and a self-reported slot
+  all exist before writing anything; is idempotent (calling it twice on an already-`confirmed` event just
+  returns success again rather than erroring or double-sending emails); sets `status = 'confirmed'` +
+  `confirmed_at`; generates a reference number (`GESA-` + the first 8 characters of the event id); sends three
+  emails (client, therapist, admin — see below); returns everything the success screen needs in one response.
+- `POST /api/diary-appointment/cancel` — the optional "Cancel booking" action from the review screen; simply
+  marks the event `cancelled` if it isn't already `confirmed`.
+
+**No real "slot became unavailable" check exists**, and couldn't meaningfully — GESA never holds an actual
+reservation against an external, uncontrolled calendar the way `session_bookings`' DB unique constraint holds a
+real one for the native flow. The confirm route's error handling is still shaped the same way (validate, fail
+clearly, let the client retry) so a real provider integration could plug into the same shape later, but today
+the only realistic failure is a missing/stale event id, not a genuine double-booking. Flagging this rather than
+building a fake unavailability check against data GESA doesn't actually have.
+
+**New UI, wired into `BookSessionButton.tsx`'s diary-link branch** (a small state machine —
+`idle -> intake -> openingCalendar -> awaitingReturn -> selectingSlot -> reviewing -> success`, plus a
+`calendarError` branch — all scoped to the one therapist this button instance was rendered for):
+- **"Opening [Therapist]'s calendar…"** — the loading state Roy's spec asked for by name, shown for the brief
+  gap between `window.open` succeeding and `/api/diary-scheduling` confirming the handoff was recorded.
+- An **"I selected a time — continue"** prompt once that handoff is recorded — this is the return path the spec
+  required ("ensure the user can return to GESA after selecting the appointment slot"), since there's no
+  callback from the external tab telling this app the client is done.
+- `components/booking/SlotSelectionModal.tsx` — the self-report form (date, start time, session length →
+  computed end time, time zone pre-filled from the browser, session type).
+- `components/booking/ScheduleReviewModal.tsx` — "Review your appointment," showing therapist name + specialty,
+  date, time range, time zone, session type, and the client's own name/email/phone/city from the intake record
+  — every field Roy's spec listed. "Confirm schedule" (primary), "Back to calendar" (secondary — literally
+  reopens the therapist's real diary link again, not just the self-report form, since "back to calendar" should
+  mean the calendar), "Cancel booking" (optional per spec, implemented).
+- `components/booking/BookingSuccessModal.tsx` — "Your session has been scheduled," with the exact example
+  message shape from the spec, the reference number, session length, and a note to also expect a separate
+  confirmation from the therapist's own scheduling system (since GESA doesn't control or see that one). "View my
+  appointments" was **not added** — there is no client-facing "my bookings" page anywhere in this app today
+  (only the therapist dashboard from Phase 127, and an account-settings page), and Roy's own spec made that
+  action conditional on one existing ("if the user has an account/dashboard"). Flagging this as not built rather
+  than linking to a page that doesn't exist. "Back to Our Professionals" and "Close" are both present.
+- The appointment is only ever created/finalized inside `onConfirm`, which calls `/api/diary-appointment/confirm`
+  — nothing before that point writes a `confirmed` status anywhere, matching "do not treat submission of the
+  intake form as a confirmed appointment."
+
+**Notifications** (new templates in `lib/email/templates.ts`): a client confirmation
+(`diaryAppointmentClientConfirmationEmail`), a therapist notification
+(`diaryAppointmentTherapistNotificationEmail`), and a team/admin notification
+(`diaryAppointmentTeamNotificationEmail`) — all three explicitly worded around "you/they reported booking this,"
+never implying GESA independently verified it, continuing the same honesty pattern as every diary-link email
+since Phase 126.
+
+**Admin visibility** (`components/admin/TherapistsTable.tsx`, `app/admin/therapists/page.tsx`): the professionals
+list now shows a "Diary link" column with three states — "No diary link" (secondary/neutral), "Link needs
+review" (destructive-colored, for `diary_link_status = 'invalid'`), "Diary link set" (primary-colored) — visible
+across the whole list, not just after opening each professional's edit page. **Did not auto-gate `is_active`
+on having a valid diary link** — a therapist with no diary link still books correctly through the existing
+native date/time-picker fallback, so treating "no diary link" as "not bookable" would have been wrong; the
+badge satisfies the spec's own "or show a clear internal warning" alternative instead.
+
+**Technical rules honored:** the existing intake form/data model (Phase 128) is reused untouched — this phase
+only adds a new lifecycle on top of the event it already creates. The selected therapist is preserved through
+every step via `therapist.id`/`therapist.diary_link` read once from this button's own props, never refetched or
+looked up by anything shared across therapists. Duplicate-appointment handling: the confirm route is idempotent
+by event status (a second click after success just replies "already confirmed" instead of erroring or
+re-sending emails); a full page refresh mid-flow does lose in-memory state (which stage the client was on), the
+same accepted limitation already documented for Phase 128's intake idempotency — a hard reload starts the flow
+over, but resubmitting the intake itself still reuses the same `sessionStorage`-backed record, so a genuinely
+duplicate `booking_intake_forms` row is still avoided even after a refresh.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline as every prior phase, zero new
+errors (also updated `tests/unit/TherapistsTable.test.tsx`'s fixtures for the two new required fields). Not
+tested: an actual click-through in a live browser (no dev server in this sandbox) — particularly worth checking
+on Roy's end after deploying: the full flow end to end on a real diary-link therapist (Bertrand Finckler is the
+example throughout this spec), that "Back to calendar" really does reopen a fresh tab to the right link, and
+that all three confirmation emails send correctly.
+
+**Files changed:** `lib/database.types.ts` (extended `DiarySchedulingEventRow`/`DiarySchedulingStatus`, new
+`SlotSource`), `app/api/diary-scheduling/route.ts` (status literal rename), `app/api/diary-appointment/select-slot/route.ts`
+(new), `app/api/diary-appointment/confirm/route.ts` (new), `app/api/diary-appointment/cancel/route.ts` (new),
+`lib/email/templates.ts` (3 new templates), `components/booking/SlotSelectionModal.tsx` (new),
+`components/booking/ScheduleReviewModal.tsx` (new), `components/booking/BookingSuccessModal.tsx` (new),
+`components/booking/BookingIntakeModal.tsx`/`BookingIntakeForm.tsx` (onSuccess now also returns client details),
+`components/therapists/BookSessionButton.tsx` (full state machine), `components/admin/TherapistsTable.tsx` +
+`app/admin/therapists/page.tsx` (diary-link status column), `tests/unit/TherapistsTable.test.tsx`. Database: 1
+migration (`extend_diary_scheduling_events_full_lifecycle`) against Production project `iddeoavrlnvwwfopsacy`.
+
+```
+del .git\index.lock
+git add lib/database.types.ts app/api/diary-scheduling/route.ts app/api/diary-appointment lib/email/templates.ts components/booking components/therapists/BookSessionButton.tsx components/admin/TherapistsTable.tsx app/admin/therapists/page.tsx tests/unit/TherapistsTable.test.tsx EXECUTION_PLAN.md
+git commit -m "Phase 129: diary-link connection, schedule review, confirm, and success notification (client-reported slot)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

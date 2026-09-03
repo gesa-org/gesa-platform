@@ -37,6 +37,8 @@ export default async function AdminTherapistsPage() {
           full_name: t.full_name,
           languages: t.languages,
           is_active: t.is_active,
+          diary_link: t.diary_link,
+          diary_link_status: t.diary_link_status,
         }))}
       />
     </div>

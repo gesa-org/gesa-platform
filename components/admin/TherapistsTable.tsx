@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { AlertTriangle, CalendarCheck2, CalendarX2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
+import type { DiaryLinkStatus } from "@/lib/database.types";
 
 // Phase 65 — Roy said toggling therapists active/deactivated one at a time
 // through "Edit" was tiring once there are a lot of them, and asked for a
@@ -20,7 +22,35 @@ export type TherapistListRow = {
   full_name: string;
   languages: string[];
   is_active: boolean;
+  // Phase 129 — surfaced here (not just on the individual edit page) per
+  // Roy's "see whether a diary link is configured / active or missing"
+  // requirement — an admin scanning the whole list can now spot a
+  // therapist with no working scheduling link without opening each one.
+  diary_link: string | null;
+  diary_link_status: DiaryLinkStatus;
 };
+
+function DiaryLinkBadge({ diaryLink, status }: { diaryLink: string | null; status: DiaryLinkStatus }) {
+  if (!diaryLink) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[12px] font-medium text-muted-fg">
+        <CalendarX2 size={12} /> No diary link
+      </span>
+    );
+  }
+  if (status === "invalid") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-1 text-[12px] font-medium text-destructive">
+        <AlertTriangle size={12} /> Link needs review
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2.5 py-1 text-[12px] font-medium text-primary">
+      <CalendarCheck2 size={12} /> Diary link set
+    </span>
+  );
+}
 
 export default function TherapistsTable({ therapists: initialTherapists }: { therapists: TherapistListRow[] }) {
   const [therapists, setTherapists] = useState(initialTherapists);
@@ -106,6 +136,7 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">Languages</th>
               <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Diary link</th>
               <th className="px-5 py-3"></th>
             </tr>
           </thead>
@@ -138,6 +169,9 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
                   >
                     {t.is_active ? "Active" : "Deactivated"}
                   </span>
+                </td>
+                <td className="px-5 py-3">
+                  <DiaryLinkBadge diaryLink={t.diary_link} status={t.diary_link_status} />
                 </td>
                 <td className="px-5 py-3 text-right">
                   <Link href={`/admin/therapists/${t.id}`} className="font-semibold text-primary underline">
