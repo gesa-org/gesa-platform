@@ -318,6 +318,45 @@ export function sessionBookingTherapistNotificationEmail(
   `);
 }
 
+// Phase 126 — diary-link handoff notifications. Deliberately worded around
+// "opened"/"awaiting confirmation" rather than "booked"/"confirmed": none of
+// the diary providers in use (Google Calendar appointment schedules,
+// Calendly, simplybook.it) give this app a webhook when the client actually
+// picks a slot, so all we can honestly report is that the client was sent
+// to the therapist's scheduling page — not that a session was locked in.
+export function diarySchedulingTherapistNotificationEmail(therapistName: string, clientName: string | null) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Someone just opened your scheduling link</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      Hi ${therapistName || "there"}, ${clientName ? `<strong>${clientName}</strong>` : "a GESA client"} was just sent
+      to your scheduling link to pick a time for a session with you.
+    </p>
+    <p style="color:#33352d;line-height:1.6;">
+      This is not yet a confirmed booking — we won't know the time they chose (or whether they completed booking)
+      until you see it appear on your own calendar.
+    </p>
+  `);
+}
+
+export function diarySchedulingTeamNotificationEmail(
+  therapistName: string,
+  clientName: string | null,
+  clientEmail: string | null
+) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">Diary-link scheduling opened</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Therapist:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;">
+      <strong>Client:</strong> ${clientName ?? "(not provided)"}${clientEmail ? ` (${clientEmail})` : ""}
+    </p>
+    <p style="color:#33352d;line-height:1.6;margin-top:10px;">
+      Status: <strong>opened</strong> — the client was sent to the therapist's own scheduling link. There is no
+      confirmation callback from this provider, so this is the only signal we get; the actual time (if any) is on
+      the therapist's calendar, not ours.
+    </p>
+  `);
+}
+
 export function groupRegistrationEmail(name: string, groupTitle: string, schedule: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're registered, ${name}</h1>

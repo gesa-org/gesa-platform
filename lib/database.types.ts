@@ -137,12 +137,24 @@ export type TestimonialRow = {
   sort: number;
 }
 
+// Phase 126 — added diary_link/diary_link_status/country/price_note
+// (migration: add_diary_link_country_price_to_therapists). contact_email/
+// contact_phone are also declared here since admin/self code still reads
+// them via the `get_therapist_contact` RPC or direct authenticated access —
+// only the `anon` role had column-level SELECT revoked on these two (see
+// the `therapists_public` view below and lib/queries.ts), so the shape of
+// a full authenticated row is unchanged.
+export type DiaryLinkStatus = "valid" | "invalid" | "unset";
+
 export type TherapistRow = {
   bio: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  country: string | null;
   created_at: string;
   credentials: string | null;
+  diary_link: string | null;
+  diary_link_status: DiaryLinkStatus;
   full_name: string;
   gender: GenderType | null;
   id: string;
@@ -150,6 +162,7 @@ export type TherapistRow = {
   is_verified: boolean;
   languages: string[];
   photo_url: string | null;
+  price_note: string | null;
   profile_id: string | null;
   session_lengths: SessionDuration[];
   short_summary: string | null;
@@ -162,6 +175,44 @@ export type TherapistRow = {
   verified_by: string | null;
   years_experience: number | null;
 }
+
+// Phase 126 — the `therapists_public` view's exact column list (see
+// migration create_public_safe_therapists_view_and_lock_anon_columns).
+// Deliberately excludes contact_email/contact_phone, is_active,
+// profile_id, verified_at/verified_by — nothing an unauthenticated visitor
+// needs, and (for the two contact fields) nothing they're allowed to have.
+// Every public-facing query in lib/queries.ts returns this shape, not the
+// full TherapistRow, so a confidential field simply cannot flow into a
+// public page's props by accident — there's no field to forget to strip.
+export type PublicTherapistRow = Pick<
+  TherapistRow,
+  | "id"
+  | "full_name"
+  | "slug"
+  | "bio"
+  | "credentials"
+  | "gender"
+  | "is_verified"
+  | "languages"
+  | "photo_url"
+  | "session_lengths"
+  | "short_summary"
+  | "specialties"
+  | "time_zone"
+  | "tracks"
+  | "years_experience"
+  | "diary_link"
+  | "diary_link_status"
+  | "country"
+  | "price_note"
+  | "created_at"
+  | "updated_at"
+> & {
+  // Derived boolean, not the phone number itself — lets the UI offer/hide
+  // the WhatsApp contact channel without ever sending a confidential
+  // contact_phone value to a page an unauthenticated visitor can load.
+  has_whatsapp: boolean;
+};
 
 export type BookingRequestRow = {
   created_at: string;
@@ -247,6 +298,27 @@ export type SessionBookingRow = {
   status: BookingStatus;
   created_at: string;
 }
+
+export type DiarySchedulingStatus = "opened" | "confirmed";
+
+// Phase 126 — records a client being handed off to a therapist's own
+// diary-link scheduling page (Google Calendar appointment schedule,
+// Calendly, simplybook.it). None of those providers give this app a
+// callback/webhook when a slot is actually booked, so `status` only ever
+// gets set to "opened" by the app itself; "confirmed" exists in the type/
+// check constraint for a future integration but nothing writes it today —
+// see the diary-scheduling API route.
+export type DiarySchedulingEventRow = {
+  id: string;
+  therapist_id: string;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  time_zone: string | null;
+  diary_link: string;
+  status: DiarySchedulingStatus;
+  created_at: string;
+};
 
 // Phase 63 — a real, structured intake for the "become a volunteer
 // therapist" flow (see components/volunteer/VolunteerApplicationModal.tsx),
@@ -413,6 +485,14 @@ export type Database = {
         ];
       };
       therapists: { Row: TherapistRow; Insert: Partial<TherapistRow> & Pick<TherapistRow, "full_name" | "slug">; Update: Partial<TherapistRow>; Relationships: [] };
+      // Phase 126 — read-only view (see migration
+      // create_public_safe_therapists_view_and_lock_anon_columns). Insert/
+      // Update are `never`, not `Partial<PublicTherapistRow>`, so trying to
+      // write through this view is a compile error, not just an RLS/grant
+      // failure at runtime — this view exists specifically so public code
+      // paths can't touch contact_email/contact_phone, and that intent
+      // should be visible in the type, not just enforced by Postgres.
+      therapists_public: { Row: PublicTherapistRow; Insert: never; Update: never; Relationships: [] };
       therapist_weekly_hours: {
         Row: TherapistWeeklyHoursRow;
         Insert: Partial<TherapistWeeklyHoursRow> & Pick<TherapistWeeklyHoursRow, "therapist_id" | "day_of_week" | "start_time" | "end_time">;
@@ -441,6 +521,20 @@ export type Database = {
           },
         ];
       };
+      diary_scheduling_events: {
+        Row: DiarySchedulingEventRow;
+        Insert: Partial<DiarySchedulingEventRow> & Pick<DiarySchedulingEventRow, "therapist_id" | "diary_link">;
+        Update: Partial<DiarySchedulingEventRow>;
+        Relationships: [
+          {
+            foreignKeyName: "diary_scheduling_events_therapist_id_fkey";
+            columns: ["therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       translation_cache: {
         Row: TranslationCacheRow;
         Insert: Partial<TranslationCacheRow> & Pick<TranslationCacheRow, "source_hash" | "target_lang" | "source_text" | "translated_text">;
@@ -454,6 +548,15 @@ export type Database = {
       get_or_create_my_client: { Args: Record<string, never>; Returns: string };
       get_or_create_thread: { Args: { p_therapist_id: string }; Returns: string };
       get_booked_slots: { Args: { p_therapist_id: string; p_date: string }; Returns: { session_time: string }[] };
+      // Phase 126 — SECURITY DEFINER RPC, the sanctioned path for
+      // admin/therapist-self reads of confidential contact fields now that
+      // anon/authenticated column-level SELECT is locked down on the base
+      // table for the public-facing case. See getTherapistByIdAdmin in
+      // lib/queries.ts for the only current caller.
+      get_therapist_contact: {
+        Args: { p_therapist_id: string };
+        Returns: { contact_email: string | null; contact_phone: string | null }[];
+      };
     };
     Enums: {
       app_role: AppRole;

@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Tables } from "@/lib/database.types";
+import type { Tables, PublicTherapistRow } from "@/lib/database.types";
 
 // Server-side read helpers. All of these run under the anon key + RLS —
 // no service role needed since every table here has a public-read policy.
@@ -11,12 +11,19 @@ import type { Tables } from "@/lib/database.types";
 // invisible on the public directory despite the admin dashboard showing
 // them as "Active." Dropped here to match the RLS policy and avoid the
 // same confusion recurring in app code even though RLS already enforces it.
-export async function getActiveTherapists(): Promise<Tables<"therapists">[]> {
+// Phase 126 — queries the `therapists_public` view, not the `therapists`
+// table directly. The view's column list (see migration
+// create_public_safe_therapists_view_and_lock_anon_columns) simply doesn't
+// include contact_email/contact_phone, so there is no confidential field
+// for this function — or anything downstream of it (the directory, the
+// profile page) — to accidentally select or forward to the browser. The
+// view also already applies `is_active = true`, replacing the `.eq()` this
+// used to need against the base table.
+export async function getActiveTherapists(): Promise<PublicTherapistRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("therapists")
+    .from("therapists_public")
     .select("*")
-    .eq("is_active", true)
     .order("full_name");
   if (error) throw error;
   return data ?? [];
@@ -125,7 +132,7 @@ export async function getCrisisResources(): Promise<Tables<"crisis_resources">[]
 // — real specialty/track data isn't rich enough yet to filter meaningfully by
 // entry route (see EXECUTION_PLAN.md Phase 7 notes), so every non-crisis path
 // draws from the same pool of verified therapists for now.
-export async function getRandomMatchedTherapist(): Promise<Tables<"therapists"> | null> {
+export async function getRandomMatchedTherapist(): Promise<PublicTherapistRow | null> {
   const therapists = await getActiveTherapists();
   if (therapists.length === 0) return null;
   return therapists[Math.floor(Math.random() * therapists.length)];
@@ -136,27 +143,72 @@ export async function getRandomMatchedTherapist(): Promise<Tables<"therapists"> 
 // for an admin to review or reactivate. Relies on the pre-existing
 // therapists_self_read RLS policy, which already grants admin/reviewer read
 // access to every therapist row.
-export async function getAllTherapistsAdmin(): Promise<Tables<"therapists">[]> {
+//
+// Phase 126 — explicit column list, excluding contact_email/contact_phone:
+// the admin *list* table (TherapistsTable) never shows contact info, only
+// the per-record edit form does, and that form fetches it separately via
+// getTherapistByIdAdmin below. No functional change for admins (RLS still
+// lets them read those columns), this is just least-privilege — the list
+// view has no reason to pull two confidential fields for every row.
+const THERAPIST_ADMIN_LIST_COLUMNS =
+  "id, full_name, slug, bio, credentials, country, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, photo_url, price_note, profile_id, session_lengths, short_summary, specialties, time_zone, tracks, updated_at, verified_at, verified_by, years_experience";
+
+export async function getAllTherapistsAdmin(): Promise<Omit<Tables<"therapists">, "contact_email" | "contact_phone">[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("therapists").select("*").order("full_name");
+  const { data, error } = await supabase.from("therapists").select(THERAPIST_ADMIN_LIST_COLUMNS).order("full_name");
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as unknown as Omit<Tables<"therapists">, "contact_email" | "contact_phone">[];
 }
 
-export async function getTherapistByIdAdmin(id: string): Promise<Tables<"therapists"> | null> {
+// Phase 126 — contact_email/contact_phone are fetched separately via the
+// get_therapist_contact RPC (SECURITY DEFINER, checks admin/reviewer/self
+// itself — see migration) and merged in here, rather than selected
+// directly off `therapists`. Functionally this endpoint's result is
+// unchanged (still the full record, for the admin edit form), but it keeps
+// the *pattern* for reading these two fields consistent everywhere in the
+// app: always through the RPC, never a bare `select("*")` — so a future
+// column-level lockdown of the `authenticated` role (the follow-up flagged
+// in this phase's notes) wouldn't silently break this call.
+export type TherapistAdminRow = Tables<"therapists"> & {
+  // Phase 126 (dashboard follow-up) — the email of the `profiles` row this
+  // therapist is linked to via `therapists.profile_id`, so the edit form can
+  // show "this professional has an account (x@y.com)" without a second
+  // client-side round trip. Admin's own session can already read any
+  // profiles row (`profiles_self_select` bypasses for admin/reviewer), so
+  // this is a plain join here, not a confidential-field case like contact
+  // info — an admin is always allowed to see which login is linked to which
+  // professional record.
+  linkedAccountEmail: string | null;
+};
+
+export async function getTherapistByIdAdmin(id: string): Promise<TherapistAdminRow | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("therapists").select("*").eq("id", id).maybeSingle();
+  const [{ data, error }, contact] = await Promise.all([
+    supabase.from("therapists").select(THERAPIST_ADMIN_LIST_COLUMNS).eq("id", id).maybeSingle(),
+    supabase.rpc("get_therapist_contact", { p_therapist_id: id }).maybeSingle(),
+  ]);
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  const row = data as unknown as Omit<Tables<"therapists">, "contact_email" | "contact_phone">;
+  let linkedAccountEmail: string | null = null;
+  if (row.profile_id) {
+    const { data: linkedProfile } = await supabase.from("profiles").select("email").eq("id", row.profile_id).maybeSingle();
+    linkedAccountEmail = linkedProfile?.email ?? null;
+  }
+  return {
+    ...row,
+    contact_email: contact.data?.contact_email ?? null,
+    contact_phone: contact.data?.contact_phone ?? null,
+    linkedAccountEmail,
+  };
 }
 
-export async function getTherapistBySlug(slug: string): Promise<Tables<"therapists"> | null> {
+export async function getTherapistBySlug(slug: string): Promise<PublicTherapistRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("therapists")
+    .from("therapists_public")
     .select("*")
     .eq("slug", slug)
-    .eq("is_active", true)
     .maybeSingle();
   if (error) throw error;
   return data;
