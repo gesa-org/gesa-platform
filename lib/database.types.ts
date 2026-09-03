@@ -299,15 +299,26 @@ export type SessionBookingRow = {
   created_at: string;
 }
 
-export type DiarySchedulingStatus = "opened" | "confirmed";
+// Phase 129 — extends Phase 126's "opened" event log into the full
+// appointment lifecycle: calendar_opened (renamed from "opened" — existing
+// rows were migrated) -> slot_selected -> pending_confirmation -> confirmed,
+// or cancelled/failed off any of those. See the extend_diary_scheduling_
+// events_full_lifecycle migration for the important caveat: every status
+// past calendar_opened comes from the client self-reporting what they
+// picked on the external calendar, never a provider webhook — none of
+// Google Calendar appointment schedules, Calendly, or simplybook.it are
+// connected to this app via API/OAuth. `slot_source` makes that explicit
+// wherever this data is read, so nothing downstream can present a
+// self-reported slot as system-verified by accident.
+export type DiarySchedulingStatus =
+  | "calendar_opened"
+  | "slot_selected"
+  | "pending_confirmation"
+  | "confirmed"
+  | "cancelled"
+  | "failed";
+export type SlotSource = "client_reported";
 
-// Phase 126 — records a client being handed off to a therapist's own
-// diary-link scheduling page (Google Calendar appointment schedule,
-// Calendly, simplybook.it). None of those providers give this app a
-// callback/webhook when a slot is actually booked, so `status` only ever
-// gets set to "opened" by the app itself; "confirmed" exists in the type/
-// check constraint for a future integration but nothing writes it today —
-// see the diary-scheduling API route.
 export type DiarySchedulingEventRow = {
   id: string;
   therapist_id: string;
@@ -322,6 +333,16 @@ export type DiarySchedulingEventRow = {
   // before being sent here. Nullable because it's backfilled going forward
   // only, not retroactively on rows recorded before Phase 128 shipped.
   intake_submission_id: string | null;
+  // Phase 129 — all self-reported by the client after returning from the
+  // external calendar tab (see components/booking/SlotSelectionModal.tsx).
+  selected_date: string | null;
+  selected_start_time: string | null;
+  selected_end_time: string | null;
+  duration_minutes: number | null;
+  appointment_type: string | null;
+  external_booking_id: string | null;
+  confirmed_at: string | null;
+  slot_source: SlotSource;
 };
 
 export type ParticipatedBefore = "yes" | "no";

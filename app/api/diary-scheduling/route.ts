@@ -12,10 +12,10 @@ const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 // route does: none of the diary providers we support (Google Calendar
 // appointment schedules, Calendly, simplybook.it) call back into this app
 // when the client actually finishes booking a slot, so there is no way to
-// know from here whether a session was really scheduled — only that the
-// client was handed off. Status is always "opened", never "confirmed";
-// saying anything stronger would be a straightforwardly false claim in a
-// booking-status email.
+// know from here whether a session was really scheduled from this event
+// alone. Phase 129 adds a self-report step after this (see
+// /api/diary-appointment/select-slot and /api/diary-appointment/confirm) —
+// this route only ever creates the row with status "calendar_opened".
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
 
@@ -95,5 +95,5 @@ export async function POST(request: Request) {
     }),
   ]);
 
-  return NextResponse.json({ id: inserted?.id ?? null, status: "opened", toTherapist, toTeam });
+  return NextResponse.json({ id: inserted?.id ?? null, status: "calendar_opened", toTherapist, toTeam });
 }

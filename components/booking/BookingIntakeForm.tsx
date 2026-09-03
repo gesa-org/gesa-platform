@@ -65,7 +65,7 @@ export default function BookingIntakeForm({
   therapistId: string;
   therapistName: string;
   onCancel: () => void;
-  onSuccess: (intakeId: string) => void;
+  onSuccess: (intakeId: string, details: { clientName: string; clientEmail: string; clientPhone: string; clientCity: string }) => void;
 }) {
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -128,7 +128,12 @@ export default function BookingIntakeForm({
         return;
       }
       setRetryPayload(null);
-      onSuccess(data.id as string);
+      onSuccess(data.id as string, {
+        clientName: String(payload.clientName ?? ""),
+        clientEmail: String(payload.clientEmail ?? ""),
+        clientPhone: String(payload.clientPhone ?? ""),
+        clientCity: String(payload.clientCity ?? ""),
+      });
     } catch {
       setRetryPayload(payload);
       setErrors((prev) => ({ ...prev, form: "Something went wrong — please try again." }));

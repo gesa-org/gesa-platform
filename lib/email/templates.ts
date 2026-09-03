@@ -357,6 +357,78 @@ export function diarySchedulingTeamNotificationEmail(
   `);
 }
 
+// Phase 129 — sent once a client reports the slot they picked on a
+// therapist's diary link and clicks "Confirm schedule" (see
+// app/api/diary-appointment/confirm/route.ts). Deliberately still careful
+// with its wording even at "confirmed": GESA is confirming that *the
+// client told us* they booked this time, not that it verified the slot
+// against the therapist's actual calendar (no diary provider in use gives
+// this app that capability) — the client is pointed to their own inbox for
+// the diary provider's own, separate confirmation as the real proof.
+export function diaryAppointmentClientConfirmationEmail(
+  clientName: string,
+  therapistName: string,
+  date: string,
+  startTime: string,
+  timeZone: string | null,
+  referenceNumber: string
+) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Your session has been scheduled</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      Hi ${clientName || "there"}, your session with <strong>${therapistName}</strong> is scheduled for
+      <strong>${date} at ${startTime}${timeZone ? ` (${timeZone})` : ""}</strong>.
+    </p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Reference:</strong> ${referenceNumber}</p>
+    <p style="color:#33352d;line-height:1.6;">
+      You booked this time directly on ${therapistName}'s own scheduling page, so you should also receive a
+      separate confirmation from that system with your meeting link or location — check your inbox (and spam
+      folder) for that. If anything looks off, reply to this email and our team will help.
+    </p>
+  `);
+}
+
+export function diaryAppointmentTherapistNotificationEmail(
+  therapistName: string,
+  clientName: string,
+  date: string,
+  startTime: string,
+  timeZone: string | null
+) {
+  return shell(`
+    <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">A client confirmed a session with you</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      Hi ${therapistName || "there"}, <strong>${clientName}</strong> reported booking a session with you for
+      <strong>${date} at ${startTime}${timeZone ? ` (${timeZone})` : ""}</strong> via your GESA scheduling link.
+    </p>
+    <p style="color:#33352d;line-height:1.6;">
+      This comes from the client, not from your calendar directly — please check your own scheduling page to
+      make sure this matches an actual booking on your end.
+    </p>
+  `);
+}
+
+export function diaryAppointmentTeamNotificationEmail(
+  therapistName: string,
+  clientName: string,
+  clientEmail: string,
+  date: string,
+  startTime: string,
+  referenceNumber: string
+) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">Diary-link session confirmed (client-reported)</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Therapist:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Client:</strong> ${clientName} (${clientEmail})</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>When:</strong> ${date} at ${startTime}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Reference:</strong> ${referenceNumber}</p>
+    <p style="color:#33352d;line-height:1.6;margin-top:10px;">
+      Client-reported, not provider-verified — there is no webhook from this diary provider confirming the slot
+      independently.
+    </p>
+  `);
+}
+
 export function groupRegistrationEmail(name: string, groupTitle: string, schedule: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're registered, ${name}</h1>

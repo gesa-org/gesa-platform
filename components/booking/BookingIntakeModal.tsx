@@ -14,6 +14,13 @@ import BookingIntakeForm from "@/components/booking/BookingIntakeForm";
 // shared Modal keeps this change contained to the one flow that asked for
 // it, instead of altering focus behavior for every existing modal on the
 // site at once.
+export type IntakeSuccessDetails = {
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientCity: string;
+};
+
 export default function BookingIntakeModal({
   therapistId,
   therapistName,
@@ -23,7 +30,7 @@ export default function BookingIntakeModal({
   therapistId: string;
   therapistName: string;
   onClose: () => void;
-  onSuccess: (intakeId: string) => void;
+  onSuccess: (intakeId: string, details: IntakeSuccessDetails) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
