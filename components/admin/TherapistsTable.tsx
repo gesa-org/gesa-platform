@@ -53,7 +53,7 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
     const { error: updateError } = await supabase.from("therapists").update({ is_active: nextActive }).in("id", ids);
     setPending(false);
     if (updateError) {
-      setError("Couldn't update those therapists — try again.");
+      setError("Couldn't update those professionals — try again.");
       return;
     }
     // Optimistic local update, same pattern as TherapistEditForm's single-row
@@ -93,7 +93,7 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
               <th className="px-5 py-3">
                 <input
                   type="checkbox"
-                  aria-label="Select all therapists"
+                  aria-label="Select all professionals"
                   checked={allSelected}
                   ref={(el) => {
                     if (el) el.indeterminate = someSelected;

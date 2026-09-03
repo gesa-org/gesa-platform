@@ -196,7 +196,7 @@ export default function NotificationBell() {
             title: `New volunteer application — ${v.full_name}`,
             subtitle: [v.specialties?.[0], v.meeting_duration ? `${v.meeting_duration} min` : null]
               .filter(Boolean)
-              .join(" · ") || "Volunteer therapist",
+              .join(" · ") || "Volunteer professional",
             createdAt: v.created_at,
             detail: v as unknown as Record<string, unknown>,
           })),
@@ -473,7 +473,7 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
           )}
           {(d.selected_therapist?.full_name || d.matched_therapist?.full_name || d.therapist?.full_name) && (
             <div>
-              <span className="font-semibold">Therapist: </span>
+              <span className="font-semibold">Professional: </span>
               {d.selected_therapist?.full_name ?? d.matched_therapist?.full_name ?? d.therapist?.full_name}
             </div>
           )}

@@ -18,9 +18,13 @@ export default async function AdminTherapistsPage() {
     <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
       <div className="flex items-start justify-between gap-4 border-b border-border p-5">
         <div>
-          <h2 className="text-lg">Therapists ({therapists.length})</h2>
+          {/* Phase 125 — "Therapists" -> "Our Professionals" (heading + body
+              copy), matching the sidebar rename in app/admin/layout.tsx.
+              Route, component names, and the underlying `therapists` table
+              are unchanged. */}
+          <h2 className="text-lg">Our Professionals ({therapists.length})</h2>
           <p className="mt-1 text-[13px] text-muted-fg">
-            Edit photos, bios, and languages, or deactivate a therapist to remove them from the public directory.
+            Edit photos, bios, and languages, or deactivate a professional to remove them from the public directory.
             Check several (or all) below to activate or deactivate them together.
           </p>
         </div>

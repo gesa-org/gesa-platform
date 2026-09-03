@@ -67,7 +67,7 @@ describe("AdminMatchRequestsPage — booking conflict warnings", () => {
     const jsx = await AdminMatchRequestsPage();
     render(jsx);
 
-    expect(screen.getByText("This therapist is already booked at this time")).toBeInTheDocument();
+    expect(screen.getByText("This professional is already booked at this time")).toBeInTheDocument();
   });
 
   it("flags two pending requests both eyeing the same therapist+date+time", async () => {
@@ -137,7 +137,7 @@ describe("AdminMatchRequestsPage — booking conflict warnings", () => {
     const jsx = await AdminMatchRequestsPage();
     render(jsx);
 
-    expect(screen.queryByText("This therapist is already booked at this time")).not.toBeInTheDocument();
+    expect(screen.queryByText("This professional is already booked at this time")).not.toBeInTheDocument();
     expect(screen.queryByText(/Also requested by/)).not.toBeInTheDocument();
   });
 });

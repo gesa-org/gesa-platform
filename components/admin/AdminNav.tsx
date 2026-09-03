@@ -11,7 +11,9 @@ export type AdminNavItem = { href: string; label: string };
 // highlighted while it's the current page. `/admin` itself needs an exact
 // match (otherwise it would also light up for every other /admin/* route,
 // since it's a prefix of all of them); every other item is a normal
-// prefix match so e.g. /admin/therapists/[id] still highlights "Therapists".
+// prefix match so e.g. /admin/therapists/[id] still highlights the
+// sidebar's "Our Professionals" item (renamed from "Therapists" Phase 125 —
+// the href/route itself is unchanged).
 export default function AdminNav({ items }: { items: AdminNavItem[] }) {
   const pathname = usePathname();
 

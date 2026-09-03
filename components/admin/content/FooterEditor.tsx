@@ -8,7 +8,7 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
     <FlatFieldsEditor<FooterContent>
       contentKey="page_footer"
       initial={initial}
-      note="Link destinations for the four main columns (About, Our Therapists, legal pages, etc.) stay fixed — only their visible label text is editable. The social links, trusted partners, and non-profit status line below (Phase 57) have no fixed destination/wording of their own, so both label and URL/text are editable there."
+      note="Link destinations for the four main columns (About, Our Therapists, legal pages, etc.) stay fixed — only their visible label text is editable. The social links, trusted partners, and non-profit status line below (Phase 57) have no fixed destination/wording of their own, so both label and URL/text are editable there. As of Phase 117, the Explore column's About/Find Support/Our Professionals/Community/Donate links always mirror the top navigation automatically — edit those on the Header tab, not here."
       groups={[
         {
           heading: "Tagline",
@@ -18,13 +18,25 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
           heading: "Explore column",
           fields: [
             { key: "exploreHeading", label: "Column heading" },
-            { key: "exploreAboutLabel", label: "About link label" },
-            { key: "exploreTherapistsLabel", label: "Our Therapists link label" },
-            { key: "exploreSupportGroupsLabel", label: "Support Groups link label" },
-            { key: "exploreBlogLabel", label: "Blog label" },
+            {
+              key: "exploreAboutLabel",
+              label: "About link label (no longer shown — edit the Header tab instead)",
+              help: "Phase 117: the Explore column now always mirrors the top navigation, so this field isn't displayed anywhere. Kept so no data is lost; safe to ignore.",
+            },
+            {
+              key: "exploreTherapistsLabel",
+              label: "Our Therapists link label (no longer shown — edit the Header tab instead)",
+              help: "Phase 117: the Explore column now always mirrors the top navigation, so this field isn't displayed anywhere. Kept so no data is lost; safe to ignore.",
+            },
+            {
+              key: "exploreSupportGroupsLabel",
+              label: "Support Groups link label (no longer shown — edit the Header tab instead)",
+              help: "Phase 117: the Explore column now always mirrors the top navigation, so this field isn't displayed anywhere. Kept so no data is lost; safe to ignore.",
+            },
+            { key: "exploreBlogLabel", label: "Blog label", help: "Now shown in the Support column, not Explore (Phase 117)." },
             { key: "exploreBlogBadge", label: "Blog badge text", help: "Shown next to the disabled Blog label, e.g. \"Soon\"." },
-            { key: "exploreFaqLabel", label: "FAQ link label" },
-            { key: "exploreContactLabel", label: "Contact link label" },
+            { key: "exploreFaqLabel", label: "FAQ link label", help: "Now shown in the Support column, not Explore (Phase 117)." },
+            { key: "exploreContactLabel", label: "Contact link label", help: "Now shown in the Support column, not Explore (Phase 117)." },
           ],
         },
         {
@@ -33,7 +45,11 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
             { key: "supportHeading", label: "Column heading" },
             { key: "supportFindTherapistLabel", label: "Find a Therapist link label" },
             { key: "supportJoinGroupLabel", label: "Join a Group link label" },
-            { key: "supportDonateLabel", label: "Donate link label" },
+            {
+              key: "supportDonateLabel",
+              label: "Donate link label (no longer shown)",
+              help: "Phase 117: this used to be a second Donate link pointing to a different page than the header's own Donate button. Removed to avoid two mismatched Donate links in the same footer — Donate now appears once, in the Explore column, sharing the header's link. Kept so no data is lost; safe to ignore.",
+            },
             { key: "supportVolunteerLabel", label: "Volunteer link label" },
             { key: "supportEmergencyLabel", label: "Emergency Contact link label" },
           ],

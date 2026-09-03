@@ -103,6 +103,10 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
 
       <section className="flex flex-col gap-3">
         <h3 className="text-[15px] font-semibold">Why GESA exists</h3>
+        <p className="text-[12px] text-muted-fg">
+          Not currently shown on the page (removed per Phase 77) — kept here in case a future layout brings it
+          back. Editing this section has no visible effect on the live site right now.
+        </p>
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Heading</label>
           <input
@@ -362,6 +366,10 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
 
       <section className="flex flex-col gap-3 border-t border-border pt-6">
         <h3 className="text-[15px] font-semibold">Volunteer CTA band</h3>
+        <p className="text-[12px] text-muted-fg">
+          Not currently shown on the page (removed per Phase 85) — kept here in case a future layout brings it
+          back. Editing this section has no visible effect on the live site right now.
+        </p>
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Heading</label>
           <input
@@ -417,6 +425,10 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
 
       <section className="flex flex-col gap-3 border-t border-border pt-6">
         <h3 className="text-[15px] font-semibold">Legal / tax blurb</h3>
+        <p className="text-[12px] text-muted-fg">
+          Not currently shown on the page (removed per Phase 85) — kept here in case a future layout brings it
+          back. Editing this section has no visible effect on the live site right now.
+        </p>
         <textarea
           rows={2}
           value={legalBlurb}

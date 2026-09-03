@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AddTherapistModal from "@/components/admin/AddTherapistModal";
 
-// Phase 82 — "Add therapist" on /admin/therapists. Mocks the Supabase
+// Phase 82 — "Add Professional" on /admin/therapists. Mocks the Supabase
 // client the same way TherapistsTable's tests do, so no real network call
 // happens here; verifies the slug is derived from the full name, the record
 // is created inactive, and the admin is routed straight into the full
@@ -33,8 +33,8 @@ describe("AddTherapistModal", () => {
 
   it("opens the form, and does nothing until a name is entered", () => {
     render(<AddTherapistModal />);
-    expect(screen.queryByText("Add therapist")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("Add therapist"));
+    expect(screen.queryByText("Add Professional")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Add Professional"));
     expect(screen.getByText("Create & edit profile").closest("button")).toBeDisabled();
   });
 
@@ -42,7 +42,7 @@ describe("AddTherapistModal", () => {
     mockSingle.mockResolvedValueOnce({ data: { id: "new-id-1" }, error: null });
     render(<AddTherapistModal />);
 
-    fireEvent.click(screen.getByText("Add therapist"));
+    fireEvent.click(screen.getByText("Add Professional"));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Dr. Jamie O'Neil" } });
     fireEvent.click(screen.getByText("Create & edit profile"));
 
@@ -56,7 +56,7 @@ describe("AddTherapistModal", () => {
       .mockResolvedValueOnce({ data: { id: "new-id-2" }, error: null });
     render(<AddTherapistModal />);
 
-    fireEvent.click(screen.getByText("Add therapist"));
+    fireEvent.click(screen.getByText("Add Professional"));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Dana Cohen" } });
     fireEvent.click(screen.getByText("Create & edit profile"));
 
@@ -69,11 +69,11 @@ describe("AddTherapistModal", () => {
     mockSingle.mockResolvedValueOnce({ data: null, error: { code: "42501", message: "permission denied" } });
     render(<AddTherapistModal />);
 
-    fireEvent.click(screen.getByText("Add therapist"));
+    fireEvent.click(screen.getByText("Add Professional"));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "Someone" } });
     fireEvent.click(screen.getByText("Create & edit profile"));
 
-    expect(await screen.findByText(/Could not create the therapist/)).toBeInTheDocument();
+    expect(await screen.findByText(/Could not create the professional/)).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
 });

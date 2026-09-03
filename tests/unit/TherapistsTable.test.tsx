@@ -42,7 +42,10 @@ describe("TherapistsTable", () => {
 
   it("'select all' checks every row, and deactivating them all fires one batched update, not one per row", async () => {
     render(<TherapistsTable therapists={THERAPISTS} />);
-    fireEvent.click(screen.getByLabelText("Select all therapists"));
+    // Phase 125 — aria-label renamed "Select all therapists" -> "Select all
+    // professionals" along with the rest of the CRM's "Therapists" ->
+    // "Our Professionals" copy.
+    fireEvent.click(screen.getByLabelText("Select all professionals"));
     expect(screen.getByText("3 selected")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Deactivate selected"));
@@ -86,7 +89,7 @@ describe("TherapistsTable", () => {
     fireEvent.click(screen.getByLabelText("Select Karin Horen"));
     fireEvent.click(screen.getByText("Deactivate selected"));
 
-    expect(await screen.findByText(/Couldn't update those therapists/)).toBeInTheDocument();
+    expect(await screen.findByText(/Couldn't update those professionals/)).toBeInTheDocument();
     // Row still shows its original, unchanged status.
     const row = screen.getByText("Karin Horen").closest("tr");
     expect(row?.textContent).toContain("Active");

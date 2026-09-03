@@ -41,7 +41,7 @@ export default async function AdminSessionsPage() {
               <tr>
                 <th className="px-5 py-3">Date &amp; time</th>
                 <th className="px-5 py-3">Client</th>
-                <th className="px-5 py-3">Therapist</th>
+                <th className="px-5 py-3">Professional</th>
                 <th className="px-5 py-3">Channel</th>
                 <th className="px-5 py-3">Path</th>
                 <th className="px-5 py-3">Status</th>

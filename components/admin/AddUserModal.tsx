@@ -9,7 +9,7 @@ import type { AppRole } from "@/lib/database.types";
 
 const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
   { value: "client", label: "Client" },
-  { value: "therapist", label: "Therapist" },
+  { value: "therapist", label: "Professional" }, // internal role value unchanged (Phase 125), only the admin-facing label renamed
   { value: "reviewer", label: "Reviewer" },
   { value: "finance", label: "Finance" },
   { value: "admin", label: "Admin" },
@@ -109,7 +109,7 @@ export default function AddUserModal() {
             <div>
               <h3 className="text-lg font-semibold">Add user</h3>
               <p className="mt-1 text-[13px] text-muted-fg">
-                Creates a real account with a temporary password — for staff, reviewers, or a therapist you want
+                Creates a real account with a temporary password — for staff, reviewers, or a professional you want
                 signed in and messaging clients directly.
               </p>
             </div>

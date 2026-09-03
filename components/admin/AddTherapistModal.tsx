@@ -70,7 +70,7 @@ export default function AddTherapistModal() {
         lastError = "That name's URL is already taken — trying another.";
         continue;
       }
-      lastError = "Could not create the therapist. Please try again.";
+      lastError = "Could not create the professional. Please try again.";
       break;
     }
 
@@ -80,16 +80,21 @@ export default function AddTherapistModal() {
 
   return (
     <>
+      {/* Phase 125 — "Add therapist" -> "Add Professional" (button, modal
+          title, and body copy), matching the CRM-wide rename. The `slugify`
+          fallback ("therapist"), the `therapists` table name, and the route
+          this pushes to (/admin/therapists/[id]) are all internal
+          identifiers, left unchanged per Roy's instruction. */}
       <Button size="sm" onClick={() => setOpen(true)} className="inline-flex items-center gap-1.5">
-        <Plus size={15} /> Add therapist
+        <Plus size={15} /> Add Professional
       </Button>
 
       <Modal open={open} onClose={close}>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <div>
-            <h3 className="text-lg font-semibold">Add therapist</h3>
+            <h3 className="text-lg font-semibold">Add Professional</h3>
             <p className="mt-1 text-[13px] text-muted-fg">
-              Creates a new, inactive therapist record and takes you straight to the full profile editor — photo,
+              Creates a new, inactive professional record and takes you straight to the full profile editor — photo,
               bio, credentials, specialties, and activating them for the public directory all happen there.
             </p>
           </div>

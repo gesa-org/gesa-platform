@@ -12,10 +12,12 @@ export default async function AdminTherapistEditPage({ params }: { params: { id:
 
   return (
     <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+      {/* Phase 125 — "Therapists"/"Edit" copy -> "Our Professionals"
+          wording, matching the sidebar/list-page rename. */}
       <Link href="/admin/therapists" className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary">
-        <ArrowLeft size={14} /> All therapists
+        <ArrowLeft size={14} /> All professionals
       </Link>
-      <h2 className="mb-5 text-lg">Edit {therapist.full_name}</h2>
+      <h2 className="mb-5 text-lg">Edit professional: {therapist.full_name}</h2>
       <TherapistEditForm therapist={therapist} />
     </div>
   );

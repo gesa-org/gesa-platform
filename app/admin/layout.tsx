@@ -11,7 +11,17 @@ const NAV = [
   { href: "/admin/inquiries", label: "Inquiries" },
   { href: "/admin/registrations", label: "Group registrations" },
   { href: "/admin/messages", label: "Messages" },
-  { href: "/admin/therapists", label: "Therapists" },
+  // Phase 125 — sidebar label renamed "Therapists" -> "Our Professionals"
+  // per Roy's request. Route (`/admin/therapists`) and every underlying
+  // Supabase table/column name are unchanged on purpose — only this
+  // admin-facing label and the other UI-facing strings in the section
+  // itself changed (see components/admin/TherapistEditForm.tsx,
+  // AddTherapistModal.tsx, TherapistsTable.tsx, and app/admin/therapists/**
+  // for the rest). The admin dashboard has no i18n/translation system (only
+  // the public site does — components/TranslationProvider.tsx), so there's
+  // no Hebrew dictionary entry to update in parallel; every string in
+  // app/admin/** is a hardcoded English literal.
+  { href: "/admin/therapists", label: "Our Professionals" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/content", label: "Content Manager (Editing Details)" },
 ];

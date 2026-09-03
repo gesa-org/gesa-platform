@@ -26,10 +26,10 @@ export default async function AdminVolunteerApplicationsPage() {
   return (
     <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
       <div className="border-b border-border p-5">
-        <h2 className="text-lg">Volunteer therapist applications ({applications.length})</h2>
+        <h2 className="text-lg">Volunteer professional applications ({applications.length})</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
           Approving here is just a status label for your own tracking — it doesn&apos;t automatically create a
-          listed therapist. Add them to Therapists yourself once you&apos;re satisfied with an application.
+          listed professional. Add them to Our Professionals yourself once you&apos;re satisfied with an application.
         </p>
       </div>
       {applications.length === 0 ? (

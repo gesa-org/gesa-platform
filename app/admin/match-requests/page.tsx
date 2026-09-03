@@ -71,7 +71,7 @@ export default async function AdminMatchRequestsPage() {
                 <th className="px-5 py-3">Requested</th>
                 <th className="px-5 py-3">Client</th>
                 <th className="px-5 py-3">Format</th>
-                <th className="px-5 py-3">Matched therapist</th>
+                <th className="px-5 py-3">Matched professional</th>
                 <th className="px-5 py-3">Preferred time</th>
                 <th className="px-5 py-3">Shared / preferences</th>
                 <th className="px-5 py-3">Status</th>
@@ -120,7 +120,7 @@ export default async function AdminMatchRequestsPage() {
                       >
                         <AlertTriangle size={12} />
                         {conflict.type === "booked"
-                          ? "This therapist is already booked at this time"
+                          ? "This professional is already booked at this time"
                           : `Also requested by ${conflict.count} other${conflict.count === 1 ? "" : "s"} for this same slot`}
                       </div>
                     )}

@@ -9,9 +9,9 @@ export default async function AdminMessagesPage() {
   return (
     <div className="overflow-hidden rounded-[var(--radius)] border border-border bg-card">
       <div className="border-b border-border p-5">
-        <h2 className="text-lg">Client ↔ Therapist messages ({threads.length})</h2>
+        <h2 className="text-lg">Client ↔ Professional messages ({threads.length})</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
-          For evaluation and monitoring only — conversations remain private between the client and therapist.
+          For evaluation and monitoring only — conversations remain private between the client and professional.
         </p>
       </div>
       {threads.length === 0 ? (
@@ -23,7 +23,7 @@ export default async function AdminMessagesPage() {
               <tr>
                 <th className="px-5 py-3">Started</th>
                 <th className="px-5 py-3">Client</th>
-                <th className="px-5 py-3">Therapist</th>
+                <th className="px-5 py-3">Professional</th>
                 <th className="px-5 py-3">Last message</th>
                 <th className="px-5 py-3">Messages</th>
               </tr>

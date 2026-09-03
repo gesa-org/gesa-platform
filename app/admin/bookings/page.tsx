@@ -29,7 +29,7 @@ export default async function AdminBookingsPage() {
                 <th className="px-5 py-3">Entry route</th>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
-                <th className="px-5 py-3">Matched therapist</th>
+                <th className="px-5 py-3">Matched professional</th>
                 <th className="px-5 py-3">Status</th>
               </tr>
             </thead>

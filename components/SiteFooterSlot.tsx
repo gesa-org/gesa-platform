@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Footer from "@/components/Footer";
 import { useRevealHeight } from "@/components/layout/useRevealHeight";
-import type { FooterContent } from "@/lib/content";
+import type { FooterContent, HeaderContent } from "@/lib/content";
 
 // The footer is rendered once, globally, in app/layout.tsx — most routes
 // get it in normal document flow. A specific set of top-level pages instead
@@ -37,17 +37,27 @@ const REVEAL_ROUTES = new Set(["/", "/about", "/therapists", "/support-groups"])
 // passed down here — this component stays "use client" for usePathname(),
 // and a Client Component can't itself import the server-only Supabase
 // query used to fetch it.
-export default function SiteFooterSlot({ footerContent }: { footerContent?: FooterContent }) {
+// Phase 117 — headerContent is a new, optional prop threaded straight
+// through to <Footer>, which now reads its "Explore" column's labels/hrefs
+// from it (see lib/navigation.ts) instead of Footer's own separate,
+// previously-drifted copy of those same three labels.
+export default function SiteFooterSlot({
+  footerContent,
+  headerContent,
+}: {
+  footerContent?: FooterContent;
+  headerContent?: HeaderContent;
+}) {
   const pathname = usePathname();
   const isRevealPage = pathname !== null && REVEAL_ROUTES.has(pathname);
   const layerRef = useRevealHeight(isRevealPage);
 
-  if (!isRevealPage) return <Footer content={footerContent} />;
+  if (!isRevealPage) return <Footer content={footerContent} headerContent={headerContent} />;
 
   return (
     <div ref={layerRef} className="reveal-page__footer-layer">
       <div className="reveal-page__footer">
-        <Footer content={footerContent} />
+        <Footer content={footerContent} headerContent={headerContent} />
       </div>
     </div>
   );

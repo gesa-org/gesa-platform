@@ -88,7 +88,11 @@ export default async function RootLayout({
               <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 focus:outline-none">
                 {children}
               </main>
-              <SiteFooterSlot footerContent={footerContent} />
+              {/* Phase 117 — headerContent passed down here too (already
+                  fetched above for <Header>) so Footer's Explore column can
+                  read the exact same nav labels/hrefs Header renders from —
+                  see lib/navigation.ts. */}
+              <SiteFooterSlot footerContent={footerContent} headerContent={headerContent} />
               <CrisisButton content={crisisButtonContent} />
               <AccessibilityWidget />
             </AccessibilityProvider>

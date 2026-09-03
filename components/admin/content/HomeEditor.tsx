@@ -76,13 +76,13 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
           fields: [{ key: "footerNote", label: "Note under the path cards" }],
         },
         {
-          heading: "News ticker",
+          heading: "News ticker (currently unused)",
           fields: [
             {
               key: "purposeTicker",
               label: "Ticker phrases",
               multiline: true,
-              help: "One phrase per line — each becomes a separate item in the continuously-scrolling ticker below the hero.",
+              help: "Not currently shown on the page — the scrolling ticker component itself was removed from the Home page (Phase 74). One phrase per line, kept here in case a future layout brings the ticker back; editing this has no visible effect on the live site right now.",
             },
           ],
         },

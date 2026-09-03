@@ -199,7 +199,7 @@ export default async function AdminOverviewPage() {
     ...sessionBookings.map((s) => ({
       type: "Session booking",
       href: "/admin/sessions",
-      label: `Session with ${s.therapist?.full_name ?? "a therapist"}`,
+      label: `Session with ${s.therapist?.full_name ?? "a professional"}`,
       email: s.client_email,
       createdAt: s.created_at,
       isNew: isNew(s.created_at),
@@ -269,7 +269,7 @@ export default async function AdminOverviewPage() {
       kind: "session" as const,
       dateIso: s.session_date,
       time: s.session_time.slice(0, 5),
-      personLabel: `${s.client_name} with ${s.therapist?.full_name ?? "a therapist"}`,
+      personLabel: `${s.client_name} with ${s.therapist?.full_name ?? "a professional"}`,
       statusLabel: s.status,
       dotClass: s.status === "confirmed" ? "bg-amber" : "bg-muted-fg",
     })),

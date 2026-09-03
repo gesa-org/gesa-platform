@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
+import PhoneNumberInput from "@/components/ui/PhoneNumberInput";
 import type { Tables } from "@/lib/database.types";
 
 export default function TherapistEditForm({ therapist }: { therapist: Tables<"therapists"> }) {
@@ -14,6 +15,15 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
   const [bio, setBio] = useState(therapist.bio ?? "");
   const [credentials, setCredentials] = useState(therapist.credentials ?? "");
   const [contactEmail, setContactEmail] = useState(therapist.contact_email ?? "");
+  // Phase 125 — phone field. `contact_phone` already existed as a nullable
+  // text column (confirmed directly against the Production Supabase
+  // project before building this — no migration needed), just never had a
+  // UI. Stored as E.164 (e.g. "+639171234567"); `phoneValid` gates saving
+  // (see onSubmit) so a still-invalid, non-empty number can't be saved, but
+  // an intentionally empty field always can — matching the "don't block
+  // saving existing professionals with no phone number" requirement.
+  const [contactPhone, setContactPhone] = useState<string | null>(therapist.contact_phone ?? null);
+  const [phoneValid, setPhoneValid] = useState(true);
   const [specialties, setSpecialties] = useState(therapist.specialties.join(", "));
   const [languages, setLanguages] = useState(therapist.languages.join(", "));
   const [isActive, setIsActive] = useState(therapist.is_active);
@@ -42,6 +52,13 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Phone is the one field here with its own validity state (everything
+    // else is free text) — block the save only when there's a non-empty,
+    // still-invalid number, never for an empty one.
+    if (!phoneValid) {
+      setStatus("error");
+      return;
+    }
     setPending(true);
     setStatus("idle");
     const supabase = createClient();
@@ -54,6 +71,7 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
         bio: bio || null,
         credentials: credentials || null,
         contact_email: contactEmail || null,
+        contact_phone: contactPhone || null,
         specialties: specialties
           .split(",")
           .map((s) => s.trim())
@@ -133,13 +151,23 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
             type="email"
             value={contactEmail}
             onChange={(e) => setContactEmail(e.target.value)}
-            placeholder="therapist@example.com"
+            placeholder="professional@example.com"
             className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
           />
           <p className="mt-1 text-[12.5px] text-muted-fg">
-            Used for match/booking notifications sent to this therapist.
+            Used for match/booking notifications sent to this professional.
           </p>
         </div>
+
+        <PhoneNumberInput
+          id="therapist-phone"
+          value={contactPhone}
+          onChange={(e164, isValid) => {
+            setContactPhone(e164);
+            setPhoneValid(isValid);
+          }}
+          helpText="Optional. Saved in international format; used for match/booking notifications where SMS or a call is needed."
+        />
 
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Specialties (comma-separated)</label>
@@ -164,18 +192,22 @@ export default function TherapistEditForm({ therapist }: { therapist: Tables<"th
             {pending ? "Saving…" : "Save changes"}
           </Button>
           {status === "saved" && <span className="text-[13.5px] font-medium text-primary">Saved.</span>}
-          {status === "error" && <span className="text-[13.5px] font-medium text-destructive">Couldn&apos;t save — try again.</span>}
+          {status === "error" && (
+            <span className="text-[13.5px] font-medium text-destructive">
+              {phoneValid ? "Couldn't save — try again." : "Fix the phone number above, then save again."}
+            </span>
+          )}
         </div>
       </form>
 
       <div className="mt-6 border-t border-border pt-5">
         <h3 className="mb-1.5 text-[15px] font-semibold">Danger zone</h3>
         <p className="mb-3 text-[13px] text-muted-fg">
-          Deactivating hides this therapist from the public directory and matching, without deleting their record —
+          Deactivating hides this professional from the public directory and matching, without deleting their record —
           reversible any time.
         </p>
         <Button variant={isActive ? "outline" : "primary"} onClick={toggleActive}>
-          {isActive ? "Deactivate therapist" : "Reactivate therapist"}
+          {isActive ? "Deactivate professional" : "Reactivate professional"}
         </Button>
       </div>
     </div>
