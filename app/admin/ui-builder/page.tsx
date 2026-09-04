@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import UIBuilderShell from "@/components/admin/ui-builder/UIBuilderShell";
+import UiBuilderTabs from "@/components/admin/ui-builder/UiBuilderTabs";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +18,12 @@ export default async function UIBuilderPage() {
       <div className="mb-5">
         <h2 className="text-lg">UI Builder</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
-          Edit site-wide colors and typography, preview the change live, then Publish to update the live site
-          instantly. Draft edits save automatically as you go — nothing goes live until you click Publish.
+          Edit site-wide colors and typography, or switch to Page Content to click-select and edit text directly
+          on a live preview of a specific page. Draft edits save automatically as you go — nothing goes live
+          until you click Publish.
         </p>
       </div>
-      <UIBuilderShell />
+      <UiBuilderTabs />
     </div>
   );
 }

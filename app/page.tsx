@@ -2,7 +2,16 @@ import Paths, { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import Stats from "@/components/home/Stats";
 import DonateBand from "@/components/home/DonateBand";
 import { getPageContent } from "@/lib/content";
+import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
+import { createClient } from "@/lib/supabase/server";
+import { applyDraftPatch } from "@/lib/ui-builder/pageContentResolver";
+import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 
+// Phase 133 — this page is intentionally still `revalidate = 300` for every
+// normal request; the editor-preview branch below opts out of that cache
+// per-request (see `dynamic` note) only when the two gates both pass, so a
+// real visitor's experience — cached, fast, published-only — is completely
+// unchanged.
 export const revalidate = 300;
 
 // Footer reveal effect (design.md §7.1.1): this page's content is the
@@ -52,14 +61,52 @@ export const revalidate = 300;
 // SiteFooterSlot.tsx) so it's a normal, always-visible section instead of
 // part of the hidden-until-scroll effect — only the Footer stays inside
 // that reveal layer now.
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
   const homeContent = await getPageContent("page_home", HOME_CONTENT_FALLBACK);
 
-  return (
+  // Phase 133 — the Visual Page Editor's preview canvas loads this exact
+  // route with `?editorPreview=true` (see PageEditorShell.tsx). Gated on
+  // BOTH the query param AND a real authenticated admin session — a
+  // logged-out visitor who guesses the query string gets the normal
+  // published page, never draft content, since `isEditorPreview` only ever
+  // goes true past the `getCurrentProfile()` check below.
+  const wantsPreview = searchParams?.editorPreview === "true";
+  let isEditorPreview = false;
+  let resolvedContent = homeContent;
+
+  if (wantsPreview) {
+    const profile = await getCurrentProfile();
+    if (profile?.role === "admin") {
+      isEditorPreview = true;
+      const supabase = await createClient();
+      const { data: draftRow } = await supabase
+        .from("crm_ui_drafts")
+        .select("schema")
+        .eq("scope", "page:home")
+        .maybeSingle();
+      resolvedContent = applyDraftPatch(
+        "home",
+        homeContent as unknown as Record<string, unknown>,
+        draftRow?.schema as Record<string, unknown> | null
+      ) as typeof homeContent;
+    }
+  }
+
+  const page = (
     <div className="reveal-page__main flex flex-col">
-      <Paths content={homeContent} />
+      <Paths content={resolvedContent} />
       <Stats />
       <DonateBand />
     </div>
   );
+
+  // EditorPreviewBridge is the only thing that ever turns on selection
+  // affordances (see EditableText/EditorPreviewContext) — for every normal
+  // request this branch never runs, so no admin-only code executes and no
+  // extra markup renders for a real visitor.
+  return isEditorPreview ? <EditorPreviewBridge>{page}</EditorPreviewBridge> : page;
 }

@@ -6,6 +6,15 @@ import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
 import type { HomeContent } from "@/lib/content";
+import EditableText from "@/components/ui-builder/public/EditableText";
+
+// Phase 133 — content-ID prefixes for the three path cards, matching
+// lib/ui-builder/pageRegistry.ts's HOME_EDITABLE_FIELDS exactly (e.g.
+// "home.crisis-card.title"). Indexed the same way `cards`/`PATH_FRONT_STYLES`
+// already are (0 = crisis, 1 = veterans, 2 = support) so adding a fourth
+// card later just means extending both this array and the registry in
+// lockstep, in the same order.
+const CARD_CONTENT_KEYS = ["crisis-card", "veterans-card", "support-card"];
 
 export const HOME_CONTENT_FALLBACK: HomeContent = {
   published: true,
@@ -311,27 +320,33 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           <Reveal type="fade-up" as="div" className="mx-auto max-w-[52rem] text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-espresso">
               <Sparkle size={15} className="text-clay" aria-hidden="true" />
-              {content.eyebrow}
+              <EditableText contentId="home.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />
             </span>
             <h1
               id="paths-heading"
               className="mx-auto mt-6 max-w-[18ch] font-serif text-[clamp(38px,5.5vw,64px)] leading-[1.08] text-espresso"
             >
-              {content.title}
+              <EditableText contentId="home.hero.heading" label="Hero heading" value={content.title} as="span" />
             </h1>
-            <p className="mx-auto mt-5 max-w-[42rem] text-[16px] leading-relaxed text-espresso/75">{content.subtitle}</p>
+            <EditableText
+              contentId="home.hero.description"
+              label="Hero description"
+              value={content.subtitle}
+              as="p"
+              className="mx-auto mt-5 max-w-[42rem] text-[16px] leading-relaxed text-espresso/75"
+            />
             <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-[14px] font-medium text-espresso/80">
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck size={17} className="text-espresso/60" aria-hidden="true" />
-                {content.badge1Label}
+                <EditableText contentId="home.hero.badge1" label="Trust badge 1" value={content.badge1Label} as="span" />
               </span>
               <span className="inline-flex items-center gap-2">
                 <HeartHandshake size={17} className="text-espresso/60" aria-hidden="true" />
-                {content.badge2Label}
+                <EditableText contentId="home.hero.badge2" label="Trust badge 2" value={content.badge2Label} as="span" />
               </span>
               <span className="inline-flex items-center gap-2">
                 <Users size={17} className="text-espresso/60" aria-hidden="true" />
-                {content.badge3Label}
+                <EditableText contentId="home.hero.badge3" label="Trust badge 3" value={content.badge3Label} as="span" />
               </span>
             </div>
           </Reveal>
@@ -439,7 +454,13 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             states. */}
                         <div className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
                           <FrontIcon size={14} className="text-espresso" aria-hidden="true" />
-                          <span className="text-[11px] font-semibold uppercase tracking-wide text-espresso">{p.frontLabel}</span>
+                          <EditableText
+                            contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.label`}
+                            label="Card badge label"
+                            value={p.frontLabel}
+                            as="span"
+                            className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
+                          />
                         </div>
                       </div>
                     );
@@ -468,13 +489,31 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                         >
                           <BadgeIcon size={19} className="text-white" />
                         </div>
-                        <h3 className="font-serif text-[17px] leading-tight text-foreground">{p.title}</h3>
-                        <p className="mt-1.5 text-[12.5px] leading-snug text-muted-fg">{p.description}</p>
+                        <EditableText
+                          contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.title`}
+                          label="Card heading"
+                          value={p.title}
+                          as="h3"
+                          className="font-serif text-[17px] leading-tight text-foreground"
+                        />
+                        <EditableText
+                          contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.description`}
+                          label="Card description"
+                          value={p.description}
+                          as="p"
+                          className="mt-1.5 text-[12.5px] leading-snug text-muted-fg"
+                        />
                         <Link
                           href={p.ctaLink}
                           className="relative z-10 mt-3.5 inline-flex w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-espresso px-[18px] py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#141820]"
                         >
-                          {p.ctaLabel} <ArrowRight size={13} />
+                          <EditableText
+                            contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.cta`}
+                            label="Card CTA label"
+                            value={p.ctaLabel}
+                            as="span"
+                          />{" "}
+                          <ArrowRight size={13} />
                         </Link>
                       </div>
                     );
@@ -492,7 +531,13 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
             `text-foreground` with a touch of weight, for real visibility
             rather than reading as fine print. */}
         <Reveal type="fade">
-          <p className="mt-8 text-center text-[18px] font-medium text-foreground">{content.footerNote}</p>
+          <EditableText
+            contentId="home.footer-note"
+            label="Closing note"
+            value={content.footerNote}
+            as="p"
+            className="mt-8 text-center text-[18px] font-medium text-foreground"
+          />
         </Reveal>
       </div>
     </section>

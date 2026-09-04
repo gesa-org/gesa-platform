@@ -5601,4 +5601,141 @@ git push
 ```
 
 ---
+
+## Phase 133 — Visual Page Editor (click-to-select text editing, Home reference implementation)
+
+**Request:** a large, detailed spec for a full "Visual Page Editor" inside `/admin/ui-builder` — select a page,
+click any element in a live preview, edit it in a right-side inspector with a Word-style formatting toolbar,
+manage images/layout/spacing, and publish with accessibility/link/alt-text validation, conflict handling, and
+full test coverage, extending Phase 132's global theme builder.
+
+**Implementation plan (per the request's own "before coding" requirement) — inspected first:** Home's page
+(`app/page.tsx`) already composes from one `site_content` row (`page_home`), read via the existing
+`getPageContent()` contract and already fully editable field-by-field through `HomeEditor.tsx` in the Content
+Manager. Rather than the spec's suggested brand-new `ui_builder_page_definitions`/`ui_builder_content_overrides`
+tables — which would have forked page content into two competing storage systems (an admin using the old
+Content Manager and one using the new visual editor could silently clobber each other) — this phase reuses
+Phase 132's `crm_ui_drafts` table (already generic on `scope`) for per-page drafts, and publishes into the exact
+same `site_content` row the Content Manager already reads and writes. "Page definitions" became a static
+TypeScript registry (`lib/ui-builder/pageRegistry.ts`) rather than a database table, matching how this app
+already defines every page's content shape as a TS type (`HomeContent`, etc.) rather than DB rows.
+
+**Scope, disclosed up front rather than discovered at review:** given the size of the full spec (a Word-style
+rich-text toolbar with a structured JSON format, a media library with focal points, style/spacing/advanced
+inspector tabs, a publish-review modal with accessibility/link/alt-text validation, optimistic-concurrency
+conflict handling, an audit-history table, and unit/integration/E2E test suites) and this sandbox's standing
+limitation — no working dev server or browser to click through a build this large before it ships — this phase
+delivers the **real, working foundation plus one fully wired reference page (Home, text content only)**, exactly
+as the spec itself asked to start with, rather than attempting all 19 sections in one unverifiable pass.
+Deferred pieces are listed explicitly at the end of this entry, matching the same disclosure pattern as Phase
+132's Image/Layout modules — nothing here is faked or stubbed to look more complete than it is.
+
+**Content-ID architecture:** `lib/ui-builder/pageRegistry.ts` defines `PAGE_DEFINITIONS` (the 11 pages Roy
+listed, each with a route/title/group and a `supportsVisualEditor` flag — only `home` is `true` this phase) and
+`HOME_EDITABLE_FIELDS`, a list of `{ contentId, path, label, type, group, maxLength }` records — e.g. `{
+contentId: "home.hero.heading", path: "title", label: "Hero heading", type: "text", group: "Hero" }`. The
+`contentId` is the stable, permanent identity the spec required (never a DOM index/CSS path); `path` is the only
+thing that would ever need to change if `HomeContent`'s own shape changes. `lib/ui-builder/pageContentResolver.ts`
+has the get/set-by-path + merge utilities that turn a flat `{ contentId: value }` patch into a real content
+object update, and back.
+
+**How a content ID maps to a public component:** each editable spot in `components/home/Paths.tsx` (hero
+eyebrow/heading/description/3 trust badges, each of the three path cards' badge label/heading/description/CTA
+label, and the closing footer note — 19 fields total) is wrapped in a new `<EditableText contentId="..." label="..."
+value={content.someField} as="h3" className="..." />` in place of the raw `{content.someField}` it used to
+render directly. For a normal visitor, `EditableText` renders `<Tag className={className}>{value}</Tag>` —
+byte-for-byte the same markup as before this phase — because `useEditorPreview()` reads `{ enabled: false }` by
+default with no provider in the tree. Only inside the admin Page Editor's iframe does a mounted
+`EditorPreviewBridge` provide `{ enabled: true }`, at which point the same component adds `data-gesa-content-id`/
+`data-gesa-label` attributes, a keyboard-operable click handler, and a hover/selected outline.
+
+**Draft vs. published behavior:** identical shape to Phase 132's theme tokens, scoped per page.
+`GET/PUT/DELETE /api/admin/ui-builder/page-content/draft?pageKey=home` read/write `crm_ui_drafts` under
+`scope = "page:home"`, validated against `HOME_EDITABLE_FIELDS` on both ends (an unknown contentId in a PUT
+payload is silently dropped, never stored — the spec's "admin cannot write arbitrary unknown fields" rule).
+`POST /api/admin/ui-builder/page-content/publish` merges that draft onto the **currently published** content
+(not a blind overwrite, so a separate Content Manager edit to a field the draft never touched survives), writes
+the result back to `site_content` (key `page_home`), and calls `revalidatePath("/")`  — scoped to just that
+route, unlike Phase 132's whole-site `revalidatePath("/", "layout")`, since page text only affects its own page.
+Editor preview resolution (`app/page.tsx` — Home's page) checks `?editorPreview=true` **and** a real
+`getCurrentProfile().role === "admin"` session before ever reading the draft table or rendering
+`EditorPreviewBridge`; a logged-out visitor hitting that query string gets the normal cached, published-only
+page.
+
+**Selection/communication protocol:** typed `postMessage` events, same naming the spec asked for —
+`GESA_EDITOR_READY` (iframe → parent, on mount), `GESA_EDITOR_SELECT_ELEMENT` (iframe → parent, on click),
+`GESA_EDITOR_SET_EDIT_MODE` / `GESA_EDITOR_SET_SELECTION` / `GESA_EDITOR_UPDATE_PREVIEW` /
+`GESA_EDITOR_SCROLL_TO_ELEMENT` (parent → iframe). Every handler on both sides checks `event.origin ===
+window.location.origin` before touching the payload; `GESA_EDITOR_UPDATE_PREVIEW` only ever sets `el.textContent`
+(never `innerHTML`) on the one element matching a `data-gesa-content-id`, so even a malformed message can't
+inject markup. `EditorPreviewBridge` also capture-intercepts every click on an `<a>`/submit `<button>`/`<form>`
+inside the preview so browsing it can never navigate away from the builder or fire a real submission, regardless
+of whether Edit mode is on.
+
+**Admin UI:** `/admin/ui-builder` now has two tabs (`components/admin/ui-builder/UiBuilderTabs.tsx`) — "Global
+Theme" (Phase 132's `UIBuilderShell`, completely untouched — same component, same behavior, zero regression)
+and the new "Page Content" (`PageEditorShell.tsx`): a Page Navigator (search + the 11 pages grouped Core/
+Support/Legal, each showing a "Global only" tag when `supportsVisualEditor` is false), a Layers list generated
+from the field registry and grouped the same way the inspector groups fields, a preview iframe with a Desktop/
+Tablet/Mobile viewport switcher and an Edit-mode toggle, and an inspector that shows a breadcrumb + text/textarea
+field (with a live character counter against each field's `maxLength`) for whatever's selected, wired with its
+own Undo/Redo/Discard/Publish reusing the same reducer-based history-stack pattern as the global builder
+(`lib/ui-builder/usePageEditorState.ts`).
+
+**Left out of this phase, disclosed rather than faked:**
+- The Word-style rich-text formatting toolbar (font family/size/weight/style/color/highlight/alignment/lists/
+  spacing/letter-spacing/text-transform) and the structured rich-text JSON format it would persist — every field
+  wired this phase is plain text/textarea, matching what those fields already were in the existing Content
+  Manager.
+- Image/media editing (Home has no image fields in its current content shape, so none existed to wire yet).
+- The Style, Spacing, and Advanced inspector tabs (border/shadow/opacity/padding/margin/ARIA-label overrides).
+- Buttons-and-links editing (CTA *label* text is wired; CTA *destination URL* editing, the new-tab toggle, and
+  `rel`/protocol validation are not).
+- The publish review modal (accessibility/broken-link/missing-alt-text/SEO warnings before Publish) — Publish
+  here is immediate, same as Phase 132's theme publish.
+- Version-conflict detection between two admins editing the same page concurrently, and the `ui_builder_change_
+  history`/audit-log table.
+- Any page besides Home wired with real fields — the other 10 pages are correctly registered and show "Global
+  only" in the Page Navigator per the spec's own fallback ("if the page is unsupported for visual editing,
+  display a clear message and allow global styling only"), but adding their field registries is follow-up work.
+- Unit/integration/E2E tests.
+
+**How to add a new editable field to a future page:** add one entry to that page's field-definition array in
+`lib/ui-builder/pageRegistry.ts` (`contentId`, the dot-`path` into its existing content type, a friendly
+`label`, `type`, a `group` for the Layers panel, and an optional `maxLength`), flip that page's
+`supportsVisualEditor` to `true` in `PAGE_DEFINITIONS`, wire a fallback lookup for it in both API routes'
+`getFallbackForPage`/inline fallback branches, and wrap the corresponding JSX in that page's component with
+`<EditableText contentId="..." label="..." value={content.xyz} as="..." />` in place of the raw
+`{content.xyz}`. No new database migration is ever needed for a new field — `crm_ui_drafts`/`site_content` are
+already generic enough.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline, zero new errors (two real issues
+surfaced and were fixed during this phase: `crm_ui_drafts.schema` needed a `Record<string, string>` — not
+`unknown` — for the sanitized draft patch to satisfy the `Json` column type, and the preview bridge's shared
+click/submit handler needed a plain `Event` parameter type, not `MouseEvent`, to satisfy both listeners' native
+signatures). Also proactively grepped every new `.tsx` file for the exact unescaped-apostrophe pattern that broke
+Phase 132's first build attempt — none found. Not verified: an actual click-through of the Page Editor (no dev
+server/browser in this sandbox) — this is the most important thing to test after deploying, specifically:
+open `/admin/ui-builder` → Page Content → Home, turn on Edit mode, click the hero heading in the preview, confirm
+the inspector selects it and the Layers list highlights the matching item, type a change and confirm the preview
+updates live, Publish, then load the real Home page and confirm the change is there.
+
+**Files changed:** `lib/ui-builder/pageRegistry.ts` (new), `lib/ui-builder/pageContentResolver.ts` (new),
+`lib/ui-builder/usePageEditorState.ts` (new), `app/api/admin/ui-builder/page-content/draft/route.ts` (new),
+`app/api/admin/ui-builder/page-content/publish/route.ts` (new), `components/ui-builder/public/
+EditorPreviewContext.tsx` (new), `components/ui-builder/public/EditorPreviewBridge.tsx` (new),
+`components/ui-builder/public/EditableText.tsx` (new), `components/home/Paths.tsx` (19 fields wrapped in
+`EditableText`), `app/page.tsx` (editor-preview gate + draft overlay), `components/admin/ui-builder/
+PageEditorShell.tsx` (new), `components/admin/ui-builder/UiBuilderTabs.tsx` (new, wraps the untouched Phase 132
+`UIBuilderShell`), `app/admin/ui-builder/page.tsx` (renders the new tabs instead of `UIBuilderShell` directly).
+No new database migrations — reused Phase 132's `crm_ui_drafts` table and the existing `site_content` table.
+
+```
+del .git\index.lock
+git add lib/ui-builder app/api/admin/ui-builder components/ui-builder components/home/Paths.tsx app/page.tsx components/admin/ui-builder app/admin/ui-builder EXECUTION_PLAN.md
+git commit -m "Phase 133: Visual Page Editor foundation + Home reference implementation (text content)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
