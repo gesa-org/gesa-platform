@@ -5410,4 +5410,58 @@ git push
 ```
 
 ---
+
+## Phase 130 — hero/banner background: gold → slate grey
+
+**Request:** replace the gold hero-band background on Home, About, Our Therapists, and Support Groups with a
+"Soft Slate Grey / Muted Blue Grey" color from a reference swatch Roy sent, keeping the existing hover/sliding
+animations and the faint globe/heart/link watermark texture untouched.
+
+**Color match:** sampled the exact color directly from Roy's reference image rather than approximating against
+an existing token — `#AAB8C5`. Close to, but distinct from, `--secondary`/`--muted` (`#b7c3d6`), so it got its
+own token (`--slate-banner`) rather than reusing either of those.
+
+**Scope, confirmed with Roy before touching anything** (the gold treatment shows up in more places than just
+the hero bands — a pale-gold wash on About's founders section and Our Therapists' directory wrapper, and small
+gold label pills/badge icons on Home's flip-cards): he chose **hero/banner bands only**. Those two other gold
+surfaces are untouched — flagging again here in case that turns out to be an oversight rather than an
+intentional keep.
+
+**Changes:**
+- `app/globals.css` — added `--slate-banner: #aab8c5` to `:root`. `.gold-banner` (the shared class behind
+  Home's hero, About's Hero, and PageHero's `gold` prop used by Our Therapists/Support Groups) now reads
+  `background: var(--slate-banner)` — a flat fill, replacing the old 3-stop gold gradient. Per "keep the simple
+  design," didn't reconstruct a new gradient in the grey hue — Roy supplied one color and asked for it matched
+  as-is. The `::before` animated sheen sweep is untouched, so the same slow diagonal highlight still plays over
+  the new color. `.admin-gold-bg` (the /admin CRM dashboard's separate full-page background) and
+  `.gold-card-hover` (the hover shimmer on Home's 3 path cards) are both untouched — neither is a "landing page
+  background" and Roy's own instruction was to leave hover effects alone.
+- `components/Hero.tsx` — the soft decorative glow blob behind About's headline had `var(--clay)` (gold) as its
+  radial-gradient center stop, which would have clashed once the section behind it turned grey. Swapped that
+  stop to plain white; `var(--accent)` (sage green) at the gradient's second stop was untouched since it was
+  never part of the gold treatment.
+- No changes needed to `components/home/Paths.tsx`'s hero band (its own decorative blob already used
+  `bg-white/25`, not a gold-tinted color) or `components/ui/PageHero.tsx` (its blob and eyebrow-pill background
+  colors weren't part of `.gold-banner`'s own gradient, and per the confirmed scope, small badge/pill accents
+  stayed as-is).
+- `components/ui/GoldWatermarks.tsx` (the globe/link/heart/sparkle/users line-art texture) needed no change —
+  it was already colored via `text-foreground` at low opacity, not a gold-specific color, so it reads correctly
+  against the new grey background with zero edits.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline as every prior phase, zero new
+errors. Not verified: an actual visual click-through (no dev server/browser in this sandbox) — worth a look on
+all four pages after deploying, particularly that the eyebrow pill's cream background (`#fff8ea`, left
+unchanged) still reads clearly against the new grey rather than blending in.
+
+**Files changed:** `app/globals.css` (`--slate-banner` token, `.gold-banner` background), `components/Hero.tsx`
+(glow blob center stop). No database changes.
+
+```
+del .git\index.lock
+git add app/globals.css components/Hero.tsx EXECUTION_PLAN.md
+git commit -m "Phase 130: hero/banner background swapped from gold to slate-grey reference swatch"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

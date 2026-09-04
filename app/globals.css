@@ -71,6 +71,18 @@
     --destructive: #bb5138; /* unchanged — functional error/status color */
     --amber: #8c6f1f; /* Dark Bronze Gold — reserved for high-contrast accents */
     --amber-soft: #ede2c0;
+    /* Phase 130 — Roy sent a reference swatch ("Soft Slate Grey / Muted Blue
+       Grey") and asked to replace the gold hero-band background on Home,
+       About, Our Therapists, and Support Groups with it. Sampled directly
+       from his reference image (#AAB8C5) rather than approximating against
+       an existing token — --secondary/--muted (#b7c3d6) is close but not
+       the same color, and he was explicit about matching the image exactly.
+       Scoped to a new token instead of retuning --clay/--amber themselves,
+       since those two are still used site-wide for unrelated accents
+       (eyebrow labels, thin borders, the Button "clay" variant, badges) that
+       weren't part of this request — only `.gold-banner` (below) reads from
+       this token. */
+    --slate-banner: #aab8c5;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
@@ -102,9 +114,16 @@
    Contact, and the legal pages (which also use PageHero) keep their
    existing light banner exactly as before. */
 @layer components {
+  /* Phase 130 — background swapped from the brushed-gold gradient to Roy's
+     slate-grey reference swatch (--slate-banner, see :root). Kept as a flat
+     single color rather than reconstructing a 3-stop gradient in a new
+     hue — he supplied one exact color and asked for it matched as-is, and a
+     flat fill reads as the simpler treatment he asked to keep. The ::before
+     sheen sweep, GoldWatermarks icons, and every hover effect below are
+     untouched per his explicit request. */
   .gold-banner {
     position: relative;
-    background: linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%);
+    background: var(--slate-banner);
     overflow: hidden;
   }
   .gold-banner::before {

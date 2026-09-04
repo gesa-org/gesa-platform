@@ -121,8 +121,15 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               Support Groups' gold sections, not just here. */}
           <GoldWatermarks />
 
-          {/* Soft multi-color glow behind the headline */}
-          <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,var(--clay)_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />
+          {/* Soft multi-color glow behind the headline. Phase 130 — the
+              center stop was var(--clay) (gold), which clashed once the
+              section behind it switched to the slate-grey `.gold-banner`
+              background; swapped to a plain white highlight so the glow
+              still reads as "soft light behind the headline" against the
+              new background instead of a stray gold patch. --accent (sage
+              green) was untouched — it never read as part of the gold
+              treatment. */}
+          <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,white_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />
         </ParallaxLayer>
       </div>
 
