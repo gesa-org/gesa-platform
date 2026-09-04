@@ -13,9 +13,19 @@ import {
   Tablet,
   Smartphone,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Button from "@/components/ui/Button";
 import { usePageEditorState } from "@/lib/ui-builder/usePageEditorState";
-import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, type PageGroup } from "@/lib/ui-builder/pageRegistry";
+import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, isRichTextField, type PageGroup } from "@/lib/ui-builder/pageRegistry";
+
+// Phase 134 — lazy-loaded, admin-only. Tiptap (~40kb) only ever downloads
+// when an admin actually selects a richText field, not just for opening the
+// Page Editor tab at all — matching "lazy-load rich text editor and heavy
+// controls" from the original spec.
+const RichTextEditor = dynamic(() => import("@/components/admin/ui-builder/RichTextEditor"), {
+  ssr: false,
+  loading: () => <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-border text-[13px] text-muted-fg">Loading editor…</div>,
+});
 
 // Phase 133 — the Visual Page Editor's admin-side shell. This is the parent
 // half of the typed postMessage protocol; components/ui-builder/public/
@@ -44,6 +54,15 @@ function isSelectMessage(data: unknown): data is SelectMessage {
       (data as { type?: unknown }).type === "GESA_EDITOR_SELECT_ELEMENT" &&
       typeof (data as { contentId?: unknown }).contentId === "string"
   );
+}
+
+// Phase 134 — character counts for richText fields count visible text, not
+// markup, so wrapping a paragraph in <strong> doesn't inflate the count
+// against a plain-text field's same length limit. A quick tag-strip, not a
+// security boundary — sanitizeRichTextHtml (server-side, on save) is what
+// actually protects the stored value.
+function stripTagsForCount(value: string): string {
+  return value.replace(/<[^>]*>/g, "");
 }
 
 export default function PageEditorShell() {
@@ -305,13 +324,11 @@ export default function PageEditorShell() {
                 {pageDef?.title} / {selectedField.group} / {selectedField.label}
               </p>
               <h3 className="mb-3 text-[15px] font-semibold">{selectedField.label}</h3>
-              {selectedField.type === "textarea" ? (
-                <textarea
+              {isRichTextField(selectedField.type) ? (
+                <RichTextEditor
+                  key={selectedField.contentId}
                   value={editor.fields[selectedField.contentId] ?? ""}
-                  onChange={(e) => updateSelectedField(e.target.value)}
-                  maxLength={selectedField.maxLength}
-                  rows={4}
-                  className="w-full rounded-xl border border-border px-3 py-2 text-[13px]"
+                  onChange={(html) => updateSelectedField(html)}
                 />
               ) : (
                 <input
@@ -324,7 +341,7 @@ export default function PageEditorShell() {
               )}
               {selectedField.maxLength && (
                 <p className="mt-1 text-right text-[11px] text-muted-fg">
-                  {(editor.fields[selectedField.contentId] ?? "").length} / {selectedField.maxLength}
+                  {stripTagsForCount(editor.fields[selectedField.contentId] ?? "").length} / {selectedField.maxLength}
                 </p>
               )}
               <p className="mt-3 border-t border-border pt-2 text-[11px] text-muted-fg">

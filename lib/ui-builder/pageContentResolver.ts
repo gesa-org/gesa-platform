@@ -1,5 +1,6 @@
 import { getSiteContent } from "@/lib/queries";
-import { getEditableFields } from "@/lib/ui-builder/pageRegistry";
+import { getEditableFields, isRichTextField } from "@/lib/ui-builder/pageRegistry";
+import { sanitizeRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
 
 // Phase 133 — resolves a page's content the way the spec's section 8C asks:
 //   Public rendering:      published override -> component default
@@ -72,6 +73,28 @@ export function extractFieldValues(pageKey: string, content: Record<string, unkn
     out[field.contentId] = typeof value === "string" ? value : "";
   }
   return out;
+}
+
+/** Phase 134 — defense-in-depth sanitization applied at render time, on top
+ * of the sanitization already done when a field is saved (see
+ * app/api/admin/ui-builder/page-content/draft/route.ts and .../publish/
+ * route.ts). Re-sanitizes every registered field on a resolved content
+ * object per its type — richText fields through the toolbar's HTML
+ * allowlist, everything else stripped of any HTML entirely — so a row that
+ * somehow predates this phase, or was edited directly in the database,
+ * still can't reach a visitor unsanitized. Idempotent: sanitizing
+ * already-clean content is a no-op, so calling this on every request is
+ * cheap and safe. */
+export function sanitizeResolvedContent<T extends Record<string, unknown>>(pageKey: string, content: T): T {
+  const fields = getEditableFields(pageKey);
+  let result: Record<string, unknown> = { ...content };
+  for (const field of fields) {
+    const value = getAtPath(result, field.path);
+    if (typeof value !== "string") continue;
+    const clean = isRichTextField(field.type) ? sanitizeRichTextHtml(value) : stripAllHtml(value);
+    result = setAtPath(result, field.path, clean);
+  }
+  return result as T;
 }
 
 // Re-exported so callers only need one import for the "what does this page

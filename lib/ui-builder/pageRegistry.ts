@@ -50,7 +50,17 @@ export function getPageDefinition(pageKey: string): PageDefinition | undefined {
   return PAGE_DEFINITIONS.find((p) => p.pageKey === pageKey);
 }
 
-export type EditableFieldType = "text" | "textarea";
+// Phase 134 — replaces Phase 133's "text"/"textarea" UI-shape distinction
+// with the content-*meaning* the spec asked for. "plainText"/"heading"/
+// "ctaLabel" all render the existing compact single-line input (no
+// formatting toolbar, no HTML ever allowed in the value — enforced by
+// stripAllHtml() at the API layer); "richText" is the only type that gets
+// the new Word-style toolbar + Tiptap editor and is allowed to persist
+// sanitized HTML. "url"/"image" are declared for forward compatibility
+// (CTA destination editing and image fields are still deferred — see
+// EXECUTION_PLAN.md Phase 133/134's "left out" notes) but no field uses
+// them yet.
+export type ContentFieldType = "plainText" | "richText" | "heading" | "ctaLabel" | "url" | "image";
 
 export type EditableFieldDef = {
   contentId: string;
@@ -59,39 +69,47 @@ export type EditableFieldDef = {
    * "content_json" blob per field. */
   path: string;
   label: string;
-  type: EditableFieldType;
+  type: ContentFieldType;
   /** Groups fields for the Layers panel (spec: "Hero", "Cards", "Footer"),
    * and doubles as the breadcrumb's middle segment. */
   group: string;
   maxLength?: number;
 };
 
+// Whether a field type gets the rich-text toolbar+editor vs. the plain
+// single-line input — the one branch point the inspector UI needs.
+export function isRichTextField(type: ContentFieldType): boolean {
+  return type === "richText";
+}
+
 // Phase 133 — Home's field map, the "fully supported reference
 // implementation" the spec asks for. Every contentId here is stable and
 // hand-assigned; the `path` is the only thing that would ever need to
-// change if HomeContent's own shape changes. Text-only for this phase (see
-// EXECUTION_PLAN.md Phase 133) — image fields (none on Home today) and
-// rich-text formatting are follow-up work.
+// change if HomeContent's own shape changes.
+// Phase 134 — `type` values updated to the exact plainText/richText mapping
+// Roy specified: hero/card descriptions and the footer note became
+// "richText" (Word-style toolbar); everything short (eyebrow, headings,
+// badges, CTA labels) stayed a plain single-line field.
 export const HOME_EDITABLE_FIELDS: EditableFieldDef[] = [
-  { contentId: "home.hero.eyebrow", path: "eyebrow", label: "Hero eyebrow", type: "text", group: "Hero", maxLength: 80 },
-  { contentId: "home.hero.heading", path: "title", label: "Hero heading", type: "text", group: "Hero", maxLength: 140 },
-  { contentId: "home.hero.description", path: "subtitle", label: "Hero description", type: "textarea", group: "Hero", maxLength: 400 },
-  { contentId: "home.hero.badge1", path: "badge1Label", label: "Trust badge 1", type: "text", group: "Hero", maxLength: 40 },
-  { contentId: "home.hero.badge2", path: "badge2Label", label: "Trust badge 2", type: "text", group: "Hero", maxLength: 40 },
-  { contentId: "home.hero.badge3", path: "badge3Label", label: "Trust badge 3", type: "text", group: "Hero", maxLength: 40 },
-  { contentId: "home.crisis-card.label", path: "card1FrontLabel", label: "Crisis card badge label", type: "text", group: "Crisis card", maxLength: 20 },
-  { contentId: "home.crisis-card.title", path: "card1Title", label: "Crisis card heading", type: "text", group: "Crisis card", maxLength: 100 },
-  { contentId: "home.crisis-card.description", path: "card1Description", label: "Crisis card description", type: "textarea", group: "Crisis card", maxLength: 300 },
-  { contentId: "home.crisis-card.cta", path: "card1CtaLabel", label: "Crisis card CTA label", type: "text", group: "Crisis card", maxLength: 40 },
-  { contentId: "home.veterans-card.label", path: "card2FrontLabel", label: "Veterans card badge label", type: "text", group: "Veterans card", maxLength: 20 },
-  { contentId: "home.veterans-card.title", path: "card2Title", label: "Veterans card heading", type: "text", group: "Veterans card", maxLength: 100 },
-  { contentId: "home.veterans-card.description", path: "card2Description", label: "Veterans card description", type: "textarea", group: "Veterans card", maxLength: 300 },
-  { contentId: "home.veterans-card.cta", path: "card2CtaLabel", label: "Veterans card CTA label", type: "text", group: "Veterans card", maxLength: 40 },
-  { contentId: "home.support-card.label", path: "card3FrontLabel", label: "Support card badge label", type: "text", group: "Support card", maxLength: 20 },
-  { contentId: "home.support-card.title", path: "card3Title", label: "Support card heading", type: "text", group: "Support card", maxLength: 100 },
-  { contentId: "home.support-card.description", path: "card3Description", label: "Support card description", type: "textarea", group: "Support card", maxLength: 300 },
-  { contentId: "home.support-card.cta", path: "card3CtaLabel", label: "Support card CTA label", type: "text", group: "Support card", maxLength: 40 },
-  { contentId: "home.footer-note", path: "footerNote", label: "Closing note", type: "text", group: "Footer note", maxLength: 200 },
+  { contentId: "home.hero.eyebrow", path: "eyebrow", label: "Hero eyebrow", type: "plainText", group: "Hero", maxLength: 80 },
+  { contentId: "home.hero.heading", path: "title", label: "Hero heading", type: "heading", group: "Hero", maxLength: 140 },
+  { contentId: "home.hero.description", path: "subtitle", label: "Hero description", type: "richText", group: "Hero", maxLength: 400 },
+  { contentId: "home.hero.badge1", path: "badge1Label", label: "Trust badge 1", type: "plainText", group: "Hero", maxLength: 40 },
+  { contentId: "home.hero.badge2", path: "badge2Label", label: "Trust badge 2", type: "plainText", group: "Hero", maxLength: 40 },
+  { contentId: "home.hero.badge3", path: "badge3Label", label: "Trust badge 3", type: "plainText", group: "Hero", maxLength: 40 },
+  { contentId: "home.crisis-card.label", path: "card1FrontLabel", label: "Crisis card badge label", type: "plainText", group: "Crisis card", maxLength: 20 },
+  { contentId: "home.crisis-card.title", path: "card1Title", label: "Crisis card heading", type: "heading", group: "Crisis card", maxLength: 100 },
+  { contentId: "home.crisis-card.description", path: "card1Description", label: "Crisis card description", type: "richText", group: "Crisis card", maxLength: 300 },
+  { contentId: "home.crisis-card.cta", path: "card1CtaLabel", label: "Crisis card CTA label", type: "ctaLabel", group: "Crisis card", maxLength: 40 },
+  { contentId: "home.veterans-card.label", path: "card2FrontLabel", label: "Veterans card badge label", type: "plainText", group: "Veterans card", maxLength: 20 },
+  { contentId: "home.veterans-card.title", path: "card2Title", label: "Veterans card heading", type: "heading", group: "Veterans card", maxLength: 100 },
+  { contentId: "home.veterans-card.description", path: "card2Description", label: "Veterans card description", type: "richText", group: "Veterans card", maxLength: 300 },
+  { contentId: "home.veterans-card.cta", path: "card2CtaLabel", label: "Veterans card CTA label", type: "ctaLabel", group: "Veterans card", maxLength: 40 },
+  { contentId: "home.support-card.label", path: "card3FrontLabel", label: "Support card badge label", type: "plainText", group: "Support card", maxLength: 20 },
+  { contentId: "home.support-card.title", path: "card3Title", label: "Support card heading", type: "heading", group: "Support card", maxLength: 100 },
+  { contentId: "home.support-card.description", path: "card3Description", label: "Support card description", type: "richText", group: "Support card", maxLength: 300 },
+  { contentId: "home.support-card.cta", path: "card3CtaLabel", label: "Support card CTA label", type: "ctaLabel", group: "Support card", maxLength: 40 },
+  { contentId: "home.footer-note", path: "footerNote", label: "Closing note", type: "richText", group: "Footer note", maxLength: 200 },
 ];
 
 export function getEditableFields(pageKey: string): EditableFieldDef[] {
