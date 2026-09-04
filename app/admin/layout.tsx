@@ -24,6 +24,13 @@ const NAV = [
   { href: "/admin/therapists", label: "Our Professionals" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/content", label: "Content Manager (Editing Details)" },
+  // Phase 132 — the new visual design-token builder (colors, typography,
+  // live preview, draft/publish). Deliberately a separate nav item from
+  // "Content Manager" above rather than a tab inside it — Content Manager
+  // edits page copy/text field-by-field with no preview; this edits
+  // site-wide visual tokens with a live preview and an explicit Publish
+  // step, a different enough workflow to warrant its own entry.
+  { href: "/admin/ui-builder", label: "UI Builder" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

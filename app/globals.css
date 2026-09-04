@@ -360,7 +360,10 @@ html[dir="rtl"] .float-right {
   .eyebrow {
     display: inline-block;
     font-size: 12px;
-    letter-spacing: 0.14em;
+    /* Phase 132 — the UI Builder's "letter spacing for small uppercase
+       labels" control targets this rule specifically; fallback matches the
+       pre-Phase-132 literal value. */
+    letter-spacing: var(--ui-label-tracking, 0.14em);
     text-transform: uppercase;
     font-weight: 700;
     color: var(--clay);
@@ -432,17 +435,25 @@ html[dir="rtl"] .float-right {
     margin: 0;
     padding: 0;
   }
+  /* Phase 132 — font-size/line-height/font-weight below now read from the
+     --ui-* custom properties the admin UI Builder controls (see
+     lib/ui-builder/tokensToCss.ts), each with a fallback matching this
+     rule's own pre-Phase-132 literal value — so a page that never got the
+     override <style> block (or a build predating this phase) renders
+     identically to before. --font-sans/--font-serif were already variables
+     and needed no change. */
   body {
     font-family: var(--font-sans);
     background: var(--background);
     color: var(--foreground);
-    line-height: 1.6;
-    font-size: 16px;
+    line-height: var(--ui-line-height, 1.6);
+    font-size: var(--ui-base-font-size, 16px);
+    font-weight: var(--ui-body-weight, 400);
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, .serif {
     font-family: var(--font-serif);
-    font-weight: 600;
+    font-weight: var(--ui-heading-weight, 600);
     letter-spacing: -.01em;
     line-height: 1.2;
   }

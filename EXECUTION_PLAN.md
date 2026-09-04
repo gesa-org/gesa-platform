@@ -5495,4 +5495,110 @@ git push
 ```
 
 ---
+
+## Phase 132 — admin "UI Builder": site-wide design tokens, draft/publish, live preview
+
+**Request:** Roy sent a full architecture spec for a visual "UI/UX Components Builder" embedded in the CRM —
+five modules (Typography, Images, Color/Theme, Layout/Reorder, Global Actions), a centralized state tree, an
+isolated live-preview pane, and a draft-table-to-production Publish pipeline with cache flushing.
+
+**Scoping conversation, before writing any code:** the existing admin "Content Manager" (21 components) only
+edits plain text/link fields into a single `site_content` JSON table — no color, font, spacing, drag-and-drop,
+draft state, or live preview anywhere in the app today. The full five-module spec is a genuinely large product
+(closer to a lightweight page-builder than a feature), and building all five blind — with no working dev
+server or browser in this sandbox to click through the result — risked shipping a large, unverifiable diff.
+Flagged this to Roy directly and asked how to prioritize; he chose to attempt the full architecture, applied
+site-wide from the start, rather than starting narrower on one page. Given that direction, this phase builds
+the **real, working architecture end-to-end** (state tree, draft persistence, Publish + cache flush, live
+preview, undo/redo) with the **two most tractable modules fully wired — Typography and Color/Theme** — and
+ships the other two (Images/Lighting, Layout/Reorder) as visibly disabled placeholders inside the same shell
+rather than half-built or faked controls. This is a scope judgment call under the sandbox's verification
+limits, not silent scope-cutting — flagging it clearly here, same as every other honesty-over-completeness
+call made earlier in this engagement (see Phase 129's client-self-report design for the same principle applied
+elsewhere).
+
+**Data model:**
+- New table `crm_ui_drafts` (migration `create_crm_ui_drafts`): `scope text primary key, schema jsonb not null,
+  updated_by uuid references profiles(id), updated_at timestamptz`. RLS: one `for all` policy gated on
+  `auth_role() = 'admin'`, matching the existing policy-naming convention. One row (`scope = 'global'`) is used
+  today; the `scope` column (rather than a single fixed row) exists so a later phase can add per-page drafts
+  without a schema change.
+- Published tokens reuse the existing `site_content` table under a new key, `theme_tokens` — no schema change
+  needed there, and the public site already knows how to read any `site_content` key via `getPageContent()`'s
+  existing fallback/`published` contract, so no new read path was needed either.
+- `lib/database.types.ts` — added `CrmUiDraftRow` type and the `crm_ui_drafts` table entry.
+
+**Token schema** (`lib/ui-builder/types.ts`): `DesignTokens = { colors: {primary, secondary, accent,
+background, foreground}, typography: {headingFont, bodyFont, baseFontSize, headingWeight, bodyWeight,
+lineHeight, labelLetterSpacing} }`. Fonts are a curated dropdown (not free text) of families already loaded by
+the site, so a selection can never silently fail to load. Every default value was set to match
+`app/globals.css`'s actual current literal values exactly (verified by reading the file, not assumed) — so
+publishing with zero edits is a true no-op.
+
+**Publish pipeline:** `PUT /api/admin/ui-builder/draft` autosaves the in-progress token state (debounced
+client-side) into `crm_ui_drafts` — the "staging/draft state database table" the spec asked for.
+`POST /api/admin/ui-builder/publish` copies that draft into `site_content` (`theme_tokens`, `published: true`)
+and calls `revalidatePath("/", "layout")` — this app has no separate CDN in front of Vercel to flush, so
+Next.js's own cache-revalidation API is the concrete implementation of "flush any CDN/server caches"; since the
+tokens are injected once in the root layout and apply site-wide, revalidating at the root layout invalidates
+every route's cached render in one call. This is the first use of `revalidatePath` anywhere in this codebase —
+every prior content edit relied on each page's own short ISR window instead of an explicit flush.
+
+**Rendering:** `app/layout.tsx` now fetches `theme_tokens` (via the existing `getPageContent` contract) and
+renders a `<style id="gesa-theme-tokens">:root{...}</style>` block immediately after `<body>` opens, overriding
+`globals.css`'s defaults for every real visitor on every request. `app/globals.css` was updated so the
+properties an admin can actually control are wired to real CSS: `body`'s `font-size`/`line-height`/
+`font-weight`, `h1-h4/.serif`'s `font-weight`, and `.eyebrow`'s `letter-spacing` (the spec's own "optimized for
+small uppercase labels" callout) all now read `var(--ui-*, <original literal value>)` — every fallback matches
+the pre-Phase-132 value exactly, so a stale build or a missing row renders identically to before.
+`--font-serif`/`--font-sans` needed no new wiring; they were already CSS variables feeding Tailwind's
+`fontFamily` config.
+
+**Live preview:** the builder's iframe (`components/admin/ui-builder/UIBuilderShell.tsx`) loads the real public
+site (`/`) — not a separate mocked-up renderer — and on every token change, `postMessage`s the computed CSS
+text into it. A small listener script in `app/layout.tsx` (present on every page, inert for every real visitor)
+checks `event.origin` matches the site's own origin and the message's shape before touching anything, then
+overwrites the same `<style>` tag's content — so the preview is always rendered by the exact same code path a
+real visitor would get, just with draft (unpublished) values.
+
+**State management:** `lib/ui-builder/useUIBuilderState.ts` — a `useReducer`-based history stack (past/present/
+future) rather than adding Zustand/Redux as a new dependency; this app has no existing global-state library, and
+a plain reducer gives the same "one state tree, dispatch-driven" shape without a new package this sandbox can't
+build/verify against a real dev server. Undo/Redo, debounced autosave, Publish, and "Discard draft" (reverts to
+the currently published tokens) are all wired through it.
+
+**Contrast safeguard:** `lib/ui-builder/types.ts`'s `contrastRatio()` implements the real WCAG relative-
+luminance formula (not an approximation) and the builder shows a pass/fail badge for text-on-background and
+primary-on-background as colors are edited — warns, doesn't block Publish, since a color pairing might be
+intentionally decorative rather than body text.
+
+**Left out of this phase, honestly, not silently:** Images/Lighting module, Layout/Section-reorder module (and
+therefore "review/trust-signal placement logic," which is a layout-ordering concern), the "Insert new
+section/component" action, and per-page (vs. global) drafts. All are shown as locked/disabled sections in the
+builder UI so the module map from Roy's original request stays visible, rather than omitted entirely.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline, zero new errors (this took two
+passes: the first added `crm_ui_drafts` to the DB but not to `lib/database.types.ts`, which surfaced as 6 real
+type errors — fixed by adding `CrmUiDraftRow` and the table entry, verified clean afterward). Not verified: an
+actual click-through of the builder UI, the live-preview iframe's postMessage round trip, or a real Publish
+(no dev server/browser in this sandbox) — this is the single most important thing to test after deploying,
+specifically: open `/admin/ui-builder`, change a color, confirm the preview pane updates without a page reload,
+click Publish, then open the live site in a normal tab and confirm the change is there immediately.
+
+**Files changed:** `lib/ui-builder/types.ts` (new), `lib/ui-builder/tokensToCss.ts` (new),
+`lib/ui-builder/useUIBuilderState.ts` (new), `lib/database.types.ts` (`CrmUiDraftRow` + table entry),
+`app/api/admin/ui-builder/draft/route.ts` (new), `app/api/admin/ui-builder/publish/route.ts` (new),
+`app/layout.tsx` (theme token style block + preview listener script), `app/globals.css` (body/heading/eyebrow
+wired to `--ui-*` tokens), `components/admin/ui-builder/UIBuilderShell.tsx` (new), `app/admin/ui-builder/page.tsx`
+(new), `app/admin/layout.tsx` (nav entry). Database: 1 migration (`create_crm_ui_drafts`) against Production
+project `iddeoavrlnvwwfopsacy`.
+
+```
+del .git\index.lock
+git add lib/ui-builder lib/database.types.ts app/api/admin/ui-builder app/layout.tsx app/globals.css components/admin/ui-builder app/admin/ui-builder app/admin/layout.tsx EXECUTION_PLAN.md
+git commit -m "Phase 132: admin UI Builder — design tokens, draft/publish pipeline, live preview"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
