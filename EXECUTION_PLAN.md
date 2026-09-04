@@ -5464,4 +5464,35 @@ git push
 ```
 
 ---
+
+## Phase 131 — Crisis path card: mat color
+
+**Request:** Roy sent a reference image of Home's "Crisis" path card (the first of the three flip-cards) with a
+light sky-blue mat behind the swirl mark, replacing the cream mat it currently has, and asked for that exact
+color matched.
+
+**Change:** `components/home/Paths.tsx`'s `PATH_FRONT_STYLES[0].bg` (the Crisis card's front-face mat, behind
+`GesaMark`) — sampled the blue directly from Roy's reference image (`#aed0e9`) rather than reusing an existing
+token, and changed it from `bg-clay-soft` to `bg-[#aed0e9]`. The other two cards (Veterans, Support) already use
+hardcoded hex values for their own mats (`bg-accent`, `bg-[#5f7a91]`) where no token fit, so this follows the
+same established pattern.
+
+**Left untouched:** the mark's own ring colors (sage green outer ring, tan middle ring, terracotta inner
+ring/dot) — these already closely matched the reference image, so only the background changed. Also untouched:
+the shared cream back-face panel (`bg-clay-soft`, line ~458) all three cards flip to on hover — that's one
+color shared across Crisis/Veterans/Support, not specific to Crisis, and Roy's reference was of the front
+(unflipped) face only.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline, zero new errors.
+
+**Files changed:** `components/home/Paths.tsx` (one line). No database changes.
+
+```
+del .git\index.lock
+git add components/home/Paths.tsx EXECUTION_PLAN.md
+git commit -m "Phase 131: Crisis path card mat color matched to reference image"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

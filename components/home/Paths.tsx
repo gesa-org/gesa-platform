@@ -177,9 +177,20 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // (verified by rendering each card's own palette to PNG before landing on
 // these) so every ring still reads as a distinct tone against its own
 // card's background, not just carried over from the old shape unchanged.
+// Phase 131 — Roy sent a reference image of the Crisis card with a light
+// sky-blue mat instead of the cream `bg-clay-soft` it had been using, and
+// asked for that exact color matched. Sampled directly from his image
+// (#aed0e9) rather than reusing an existing token — none of the site's blue
+// tokens (--secondary/--muted #b7c3d6, --slate-banner #aab8c5) are this
+// light/saturated a sky blue, and he was explicit about matching the
+// picture, not approximating. Hardcoded as an arbitrary Tailwind value,
+// consistent with card 3 below (`bg-[#5f7a91]`) already doing the same
+// thing for a color with no existing token. The mark's ring colors
+// (sage/tan/terracotta) were already a close match to the reference and
+// were left untouched — only the card's background changed.
 const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] = [
   {
-    bg: "bg-clay-soft",
+    bg: "bg-[#aed0e9]",
     frame: "border-clay",
     mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
   },
