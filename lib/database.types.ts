@@ -357,6 +357,18 @@ export type BookingIntakeStatus = "intake_completed" | "diary_opened";
 // given how much more personal data this one form collects at once (city,
 // birth year, phone, participation history) alongside the two consent
 // timestamps.
+// Phase 132 — draft staging for the admin UI Builder (site-wide design
+// tokens). `schema` is intentionally untyped `Json` at the DB layer — the
+// actual shape (DesignTokens) lives in lib/ui-builder/types.ts and is
+// validated/merged there on every read, the same "don't trust the stored
+// JSON shape blindly" pattern site_content's getPageContent already uses.
+export type CrmUiDraftRow = {
+  scope: string;
+  schema: Json;
+  updated_by: string | null;
+  updated_at: string;
+};
+
 export type BookingIntakeFormRow = {
   id: string;
   therapist_id: string;
@@ -625,6 +637,20 @@ export type Database = {
         Insert: Partial<TranslationCacheRow> & Pick<TranslationCacheRow, "source_hash" | "target_lang" | "source_text" | "translated_text">;
         Update: Partial<TranslationCacheRow>;
         Relationships: [];
+      };
+      crm_ui_drafts: {
+        Row: CrmUiDraftRow;
+        Insert: Partial<CrmUiDraftRow> & Pick<CrmUiDraftRow, "scope" | "schema">;
+        Update: Partial<CrmUiDraftRow>;
+        Relationships: [
+          {
+            foreignKeyName: "crm_ui_drafts_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: Record<string, never>;

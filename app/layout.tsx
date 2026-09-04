@@ -12,6 +12,8 @@ import AccessibilityWidget from "@/components/accessibility/AccessibilityWidget"
 import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
 import { MAIN_CONTENT_ID } from "@/lib/accessibility/config";
 import { getPageContent } from "@/lib/content";
+import { DEFAULT_DESIGN_TOKENS, mergeDesignTokens, type DesignTokens } from "@/lib/ui-builder/types";
+import { designTokensToCssText } from "@/lib/ui-builder/tokensToCss";
 
 export const metadata: Metadata = {
   title: "GESA (Global Emotional Support Alliance)",
@@ -27,15 +29,50 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [footerContent, headerContent, crisisButtonContent] = await Promise.all([
+  const [footerContent, headerContent, crisisButtonContent, themeTokensRaw] = await Promise.all([
     getPageContent("page_footer", FOOTER_CONTENT_FALLBACK),
     getPageContent("site_header", HEADER_CONTENT_FALLBACK),
     getPageContent("component_crisis_button", CRISIS_BUTTON_CONTENT_FALLBACK),
+    getPageContent<DesignTokens>("theme_tokens", DEFAULT_DESIGN_TOKENS),
   ]);
+  // Phase 132 — the UI Builder's published design tokens. mergeDesignTokens
+  // re-fills anything missing (a row saved before a new field existed,
+  // etc.) rather than trusting the stored JSON shape blindly.
+  const themeTokens = mergeDesignTokens(themeTokensRaw);
+  const themeTokensCss = designTokensToCssText(themeTokens);
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
+        {/* Phase 132 — server-rendered override of the design tokens the
+            admin UI Builder controls (colors + typography). Rendered first,
+            right after <body> opens, so it wins the cascade over
+            globals.css's :root defaults for every visitor on every request
+            — this is the "production tokens" half of Publish; no separate
+            CDN sits in front of Vercel here, so app/api/admin/ui-builder/
+            publish/route.ts's revalidatePath call is what actually flushes
+            the cached render that would otherwise serve the old values for
+            up to that route's ISR window. */}
+        <style id="gesa-theme-tokens">{`:root { ${themeTokensCss} }`}</style>
+        {/* Phase 132 — the admin UI Builder's live-preview iframe loads this
+            same site and postMessages draft token edits into it as an admin
+            adjusts a color/font control, so the preview reflects changes
+            before Publish is ever clicked. Origin-checked and shape-checked
+            before touching anything, and entirely inert for every normal
+            visitor — no message ever arrives outside that one iframe. Only
+            ever writes inline style properties on <html>, never innerHTML
+            or any other DOM mutation. */}
+        <Script id="gesa-ui-draft-preview-listener" strategy="afterInteractive">
+          {`try {
+            window.addEventListener("message", function (event) {
+              if (event.origin !== window.location.origin) return;
+              var data = event.data;
+              if (!data || data.type !== "gesa-ui-draft-preview" || typeof data.css !== "string") return;
+              var el = document.getElementById("gesa-theme-tokens");
+              if (el) el.textContent = ":root { " + data.css + " }";
+            });
+          } catch (e) {}`}
+        </Script>
         {/* Phase 115 — without this, the document renders lang="en"/dir
             (implicitly ltr) for the first paint on every request, even for
             a returning visitor who already chose Hebrew, and only flips to
