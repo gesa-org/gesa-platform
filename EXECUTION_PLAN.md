@@ -6376,3 +6376,176 @@ Roy — same as the last several phases: run those four one at a time, and paste
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 140: Page Content becomes a genuinely site-wide editor — legal pages, missed pages, and global Header/Footer/Crisis Button
+
+**Request:** "the 'Phase 135, Phase 136, Phase 137, Phase 138' [work] is also work to other pages... This
+implemented feature at the 'Page Content' of UI Builder section is a global/universal function of the website...
+all the text details across the website must be editable using this function." In plain terms: Page Content had
+only ever covered 8 of the site's pages (Home, About, Our Professionals, Community, Donate, Intake, FAQ, Contact)
+— everything else (5 legal pages, 2 real pages with zero registry entry, and the Header/Footer/Crisis Button that
+render on every single route) was still Content-Manager-only or, in two cases, not editable through any admin
+interface at all.
+
+**Audit first, per the standing rule:** read every route under `app/` end to end before touching the registry.
+Found four categories of gap: (1) the 5 legal pages (`app/[slug]/page.tsx`, backed by a separate `legal_pages`
+table, not `site_content`) — `supportsVisualEditor: false` since Phase 135, by design, not oversight; (2) two real,
+live pages with **no registry entry at all**, not even the `false` placeholder the legal pages had —
+`/find-your-therapist` and `/donate/thank-you`; (3) Header, Footer, and the site-wide Crisis Button — rendered
+once in `app/layout.tsx`, left unregistered since Phase 135 for a real architectural reason (below); (4) `/blog` —
+confirmed a deliberate `redirect("/")` stub with no real content (Roy disabled it pending real posts), correctly
+excluded, not a gap.
+
+**Legal pages — a second resolver strategy, not a workaround:** `legal_pages` rows (`{slug, title, body,
+updated_at}`) are a fundamentally different shape than a `site_content` JSON blob, so rather than force-fitting
+them through the existing `contentSources` path, `PageDefinition` gained one new optional field —
+`legalPageSlug` — and `pageContentResolver.ts`'s `getPageBaseContent()`/`publishPageSources()` each gained an
+early branch: if `def.legalPageSlug` is set, read/write `legal_pages` directly (via the existing `getLegalPage()`
+query and a plain `.update()`) instead of walking `contentSources` (empty for these 5). All 5 entries flipped to
+`supportsVisualEditor: true`, each `legalPageSlug` matching its real URL slug exactly. Two fields per page
+(`title`, `body` — generated once by a `legalPageFields(pageKey)` helper rather than hand-repeated 5 times);
+`body` deliberately has no `maxLength` (a legal document's real length is open-ended, unlike this registry's
+other richText fields, all short marketing copy). Still fully editable through Content Manager's
+`LegalPagesManager` too — same rows, either interface, no migration or second data store.
+
+**The two missed pages — registered exactly like FAQ/Contact:** both are simple, single-`site_content`-row
+banner pages (`page_find_your_therapist`, `page_donate_thank_you` — the latter seeded fresh from the live
+hardcoded copy in `app/donate/thank-you/thankYouContent.ts`, which had no site_content backing at all before this
+phase). `app/find-your-therapist/page.tsx` and `app/donate/thank-you/page.tsx` rewritten to the same
+`resolveEditorPreview`/`EditorPreviewBridge`/`EditableText` pattern every other page already uses — Find Your
+Therapist's hero eyebrow/title/description, and Donate Thank You's 3 status states (paid/failed/pending
+heading+body) plus the shared back-link label.
+
+**Header/Footer/Crisis Button — the real architectural problem:** these render once in `app/layout.tsx`, shared
+by every route. Unlike a page's own `page.tsx` (which Next.js hands a `searchParams` prop), a shared layout
+deliberately gets none — giving it one would force every route under that layout to re-render per query string,
+breaking layout caching site-wide. Every other page's `?editorPreview=true` draft-preview gate is server-side and
+depends on exactly that prop, so it couldn't be reused here unmodified. Two problems, two independent fixes:
+- **Data layer:** registered "global" as an ordinary 3-source page in `pageRegistry.ts` — `contentSources:
+  [{namespace: "header", siteContentKey: "site_header"}, {namespace: "footer", siteContentKey: "page_footer"},
+  {namespace: "crisisButton", siteContentKey: "component_crisis_button"}]` — reusing 100% of the existing
+  generic `getPageBaseContent`/`publishPageSources`/draft+publish API route machinery with zero new routes.
+  `pageContentResolver.ts`'s `FALLBACK_BY_SITE_CONTENT_KEY` map gained the three matching fallback objects
+  (`HEADER_CONTENT_FALLBACK`, `FOOTER_CONTENT_FALLBACK`, `CRISIS_BUTTON_CONTENT_FALLBACK`, imported straight from
+  `Header.tsx`/`Footer.tsx`/`CrisisButton.tsx` — the same single source of truth every other fallback in that map
+  already uses). ~50 fields registered under `GLOBAL_EDITABLE_FIELDS`, namespaced `header.*`/`footer.*`/
+  `crisisButton.*`. Four Footer fields already disclosed as dead in Footer.tsx's own Phase 117 comments
+  (`exploreAboutLabel`/`exploreTherapistsLabel`/`exploreSupportGroupsLabel`/`supportDonateLabel` — each
+  superseded by a Header field or removed from render) were deliberately **not** registered — registering a field
+  nothing on the page renders would let an admin "edit" something with no visible effect.
+- **Preview/selection layer:** built `components/ui-builder/public/GlobalContentGate.tsx`, a client component
+  that does entirely client-side what every other page's server component does with `searchParams` —
+  `useSearchParams()` (works at any component depth, but only inside a `<Suspense>` boundary, which is what
+  keeps this de-opting to client-only rendering confined to this one subtree instead of the whole route) detects
+  `?editorPreview=true`, and only then fetches the *same* admin-gated `/api/admin/ui-builder/page-content/
+  draft?pageKey=global` route every other page's inspector already calls (no new API route). A 401/403 (not
+  signed in, or a non-admin) simply leaves the server-fetched published content in place — identical to every
+  other page's own admin gate. `app/layout.tsx` now fetches `headerContent`/`footerContent`/`crisisButtonContent`
+  exactly as before and passes them into `GlobalContentGate`, which renders `<Header>`/`{children}`/
+  `<SiteFooterSlot>`/`<CrisisButton>` in its place, wrapping in `EditorPreviewBridge` only once the draft fetch
+  actually succeeds. The Suspense fallback renders the same components with the plain published content, so a
+  normal visitor's first paint is byte-identical to before this phase.
+
+**Wiring the actual fields:** `Header.tsx`, `Footer.tsx`, and `CrisisButton.tsx` had every registered field
+wrapped in `EditableText` with the exact `contentId`s from `GLOBAL_EDITABLE_FIELDS` (e.g.
+`global.header.homeLabel`, `global.footer.tagline`, `global.crisisButton.triggerLabel`). One prop-widening
+needed along the way: `HelpUsGrowForm`'s `heading`/`subtitle`/`submitLabel`/`sendingLabel`/`submittedMessage`
+props were `string`, widened to `ReactNode` (same precedent as `PageHero`'s `eyebrow` prop in Phase 135) so
+Footer can pass an `EditableText`-wrapped element through rather than a plain string. Footer's "Explore" column
+top 4 links (About/Find Support/Our Professionals/Community + Donate) were deliberately **left unwrapped** here —
+they already read `HeaderContent` via `lib/navigation.ts`'s shared `PRIMARY_NAVIGATION` list and are already
+editable from Header's own wrapped elements; wrapping the same `contentId` a second time in a second DOM location
+would mean only one of the two elements gets the inspector's live-preview `textContent`/`innerHTML` update (that
+handler queries a single matching element, not all of them) until Publish/reload — better to leave that one
+`contentId` selectable from exactly one place (Header) than to create a duplicate-but-desynced-during-editing
+element.
+
+**Multiple `EditorPreviewBridge` instances, reasoned through, not just assumed safe:** when "Global" is selected
+in the Page Navigator, its iframe loads Home (`route: "/"`) — so Home's own `page.tsx` may also wrap itself in
+its own `EditorPreviewBridge` (for `home.*` fields) *nested inside* `GlobalContentGate`'s bridge (for
+`global.*` fields, which live outside `<main>`, never nested under Home's own bridge). Each bridge is an
+independent, idempotent context provider: both post `GESA_EDITOR_READY` on mount (harmless if received twice by
+the parent frame), both react to `GESA_EDITOR_SET_EDIT_MODE`/`SET_SELECTION`/`UPDATE_PREVIEW` messages
+(idempotent — `UPDATE_PREVIEW`'s DOM write targets one already-unique `data-gesa-content-id`, so a redundant
+second bridge processing the same message is a no-op re-write of the same element), and each only ever affects
+descendants actually consuming *its own* context (Header/Footer/CrisisButton fields read the outer bridge's
+context; Home's own fields read the inner one) — so nesting introduces no visible conflict.
+
+**Publish's cache-invalidation special case:** `app/api/admin/ui-builder/page-content/publish/route.ts` now
+branches on `pageKey === "global"` — `revalidatePath("/", "layout")` instead of `revalidatePath(def.route)`,
+since a layout-level change needs the whole site's cache invalidated, not the one route ("/") the Page Navigator
+happens to load "Global" against.
+
+**`getFieldByContentId`/`getPageKeyForContentId` — fixing a real correctness gap this phase's own design
+surfaced:** because Header/Footer/CrisisButton render on *every* page's canvas regardless of which page is
+selected in the Page Navigator, the previous per-page-scoped `getFieldByContentId(pageKey, contentId)` lookup
+would fail to resolve a click on a Header/Footer element whenever any page other than "Global" was selected.
+Fixed by making the lookup global (every `contentId` is hand-prefixed by its owning pageKey, so it's already
+unique) and by having `PageEditorShell.tsx`'s `onMessage` handler auto-switch `selectedPageKey` to the clicked
+field's real owning page (`getPageKeyForContentId`) when it differs from what's currently selected — the one
+accepted UX tradeoff being that clicking a Header/Footer field while browsing a different page's canvas switches
+the Navigator to "Global" (and reloads the iframe to Home, "Global"'s designated route) rather than silently
+failing to select anything.
+
+**Deliberately excluded, disclosed rather than silently skipped:**
+- **`components/accessibility/AccessibilityWidget.tsx`'s own internal labels** ("Accessibility options,"
+  "Accessibility Adjustments," "Close accessibility toolbar," and the labels inside its Language/Content/Color/
+  Orientation/Reset sections) — this is the accessibility tool's own control-panel chrome, not visitor-facing
+  marketing copy, the same category of utility UI this engagement has consistently left out of Page Content (see
+  Phase 135's DonateForm/payment-logic carve-out). Flagged here explicitly rather than left as a silent gap.
+- **Auth/account/messaging pages** (`login`, `signup`, `forgot-password`, `reset-password`, `account`,
+  `messages`) — functional form/utility pages, not marketing content, same excluded category.
+- **Individual therapist profile pages** (`app/therapists/[slug]/page.tsx`) — real, structured therapist-record
+  data, not static site copy; excluded per the same "don't expose sensitive/structured data as static content"
+  guardrail every prior phase in this registry has applied.
+- **`/blog`** — confirmed (not assumed) to be a deliberate `redirect("/")` stub with zero real content; nothing
+  to register.
+
+**QA:** `npx tsc --noEmit` — identical to the established 16-line baseline (the same pre-existing
+`lib/email/resend.ts` + 5 test-file typing issues, none touched this phase) after every batch of changes this
+phase, most recently re-confirmed after the `GlobalContentGate.tsx`/`layout.tsx`/`Header.tsx`/`Footer.tsx`/
+`CrisisButton.tsx`/`HelpUsGrowForm.tsx` edits. Grepped every new/modified file for the unescaped-apostrophe JSX
+pattern that broke two earlier builds — every apostrophe found (in comments like "doesn't," "Roy's," "component's")
+is inside a `//`/`/* */` comment, none in literal JSX text. Cross-checked every `global.*` contentId used in
+Header/Footer/CrisisButton against `GLOBAL_EDITABLE_FIELDS`'s actual registered strings, not guessed IDs.
+**Not verified: an actual click-through in a live browser** (same standing sandbox limitation as every UI
+Builder phase since Phase 132 — no dev server here). Most important to verify after deploying, in this order:
+(1) open Page Content, confirm "Global (Header, Footer & Crisis Button)" and all 5 legal pages now appear in the
+Page Navigator and are no longer marked unsupported; (2) edit a Header nav label, confirm the live-preview canvas
+updates immediately and the Navigator doesn't jump pages unexpectedly; (3) from a *different* page's canvas (e.g.
+About), click a Footer link and confirm the Navigator auto-switches to "Global" and the inspector shows the
+correct field, not a stale one; (4) Publish a Header/Footer/Crisis Button edit and confirm it's visible on every
+route, not just Home, without a manual redeploy; (5) open a legal page in Page Content, edit the body, Publish,
+and confirm the public `/privacy-policy` (etc.) route reflects it and Content Manager's LegalPagesManager shows
+the same updated row; (6) visit `/find-your-therapist` and `/donate/thank-you` directly and confirm their banners
+render and are editable.
+
+**Files changed:** `lib/ui-builder/pageRegistry.ts` (`legalPageSlug` field, "global"/`find-your-therapist`/
+`donate-thank-you` page definitions, 5 legal page entries flipped to `supportsVisualEditor: true`,
+`GLOBAL_EDITABLE_FIELDS`, `legalPageFields()`, `FIND_YOUR_THERAPIST_EDITABLE_FIELDS`,
+`DONATE_THANK_YOU_EDITABLE_FIELDS`, global-search `getFieldByContentId(contentId)`, new
+`getPageKeyForContentId(contentId)`), `lib/ui-builder/pageContentResolver.ts` (legal-page branch in
+`getPageBaseContent`/`publishPageSources`, 5 new `FALLBACK_BY_SITE_CONTENT_KEY` entries), `app/api/admin/
+ui-builder/page-content/publish/route.ts` (`pageKey === "global"` revalidate special-case), `app/[slug]/page.tsx`,
+`app/find-your-therapist/page.tsx`, `app/donate/thank-you/page.tsx` (rewritten onto the standard
+`resolveEditorPreview`/`EditorPreviewBridge`/`EditableText` pattern), `components/ui-builder/public/
+GlobalContentGate.tsx` (new), `app/layout.tsx` (renders through the gate), `components/Header.tsx`,
+`components/Footer.tsx`, `components/CrisisButton.tsx` (every registered field wrapped in `EditableText`),
+`components/footer/HelpUsGrowForm.tsx` (5 props widened `string` → `ReactNode`), `components/admin/ui-builder/
+PageEditorShell.tsx` (global `getFieldByContentId` call, auto-switch-selected-page-on-click, unsupported-page
+message simplified). No new database migrations — every field still reads/writes the same `crm_ui_drafts`/
+`site_content`/`legal_pages` rows that already existed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 140: make Page Content a genuinely site-wide editor (legal pages, missed pages, global Header/Footer/Crisis Button)"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the
+`git commit` line specifically (that's the step that's gone unconfirmed the last couple of phases — even just a
+line saying "nothing showed up" or a screenshot helps me know whether the commit actually went through).
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -7,6 +7,7 @@ import NotificationBell from '@/components/admin/NotificationBell';
 import VolunteerPrimaryCta from '@/components/volunteer/VolunteerPrimaryCta';
 import type { HeaderContent } from '@/lib/content';
 import { PRIMARY_NAVIGATION, resolveNavHref } from '@/lib/navigation';
+import EditableText from '@/components/ui-builder/public/EditableText';
 
 // Phase 88 — Roy asked to relabel the main nav and the Donate CTA without
 // touching any page's actual URL, structure, or in-page content: the item
@@ -69,13 +70,22 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
             not a plain Link) so it's pulled out of the map and rendered on
             its own right after, same visual treatment as before. */}
         <nav className="hidden md:flex gap-2 ms-2">
+          {/* Phase 140 — each nav label is now Page Content-editable via
+              "global.header.<contentField>" (see pageRegistry.ts's
+              GLOBAL_EDITABLE_FIELDS), same contentField this list already
+              used to read from `content`. */}
           {PRIMARY_NAVIGATION.filter((item) => item.showInHeader && item.key !== "donate").map((item) => (
             <Link
               key={item.key}
               href={resolveNavHref(item, content)}
               className="px-3 py-2 rounded-full text-[15px] font-medium text-muted-fg hover:text-primary transition-colors"
             >
-              {content[item.contentField]}
+              <EditableText
+                contentId={`global.header.${item.contentField}`}
+                label={`Nav: "${content[item.contentField]}"`}
+                value={content[item.contentField] as string}
+                as="span"
+              />
             </Link>
           ))}
         </nav>
@@ -90,7 +100,8 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
             href={content.donateHref}
             className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft"
           >
-            <Heart size={16} /> {content.donateLabel}
+            <Heart size={16} />{" "}
+            <EditableText contentId="global.header.donateLabel" label="Donate button label" value={content.donateLabel} as="span" />
           </VolunteerPrimaryCta>
           <NotificationBell />
           <LanguageSelector />

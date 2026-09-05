@@ -72,7 +72,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: publishResult.error }, { status: 500 });
   }
 
-  revalidatePath(def.route);
+  // Phase 140 — "global" (Header/Footer/Crisis Button) renders in
+  // app/layout.tsx, shared by every route, not just `def.route` (which is
+  // "/" only because that's what the Page Navigator's iframe loads for it).
+  // A layout-level change needs the whole site's cache invalidated, not one
+  // page's — revalidatePath's own `type: "layout"` option is built exactly
+  // for this.
+  if (pageKey === "global") {
+    revalidatePath("/", "layout");
+  } else {
+    revalidatePath(def.route);
+  }
 
   return NextResponse.json({ ok: true, publishedAt, route: def.route });
 }

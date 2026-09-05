@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 
-import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
-import SiteFooterSlot from "@/components/SiteFooterSlot";
-import CrisisButton, { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
+import { HEADER_CONTENT_FALLBACK } from "@/components/Header";
+import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
+import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
+import GlobalContentGate from "@/components/ui-builder/public/GlobalContentGate";
 import TranslationProvider from "@/components/TranslationProvider";
 import SmoothScroll from "@/components/motion/SmoothScroll";
 import AccessibilityProvider from "@/components/accessibility/AccessibilityProvider";
 import AccessibilityWidget from "@/components/accessibility/AccessibilityWidget";
-import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
 import { MAIN_CONTENT_ID } from "@/lib/accessibility/config";
 import { getPageContent } from "@/lib/content";
 import { DEFAULT_DESIGN_TOKENS, mergeDesignTokens, type DesignTokens } from "@/lib/ui-builder/types";
@@ -117,20 +117,27 @@ export default async function RootLayout({
                 document-level classes (see globals.css) apply to Header/
                 Footer/CrisisButton too, not only page content. */}
             <AccessibilityProvider>
-              <Header content={headerContent} />
-              {/* id/tabIndex added for the widget's "Skip To Content →
-                  Main Content" control (components/accessibility/sections/
-                  SkipToContentSection.tsx) — this landmark didn't have a
-                  stable, focusable id before. */}
-              <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 focus:outline-none">
-                {children}
-              </main>
-              {/* Phase 117 — headerContent passed down here too (already
-                  fetched above for <Header>) so Footer's Explore column can
-                  read the exact same nav labels/hrefs Header renders from —
-                  see lib/navigation.ts. */}
-              <SiteFooterSlot footerContent={footerContent} headerContent={headerContent} />
-              <CrisisButton content={crisisButtonContent} />
+              {/* Phase 140 — Header/Footer/CrisisButton are now registered
+                  in the UI Builder's Page Content as the "global" page (see
+                  lib/ui-builder/pageRegistry.ts), so an admin's
+                  ?editorPreview=true draft can override their text the same
+                  way every other page's own content already can. This
+                  layout has no `searchParams` prop to gate that server-side
+                  (a shared layout can't do that without breaking layout
+                  caching for every route), so GlobalContentGate does it
+                  client-side — see that file's own comment for the full
+                  mechanism. Every prop below is exactly what was already
+                  fetched/passed here before this phase; normal visitors see
+                  no change at all. */}
+              <GlobalContentGate headerContent={headerContent} footerContent={footerContent} crisisButtonContent={crisisButtonContent}>
+                {/* id/tabIndex added for the widget's "Skip To Content →
+                    Main Content" control (components/accessibility/sections/
+                    SkipToContentSection.tsx) — this landmark didn't have a
+                    stable, focusable id before. */}
+                <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 focus:outline-none">
+                  {children}
+                </main>
+              </GlobalContentGate>
               <AccessibilityWidget />
             </AccessibilityProvider>
           </TranslationProvider>

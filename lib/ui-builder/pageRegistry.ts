@@ -50,12 +50,53 @@ export type PageDefinition = {
    * the comment above their entries below for why). */
   supportsVisualEditor: boolean;
   /** One or more site_content rows this page's editable fields are spread
-   * across. Empty for pages that don't use site_content at all (the legal
-   * pages, which live in the separate `legal_pages` table). */
+   * across. Empty for pages that don't use site_content at all — currently
+   * only the 5 legal pages, which use `legalPageSlug` below instead. */
   contentSources: PageContentSource[];
+  /** Phase 140 — set only for the 5 legal pages. Their content lives in a
+   * `legal_pages` table row (`{slug, title, body}`), read via
+   * `getLegalPage(slug)` and written via a direct `update` on that row, not
+   * a `site_content` upsert — a genuinely different storage shape, so
+   * `getPageBaseContent`/`publishPageSources` in pageContentResolver.ts
+   * branch on this field instead of `contentSources` for these 5 pages. */
+  legalPageSlug?: string;
 };
 
 export const PAGE_DEFINITIONS: PageDefinition[] = [
+  // Phase 140 — Header, Footer, and the site-wide Crisis Button all render
+  // in app/layout.tsx (every page), not any one page's own page.tsx —
+  // Phase 135 left them unregistered because layout.tsx, unlike a page.tsx,
+  // gets no `searchParams` from Next.js (a deliberate framework constraint:
+  // a shared layout can't re-render per query string without breaking
+  // layout caching for every route under it), so there was no server-side
+  // way to gate an admin's live draft preview the way every other page
+  // does. Solved via a client-side gate instead (see
+  // components/ui-builder/public/GlobalContentGate.tsx): it reads
+  // `?editorPreview=true` with `useSearchParams()` (available at any
+  // component depth, unlike a Server Component's `searchParams` prop) and,
+  // only once mounted client-side, calls the *same* admin-gated
+  // `/api/admin/ui-builder/page-content/draft?pageKey=global` route every
+  // other page's inspector already uses — no new API route needed, since
+  // "global" is registered below as an ordinary 3-source page like About or
+  // Community, just namespaced under `header`/`footer`/`crisisButton`
+  // instead of a single page's own fields. `route: "/"` is what the Page
+  // Navigator's iframe loads when "Global" is selected (Home's own page,
+  // since Header/Footer/CrisisButton render on every route identically);
+  // Publish special-cases this one pageKey to `revalidatePath("/",
+  // "layout")` instead of a single route, since a layout-level change
+  // needs the whole site's cache invalidated, not one page's.
+  {
+    pageKey: "global",
+    route: "/",
+    title: "Global (Header, Footer & Crisis Button)",
+    group: "system",
+    supportsVisualEditor: true,
+    contentSources: [
+      { namespace: "header", siteContentKey: "site_header" },
+      { namespace: "footer", siteContentKey: "page_footer" },
+      { namespace: "crisisButton", siteContentKey: "component_crisis_button" },
+    ],
+  },
   { pageKey: "home", route: "/", title: "Home", group: "core", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_home" }] },
   {
     pageKey: "about",
@@ -105,24 +146,45 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
   },
   { pageKey: "faq", route: "/faq", title: "FAQ", group: "support", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_faq" }] },
   { pageKey: "contact", route: "/contact", title: "Contact", group: "support", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_contact" }] },
-  // Legal pages — deliberately left `supportsVisualEditor: false` this
-  // phase. Unlike every page above, these five don't live in site_content
-  // at all: app/[slug]/page.tsx reads them from the separate `legal_pages`
-  // table (`{ slug, title, body, updated_at }`) via getLegalPage(slug), a
-  // plain DB row rather than a JSON blob this registry's dot-path resolver
-  // can patch. Wiring them into the visual canvas needs a second resolver
-  // strategy (read/patch/publish against a table row, not a site_content
-  // key) rather than a registry entry — a real, scoped follow-up, not
-  // something to bolt on incorrectly here. They remain fully editable today
-  // via Content Manager's LegalPagesManager, which already targets that
-  // table directly. `cookies-policy` and `legal-notice` were also missing
-  // from this list entirely before this phase — added for a complete Pages
-  // list even though visual editing isn't wired for any of the five yet.
-  { pageKey: "privacy-policy", route: "/privacy-policy", title: "Privacy Policy", group: "legal", supportsVisualEditor: false, contentSources: [] },
-  { pageKey: "cookies-policy", route: "/cookies-policy", title: "Cookies Policy", group: "legal", supportsVisualEditor: false, contentSources: [] },
-  { pageKey: "legal-notice", route: "/legal-notice", title: "Legal Notice", group: "legal", supportsVisualEditor: false, contentSources: [] },
-  { pageKey: "accessibility-statement", route: "/accessibility-statement", title: "Accessibility Statement", group: "legal", supportsVisualEditor: false, contentSources: [] },
-  { pageKey: "terms-and-conditions", route: "/terms-and-conditions", title: "Terms & Conditions", group: "legal", supportsVisualEditor: false, contentSources: [] },
+  // Phase 140 — two real, live pages a site-wide audit found with zero
+  // registry entry at all (not even the `supportsVisualEditor: false`
+  // placeholder the 5 legal pages had) — both simple, single-`site_content`-
+  // row banner pages, same shape as FAQ/Contact above.
+  {
+    pageKey: "find-your-therapist",
+    route: "/find-your-therapist",
+    title: "Find Your Therapist",
+    group: "support",
+    supportsVisualEditor: true,
+    contentSources: [{ namespace: "", siteContentKey: "page_find_your_therapist" }],
+  },
+  {
+    pageKey: "donate-thank-you",
+    route: "/donate/thank-you",
+    title: "Donate — Thank You",
+    group: "support",
+    supportsVisualEditor: true,
+    contentSources: [{ namespace: "", siteContentKey: "page_donate_thank_you" }],
+  },
+  // Legal pages — Phase 135 left these `supportsVisualEditor: false`
+  // because they don't live in site_content at all: app/[slug]/page.tsx
+  // reads them from the separate `legal_pages` table (`{ slug, title, body,
+  // updated_at }`) via getLegalPage(slug), a plain DB row rather than a
+  // JSON blob the dot-path resolver could patch the same way. Phase 140
+  // builds that "second resolver strategy" (see `legalPageSlug` above,
+  // and pageContentResolver.ts's `getPageBaseContent`/`publishPageSources`
+  // branches) rather than leaving it as a standing gap — each entry's
+  // `pageKey` matches its real URL slug exactly (the catch-all
+  // `app/[slug]/page.tsx` route), so `legalPageSlug` is just a repeat of
+  // `pageKey` for these 5, kept as its own field for clarity at the call
+  // sites that branch on it. They remain fully editable via Content
+  // Manager's LegalPagesManager too — same `legal_pages` rows, either
+  // interface, no migration or second data store.
+  { pageKey: "privacy-policy", route: "/privacy-policy", title: "Privacy Policy", group: "legal", supportsVisualEditor: true, contentSources: [], legalPageSlug: "privacy-policy" },
+  { pageKey: "cookies-policy", route: "/cookies-policy", title: "Cookies Policy", group: "legal", supportsVisualEditor: true, contentSources: [], legalPageSlug: "cookies-policy" },
+  { pageKey: "legal-notice", route: "/legal-notice", title: "Legal Notice", group: "legal", supportsVisualEditor: true, contentSources: [], legalPageSlug: "legal-notice" },
+  { pageKey: "accessibility-statement", route: "/accessibility-statement", title: "Accessibility Statement", group: "legal", supportsVisualEditor: true, contentSources: [], legalPageSlug: "accessibility-statement" },
+  { pageKey: "terms-and-conditions", route: "/terms-and-conditions", title: "Terms & Conditions", group: "legal", supportsVisualEditor: true, contentSources: [], legalPageSlug: "terms-and-conditions" },
 ];
 
 export function getPageDefinition(pageKey: string): PageDefinition | undefined {
@@ -447,7 +509,123 @@ const CONTACT_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "contact.hero.description", path: "description", label: "Hero description", type: "plainText", group: "Hero", maxLength: 400, contentScope: "page" },
 ];
 
+// Phase 140 — Find Your Therapist. Single source, same SimplePageContent
+// banner shape as FAQ/Contact above.
+const FIND_YOUR_THERAPIST_EDITABLE_FIELDS: EditableFieldDef[] = [
+  { contentId: "find-your-therapist.hero.eyebrow", path: "eyebrow", label: "Hero eyebrow", type: "plainText", group: "Hero", maxLength: 80, contentScope: "page" },
+  { contentId: "find-your-therapist.hero.heading", path: "title", label: "Hero heading", type: "heading", group: "Hero", maxLength: 140, contentScope: "page" },
+  { contentId: "find-your-therapist.hero.description", path: "description", label: "Hero description", type: "plainText", group: "Hero", maxLength: 400, contentScope: "page" },
+];
+
+// Phase 140 — Donate's post-checkout thank-you page. Not registered before
+// this phase at all — its 3 status states (paid/failed-like/still-
+// processing) were flagged in an earlier Content Manager audit pass as
+// having no site_content backing whatsoever until that pass seeded
+// "page_donate_thank_you" with the exact live copy (see
+// app/donate/thank-you/thankYouContent.ts). Every heading/body pair below
+// mirrors that same three-state shape.
+const DONATE_THANK_YOU_EDITABLE_FIELDS: EditableFieldDef[] = [
+  { contentId: "donate-thank-you.paid.heading", path: "paidHeading", label: "Paid heading", type: "heading", group: "Paid", maxLength: 100, contentScope: "page" },
+  { contentId: "donate-thank-you.paid.body", path: "paidBody", label: "Paid body", type: "plainText", group: "Paid", maxLength: 300, contentScope: "page" },
+  { contentId: "donate-thank-you.failed.heading", path: "failedHeading", label: "Failed heading", type: "heading", group: "Failed", maxLength: 100, contentScope: "page" },
+  { contentId: "donate-thank-you.failed.body", path: "failedBody", label: "Failed body", type: "plainText", group: "Failed", maxLength: 300, contentScope: "page" },
+  { contentId: "donate-thank-you.pending.heading", path: "pendingHeading", label: "Pending heading", type: "heading", group: "Pending", maxLength: 100, contentScope: "page" },
+  { contentId: "donate-thank-you.pending.body", path: "pendingBody", label: "Pending body", type: "plainText", group: "Pending", maxLength: 300, contentScope: "page" },
+  { contentId: "donate-thank-you.backLinkLabel", path: "backLinkLabel", label: "Back link label", type: "ctaLabel", group: "Shared", maxLength: 40, contentScope: "page" },
+];
+
+// Phase 140 — the 5 legal pages. Every one has the exact same 2-field shape
+// (a heading and a long-form body), so the field defs are generated instead
+// of hand-repeated 5 times — one real place to fix if that shape ever
+// changes. `body` deliberately has no `maxLength`: unlike every other
+// richText field in this registry (all short marketing copy, 200-400
+// chars), a legal document's real length is open-ended, so no artificial
+// cap is imposed (the inspector's character-counter UI is itself gated on
+// `maxLength` being present, so omitting it also means no counter shows —
+// correct for this field, not an oversight).
+function legalPageFields(pageKey: string): EditableFieldDef[] {
+  return [
+    { contentId: `${pageKey}.title`, path: "title", label: "Title", type: "heading", group: "Content", maxLength: 140, contentScope: "page" },
+    { contentId: `${pageKey}.body`, path: "body", label: "Body", type: "richText", group: "Content", contentScope: "page" },
+  ];
+}
+
+// Phase 140 — Header, Footer, and the Crisis Button, namespaced exactly as
+// registered in PAGE_DEFINITIONS's "global" entry above (`header.*`,
+// `footer.*`, `crisisButton.*`). A few fields present in FooterContent's
+// type/fallback are deliberately NOT registered here because they're
+// already disclosed as unused/dead in Footer.tsx's own Phase 117 comments
+// (`exploreAboutLabel`/`exploreTherapistsLabel`/`exploreSupportGroupsLabel`/
+// `supportDonateLabel` — each superseded by a HeaderContent field or
+// removed from render entirely) — registering a field nothing on the page
+// actually renders would let an admin "edit" something with no visible
+// effect, which is worse than not offering it.
+const GLOBAL_EDITABLE_FIELDS: EditableFieldDef[] = [
+  // Header
+  { contentId: "global.header.homeLabel", path: "header.homeLabel", label: "Nav: \"About\" (links to /)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.aboutLabel", path: "header.aboutLabel", label: "Nav: \"Find Support\" (links to /about)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.therapistsLabel", path: "header.therapistsLabel", label: "Nav: \"Our Professionals\"", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.supportGroupsLabel", path: "header.supportGroupsLabel", label: "Nav: \"Community\"", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.donateLabel", path: "header.donateLabel", label: "Donate button label", type: "ctaLabel", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.donateHref", path: "header.donateHref", label: "Donate button link", type: "url", group: "Header navigation", contentScope: "global" },
+  // Footer — column headings + links
+  { contentId: "global.footer.tagline", path: "footer.tagline", label: "Tagline", type: "plainText", group: "Footer", maxLength: 200, contentScope: "global" },
+  { contentId: "global.footer.exploreHeading", path: "footer.exploreHeading", label: "\"Explore\" column heading", type: "heading", group: "Footer — Explore column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.exploreBlogLabel", path: "footer.exploreBlogLabel", label: "\"Blog\" label", type: "plainText", group: "Footer — Explore column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.exploreBlogBadge", path: "footer.exploreBlogBadge", label: "\"Blog\" badge (e.g. \"Soon\")", type: "plainText", group: "Footer — Explore column", maxLength: 20, contentScope: "global" },
+  { contentId: "global.footer.exploreFaqLabel", path: "footer.exploreFaqLabel", label: "\"FAQ\" label", type: "plainText", group: "Footer — Explore column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.exploreContactLabel", path: "footer.exploreContactLabel", label: "\"Contact\" label", type: "plainText", group: "Footer — Explore column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.supportHeading", path: "footer.supportHeading", label: "\"Support\" column heading", type: "heading", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.supportFindTherapistLabel", path: "footer.supportFindTherapistLabel", label: "\"Find a Therapist\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.supportJoinGroupLabel", path: "footer.supportJoinGroupLabel", label: "\"Join a Group\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.supportVolunteerLabel", path: "footer.supportVolunteerLabel", label: "\"Volunteer\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.supportEmergencyLabel", path: "footer.supportEmergencyLabel", label: "\"Emergency Contact\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.legalHeading", path: "footer.legalHeading", label: "\"Legal\" column heading", type: "heading", group: "Footer — Legal column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.legalPrivacyLabel", path: "footer.legalPrivacyLabel", label: "\"Privacy Policy\" label", type: "plainText", group: "Footer — Legal column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.legalCookiesLabel", path: "footer.legalCookiesLabel", label: "\"Cookies Policy\" label", type: "plainText", group: "Footer — Legal column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.legalNoticeLabel", path: "footer.legalNoticeLabel", label: "\"Legal Notice\" label", type: "plainText", group: "Footer — Legal column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.legalAccessibilityLabel", path: "footer.legalAccessibilityLabel", label: "\"Accessibility Statement\" label", type: "plainText", group: "Footer — Legal column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.legalTermsLabel", path: "footer.legalTermsLabel", label: "\"Terms & Conditions\" label", type: "plainText", group: "Footer — Legal column", maxLength: 40, contentScope: "global" },
+  // Footer — help-us-grow form
+  { contentId: "global.footer.helpGrowHeading", path: "footer.helpGrowHeading", label: "\"Help us grow\" heading", type: "heading", group: "Footer — Help us grow", maxLength: 60, contentScope: "global" },
+  { contentId: "global.footer.helpGrowSubtitle", path: "footer.helpGrowSubtitle", label: "\"Help us grow\" subtitle", type: "plainText", group: "Footer — Help us grow", maxLength: 200, contentScope: "global" },
+  { contentId: "global.footer.helpGrowSubmitLabel", path: "footer.helpGrowSubmitLabel", label: "Submit button (success state)", type: "ctaLabel", group: "Footer — Help us grow", maxLength: 30, contentScope: "global" },
+  { contentId: "global.footer.helpGrowSendingLabel", path: "footer.helpGrowSendingLabel", label: "Submit button (sending state)", type: "ctaLabel", group: "Footer — Help us grow", maxLength: 30, contentScope: "global" },
+  { contentId: "global.footer.helpGrowSubmittedMessage", path: "footer.helpGrowSubmittedMessage", label: "Submitted confirmation message", type: "plainText", group: "Footer — Help us grow", maxLength: 200, contentScope: "global" },
+  // Footer — social + trusted partners + legal boilerplate
+  { contentId: "global.footer.connectWithUsLabel", path: "footer.connectWithUsLabel", label: "\"Connect with Us\" label", type: "plainText", group: "Footer — Social & partners", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.socialLinkedinHref", path: "footer.socialLinkedinHref", label: "LinkedIn URL", type: "url", group: "Footer — Social & partners", contentScope: "global" },
+  { contentId: "global.footer.socialTwitterHref", path: "footer.socialTwitterHref", label: "Twitter/X URL", type: "url", group: "Footer — Social & partners", contentScope: "global" },
+  { contentId: "global.footer.socialInstagramHref", path: "footer.socialInstagramHref", label: "Instagram URL", type: "url", group: "Footer — Social & partners", contentScope: "global" },
+  { contentId: "global.footer.socialFacebookHref", path: "footer.socialFacebookHref", label: "Facebook URL", type: "url", group: "Footer — Social & partners", contentScope: "global" },
+  { contentId: "global.footer.trustedPartnersHeading", path: "footer.trustedPartnersHeading", label: "\"Our Trusted Partners\" heading", type: "heading", group: "Footer — Social & partners", maxLength: 60, contentScope: "global" },
+  { contentId: "global.footer.partner1Label", path: "footer.partner1Label", label: "Partner 1 label", type: "plainText", group: "Footer — Social & partners", maxLength: 60, contentScope: "global" },
+  { contentId: "global.footer.partner2Label", path: "footer.partner2Label", label: "Partner 2 label", type: "plainText", group: "Footer — Social & partners", maxLength: 60, contentScope: "global" },
+  { contentId: "global.footer.partner3Label", path: "footer.partner3Label", label: "Partner 3 label", type: "plainText", group: "Footer — Social & partners", maxLength: 60, contentScope: "global" },
+  { contentId: "global.footer.copyrightLine", path: "footer.copyrightLine", label: "Copyright line (keep the \"{year}\" token)", type: "plainText", group: "Footer — Bottom bar", maxLength: 200, contentScope: "global" },
+  { contentId: "global.footer.nonprofitStatusLine", path: "footer.nonprofitStatusLine", label: "Nonprofit status line", type: "plainText", group: "Footer — Bottom bar", maxLength: 200, contentScope: "global" },
+  { contentId: "global.footer.madeWithLine", path: "footer.madeWithLine", label: "\"Made with care…\" line", type: "plainText", group: "Footer — Bottom bar", maxLength: 100, contentScope: "global" },
+  // Crisis Button (fixed launcher + modal, every page)
+  { contentId: "global.crisisButton.triggerLabel", path: "crisisButton.triggerLabel", label: "Launcher button label", type: "ctaLabel", group: "Crisis Button", maxLength: 40, contentScope: "global" },
+  { contentId: "global.crisisButton.modalHeading", path: "crisisButton.modalHeading", label: "Modal heading", type: "heading", group: "Crisis Button", maxLength: 60, contentScope: "global" },
+  { contentId: "global.crisisButton.modalSubtitle", path: "crisisButton.modalSubtitle", label: "Modal subtitle", type: "plainText", group: "Crisis Button", maxLength: 200, contentScope: "global" },
+  { contentId: "global.crisisButton.resource1Title", path: "crisisButton.resource1Title", label: "Resource 1 title", type: "plainText", group: "Crisis Button — Resources", maxLength: 80, contentScope: "global" },
+  { contentId: "global.crisisButton.resource1Description", path: "crisisButton.resource1Description", label: "Resource 1 description", type: "plainText", group: "Crisis Button — Resources", maxLength: 100, contentScope: "global" },
+  { contentId: "global.crisisButton.resource1Href", path: "crisisButton.resource1Href", label: "Resource 1 link", type: "url", group: "Crisis Button — Resources", contentScope: "global" },
+  { contentId: "global.crisisButton.resource2Title", path: "crisisButton.resource2Title", label: "Resource 2 title", type: "plainText", group: "Crisis Button — Resources", maxLength: 80, contentScope: "global" },
+  { contentId: "global.crisisButton.resource2Description", path: "crisisButton.resource2Description", label: "Resource 2 description", type: "plainText", group: "Crisis Button — Resources", maxLength: 100, contentScope: "global" },
+  { contentId: "global.crisisButton.resource2Href", path: "crisisButton.resource2Href", label: "Resource 2 link", type: "url", group: "Crisis Button — Resources", contentScope: "global" },
+  { contentId: "global.crisisButton.resource3Title", path: "crisisButton.resource3Title", label: "Resource 3 title", type: "plainText", group: "Crisis Button — Resources", maxLength: 80, contentScope: "global" },
+  { contentId: "global.crisisButton.resource3Description", path: "crisisButton.resource3Description", label: "Resource 3 description", type: "plainText", group: "Crisis Button — Resources", maxLength: 100, contentScope: "global" },
+  { contentId: "global.crisisButton.resource3Href", path: "crisisButton.resource3Href", label: "Resource 3 link", type: "url", group: "Crisis Button — Resources", contentScope: "global" },
+  { contentId: "global.crisisButton.resource4Title", path: "crisisButton.resource4Title", label: "Resource 4 title", type: "plainText", group: "Crisis Button — Resources", maxLength: 80, contentScope: "global" },
+  { contentId: "global.crisisButton.resource4Description", path: "crisisButton.resource4Description", label: "Resource 4 description", type: "plainText", group: "Crisis Button — Resources", maxLength: 100, contentScope: "global" },
+  { contentId: "global.crisisButton.resource4Href", path: "crisisButton.resource4Href", label: "Resource 4 link", type: "url", group: "Crisis Button — Resources", contentScope: "global" },
+  { contentId: "global.crisisButton.disclaimer", path: "crisisButton.disclaimer", label: "Disclaimer", type: "plainText", group: "Crisis Button", maxLength: 200, contentScope: "global" },
+];
+
 const FIELDS_BY_PAGE: Record<string, EditableFieldDef[]> = {
+  global: GLOBAL_EDITABLE_FIELDS,
   home: HOME_EDITABLE_FIELDS,
   about: ABOUT_EDITABLE_FIELDS,
   therapists: THERAPISTS_EDITABLE_FIELDS,
@@ -456,12 +634,43 @@ const FIELDS_BY_PAGE: Record<string, EditableFieldDef[]> = {
   intake: INTAKE_EDITABLE_FIELDS,
   faq: FAQ_EDITABLE_FIELDS,
   contact: CONTACT_EDITABLE_FIELDS,
+  "find-your-therapist": FIND_YOUR_THERAPIST_EDITABLE_FIELDS,
+  "donate-thank-you": DONATE_THANK_YOU_EDITABLE_FIELDS,
+  "privacy-policy": legalPageFields("privacy-policy"),
+  "cookies-policy": legalPageFields("cookies-policy"),
+  "legal-notice": legalPageFields("legal-notice"),
+  "accessibility-statement": legalPageFields("accessibility-statement"),
+  "terms-and-conditions": legalPageFields("terms-and-conditions"),
 };
 
 export function getEditableFields(pageKey: string): EditableFieldDef[] {
   return FIELDS_BY_PAGE[pageKey] ?? [];
 }
 
-export function getFieldByContentId(pageKey: string, contentId: string): EditableFieldDef | undefined {
-  return getEditableFields(pageKey).find((f) => f.contentId === contentId);
+// Phase 140 — searches every registered page's fields, not just one. Every
+// contentId is globally unique (each is hand-prefixed with its owning
+// pageKey, e.g. "home.hero.title" or "global.header.homeLabel"), so a
+// global search is always unambiguous. This matters now that Header/Footer/
+// CrisisButton ("global") render on every page's own canvas alongside that
+// page's own content — an admin can click a Header nav label while
+// "Home" (or any other page) is the one selected in the Page Navigator, and
+// the inspector needs to resolve that click to its real field regardless of
+// which page happens to be selected.
+export function getFieldByContentId(contentId: string): EditableFieldDef | undefined {
+  for (const fields of Object.values(FIELDS_BY_PAGE)) {
+    const match = fields.find((f) => f.contentId === contentId);
+    if (match) return match;
+  }
+  return undefined;
+}
+
+// Phase 140 — the pageKey a contentId belongs to, derived from its own
+// prefix (the segment before the first "."). Every current pageKey is
+// hyphenated, never dotted, so this split is unambiguous; used by the
+// inspector to show the right page's title in the breadcrumb when the
+// clicked element (e.g. a Header/Footer field) belongs to a different page
+// than the one currently selected in the Page Navigator.
+export function getPageKeyForContentId(contentId: string): string | undefined {
+  const prefix = contentId.split(".")[0];
+  return getPageDefinition(prefix) ? prefix : undefined;
 }

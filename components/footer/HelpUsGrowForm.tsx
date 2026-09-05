@@ -37,11 +37,15 @@ export default function HelpUsGrowForm({
   sendingLabel = "Sending…",
   submittedMessage = "Thank you — we've received your message and will be in touch soon.",
 }: {
-  heading?: string;
-  subtitle?: string;
-  submitLabel?: string;
-  sendingLabel?: string;
-  submittedMessage?: string;
+  // Phase 140 — widened from `string` to `ReactNode` (same precedent as
+  // PageHero's `eyebrow` prop in Phase 135) so Footer.tsx can pass an
+  // EditableText-wrapped element for the Page Content canvas instead of a
+  // plain string, with zero change to this component's own rendering.
+  heading?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  submitLabel?: React.ReactNode;
+  sendingLabel?: React.ReactNode;
+  submittedMessage?: React.ReactNode;
 }) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);

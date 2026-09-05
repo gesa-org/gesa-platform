@@ -16,7 +16,7 @@ import {
 import dynamic from "next/dynamic";
 import Button from "@/components/ui/Button";
 import { usePageEditorState } from "@/lib/ui-builder/usePageEditorState";
-import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, getRichTextMode, type PageGroup } from "@/lib/ui-builder/pageRegistry";
+import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, getPageKeyForContentId, getRichTextMode, type PageGroup } from "@/lib/ui-builder/pageRegistry";
 
 // Phase 134 — lazy-loaded, admin-only. Tiptap (~40kb) only ever downloads
 // when an admin actually selects a richText field, not just for opening the
@@ -99,7 +99,14 @@ export default function PageEditorShell() {
     return groups;
   }, [fields]);
 
-  const selectedField = selectedContentId ? getFieldByContentId(selectedPageKey, selectedContentId) : undefined;
+  // Phase 140 — a global lookup, not scoped to `selectedPageKey`: Header/
+  // Footer/CrisisButton ("global" fields) render on every page's own
+  // canvas, so a click there needs to resolve correctly regardless of which
+  // page happens to be selected in the Navigator (see getFieldByContentId's
+  // own comment in pageRegistry.ts).
+  const selectedField = selectedContentId ? getFieldByContentId(selectedContentId) : undefined;
+  const selectedFieldPageKey = selectedContentId ? getPageKeyForContentId(selectedContentId) : undefined;
+  const selectedFieldPageTitle = selectedFieldPageKey ? PAGE_DEFINITIONS.find((p) => p.pageKey === selectedFieldPageKey)?.title : undefined;
 
   function postToIframe(message: unknown) {
     iframeRef.current?.contentWindow?.postMessage(message, window.location.origin);
@@ -126,13 +133,27 @@ export default function PageEditorShell() {
         return;
       }
       if (isSelectMessage(event.data)) {
+        // Phase 140 — Header/Footer/CrisisButton ("global" fields) render
+        // on every page's canvas alongside whatever page is selected, so a
+        // click can resolve to a field that belongs to a *different* page
+        // than `selectedPageKey`. Switching the Navigator's own selection to
+        // that field's real owning page keeps the Layers list, inspector,
+        // and draft state all pointed at the same page the clicked field
+        // actually lives on — the one accepted tradeoff is that this can
+        // reload the canvas to that page's own route (e.g. clicking a
+        // Header link while browsing About switches to "Global," whose
+        // route is Home) rather than silently failing to select at all.
+        const owningPageKey = getPageKeyForContentId(event.data.contentId);
+        if (owningPageKey && owningPageKey !== selectedPageKey) {
+          setSelectedPageKey(owningPageKey);
+        }
         selectContentId(event.data.contentId);
       }
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editModeEnabled, selectedContentId]);
+  }, [editModeEnabled, selectedContentId, selectedPageKey]);
 
   useEffect(() => {
     if (iframeReady) postToIframe({ type: "GESA_EDITOR_SET_EDIT_MODE", enabled: editModeEnabled });
@@ -269,16 +290,12 @@ export default function PageEditorShell() {
           ) : (
             <div className="flex h-[300px] max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-6 text-center">
               <AlertTriangle size={20} className="text-muted-fg" />
+              {/* Phase 140 — the 5 legal pages now support the visual canvas
+                  too (see pageRegistry.ts's `legalPageSlug` branch), so this
+                  message no longer needs a legal-specific case — every page
+                  reaching this branch genuinely has no field registry yet. */}
               <p className="text-[13px] text-muted-fg">
-                {pageDef?.group === "legal"
-                  ? // Phase 135 — legal pages have a real, different reason
-                    // than "not built yet": their content lives in the
-                    // legal_pages table (title/body per slug), not
-                    // site_content, so this registry's dot-path patcher
-                    // can't target them. Content Manager's Legal Pages tab
-                    // already edits that table directly.
-                    `${pageDef?.title ?? "This page"} is managed in Content Manager's Legal Pages tab — its rich-text body and title live in a separate legal-content table, not this registry, so the visual canvas doesn't support it yet.`
-                  : `${pageDef?.title ?? "This page"} doesn't support the visual click-to-edit canvas yet. Use the existing Content Manager to edit its text, or the Global Theme tab here for site-wide colors and typography.`}
+                {`${pageDef?.title ?? "This page"} doesn't support the visual click-to-edit canvas yet. Use the existing Content Manager to edit its text, or the Global Theme tab here for site-wide colors and typography.`}
               </p>
             </div>
           )}
@@ -327,7 +344,7 @@ export default function PageEditorShell() {
           ) : (
             <>
               <p className="mb-1 text-[12px] text-muted-fg">
-                {pageDef?.title} / {selectedField.group} / {selectedField.label}
+                {selectedFieldPageTitle ?? pageDef?.title} / {selectedField.group} / {selectedField.label}
               </p>
               <h3 className="mb-3 text-[15px] font-semibold">{selectedField.label}</h3>
               {(() => {

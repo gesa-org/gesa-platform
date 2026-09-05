@@ -1,5 +1,9 @@
-import { getSiteContent } from "@/lib/queries";
-import { getPageContent, ABOUT_SECTIONS_FALLBACK, THERAPISTS_CONTENT_FALLBACK, SUPPORT_GROUPS_CONTENT_FALLBACK, FAQ_CONTENT_FALLBACK, CONTACT_CONTENT_FALLBACK } from "@/lib/content";
+import { getSiteContent, getLegalPage } from "@/lib/queries";
+import { getPageContent, ABOUT_SECTIONS_FALLBACK, THERAPISTS_CONTENT_FALLBACK, SUPPORT_GROUPS_CONTENT_FALLBACK, FAQ_CONTENT_FALLBACK, CONTACT_CONTENT_FALLBACK, FIND_YOUR_THERAPIST_CONTENT_FALLBACK } from "@/lib/content";
+import { DONATE_THANK_YOU_CONTENT_FALLBACK } from "@/app/donate/thank-you/thankYouContent";
+import { HEADER_CONTENT_FALLBACK } from "@/components/Header";
+import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
+import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
 import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
@@ -43,6 +47,16 @@ const FALLBACK_BY_SITE_CONTENT_KEY: Record<string, Record<string, unknown>> = {
   component_intake_flow: INTAKE_FLOW_CONTENT_FALLBACK as unknown as Record<string, unknown>,
   page_faq: FAQ_CONTENT_FALLBACK as unknown as Record<string, unknown>,
   page_contact: CONTACT_CONTENT_FALLBACK as unknown as Record<string, unknown>,
+  // Phase 140
+  page_find_your_therapist: FIND_YOUR_THERAPIST_CONTENT_FALLBACK as unknown as Record<string, unknown>,
+  page_donate_thank_you: DONATE_THANK_YOU_CONTENT_FALLBACK as unknown as Record<string, unknown>,
+  // Phase 140 — the "global" page's 3 sources (Header, Footer, Crisis
+  // Button), so getPageBaseContent("global")/publishPageSources("global")
+  // fall back the same way every other multi-source page does instead of
+  // silently falling back to `{}` for these three site_content keys.
+  site_header: HEADER_CONTENT_FALLBACK as unknown as Record<string, unknown>,
+  page_footer: FOOTER_CONTENT_FALLBACK as unknown as Record<string, unknown>,
+  component_crisis_button: CRISIS_BUTTON_CONTENT_FALLBACK as unknown as Record<string, unknown>,
 };
 
 // Phase 133 — resolves a page's content the way the spec's section 8C asks:
@@ -152,6 +166,13 @@ export function sanitizeResolvedContent<T extends Record<string, unknown>>(pageK
 export async function getPageBaseContent(pageKey: string): Promise<Record<string, unknown>> {
   const def = getPageDefinition(pageKey);
   if (!def) return {};
+  // Phase 140 — legal pages branch here instead of walking `contentSources`
+  // (which is empty for them): their published content is one `legal_pages`
+  // row, not a site_content JSON blob.
+  if (def.legalPageSlug) {
+    const page = await getLegalPage(def.legalPageSlug);
+    return page ? { title: page.title, body: page.body } : { title: "", body: "" };
+  }
   let result: Record<string, unknown> = {};
   for (const source of def.contentSources) {
     const fallback = FALLBACK_BY_SITE_CONTENT_KEY[source.siteContentKey] ?? {};
@@ -174,10 +195,24 @@ export async function publishPageSources(
   publishedBy: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const def = getPageDefinition(pageKey);
-  if (!def || def.contentSources.length === 0) {
+  if (!def) {
     return { ok: false, error: "This page has no publishable content sources." };
   }
   const supabase = await createClient();
+  // Phase 140 — legal pages publish with a direct update on their one
+  // `legal_pages` row (same table Content Manager's LegalPagesManager
+  // writes), not the site_content upsert loop below.
+  if (def.legalPageSlug) {
+    const { error } = await supabase
+      .from("legal_pages")
+      .update({ title: (resolved.title as string) ?? "", body: (resolved.body as string) ?? "" })
+      .eq("slug", def.legalPageSlug);
+    if (error) return { ok: false, error: "Could not publish — try again." };
+    return { ok: true };
+  }
+  if (def.contentSources.length === 0) {
+    return { ok: false, error: "This page has no publishable content sources." };
+  }
   const publishedAt = new Date().toISOString();
   for (const source of def.contentSources) {
     const value = source.namespace === "" ? resolved : (resolved[source.namespace] as Record<string, unknown> | undefined) ?? {};

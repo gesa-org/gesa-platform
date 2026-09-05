@@ -9,6 +9,7 @@ import type { FooterContent, HeaderContent } from '@/lib/content';
 import { HEADER_CONTENT_FALLBACK } from '@/components/Header';
 import { getFooterExploreItems } from '@/lib/navigation';
 import { SITE_FOOTER_ID } from '@/lib/accessibility/config';
+import EditableText from '@/components/ui-builder/public/EditableText';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
 // editable — only each slot's label text is), same approach as About's
@@ -119,10 +120,14 @@ export default function Footer({
               <Logo size={34} />
               GESA
             </Link>
-            <p className="text-[#a8b4c8] max-w-[260px] text-[14.5px] mt-3.5 leading-relaxed">{content.tagline}</p>
+            <p className="text-[#a8b4c8] max-w-[260px] text-[14.5px] mt-3.5 leading-relaxed">
+              <EditableText contentId="global.footer.tagline" label="Tagline" value={content.tagline} as="span" />
+            </p>
           </StaggerItem>
           <StaggerItem>
-            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.exploreHeading}</h4>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">
+              <EditableText contentId="global.footer.exploreHeading" label="&quot;Explore&quot; column heading" value={content.exploreHeading} as="span" />
+            </h4>
             {/* Phase 117 — every link here now comes from
                 lib/navigation.ts's shared PRIMARY_NAVIGATION list, resolved
                 against the same `headerContent` object <Header> itself
@@ -165,18 +170,32 @@ export default function Footer({
             </ul>
           </StaggerItem>
           <StaggerItem>
-            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.supportHeading}</h4>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">
+              <EditableText contentId="global.footer.supportHeading" label="&quot;Support&quot; column heading" value={content.supportHeading} as="span" />
+            </h4>
             <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
-              <li><Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">{content.supportFindTherapistLabel}</Link></li>
-              <li><Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">{content.supportJoinGroupLabel}</Link></li>
+              <li>
+                <Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.supportFindTherapistLabel" label="&quot;Find a Therapist&quot; label" value={content.supportFindTherapistLabel} as="span" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/support-groups" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.supportJoinGroupLabel" label="&quot;Join a Group&quot; label" value={content.supportJoinGroupLabel} as="span" />
+                </Link>
+              </li>
               {/* Phase 63 — was a plain Link to the generic Contact form;
                   now opens the real volunteer therapist application. */}
               <li>
                 <VolunteerApplyButton className="text-left hover:text-[#eef1f6] transition-colors">
-                  {content.supportVolunteerLabel}
+                  <EditableText contentId="global.footer.supportVolunteerLabel" label="&quot;Volunteer&quot; label" value={content.supportVolunteerLabel} as="span" />
                 </VolunteerApplyButton>
               </li>
-              <li><a href="tel:988" className="hover:text-[#eef1f6] transition-colors">{content.supportEmergencyLabel}</a></li>
+              <li>
+                <a href="tel:988" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.supportEmergencyLabel" label="&quot;Emergency Contact&quot; label" value={content.supportEmergencyLabel} as="span" />
+                </a>
+              </li>
               {/* Phase 117 — moved here from the Explore column (see the
                   comment on that column above): Blog/FAQ/Contact aren't part
                   of the primary header nav, so they no longer live alongside
@@ -189,35 +208,65 @@ export default function Footer({
                   title="Coming soon — no posts published yet"
                   className="inline-flex cursor-not-allowed items-center gap-1.5 text-[#6f7889]"
                 >
-                  {content.exploreBlogLabel}
+                  <EditableText contentId="global.footer.exploreBlogLabel" label="&quot;Blog&quot; label" value={content.exploreBlogLabel} as="span" />
                   <span className="rounded-full bg-[#eef1f6]/10 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#a8b4c8]">
-                    {content.exploreBlogBadge}
+                    <EditableText contentId="global.footer.exploreBlogBadge" label="&quot;Blog&quot; badge" value={content.exploreBlogBadge} as="span" />
                   </span>
                 </span>
               </li>
-              <li><Link href="/faq" className="hover:text-[#eef1f6] transition-colors">{content.exploreFaqLabel}</Link></li>
-              <li><Link href="/contact" className="hover:text-[#eef1f6] transition-colors">{content.exploreContactLabel}</Link></li>
+              <li>
+                <Link href="/faq" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.exploreFaqLabel" label="&quot;FAQ&quot; label" value={content.exploreFaqLabel} as="span" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.exploreContactLabel" label="&quot;Contact&quot; label" value={content.exploreContactLabel} as="span" />
+                </Link>
+              </li>
             </ul>
           </StaggerItem>
           <StaggerItem>
-            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">{content.legalHeading}</h4>
+            <h4 className="text-[#eef1f6] font-sans text-[13.5px] uppercase tracking-[0.14em] mb-4.5 mb-[18px] font-semibold">
+              <EditableText contentId="global.footer.legalHeading" label="&quot;Legal&quot; column heading" value={content.legalHeading} as="span" />
+            </h4>
             <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
-              <li><Link href="/privacy-policy" className="hover:text-[#eef1f6] transition-colors">{content.legalPrivacyLabel}</Link></li>
-              <li><Link href="/cookies-policy" className="hover:text-[#eef1f6] transition-colors">{content.legalCookiesLabel}</Link></li>
-              <li><Link href="/legal-notice" className="hover:text-[#eef1f6] transition-colors">{content.legalNoticeLabel}</Link></li>
-              <li><Link href="/accessibility-statement" className="hover:text-[#eef1f6] transition-colors">{content.legalAccessibilityLabel}</Link></li>
-              <li><Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">{content.legalTermsLabel}</Link></li>
+              <li>
+                <Link href="/privacy-policy" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.legalPrivacyLabel" label="&quot;Privacy Policy&quot; label" value={content.legalPrivacyLabel} as="span" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies-policy" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.legalCookiesLabel" label="&quot;Cookies Policy&quot; label" value={content.legalCookiesLabel} as="span" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/legal-notice" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.legalNoticeLabel" label="&quot;Legal Notice&quot; label" value={content.legalNoticeLabel} as="span" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/accessibility-statement" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.legalAccessibilityLabel" label="&quot;Accessibility Statement&quot; label" value={content.legalAccessibilityLabel} as="span" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms-and-conditions" className="hover:text-[#eef1f6] transition-colors">
+                  <EditableText contentId="global.footer.legalTermsLabel" label="&quot;Terms &amp; Conditions&quot; label" value={content.legalTermsLabel} as="span" />
+                </Link>
+              </li>
             </ul>
           </StaggerItem>
         </StaggerGroup>
 
         <Reveal type="fade-up" as="div" className="mt-10">
           <HelpUsGrowForm
-            heading={content.helpGrowHeading}
-            subtitle={content.helpGrowSubtitle}
-            submitLabel={content.helpGrowSubmitLabel}
-            sendingLabel={content.helpGrowSendingLabel}
-            submittedMessage={content.helpGrowSubmittedMessage}
+            heading={<EditableText contentId="global.footer.helpGrowHeading" label="&quot;Help us grow&quot; heading" value={content.helpGrowHeading} as="span" />}
+            subtitle={<EditableText contentId="global.footer.helpGrowSubtitle" label="&quot;Help us grow&quot; subtitle" value={content.helpGrowSubtitle} as="span" />}
+            submitLabel={<EditableText contentId="global.footer.helpGrowSubmitLabel" label="Submit button (success state)" value={content.helpGrowSubmitLabel} as="span" />}
+            sendingLabel={<EditableText contentId="global.footer.helpGrowSendingLabel" label="Submit button (sending state)" value={content.helpGrowSendingLabel} as="span" />}
+            submittedMessage={<EditableText contentId="global.footer.helpGrowSubmittedMessage" label="Submitted confirmation message" value={content.helpGrowSubmittedMessage} as="span" />}
           />
         </Reveal>
 
@@ -230,7 +279,9 @@ export default function Footer({
             Roy swaps in real profile URLs via the Content Manager. */}
         <Reveal type="fade-up" as="div" className="mt-10 flex flex-col gap-5 border-t border-[#eef1f6]/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-[13.5px] font-semibold text-[#eef1f6]">{content.connectWithUsLabel}</span>
+            <span className="text-[13.5px] font-semibold text-[#eef1f6]">
+              <EditableText contentId="global.footer.connectWithUsLabel" label="&quot;Connect with Us&quot; label" value={content.connectWithUsLabel} as="span" />
+            </span>
             <div className="flex items-center gap-2.5">
               <a
                 href={content.socialLinkedinHref}
@@ -272,13 +323,20 @@ export default function Footer({
           </div>
 
           <div className="flex flex-wrap items-center gap-4">
-            <span className="text-[13.5px] font-semibold text-[#eef1f6]">{content.trustedPartnersHeading}</span>
+            <span className="text-[13.5px] font-semibold text-[#eef1f6]">
+              <EditableText contentId="global.footer.trustedPartnersHeading" label="&quot;Our Trusted Partners&quot; heading" value={content.trustedPartnersHeading} as="span" />
+            </span>
             <div className="flex flex-wrap items-center gap-4">
-              {[content.partner1Label, content.partner2Label, content.partner3Label].map((label, i) => {
+              {[
+                { contentId: "global.footer.partner1Label", label: content.partner1Label },
+                { contentId: "global.footer.partner2Label", label: content.partner2Label },
+                { contentId: "global.footer.partner3Label", label: content.partner3Label },
+              ].map((partner, i) => {
                 const Icon = PARTNER_ICONS[i] ?? PARTNER_ICONS[PARTNER_ICONS.length - 1];
                 return (
-                  <span key={label} className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc]">
-                    <Icon size={15} className="text-[#8b96a8]" /> {label}
+                  <span key={partner.contentId} className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc]">
+                    <Icon size={15} className="text-[#8b96a8]" />{" "}
+                    <EditableText contentId={partner.contentId} label="Partner label" value={partner.label} as="span" />
                   </span>
                 );
               })}
@@ -292,10 +350,21 @@ export default function Footer({
           className="border-t border-[#eef1f6]/10 mt-9 pt-6 text-[13.5px] text-[#a8b4c8] flex flex-col md:flex-row justify-between gap-2"
         >
           <div className="flex flex-col gap-1">
-            <span>{content.copyrightLine.replace("{year}", String(year))}</span>
-            <span>{content.nonprofitStatusLine}</span>
+            <span>
+              <EditableText
+                contentId="global.footer.copyrightLine"
+                label="Copyright line"
+                value={content.copyrightLine.replace("{year}", String(year))}
+                as="span"
+              />
+            </span>
+            <span>
+              <EditableText contentId="global.footer.nonprofitStatusLine" label="Nonprofit status line" value={content.nonprofitStatusLine} as="span" />
+            </span>
           </div>
-          <span>{content.madeWithLine}</span>
+          <span>
+            <EditableText contentId="global.footer.madeWithLine" label="&quot;Made with care…&quot; line" value={content.madeWithLine} as="span" />
+          </span>
         </Reveal>
       </div>
     </footer>
