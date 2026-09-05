@@ -116,16 +116,15 @@ export default async function AboutPage({
 
       {/* Phase 55 — Roy sent a reference screenshot showing this section on
           a warm cream background instead of the page's usual cool ivory
-          (--background). Scoped to just this section (bg-clay-soft, the
-          same pale-gold-wash token the gold-banner era already introduced
-          in app/globals.css) rather than changing --background globally,
-          since the ask was specifically about this section and Our
-          Therapists' directory section, not every page site-wide.
+          (--background). Scoped to just this section rather than changing
+          --background globally, since the ask was specifically about this
+          section and Our Therapists' directory section, not every page
+          site-wide.
           Phase 55 follow-up — the background color was first put on the
           same element as `wrap max-w-[820px]`, which made it fill only
           that narrow centered box instead of the full viewport width —
           exactly the "cut / certain area only" Roy flagged. Fixed by
-          moving `bg-clay-soft` to this outer, full-width <section>, with
+          moving the background to this outer, full-width <section>, with
           `wrap max-w-[820px]` now on its own inner <div> that only
           constrains the *content's* width, not the color. */}
       {/* Phase 84 — Roy sent a reference screenshot of a redesigned About
@@ -133,13 +132,19 @@ export default async function AboutPage({
           [Name]" headline, role subtitle, bio, a signature-style rendering
           of the name), a plain tagline/CTA band underneath it, and a
           separate "Team & Advisors" grid below that. He asked to keep this
-          section's existing bg-clay-soft wash and both founders' existing
-          photos untouched — only the layout/text arrangement changed.
+          section's existing warm wash and both founders' existing photos
+          untouched — only the layout/text arrangement changed.
           `founders[0]` (Ilana) is the spotlighted founder; `founders`
           slice(1) onward (Karin, today) move into the new Team & Advisors
           section further down instead of a second alternating row here. */}
+      {/* This section swapped from the pale-gold `bg-clay-soft` wash to the
+          new "Sand Brown" (#CBA560) token — Roy sent a reference swatch and
+          asked to replace the beige background here and on Our
+          Professionals' directory band (and separately, "Why GESA exists"
+          on the Support Groups page) with it. See --sand-brown in
+          app/globals.css. */}
       {sections.founders[0] && (
-        <section className="section bg-clay-soft">
+        <section className="section bg-sand-brown">
           <div className="wrap max-w-[980px]">
             <Reveal type="horizontal" distance={100} duration={0.9}>
               <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-14">

@@ -33,6 +33,13 @@ const config: Config = {
           DEFAULT: "var(--clay)",
           soft: "var(--clay-soft)",
         },
+        // Roy's "Sand Brown" (#CBA560) swap for the Founder spotlight, "Why
+        // GESA exists," and Our Professionals' directory band section
+        // backgrounds — see app/globals.css's --sand-brown comment for why
+        // this is a new token rather than a retune of --clay-soft.
+        sand: {
+          brown: "var(--sand-brown)",
+        },
         muted: {
           DEFAULT: "var(--muted)",
           fg: "var(--muted-fg)",

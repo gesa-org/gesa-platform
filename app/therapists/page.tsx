@@ -55,19 +55,20 @@ export default async function TherapistsPage({
       />
       {/* Phase 55 — Roy sent a reference screenshot showing this section on
           a warm cream background instead of the page's usual cool ivory
-          (--background). Scoped to just this section (bg-clay-soft, the
-          same pale-gold-wash token the gold-banner era already introduced
-          in app/globals.css) rather than changing --background globally,
-          since the ask was specifically about this section and About's
-          founders section, not every page site-wide.
+          (--background). Scoped to just this section rather than changing
+          --background globally, since the ask was specifically about this
+          section and About's founders section, not every page site-wide.
           Phase 55 follow-up — the background color was first put on the
           same element as `wrap` (max-width 1160px, centered), which made
           it fill only that centered box instead of the full viewport width
           — exactly the "cut / certain area only" Roy flagged. Fixed by
-          moving `bg-clay-soft` to this outer, full-width <section>, with
+          moving the background to this outer, full-width <section>, with
           `wrap` now on its own inner <div> that only constrains the
-          *content's* width, not the color. */}
-      <section className="section pt-0 bg-clay-soft">
+          *content's* width, not the color.
+          Swapped from the pale-gold `bg-clay-soft` wash to the new "Sand
+          Brown" (#CBA560) token — see --sand-brown in app/globals.css and
+          the matching comment on About's founder section. */}
+      <section className="section pt-0 bg-sand-brown">
         <div className="wrap">
           <TherapistsDirectory therapists={therapists} content={directoryContent} />
         </div>

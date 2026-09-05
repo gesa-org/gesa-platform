@@ -136,14 +136,15 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
           #b7c3d6, a real blue-gray, not ivory) to bg-background
           (--background: #eef1f6, "Powder Ivory" in globals.css).
           Phase 110 — Roy then sent a specific swatch, "Warm Ivory"
-          #F2EFE6, which is a distinct color from --background (close, but
-          not the same value) and doesn't match any existing design token
-          (closest is --clay-soft at #f5eeda, still a different color) — so
-          this is hardcoded as a literal arbitrary value rather than
-          force-fit to a token that isn't actually this color, same
-          precedent as GesaMark's per-card colors having no matching token
-          either. */}
-      <section className="section bg-[#F2EFE6]">
+          #F2EFE6, hardcoded as a literal arbitrary value since it didn't
+          match any existing token.
+          Later — Roy sent a new swatch, "Sand Brown" #CBA560, and asked to
+          replace this "beige"/warm-ivory background (this is the "Why GESA
+          exists" section) along with About's Founder spotlight and Our
+          Professionals' directory band. Moved onto the new --sand-brown
+          token (app/globals.css) rather than another hardcoded hex, since
+          this is now the third section sharing this exact color. */}
+      <section className="section bg-sand-brown">
         <Reveal type="fade-up" as="div" className="wrap max-w-[720px] text-center">
           <h2 className="mb-3 text-[30px]">{content.missionHeading}</h2>
           <div className="text-[15.5px] leading-relaxed text-muted-fg">

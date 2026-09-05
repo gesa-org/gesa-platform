@@ -83,6 +83,18 @@
        weren't part of this request — only `.gold-banner` (below) reads from
        this token. */
     --slate-banner: #aab8c5;
+    /* Roy sent a reference swatch ("#CBA560, Sand Brown") and asked to
+       replace the beige/cream section backgrounds on About's Founder
+       spotlight, the "Why GESA exists" section (now on the Support Groups/
+       Community page — see CommunityIntro.tsx), and Our Professionals'
+       directory band with it. Those three previously used two *different*
+       existing tokens (--clay-soft, a pale gold wash, for the first and
+       third; a hardcoded #F2EFE6 "warm ivory" hex for the second) — neither
+       retuned directly, since --clay-soft is still used site-wide for
+       unrelated buttons/badges/admin-nav chips that weren't part of this
+       request. Scoped to this new token instead, same pattern as
+       --sage-soft/--slate-banner above. */
+    --sand-brown: #cba560;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
