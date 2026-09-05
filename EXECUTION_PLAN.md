@@ -6265,3 +6265,68 @@ Roy — same as last time, please run those four one at a time and paste back wh
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 138: font dropdown — added the safe subset of Word's font list from the reference video
+
+**Request:** a new screen recording, analyzed frame-by-frame (extracted at 2fps via ffmpeg), showed Word/WPS's
+Font dropdown scrolled continuously top to bottom — Arial through Wingdings, roughly 300 entries, the complete
+list Windows/Office bundles. The ask was to "copy the list of theme fonts" into the Page Content editor's
+"Default (theme body font)" dropdown.
+
+**Flagged before implementing, per Roy's own explicit design decision from two phases ago:** the video is Word's
+*entire* system font catalog, not a curated "theme" list — it includes dozens of Windows/Office-only fonts (Yu
+Gothic, MS Mincho, Sitka, Segoe UI Variable, SimSun, Bahnschrift, Nirmala UI, Wingdings/Webdings, and more) that
+this site doesn't load and most visitors' devices (Mac, Linux, mobile, older Windows) don't have installed.
+Copying it verbatim would mean an admin could pick a font that silently falls back to something different on
+every visitor's device — precisely the failure mode Phase 137's own font-dropdown rule ("only show a font if
+it's loaded, a reliable system fallback, or properly imported") was written to prevent, and Roy stated himself
+last time. Rather than guess which reading was intended, asked directly via a clarifying question; Roy confirmed:
+add only the fonts from the video that are genuinely web-safe, not the full list.
+
+**What was added** (`lib/ui-builder/richTextFontOptions.ts`'s `EXTRA_FONT_OPTIONS`) — every entry below was
+visually confirmed present in the recording, and each is either a true cross-platform web-safe font or a
+well-established CSS fallback stack that degrades gracefully rather than breaking:
+- Times New Roman, Verdana, Tahoma, Trebuchet MS, Courier New — the classic "web safe fonts" set, pre-installed
+  on effectively every desktop OS for decades.
+- Calibri, Cambria, Candara, Constantia, Corbel — Microsoft's own former "Office theme" font pairing (Calibri/
+  Cambria were literally Office's default body/heading fonts for years); each stack falls back through each
+  other plus a generic family.
+- Segoe UI, using the same `"-apple-system, BlinkMacSystemFont"` pattern most modern sites use so it resolves to
+  each OS's own native system font (San Francisco on macOS, Segoe UI on Windows, Roboto on Android) instead of
+  breaking anywhere it isn't literally installed.
+- Impact — genuinely web-safe, included but labeled "Impact (headings only)" since it's a heavy, all-caps-style
+  display face, not something suited to paragraph body copy.
+
+Explicitly excluded, and why: every CJK/Indic-script font (Yu Gothic, MS Mincho, SimSun, Nirmala UI, PMingLiU),
+every symbol/dingbat font (Wingdings, Webdings, Symbol), and every other Windows/Office-exclusive family shown in
+the video (Bahnschrift, Sitka, Segoe UI Variable, Cascadia, Franklin Gothic, and the rest) — none of these are
+loaded by this site or reliably present on a random visitor's device, so none would render consistently.
+
+**QA:** confirmed every new font-family value uses only the character set `lib/ui-builder/sanitizeRichText.ts`'s
+existing font-family allowlist regex already accepts (letters, spaces, commas, hyphens, quotes) — no sanitizer
+change needed. Manually diffed the new entries against the existing Global Theme/Arial/Aptos options for exact
+duplicate values (none found) — an earlier draft of this change briefly added a second "Georgia" entry with a
+slightly different fallback stack than the one already offered; caught on review and removed before finalizing,
+so there's exactly one Georgia option, not two confusingly similar ones. `tsc --noEmit` — identical to the
+established 16-line baseline, zero new errors. **Not verified: rendering each new font in a live browser** (same
+standing sandbox limitation as every UI Builder phase) — most important to check after deploying: open the Font
+family dropdown on any rich-text field and confirm Times New Roman/Verdana/Tahoma/Trebuchet MS/Calibri/Cambria/
+Segoe UI/Impact all appear once each, with no duplicate Georgia, and that selecting each one visibly changes the
+editor's text (Segoe UI and Impact are the two most worth double-checking, since their fallback stacks are the
+most device-dependent).
+
+**Files changed:** `lib/ui-builder/richTextFontOptions.ts` only (`EXTRA_FONT_OPTIONS` expanded from 3 to 15
+entries). No sanitizer, database, or component changes needed.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 138: add web-safe fonts from Word font list (Times New Roman, Calibri, Segoe UI, and others) to the rich-text font dropdown"
+git push
+```
+
+Roy — same as the last two phases: run those four one at a time, and paste back what shows up right after
+`git commit` specifically.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

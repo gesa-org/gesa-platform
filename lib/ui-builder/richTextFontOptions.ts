@@ -25,10 +25,54 @@ import { HEADING_FONT_OPTIONS, BODY_FONT_OPTIONS, DEFAULT_DESIGN_TOKENS } from "
 //   below is used verbatim (Aptos, then Aptos Display, then Calibri, then
 //   generic sans-serif) so a device without Aptos still renders sensible,
 //   already-available text — it degrades, it never breaks.
+// Phase 138 — Roy sent a screen recording that just scrolls Word/WPS's own
+// Font dropdown top to bottom (Arial through Wingdings — the full ~300-font
+// list bundled with Windows/Office) and asked to "copy the list of theme
+// fonts" into this one. Copying that list verbatim would break the exact
+// thing this dropdown exists to prevent: most of those ~300 (Yu Gothic, MS
+// Mincho, Sitka, Segoe UI Variable, Wingdings, SimSun, Bahnschrift, Nirmala
+// UI, and dozens more) are Windows/Office-bundled fonts this site doesn't
+// load and most visitors' devices (Mac, Linux, mobile, older Windows) don't
+// have installed — choosing one as a "theme body font" would silently fall
+// back to whatever generic font the visitor's browser picks, different on
+// every device, which is precisely what the "only show a font if it's
+// loaded, a reliable system fallback, or properly imported" rule from the
+// last phase was written to stop. Confirmed with Roy directly: add only the
+// fonts from that video that are genuinely safe everywhere, not the entire
+// list. Every entry below did appear in the recording and is either a true
+// cross-platform web-safe font or backed by a well-established CSS fallback
+// stack that degrades gracefully if the named font itself isn't present:
+// - Times New Roman, Verdana, Tahoma, Trebuchet MS, Courier New — the
+//   classic "web safe fonts" set, pre-installed on effectively every desktop
+//   OS for decades.
+// - Calibri, Cambria, Candara, Constantia, Corbel — Microsoft's own former
+//   "Office theme" font family (Calibri/Cambria were literally Office's
+//   default body/heading pair for years); each stack falls back through the
+//   others plus a generic family so a device missing all of them still
+//   renders sensibly.
+// - Segoe UI — Windows' system UI font; the stack below is the same
+//   "-apple-system, BlinkMacSystemFont" pattern most modern sites use so it
+//   resolves to each OS's own native system font (San Francisco on macOS,
+//   Segoe UI on Windows, Roboto on Android) rather than breaking anywhere.
+// - Impact — a genuinely web-safe display font, but included with a note
+//   that it's a heavy, all-caps-style face meant for short headings/badges,
+//   not paragraph body copy.
 const EXTRA_FONT_OPTIONS = [
   { value: "Arial, Helvetica, sans-serif", label: "Arial" },
   { value: '"Arial Narrow", Arial, sans-serif', label: "Arial Narrow" },
   { value: "Aptos, \"Aptos Display\", Calibri, sans-serif", label: "Aptos" },
+  { value: '"Times New Roman", Times, serif', label: "Times New Roman" },
+  { value: "Verdana, Geneva, sans-serif", label: "Verdana" },
+  { value: "Tahoma, Geneva, sans-serif", label: "Tahoma" },
+  { value: '"Trebuchet MS", Helvetica, sans-serif', label: "Trebuchet MS" },
+  { value: '"Courier New", Courier, monospace', label: "Courier New" },
+  { value: "Calibri, Candara, Segoe, \"Segoe UI\", Optima, Arial, sans-serif", label: "Calibri" },
+  { value: "Cambria, Georgia, serif", label: "Cambria" },
+  { value: "Candara, Calibri, Segoe, \"Segoe UI\", Optima, Arial, sans-serif", label: "Candara" },
+  { value: "Constantia, Georgia, serif", label: "Constantia" },
+  { value: "Corbel, \"Lucida Grande\", Tahoma, sans-serif", label: "Corbel" },
+  { value: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif", label: "Segoe UI" },
+  { value: "Impact, Haettenschweiler, \"Arial Narrow\", sans-serif", label: "Impact (headings only)" },
 ] as const;
 
 function dedupeByValue<T extends { value: string; label: string }>(options: readonly T[]): T[] {
