@@ -102,7 +102,7 @@ export default function PageHero({
         </StaggerItem>
         {description && (
           <StaggerItem>
-            <p className={`mx-auto max-w-[620px] ${gold ? "text-primary/80" : "text-muted-fg"}`}>{description}</p>
+            <div className={`mx-auto max-w-[620px] ${gold ? "text-primary/80" : "text-muted-fg"}`}>{description}</div>
           </StaggerItem>
         )}
         {children}

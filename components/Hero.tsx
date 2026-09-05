@@ -157,9 +157,9 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               </h1>
             </ScrollText>
             <Reveal type="fade-up" delay={0.08}>
-              <p className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">
+              <div className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">
                 <EditableText contentId="about.hero.description" label="Hero description" value={content.subtitle} as="span" />
-              </p>
+              </div>
             </Reveal>
 
             <StaggerGroup className="flex flex-wrap gap-4 mt-6">

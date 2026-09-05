@@ -92,7 +92,23 @@ function currentTextStyle(editor: Editor) {
   };
 }
 
-export default function RichTextToolbar({ editor }: { editor: Editor }) {
+// Phase 137 — "block" (the default, used by richText fields and any
+// plainText field long enough to be real paragraph copy — see
+// lib/ui-builder/pageRegistry.ts's getRichTextMode) shows every control,
+// unchanged from Phase 136. "inline" (headings, CTA/form labels, and
+// short plainText badges/eyebrows) hides the four groups that produce
+// block-level markup — paragraph/heading style, lists, alignment,
+// blockquote/horizontal-divider — because those fields render inside a
+// tag the page template already supplies (an <h1>, a <button>'s label,
+// a badge <span>); a nested <h2> or a bullet list there would be invalid
+// markup, which is exactly what RichTextEditor.tsx's matching `mode` prop
+// also disables at the schema level (defense in depth, not just a hidden
+// button). Every character-level control — font family/size, Bold/
+// Italic/Underline/Strike/Superscript/Subscript, change case, color/
+// highlight, Font settings, Insert/edit link, Undo/Redo/Clear formatting —
+// stays identical in both modes, so it's still the same toolbar/component,
+// just fewer buttons where fewer are structurally safe.
+export default function RichTextToolbar({ editor, mode = "block" }: { editor: Editor; mode?: "block" | "inline" }) {
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
   const [highlightPopoverOpen, setHighlightPopoverOpen] = useState(false);
@@ -224,17 +240,19 @@ export default function RichTextToolbar({ editor }: { editor: Editor }) {
       aria-label="Text formatting"
       className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 rounded-t-xl border border-b-0 border-border bg-card px-2 py-1.5"
     >
-      <select
-        aria-label="Paragraph style"
-        value={paragraphStyle}
-        onChange={(e) => setParagraphStyle(e.target.value)}
-        className="mr-1 rounded-md border border-border bg-transparent px-1.5 py-1 text-[12px]"
-      >
-        <option value="paragraph">Paragraph</option>
-        <option value="h1">Heading 1</option>
-        <option value="h2">Heading 2</option>
-        <option value="h3">Heading 3</option>
-      </select>
+      {mode === "block" && (
+        <select
+          aria-label="Paragraph style"
+          value={paragraphStyle}
+          onChange={(e) => setParagraphStyle(e.target.value)}
+          className="mr-1 rounded-md border border-border bg-transparent px-1.5 py-1 text-[12px]"
+        >
+          <option value="paragraph">Paragraph</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+        </select>
+      )}
 
       {/* Phase 136 — Font family/size, mirroring the two dropdowns at the
           left edge of Word's Font ribbon group. Curated lists (see
@@ -380,24 +398,28 @@ export default function RichTextToolbar({ editor }: { editor: Editor }) {
       </ToolbarButton>
       <Divider />
 
-      <ToolbarButton label="Bulleted list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
-        <List size={14} />
-      </ToolbarButton>
-      <ToolbarButton label="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
-        <ListOrdered size={14} />
-      </ToolbarButton>
-      <Divider />
+      {mode === "block" && (
+        <>
+          <ToolbarButton label="Bulleted list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            <List size={14} />
+          </ToolbarButton>
+          <ToolbarButton label="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            <ListOrdered size={14} />
+          </ToolbarButton>
+          <Divider />
 
-      <ToolbarButton label="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
-        <AlignLeft size={14} />
-      </ToolbarButton>
-      <ToolbarButton label="Align center" active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
-        <AlignCenter size={14} />
-      </ToolbarButton>
-      <ToolbarButton label="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
-        <AlignRight size={14} />
-      </ToolbarButton>
-      <Divider />
+          <ToolbarButton label="Align left" active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+            <AlignLeft size={14} />
+          </ToolbarButton>
+          <ToolbarButton label="Align center" active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+            <AlignCenter size={14} />
+          </ToolbarButton>
+          <ToolbarButton label="Align right" active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+            <AlignRight size={14} />
+          </ToolbarButton>
+          <Divider />
+        </>
+      )}
 
       <ToolbarButton label="Insert/edit link (Ctrl+K)" active={hasExistingLink} onClick={openLinkPopover}>
         <Link2 size={14} />
@@ -407,12 +429,16 @@ export default function RichTextToolbar({ editor }: { editor: Editor }) {
           <Link2Off size={14} />
         </ToolbarButton>
       )}
-      <ToolbarButton label="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
-        <Quote size={14} />
-      </ToolbarButton>
-      <ToolbarButton label="Horizontal divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
-        <Minus size={14} />
-      </ToolbarButton>
+      {mode === "block" && (
+        <>
+          <ToolbarButton label="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+            <Quote size={14} />
+          </ToolbarButton>
+          <ToolbarButton label="Horizontal divider" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+            <Minus size={14} />
+          </ToolbarButton>
+        </>
+      )}
       <Divider />
 
       <ToolbarButton label="Undo (Ctrl+Z)" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}>

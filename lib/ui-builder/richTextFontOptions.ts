@@ -13,10 +13,42 @@ import { HEADING_FONT_OPTIONS, BODY_FONT_OPTIONS, DEFAULT_DESIGN_TOKENS } from "
 // site (see the same list Phase 132's Typography panel offers) and every
 // color option is a real token from that same design system — so a piece of
 // custom-styled rich text still always looks like it belongs on the site.
+// Phase 137 — three more options Roy asked for by name (Arial, Arial
+// Narrow, Aptos), none of which the Global Theme's own Typography panel
+// offers today. Each is a plain system/web-safe stack, not a font file this
+// site loads itself:
+// - Arial/Arial Narrow ship with effectively every desktop OS — safe as a
+//   primary choice everywhere.
+// - Aptos is Microsoft 365's current default (Windows 11 + current Office),
+//   but isn't preinstalled on macOS, Linux, or older Windows, and this site
+//   doesn't load it as a web font. Per Roy's own spec, the fallback stack
+//   below is used verbatim (Aptos, then Aptos Display, then Calibri, then
+//   generic sans-serif) so a device without Aptos still renders sensible,
+//   already-available text — it degrades, it never breaks.
+const EXTRA_FONT_OPTIONS = [
+  { value: "Arial, Helvetica, sans-serif", label: "Arial" },
+  { value: '"Arial Narrow", Arial, sans-serif', label: "Arial Narrow" },
+  { value: "Aptos, \"Aptos Display\", Calibri, sans-serif", label: "Aptos" },
+] as const;
+
+function dedupeByValue<T extends { value: string; label: string }>(options: readonly T[]): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const option of options) {
+    if (seen.has(option.value)) continue;
+    seen.add(option.value);
+    result.push(option);
+  }
+  return result;
+}
+
 export const RICH_TEXT_FONT_FAMILY_OPTIONS = [
   { value: "", label: "Default (theme body font)" },
-  ...HEADING_FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label.replace(" (current)", "") })),
-  ...BODY_FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label.replace(" (current)", "") })),
+  ...dedupeByValue([
+    ...HEADING_FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label.replace(" (current)", "") })),
+    ...BODY_FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label.replace(" (current)", "") })),
+    ...EXTRA_FONT_OPTIONS,
+  ]),
 ] as const;
 
 // A small curated size ramp (px) — covers "slightly bigger pull-quote" to

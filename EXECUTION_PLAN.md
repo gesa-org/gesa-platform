@@ -6108,3 +6108,160 @@ git push reported "Everything up-to-date," which usually means the commit itself
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 137: one standardized rich-text editor for every Page Content text field
+
+**Request:** make every editable text field across every Page Content page and layer — not just Home's Hero
+description — open with the same rich-text editor/toolbar (block styles, font family/size, bold/italic/underline/
+strike/superscript/subscript, color/highlight, lists, alignment, links, blockquote, divider, undo/redo, clear
+formatting, character counter, Content ID) that Home → Hero → Hero description already has, including Footer
+Note and every heading/eyebrow/label/badge/CTA/card/nav/legal-page text field, while leaving image, URL, color,
+spacing, toggle, and icon controls exactly as they are.
+
+**Inspection first, per Roy's instruction:** the inspector (`PageEditorShell.tsx`) had exactly one branch —
+`isRichTextField(type)` picked `RichTextEditor` for `richText` fields only; every other type (`plainText`,
+`heading`, `ctaLabel`, `formLabel`, `url`, and the not-yet-built `image`/`altText`/`toggle`/`socialLink`/
+`navigationItem`/`repeater`) fell into a single plain `<input>` — 107 of the registry's 112 fields, across all 8
+pages. `sanitizeResolvedContent` and both draft/publish routes shared that same one-type-only branch for which
+sanitizer to run. `EditableText.tsx` (the public renderer) already had an `html` prop wired independently of
+field type — every non-richText call site simply never passed it, so those fields rendered through React's
+auto-escaping `{value}` interpolation.
+
+**The three-way split, not a blanket switch:** simply pointing every field at `RichTextEditor` and sanitizing
+everything as full HTML would have created the exact failure the request explicitly warned against — "do not
+introduce nested headings, invalid markup." A `heading`/`ctaLabel`/badge/eyebrow field renders *inside* a tag the
+page template already supplies (an `<h1>`, a button's own label, a badge `<span>`); giving it the paragraph/
+heading/list/blockquote toolbar would let an admin nest a `<h2>` or a bullet list inside an `<h1>` or a button.
+So `lib/ui-builder/pageRegistry.ts`'s new `getRichTextMode(field)` — the one function the inspector, both API
+routes, and the sanitizer choice all now share — resolves every field to one of three modes:
+- **"block"** — the full toolbar, unchanged from Home's Hero description. Used by `richText` fields (5, as
+  before) and by any `plainText` field long enough to be real paragraph copy (`maxLength >= 200` — About/
+  Therapists/Support Groups/Donate/FAQ/Contact's Hero descriptions, mission/impact/disclaimer text, etc. — 19
+  fields promoted this phase).
+- **"inline"** — the same toolbar minus paragraph/heading style, lists, alignment, blockquote, and horizontal
+  divider (every character-level control — font family/size, bold/italic/underline/strike/superscript/
+  subscript, change case, color/highlight, Font settings, Insert/edit link, undo/redo/clear formatting — stays
+  identical). Used by `heading` (23), `ctaLabel` (18), `formLabel` (6), and short `plainText` fields (badges/
+  eyebrows/button labels, 25 fields under the 200-char threshold).
+- **"none"** — unchanged plain `<input>`, exactly as before. `url` (8 fields — CTA/link destinations; per the
+  request's own carve-out, these stay plain and are only ever formatted through the editor's own Insert/edit
+  link function on a *different*, block/inline field) and the still-not-built `image`/`altText`/`toggle`/
+  `socialLink`/`navigationItem`/`repeater` types (0 fields currently use these).
+
+Three independent layers enforce "inline" fields can never produce block markup, not just one: (1)
+`RichTextEditor.tsx`'s `mode` prop disables the heading/bulletList/orderedList/blockquote/horizontalRule nodes
+and skips the alignment extension *in Tiptap's own schema* for inline mode, so there's no client-side way to
+create them at all, not even via a paste or a markdown shortcut; (2) `RichTextToolbar.tsx`'s matching `mode` prop
+hides the matching toolbar buttons; (3) a new `sanitizeInlineRichTextHtml()` (`lib/ui-builder/sanitizeRichText.ts`)
+unwraps any `p`/`h1-3`/`ul`/`ol`/`li`/`blockquote`/`hr` that somehow still arrives (keeping their inner text/marks,
+not deleting content) before it's ever saved. `getRichTextMode`'s 200-character threshold is a length-based
+heuristic, not a per-field manual classification — `plainText` has always spanned everything from a 20-character
+badge to a 600-character mission statement, and 200 was chosen as the cutoff separating genuine paragraph copy
+from short labels/eyebrows/badges across the full field inventory (see the phase's own inspection notes above).
+
+**The rendering half — the part that would have silently broken without it:** `EditableText.tsx`'s `html` prop
+now defaults to `true` instead of `false`. Every field reaching it has already been sanitized server-side per its
+own mode (block/inline HTML allowlist, or `stripAllHtml` for "none," which leaves zero tags — rendering
+byte-identical either way) by the same `sanitizeResolvedContent` call every page already runs unconditionally
+(confirmed by reading `resolveEditorPreview()` and Home's `app/page.tsx` directly — both sanitize on every
+request, preview or not), so flipping the default doesn't change what a normal visitor ever safely sees; it
+changes only whether a *formatted* value renders as real markup or as literal escaped tags. That flip surfaced
+two categories of real bugs, both fixed this phase rather than left as a "known gap":
+1. **Invalid nested markup from parent wrapping.** Several now-"block" fields' `<EditableText as="span">` calls
+   were wrapped by a parent `<p>...</p>` in the page's own JSX (`PageHero.tsx`'s shared `description` slot —
+   covering Contact/FAQ/Therapists/Support Groups' Hero descriptions in one fix — plus About's `Hero.tsx`,
+   Donate's `DonatePage.tsx`, and two spots in `app/about/page.tsx` and `app/intake/page.tsx`). Tiptap's block
+   mode always serializes at least one `<p>` even for a single unformatted line, so `<p><span><p>...</p></span></p>`
+   would have made the browser's parser auto-close the *outer* `<p>` the instant it hit the inner one — real,
+   confirmed browser parsing behavior, not a theoretical validator complaint. Fixed by changing each of those
+   wrapper tags from `<p>` to `<div>` (same className, same content) — a `<div>` has no such auto-close rule, so
+   nesting is preserved correctly.
+2. **Fields never wired to the visual editor at all.** Six fields registered in Phase 135 (`therapists.directory.
+   noResultsMessage`, `supportGroups.directory.noGroupsMessage`, `supportGroups.intro.missionBody`/`card1-3Body`,
+   `donate.impact.card1-3Description`, `intake.matchList.intro`) were rendered as bare `{content.field}`
+   expressions with no `EditableText` wrapper — a pre-existing "not yet canvas-wrapped" gap disclosed at the time.
+   Promoting these to block/inline mode without fixing that would have shown visitors literal `&lt;strong&gt;`
+   text the moment an admin added any formatting. Fixed by wrapping each in `EditableText` (and `<p>`→`<div>`
+   where needed) in `TherapistsDirectory.tsx`, `SupportGroupsInteractive.tsx`, `CommunityIntro.tsx`, `DonatePage.tsx`,
+   and `IntakeMatchFlow.tsx` (the actual render site for `matchListIntro`, which `app/intake/page.tsx` only passes
+   through as a prop).
+
+**Character-limit enforcement, not just display:** `RichTextEditor.tsx` now accepts a `maxLength` prop and
+reverts to the last-accepted content (via a ref, not state) whenever an edit would push the plain-text length
+over the limit — the same "can't type past the limit" feel a native `<input maxLength>` has always given these
+fields, which Tiptap has no built-in equivalent for. A new `lib/ui-builder/enforceMaxLength.ts` backs this up
+server-side in both the draft PUT and publish POST routes: over-limit content (from a hand-crafted request, or a
+draft saved before a field's limit existed) is flattened to plain text and hard-truncated rather than rejected
+with a 400 — a 400 is the wrong failure mode for an autosaving field the admin could be mid-sentence in.
+
+**Font-family dropdown, expanded per the request's exact list:** `lib/ui-builder/richTextFontOptions.ts` now adds
+Arial (`Arial, Helvetica, sans-serif`), Arial Narrow (`"Arial Narrow", Arial, sans-serif`), and Aptos (`Aptos,
+"Aptos Display", Calibri, sans-serif` — Microsoft 365's current default, not preloaded by this site or reliably
+present outside Windows 11/current Office, so its own fallback chain degrades to Calibri then generic sans-serif
+rather than breaking) to the existing Cormorant Garamond/Georgia/Nunito Sans/Heebo options from the Global
+Theme's Typography panel, de-duplicated by exact value string (fixing a pre-existing literal duplicate: Georgia's
+identical stack appeared in both the heading and body font lists). "Default (theme body font)" stays the first
+option and, unchanged from Phase 136, still means "no override" — it inherits whatever Global Theme currently
+publishes.
+
+**Left out of this phase, disclosed rather than silently skipped:**
+- **Global Header/Footer/navigation text** — still not registered in `pageRegistry.ts` at all, per Phase 135's
+  own architectural note (`app/layout.tsx`, which renders them, has no `searchParams` access the way a page.tsx
+  does). "Footer Note" in this registry has only ever meant Home's own closing-note field (`home.footer-note`,
+  already `richText`/block mode since Phase 134) — the site-wide `<Footer>` component's copy remains
+  Content-Manager-only, unchanged by this phase.
+- **Content Manager's own editors** (`HomeEditor.tsx`, `TherapistsDirectoryEditor.tsx`, etc.) are untouched — they
+  still save plain text the way they always have. An admin using Content Manager instead of the Page Content
+  visual editor for the same field won't get Tiptap-style HTML either way, so there's no behavior mismatch for a
+  single field edited from both places, but Content Manager itself doesn't gain a rich-text toolbar this phase.
+- **`image`/`altText`/`toggle`/`socialLink`/`navigationItem`/`repeater`** — still declared types with no built
+  control and 0 registered fields, unchanged since Phase 135.
+- **The 5 legal pages** (Privacy Policy, Cookies Policy, Legal Notice, Accessibility Statement, Terms &
+  Conditions) — still not wired to `supportsVisualEditor` at all (separate `legal_pages` table, per Phase 135's
+  own disclosed follow-up); QA below confirms `PageEditorShell`'s unsupported-page message still explains why for
+  this group specifically.
+
+**QA:** `tsc --noEmit` — identical to the established 16-line baseline (unrelated test-file/Resend typing issues)
+across every pass this phase, confirmed again after the render-site fixes above — zero new errors anywhere
+touched. Grepped every new/modified file for the unescaped-apostrophe JSX pattern that broke two earlier builds —
+every apostrophe found is inside a `//` comment or a quoted string literal, none in literal JSX text. Cross-
+checked every new `contentId` used in the render-site fixes (About/Donate/Therapists/Support Groups/Intake)
+against `pageRegistry.ts`'s actual field list to confirm exact string matches, not guessed IDs.
+**Not verified: an actual click-through in a live browser** (same standing sandbox limitation as every UI Builder
+phase since Phase 132 — no dev server here). Most important to verify after deploying, in this order: (1) open a
+short field (e.g. a card CTA label or badge) in Edit mode and confirm the toolbar shows *without* paragraph
+style/lists/alignment/blockquote — "inline" mode; (2) open About's Hero description (now "block," promoted from
+plainText) and confirm the full toolbar appears and formatting survives Draft save → Publish → refresh → real
+page render, with no visual breakage where `PageHero.tsx`'s `<p>`→`<div>` change landed; (3) spot-check one of the
+five newly-wired fields (e.g. Support Groups' "No groups open" message) end-to-end since those had literally no
+click-to-edit affordance before this phase; (4) confirm the font dropdown shows Arial/Arial Narrow/Aptos with no
+duplicate "Georgia (system serif)" entry; (5) type past a field's character limit and confirm the editor stops
+accepting input at the limit, matching the native-input behavior every non-rich field always had.
+
+**Files changed:** `lib/ui-builder/pageRegistry.ts` (`getRichTextMode`, `RichTextMode`, widened `isRichTextField`),
+`lib/ui-builder/pageContentResolver.ts` (`sanitizeByMode`, `sanitizeResolvedContent` updated), `lib/ui-builder/
+sanitizeRichText.ts` (`sanitizeInlineRichTextHtml`), `lib/ui-builder/enforceMaxLength.ts` (new),
+`lib/ui-builder/richTextFontOptions.ts` (Arial/Arial Narrow/Aptos, dedupe helper), `app/api/admin/ui-builder/
+page-content/draft/route.ts` and `.../publish/route.ts` (mode-based sanitize + maxLength enforcement),
+`components/admin/ui-builder/PageEditorShell.tsx` (mode-aware input choice), `components/admin/ui-builder/
+RichTextEditor.tsx` (`mode`/`maxLength` props, schema-level node restriction, revert-on-exceed),
+`components/admin/ui-builder/RichTextToolbar.tsx` (`mode` prop, conditional block-only button groups),
+`components/ui-builder/public/EditableText.tsx` (`html` default flipped to `true`), `components/ui/PageHero.tsx`,
+`components/Hero.tsx`, `components/donate/DonatePage.tsx`, `app/about/page.tsx`, `app/intake/page.tsx`,
+`components/TherapistsDirectory.tsx`, `components/SupportGroupsInteractive.tsx`, `components/support-groups/
+CommunityIntro.tsx`, `components/intake/IntakeMatchFlow.tsx` (render-site `<p>`→`<div>` fixes and/or new
+`EditableText` wrapping). No new database migrations — every field still reads/writes the same `crm_ui_drafts`/
+`site_content` rows Phase 132-135 already created.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 137: standardize the rich-text editor across every Page Content text field"
+git push
+```
+
+Roy — same as last time, please run those four one at a time and paste back what appears directly after the
+`git commit` line.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

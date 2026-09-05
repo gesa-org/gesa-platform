@@ -185,10 +185,59 @@ export type EditableFieldDef = {
   contentScope: "page" | "global";
 };
 
-// Whether a field type gets the rich-text toolbar+editor vs. the plain
-// single-line input — the one branch point the inspector UI needs.
-export function isRichTextField(type: ContentFieldType): boolean {
-  return type === "richText";
+export type RichTextMode = "block" | "inline" | "none";
+
+// Phase 137 — every editable-text field in Page Content gets Home Hero
+// description's same rich-text editor/toolbar; this function is what
+// decides *which flavor* it gets, and it's the one place that decision is
+// made (PageEditorShell's input choice, both draft/publish routes' and
+// sanitizeResolvedContent's sanitizer choice, and EditableText's public
+// render mode all key off it, directly or indirectly).
+//
+// - "block": the full toolbar, including paragraph/heading style, lists,
+//   alignment, blockquote, and horizontal divider — genuine multi-sentence
+//   body copy that owns its own block-level structure. Used by "richText"
+//   fields (unchanged since Phase 134) and by any "plainText" field long
+//   enough to actually be a paragraph (see BLOCK_LENGTH_THRESHOLD below).
+// - "inline": the same toolbar minus those four block-level groups — every
+//   character-level control (font family/size, bold/italic/underline/
+//   strike/superscript/subscript, change case, color/highlight, Font
+//   settings, Insert/edit link, undo/redo/clear formatting) still works.
+//   Used by "heading"/"ctaLabel"/"formLabel" and short "plainText" fields
+//   (badges, eyebrows, button/field labels). These fields render inside a
+//   tag the page template already supplies — an <h1>, a button's own
+//   label, a badge <span> — so a nested <h2> or a bullet list there would
+//   be invalid markup; RichTextEditor.tsx's matching `mode` prop disables
+//   those node types at the schema level too, not just in the toolbar.
+// - "none": the plain single-line input, unchanged from every phase before
+//   this one — "url" (raw href destinations), "image"/"altText" (not text
+//   content in the formatted-copy sense), "toggle", and the not-yet-built
+//   structured types ("socialLink"/"navigationItem"/"repeater").
+//
+// "plainText" is intentionally split by length rather than getting one
+// fixed treatment: this type has always covered everything from a
+// 20-character badge to a 600-character mission statement (see
+// EXECUTION_PLAN.md's Phase 137 field inventory) — a 400-character Hero
+// description deserves the same paragraph-level toolbar Home's richText
+// Hero description already has; a 20-character badge label does not.
+const BLOCK_LENGTH_THRESHOLD = 200;
+
+export function getRichTextMode(field: Pick<EditableFieldDef, "type" | "maxLength">): RichTextMode {
+  if (field.type === "richText") return "block";
+  if (field.type === "plainText") {
+    return (field.maxLength ?? 0) >= BLOCK_LENGTH_THRESHOLD ? "block" : "inline";
+  }
+  if (field.type === "heading" || field.type === "ctaLabel" || field.type === "formLabel") return "inline";
+  return "none";
+}
+
+// Whether a field type gets the rich-text toolbar+editor at all (block or
+// inline) vs. the plain single-line input — kept as a small wrapper so the
+// existing call sites (inspector UI, both draft/publish routes,
+// sanitizeResolvedContent) that only need a yes/no don't each need to know
+// about the 3-way split above.
+export function isRichTextField(field: Pick<EditableFieldDef, "type" | "maxLength">): boolean {
+  return getRichTextMode(field) !== "none";
 }
 
 // Phase 133 — Home's field map, the "fully supported reference

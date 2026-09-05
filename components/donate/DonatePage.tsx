@@ -77,9 +77,9 @@ export default async function DonatePage({
   const crisisLinkIsExternal = content.crisisLinkHref.startsWith("http");
 
   const impactItems = [
-    { title: content.impact1Title, description: content.impact1Description },
-    { title: content.impact2Title, description: content.impact2Description },
-    { title: content.impact3Title, description: content.impact3Description },
+    { title: content.impact1Title, description: content.impact1Description, contentId: "donate.impact.card1Description" },
+    { title: content.impact2Title, description: content.impact2Description, contentId: "donate.impact.card2Description" },
+    { title: content.impact3Title, description: content.impact3Description, contentId: "donate.impact.card3Description" },
   ];
 
   const trustBadges = [content.trustBadge1Label, content.trustBadge2Label, content.trustBadge3Label, content.trustBadge4Label];
@@ -98,9 +98,9 @@ export default async function DonatePage({
             <h1 className="mt-3 font-serif text-[38px] font-semibold leading-tight text-foreground sm:text-[44px]">
               <EditableText contentId="donate.hero.heading" label="Hero heading" value={content.title} as="span" />
             </h1>
-            <p className="mx-auto mt-5 max-w-[520px] text-[16px] leading-relaxed text-muted-fg">
+            <div className="mx-auto mt-5 max-w-[520px] text-[16px] leading-relaxed text-muted-fg">
               <EditableText contentId="donate.hero.description" label="Hero description" value={content.subtitle} as="span" />
-            </p>
+            </div>
             <p className="mt-3 font-semibold text-foreground">
               <EditableText contentId="donate.hero.boldLine" label="Hero bold line" value={content.boldLine} as="span" />
             </p>
@@ -136,7 +136,9 @@ export default async function DonatePage({
                     <Icon size={24} />
                   </span>
                   <h3 className="mb-1.5 text-[13px] font-bold uppercase tracking-wide text-primary">{item.title}</h3>
-                  <p className="text-[14px] leading-relaxed text-muted-fg">{item.description}</p>
+                  <div className="text-[14px] leading-relaxed text-muted-fg">
+                    <EditableText contentId={item.contentId} label="Impact card description" value={item.description} as="span" />
+                  </div>
                 </StaggerItem>
               );
             })}

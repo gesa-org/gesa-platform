@@ -141,9 +141,9 @@ export default async function IntakePage({
 
       <div className="mt-8">
         {pathKey === "crisis" && (
-          <p className="mb-4 text-center text-[14.5px] text-muted-fg">
+          <div className="mb-4 text-center text-[14.5px] text-muted-fg">
             <EditableText contentId="intake.crisis.ongoingSupportPrompt" label="Ongoing-support prompt" value={content.ongoingSupportPrompt} as="span" />
-          </p>
+          </div>
         )}
         {matches.length > 0 ? (
           <IntakeMatchFlow pathKey={pathKey} matches={matches} matchListIntro={content.matchListIntro} />

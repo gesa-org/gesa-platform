@@ -115,6 +115,38 @@ export function stripAllHtml(value: string): string {
   return sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} });
 }
 
+// Phase 137 — for "inline" rich-text fields (see
+// lib/ui-builder/pageRegistry.ts's getRichTextMode: headings, CTA/form
+// labels, and short plainText badges/eyebrows). Same character-level marks
+// as sanitizeRichTextHtml above — bold/italic/underline/strike/
+// superscript/subscript, the shared span's font/color/highlight/caps
+// styles, and links — but never a block wrapper. These fields render
+// inside a tag the page template already supplies (an <h1>, a button's own
+// label, a badge <span>), so keeping a <p>/<h1-3>/<ul>/<ol>/<li>/
+// <blockquote>/<hr> here would produce invalid nested markup. Those tags
+// simply aren't in ALLOWED_TAGS below, and sanitize-html's default
+// disallowed-tag behavior is to drop the tag but keep its text/children
+// (only `nonTextTags` — script/style/etc. — lose their content too) — so a
+// pasted "<h2>Foo</h2><p>Bar</p>" becomes the inline text "FooBar", not
+// missing content and not invalid markup either way.
+const INLINE_ALLOWED_TAGS = ["strong", "em", "u", "s", "sup", "sub", "span", "a", "br"];
+
+export function sanitizeInlineRichTextHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: INLINE_ALLOWED_TAGS,
+    allowedAttributes: ALLOWED_ATTRIBUTES,
+    allowedStyles: ALLOWED_STYLES,
+    allowedSchemes: ALLOWED_SCHEMES,
+    transformTags: {
+      a: (tagName, attribs) => {
+        const rel = attribs.target === "_blank" ? "noopener noreferrer" : attribs.rel;
+        return { tagName, attribs: { ...attribs, ...(rel ? { rel } : {}) } };
+      },
+    },
+    nonTextTags: ["script", "style", "textarea", "noscript"],
+  });
+}
+
 const SAFE_URL_SCHEMES = new Set(["https:", "http:", "mailto:", "tel:"]);
 
 /** Validates a URL a link-editing UI is about to save. Returns null (safe)

@@ -6,6 +6,7 @@ import { BadgeCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import IntakeBookingModal from "@/components/intake/IntakeBookingModal";
 import type { PublicTherapistRow } from "@/lib/database.types";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 type Match = { therapist: PublicTherapistRow; reasoning: string };
 
@@ -28,7 +29,9 @@ export default function IntakeMatchFlow({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-center text-[14.5px] text-muted-fg">{matchListIntro}</p>
+      <div className="text-center text-[14.5px] text-muted-fg">
+        <EditableText contentId="intake.matchList.intro" label="Match list intro" value={matchListIntro} as="span" />
+      </div>
 
       {matches.map(({ therapist, reasoning }) => {
         const initials = therapist.full_name

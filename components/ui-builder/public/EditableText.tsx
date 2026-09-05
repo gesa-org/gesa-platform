@@ -14,24 +14,32 @@ type Tag = "span" | "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
 // provided `enabled: true`, which only ever happens inside the admin Page
 // Editor's iframe.
 //
-// Phase 134 — added the `html` prop for richText fields. `value` for those
-// fields is HTML that was already sanitized twice before it ever reaches
-// this component (once when saved — see app/api/admin/ui-builder/
-// page-content/{draft,publish}/route.ts — and again defensively at render
-// time in each page's own server component, e.g. app/page.tsx's
-// `sanitizeResolvedContent` call) — this component never sanitizes
-// anything itself, it only decides *how* to render an already-safe string.
-// `html={false}` (the default, used by every plainText/heading/ctaLabel
-// field) keeps the exact same auto-escaping `{value}` interpolation as
-// before this phase existed — a value containing literal "<" characters
-// always renders as visible text for those fields, never as markup.
+// Phase 134 — added the `html` prop for richText fields. `value` is HTML
+// that was already sanitized twice before it ever reaches this component
+// (once when saved — see app/api/admin/ui-builder/page-content/
+// {draft,publish}/route.ts — and again defensively at render time in each
+// page's own server component, e.g. app/page.tsx's `sanitizeResolvedContent`
+// call) — this component never sanitizes anything itself, it only decides
+// *how* to render an already-safe string.
+//
+// Phase 137 — `html` now defaults to `true`. Every field registered in
+// pageRegistry.ts is sanitized server-side per its own getRichTextMode
+// before it ever reaches here — "block"/"inline" fields through their
+// HTML allowlists, "none"-mode fields through stripAllHtml, which leaves
+// zero tags behind — so a "none"-mode value renders byte-identical either
+// way (there's no markup left to interpret), while every now-richText-
+// enabled plainText/heading/ctaLabel/formLabel field can finally render the
+// bold/italic/color/link formatting an admin adds through the shared
+// editor, instead of showing it as escaped literal text. An explicit
+// `html={false}` is still honored for any caller that needs the old plain-
+// text-only guarantee regardless of what's been sanitized upstream.
 export default function EditableText({
   contentId,
   label,
   value,
   as = "span",
   className,
-  html = false,
+  html = true,
 }: {
   contentId: string;
   label: string;

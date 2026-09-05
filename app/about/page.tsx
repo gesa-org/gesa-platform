@@ -206,9 +206,9 @@ export default async function AboutPage({
           <h2 className="mb-2.5 text-[28px] sm:text-[30px]">
             <EditableText contentId="about.movement.heading" label="Movement band heading" value={sections.movementHeading} as="span" />
           </h2>
-          <p className="mb-6 text-muted-fg">
+          <div className="mb-6 text-muted-fg">
             <EditableText contentId="about.movement.body" label="Movement band body" value={sections.movementSubtitle} as="span" />
-          </p>
+          </div>
           <VolunteerPrimaryCta
             href={sections.movementCtaHref}
             className="inline-flex items-center rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-transform hover:-translate-y-px"
@@ -260,9 +260,9 @@ export default async function AboutPage({
                 <h2 className="mb-3 text-[clamp(1.75rem,2.6vw,2.25rem)] leading-[1.15]">
                   <EditableText contentId="about.team.heading" label="Team section heading" value={sections.teamHeading} as="span" />
                 </h2>
-                <p className="max-w-[30rem] text-[clamp(0.95rem,1.1vw,1.0625rem)] leading-[1.6] text-muted-fg">
+                <div className="max-w-[30rem] text-[clamp(0.95rem,1.1vw,1.0625rem)] leading-[1.6] text-muted-fg">
                   <EditableText contentId="about.team.intro" label="Team section intro" value={sections.teamIntro} as="span" />
-                </p>
+                </div>
                 <div className="mt-5">
                   <Link
                     href={sections.teamCtaHref}

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
-import { getPageDefinition, getEditableFields, isRichTextField } from "@/lib/ui-builder/pageRegistry";
-import { extractFieldValues, applyDraftPatch, getPageBaseContent } from "@/lib/ui-builder/pageContentResolver";
-import { sanitizeRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
+import { getPageDefinition, getEditableFields, getRichTextMode } from "@/lib/ui-builder/pageRegistry";
+import { extractFieldValues, applyDraftPatch, getPageBaseContent, sanitizeByMode } from "@/lib/ui-builder/pageContentResolver";
+import { stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
+import { enforceMaxLength } from "@/lib/ui-builder/enforceMaxLength";
 
 // Phase 133 — draft persistence for the Visual Page Editor's per-page text
 // content, parallel to app/api/admin/ui-builder/draft/route.ts (the global
@@ -78,19 +79,27 @@ export async function PUT(request: Request) {
 
   // Only registered contentIds for this page survive into the saved patch —
   // an unknown key in the payload is silently dropped, not stored. Every
-  // value is also sanitized per its *registered* type, not whatever the
-  // client claims it is — a richText field's HTML goes through the
-  // toolbar's allowlist (sanitizeRichTextHtml); every other type has all
-  // HTML stripped outright (stripAllHtml), so a plainText/heading/ctaLabel
-  // field can never be used to smuggle markup even if a request is
-  // hand-crafted rather than sent from the real inspector UI.
+  // value is also sanitized per its *registered* mode, not whatever the
+  // client claims it is — a "block" field's HTML goes through the full
+  // toolbar allowlist, an "inline" field through the character-marks-only
+  // allowlist, and everything else ("none") has all HTML stripped outright
+  // — so a field can never be used to smuggle markup beyond what its own
+  // mode allows, even if a request is hand-crafted rather than sent from
+  // the real inspector UI.
+  //
+  // Phase 137 — `maxLength` is now enforced here too (not just displayed as
+  // a counter), a real server-side backstop behind RichTextEditor.tsx's own
+  // client-side revert-on-exceed: see enforceMaxLength.ts for why a
+  // last-resort plain-text truncation, not a 400, is the right fallback for
+  // an autosaving draft field.
   const fieldsForPage = getEditableFields(pageKey);
   const fieldByContentId = new Map(fieldsForPage.map((f) => [f.contentId, f] as const));
   const sanitized: Record<string, string> = {};
   for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
     const field = fieldByContentId.get(key);
     if (!field || typeof value !== "string") continue;
-    sanitized[key] = isRichTextField(field.type) ? sanitizeRichTextHtml(value) : stripAllHtml(value);
+    const clean = sanitizeByMode(getRichTextMode(field), value);
+    sanitized[key] = enforceMaxLength(clean, field.maxLength);
   }
 
   const supabase = await createClient();

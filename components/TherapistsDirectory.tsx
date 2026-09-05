@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
 import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
+import EditableText from "@/components/ui-builder/public/EditableText";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { PublicTherapistRow } from "@/lib/database.types";
 import type { TherapistsDirectoryContent } from "@/lib/content";
@@ -255,7 +256,9 @@ export default function TherapistsDirectory({
             ))}
           </StaggerGroup>
         ) : (
-          <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">{content.noResultsMessage}</div>
+          <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">
+            <EditableText contentId="therapists.directory.noResultsMessage" label="No-results message" value={content.noResultsMessage} as="span" />
+          </div>
         )}
       </div>
     </div>

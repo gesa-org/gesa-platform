@@ -5,6 +5,7 @@ import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import type { CommunityIntroContent } from "@/lib/content";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 // Phase 107 — Roy sent a wireframe of a new hero-buttons row, a "Why GESA
 // exists" mission blurb, a three-card pathway navigator, and a closing band
@@ -106,6 +107,7 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
       eyebrow: content.card1Eyebrow,
       title: content.card1Title,
       body: content.card1Body,
+      bodyContentId: "supportGroups.intro.card1Body",
       ctaLabel: content.card1CtaLabel,
       ctaHref: content.card1CtaHref,
     },
@@ -113,6 +115,7 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
       eyebrow: content.card2Eyebrow,
       title: content.card2Title,
       body: content.card2Body,
+      bodyContentId: "supportGroups.intro.card2Body",
       ctaLabel: content.card2CtaLabel,
       ctaHref: content.card2CtaHref,
     },
@@ -120,6 +123,7 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
       eyebrow: content.card3Eyebrow,
       title: content.card3Title,
       body: content.card3Body,
+      bodyContentId: "supportGroups.intro.card3Body",
       ctaLabel: content.card3CtaLabel,
       ctaHref: content.card3CtaHref,
     },
@@ -142,7 +146,9 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
       <section className="section bg-[#F2EFE6]">
         <Reveal type="fade-up" as="div" className="wrap max-w-[720px] text-center">
           <h2 className="mb-3 text-[30px]">{content.missionHeading}</h2>
-          <p className="text-[15.5px] leading-relaxed text-muted-fg">{content.missionBody}</p>
+          <div className="text-[15.5px] leading-relaxed text-muted-fg">
+            <EditableText contentId="supportGroups.intro.missionBody" label="Mission body" value={content.missionBody} as="span" />
+          </div>
         </Reveal>
       </section>
 
@@ -158,7 +164,9 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
                   <span className="mb-3 text-[13px] font-semibold text-accent">{String(i + 1).padStart(2, "0")}</span>
                   <span className="eyebrow mb-2 text-primary">{c.eyebrow}</span>
                   <h3 className="mb-2 text-[19px]">{c.title}</h3>
-                  <p className="mb-5 flex-1 text-[14px] text-muted-fg">{c.body}</p>
+                  <div className="mb-5 flex-1 text-[14px] text-muted-fg">
+                    <EditableText contentId={c.bodyContentId} label="Pathway card body" value={c.body} as="span" />
+                  </div>
                   <Link
                     href={c.ctaHref}
                     className="inline-flex items-center justify-center gap-1.5 self-start rounded-full bg-primary px-5 py-2.5 text-[12.5px] font-semibold uppercase tracking-wide text-white transition-all hover:-translate-y-px hover:bg-primary-600"

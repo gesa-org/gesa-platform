@@ -16,7 +16,7 @@ import {
 import dynamic from "next/dynamic";
 import Button from "@/components/ui/Button";
 import { usePageEditorState } from "@/lib/ui-builder/usePageEditorState";
-import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, isRichTextField, type PageGroup } from "@/lib/ui-builder/pageRegistry";
+import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, getRichTextMode, type PageGroup } from "@/lib/ui-builder/pageRegistry";
 
 // Phase 134 — lazy-loaded, admin-only. Tiptap (~40kb) only ever downloads
 // when an admin actually selects a richText field, not just for opening the
@@ -330,21 +330,29 @@ export default function PageEditorShell() {
                 {pageDef?.title} / {selectedField.group} / {selectedField.label}
               </p>
               <h3 className="mb-3 text-[15px] font-semibold">{selectedField.label}</h3>
-              {isRichTextField(selectedField.type) ? (
-                <RichTextEditor
-                  key={selectedField.contentId}
-                  value={editor.fields[selectedField.contentId] ?? ""}
-                  onChange={(html) => updateSelectedField(html)}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={editor.fields[selectedField.contentId] ?? ""}
-                  onChange={(e) => updateSelectedField(e.target.value)}
-                  maxLength={selectedField.maxLength}
-                  className="w-full rounded-xl border border-border px-3 py-2 text-[13px]"
-                />
-              )}
+              {(() => {
+                const richTextMode = getRichTextMode(selectedField);
+                if (richTextMode === "none") {
+                  return (
+                    <input
+                      type="text"
+                      value={editor.fields[selectedField.contentId] ?? ""}
+                      onChange={(e) => updateSelectedField(e.target.value)}
+                      maxLength={selectedField.maxLength}
+                      className="w-full rounded-xl border border-border px-3 py-2 text-[13px]"
+                    />
+                  );
+                }
+                return (
+                  <RichTextEditor
+                    key={selectedField.contentId}
+                    value={editor.fields[selectedField.contentId] ?? ""}
+                    onChange={(html) => updateSelectedField(html)}
+                    mode={richTextMode}
+                    maxLength={selectedField.maxLength}
+                  />
+                );
+              })()}
               {selectedField.maxLength && (
                 <p className="mt-1 text-right text-[11px] text-muted-fg">
                   {stripTagsForCount(editor.fields[selectedField.contentId] ?? "").length} / {selectedField.maxLength}

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { SupportGroupsDirectoryContent } from "@/lib/content";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { MOTION_DURATION, MOTION_EASE } from "@/components/motion/config";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 export const SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK: SupportGroupsDirectoryContent = {
   published: true,
@@ -70,7 +71,7 @@ export default function SupportGroupsInteractive({
   if (!active) {
     return (
       <div className="mt-10 rounded-[var(--radius)] border border-border bg-card p-7 text-center text-muted-fg">
-        {content.noGroupsMessage}
+        <EditableText contentId="supportGroups.directory.noGroupsMessage" label="No-groups message" value={content.noGroupsMessage} as="span" />
       </div>
     );
   }

@@ -10,8 +10,17 @@ import { COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityI
 import { DONATE_PAGE_FALLBACK } from "@/components/donate/DonatePage";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import { getPageDefinition } from "@/lib/ui-builder/pageRegistry";
-import { getEditableFields, isRichTextField } from "@/lib/ui-builder/pageRegistry";
-import { sanitizeRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
+import { getEditableFields, getRichTextMode } from "@/lib/ui-builder/pageRegistry";
+import { sanitizeRichTextHtml, sanitizeInlineRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
+
+// Phase 137 — the one sanitizer-choice function every call site below (and
+// both draft/publish API routes) now shares, so "which of the 3 sanitizers
+// does this field's mode use" is answered in exactly one place.
+export function sanitizeByMode(mode: ReturnType<typeof getRichTextMode>, value: string): string {
+  if (mode === "block") return sanitizeRichTextHtml(value);
+  if (mode === "inline") return sanitizeInlineRichTextHtml(value);
+  return stripAllHtml(value);
+}
 
 // Phase 135 — one fallback object per site_content key, so the generic
 // multi-source read/write helpers below (getPageBaseContent,
@@ -125,7 +134,7 @@ export function sanitizeResolvedContent<T extends Record<string, unknown>>(pageK
   for (const field of fields) {
     const value = getAtPath(result, field.path);
     if (typeof value !== "string") continue;
-    const clean = isRichTextField(field.type) ? sanitizeRichTextHtml(value) : stripAllHtml(value);
+    const clean = sanitizeByMode(getRichTextMode(field), value);
     result = setAtPath(result, field.path, clean);
   }
   return result as T;

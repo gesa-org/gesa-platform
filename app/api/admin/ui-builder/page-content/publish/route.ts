@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
-import { getPageDefinition, getEditableFields, isRichTextField } from "@/lib/ui-builder/pageRegistry";
-import { applyDraftPatch, getPageBaseContent, publishPageSources } from "@/lib/ui-builder/pageContentResolver";
-import { sanitizeRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
+import { getPageDefinition, getEditableFields, getRichTextMode } from "@/lib/ui-builder/pageRegistry";
+import { applyDraftPatch, getPageBaseContent, publishPageSources, sanitizeByMode } from "@/lib/ui-builder/pageContentResolver";
+import { enforceMaxLength } from "@/lib/ui-builder/enforceMaxLength";
 
 // Phase 133 — "Publish" for one page's text content, parallel to
 // app/api/admin/ui-builder/publish/route.ts (the global theme tokens
@@ -59,7 +59,8 @@ export async function POST(request: Request) {
   for (const [key, value] of Object.entries(rawPatch)) {
     const field = fieldByContentId.get(key);
     if (!field || typeof value !== "string") continue;
-    sanitizedPatch[key] = isRichTextField(field.type) ? sanitizeRichTextHtml(value) : stripAllHtml(value);
+    const clean = sanitizeByMode(getRichTextMode(field), value);
+    sanitizedPatch[key] = enforceMaxLength(clean, field.maxLength);
   }
 
   const currentPublished = await getPageBaseContent(pageKey);
