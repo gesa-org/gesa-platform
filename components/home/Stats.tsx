@@ -17,8 +17,14 @@ export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
   badge4Label: "Global Community",
 };
 
-// Phase 68 — background stays the shared --sage-soft token, matched with
-// the About page's legal/tax-note section.
+// Phase 68 — background stays the shared --sage-soft token ("Green Sage"),
+// matched with the About page's legal/tax-note section.
+// Later — Roy sent a reference screenshot of this exact row and asked to
+// keep the band's light-green background as "Green Sage" (already
+// --sage-soft, unchanged) but swap the 4 icon badges' circle color from
+// the pale blue-gray --card token to the "Sand Brown" (#CBA560) token
+// introduced for the Founder/Why-GESA-exists/Our-Professionals sections —
+// see --sand-brown in app/globals.css.
 export default async function Stats() {
   const content = await getPageContent("component_home_stats", HOME_STATS_CONTENT_FALLBACK);
   const badges = [
@@ -33,7 +39,7 @@ export default async function Stats() {
       <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
         {badges.map((b) => (
           <StaggerItem key={b.label} className="flex items-center gap-3.5">
-            <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-card text-primary shadow-sm">
+            <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-sand-brown text-primary shadow-sm">
               <b.icon size={22} />
             </span>
             <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary">
