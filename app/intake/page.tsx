@@ -6,6 +6,9 @@ import { getPageContent } from "@/lib/content";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import IntakeMatchFlow from "@/components/intake/IntakeMatchFlow";
 import PageHero from "@/components/ui/PageHero";
+import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
+import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 const PATH_ICON: Record<string, typeof HeartPulse> = {
   crisis: HeartPulse,
@@ -48,10 +51,12 @@ const PATH_MATCH_HINT: Record<string, { treatmentType: string; symptoms: string[
 export default async function IntakePage({
   searchParams,
 }: {
-  searchParams: { path?: string };
+  searchParams: { path?: string; editorPreview?: string };
 }) {
   const pathKey = searchParams.path && PATH_ENTRY_ROUTE[searchParams.path] ? searchParams.path : "general";
-  const content = await getPageContent("component_intake_flow", INTAKE_FLOW_CONTENT_FALLBACK);
+  const contentRaw = await getPageContent("component_intake_flow", INTAKE_FLOW_CONTENT_FALLBACK);
+  const { resolved, isEditorPreview } = await resolveEditorPreview("intake", contentRaw as unknown as Record<string, unknown>, searchParams);
+  const content = resolved as unknown as typeof contentRaw;
   const PATH_LABEL: Record<string, string> = {
     crisis: content.pathCrisisLabel,
     veteran: content.pathVeteranLabel,
@@ -75,12 +80,25 @@ export default async function IntakePage({
 
   const crisisResources = pathKey === "crisis" ? await getCrisisResources() : [];
 
-  return (
+  const pathLabelContentId: Record<string, string> = {
+    crisis: "intake.paths.crisisLabel",
+    veteran: "intake.paths.veteranLabel",
+    general: "intake.paths.generalLabel",
+    helpers: "intake.paths.helpersLabel",
+  };
+
+  const page = (
     <>
       <PageHero
         icon={PATH_ICON[pathKey]}
-        eyebrow={label}
-        title={pathKey === "crisis" ? content.crisisHeroTitle : content.defaultHeroTitle}
+        eyebrow={<EditableText contentId={pathLabelContentId[pathKey]} label="Path label" value={label} as="span" />}
+        title={
+          pathKey === "crisis" ? (
+            <EditableText contentId="intake.hero.crisisTitle" label="Crisis path hero heading" value={content.crisisHeroTitle} as="span" />
+          ) : (
+            <EditableText contentId="intake.hero.defaultTitle" label="Default hero heading" value={content.defaultHeroTitle} as="span" />
+          )
+        }
         narrow
       />
       <section className="section narrow pt-0">
@@ -109,11 +127,11 @@ export default async function IntakePage({
             </div>
           ))}
           <div className="mt-1 rounded-xl bg-accent-soft px-3.5 py-3 text-sm text-primary-600">
-            {content.crisisDisclaimer}
+            <EditableText contentId="intake.crisis.disclaimer" label="Crisis disclaimer" value={content.crisisDisclaimer} as="span" />
           </div>
           <Link href="/" className="mx-auto mt-2 text-[12px]">
             <Globe2 size={14} className="inline mr-1" />
-            {content.moreHelplinesText}{" "}
+            <EditableText contentId="intake.crisis.moreHelplinesText" label="More helplines text" value={content.moreHelplinesText} as="span" />{" "}
             <a href="https://findahelpline.com" target="_blank" rel="noreferrer" className="underline">
               findahelpline.com
             </a>
@@ -123,7 +141,9 @@ export default async function IntakePage({
 
       <div className="mt-8">
         {pathKey === "crisis" && (
-          <p className="mb-4 text-center text-[14.5px] text-muted-fg">{content.ongoingSupportPrompt}</p>
+          <p className="mb-4 text-center text-[14.5px] text-muted-fg">
+            <EditableText contentId="intake.crisis.ongoingSupportPrompt" label="Ongoing-support prompt" value={content.ongoingSupportPrompt} as="span" />
+          </p>
         )}
         {matches.length > 0 ? (
           <IntakeMatchFlow pathKey={pathKey} matches={matches} matchListIntro={content.matchListIntro} />
@@ -140,4 +160,6 @@ export default async function IntakePage({
       </section>
     </>
   );
+
+  return isEditorPreview ? <EditorPreviewBridge>{page}</EditorPreviewBridge> : page;
 }

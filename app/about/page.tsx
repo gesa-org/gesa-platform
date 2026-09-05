@@ -7,6 +7,9 @@ import Reveal from "@/components/motion/Reveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
+import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
+import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 export const metadata = {
   title: "About — GESA",
@@ -47,13 +50,25 @@ function initials(name: string) {
 // (it fetches `sections` above), which is fine — Reveal/StaggerGroup are
 // Client Components and Next.js allows a Server Component to render them
 // directly, no boundary conversion needed for this page itself.
-export default async function AboutPage() {
-  const [heroContent, sections] = await Promise.all([
+export default async function AboutPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const [heroContentRaw, sectionsRaw] = await Promise.all([
     getPageContent("page_about_hero", HERO_CONTENT_FALLBACK),
     getPageContent("page_about_sections", ABOUT_SECTIONS_FALLBACK),
   ]);
 
-  return (
+  const { resolved, isEditorPreview } = await resolveEditorPreview(
+    "about",
+    { hero: heroContentRaw, sections: sectionsRaw } as unknown as Record<string, unknown>,
+    searchParams
+  );
+  const heroContent = (resolved as unknown as { hero: typeof heroContentRaw }).hero;
+  const sections = (resolved as unknown as { sections: typeof sectionsRaw }).sections;
+
+  const page = (
     <div className="reveal-page__main">
       <Hero content={heroContent} />
 
@@ -76,7 +91,9 @@ export default async function AboutPage() {
       <section className="section bg-muted">
         <div className="wrap">
           <Reveal type="fade-up" className="block">
-            <h2 className="text-center text-[30px] mb-2">{sections.howItWorksHeading}</h2>
+            <h2 className="text-center text-[30px] mb-2">
+              <EditableText contentId="about.howItWorks.heading" label="“How GESA works” heading" value={sections.howItWorksHeading} as="span" />
+            </h2>
           </Reveal>
           <StaggerGroup className="mt-7.5 mt-[30px] grid gap-[22px] sm:grid-cols-2 lg:grid-cols-4">
             {sections.howItWorksPoints.map((pt, i) => {
@@ -127,7 +144,9 @@ export default async function AboutPage() {
             <Reveal type="horizontal" distance={100} duration={0.9}>
               <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-14">
                 <div className="min-w-0 flex-1 text-center md:text-left">
-                  <span className="eyebrow">{sections.foundersHeading}</span>
+                  <span className="eyebrow">
+                    <EditableText contentId="about.founders.eyebrow" label="Founder spotlight eyebrow" value={sections.foundersHeading} as="span" />
+                  </span>
                   <h2 className="my-2.5 text-[32px] sm:text-[36px]">Meet {sections.founders[0].name}</h2>
                   <div className="mb-3 text-[15px] font-semibold text-primary">{sections.founders[0].roleTitle}</div>
                   <p className="mb-5 text-[16px] leading-relaxed text-muted-fg">{sections.founders[0].shortBio}</p>
@@ -184,13 +203,17 @@ export default async function AboutPage() {
           band further down this page). */}
       <section className="section bg-background">
         <Reveal type="fade-up" as="div" className="wrap max-w-[640px] text-center">
-          <h2 className="mb-2.5 text-[28px] sm:text-[30px]">{sections.movementHeading}</h2>
-          <p className="mb-6 text-muted-fg">{sections.movementSubtitle}</p>
+          <h2 className="mb-2.5 text-[28px] sm:text-[30px]">
+            <EditableText contentId="about.movement.heading" label="Movement band heading" value={sections.movementHeading} as="span" />
+          </h2>
+          <p className="mb-6 text-muted-fg">
+            <EditableText contentId="about.movement.body" label="Movement band body" value={sections.movementSubtitle} as="span" />
+          </p>
           <VolunteerPrimaryCta
             href={sections.movementCtaHref}
             className="inline-flex items-center rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-transform hover:-translate-y-px"
           >
-            {sections.movementCtaLabel}
+            <EditableText contentId="about.movement.ctaLabel" label="Movement CTA label" value={sections.movementCtaLabel} as="span" />
           </VolunteerPrimaryCta>
         </Reveal>
       </section>
@@ -231,17 +254,21 @@ export default async function AboutPage() {
           <div className="wrap">
             <div className="grid items-center gap-[clamp(1.5rem,4vw,3rem)] md:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)]">
               <Reveal type="fade-up" as="div" className="text-start">
-                <span className="eyebrow">{sections.teamEyebrow}</span>
-                <h2 className="mb-3 text-[clamp(1.75rem,2.6vw,2.25rem)] leading-[1.15]">{sections.teamHeading}</h2>
+                <span className="eyebrow">
+                  <EditableText contentId="about.team.eyebrow" label="Team section eyebrow" value={sections.teamEyebrow} as="span" />
+                </span>
+                <h2 className="mb-3 text-[clamp(1.75rem,2.6vw,2.25rem)] leading-[1.15]">
+                  <EditableText contentId="about.team.heading" label="Team section heading" value={sections.teamHeading} as="span" />
+                </h2>
                 <p className="max-w-[30rem] text-[clamp(0.95rem,1.1vw,1.0625rem)] leading-[1.6] text-muted-fg">
-                  {sections.teamIntro}
+                  <EditableText contentId="about.team.intro" label="Team section intro" value={sections.teamIntro} as="span" />
                 </p>
                 <div className="mt-5">
                   <Link
                     href={sections.teamCtaHref}
                     className="inline-flex items-center rounded-full border border-border px-5 py-2.5 text-[12.5px] font-semibold uppercase tracking-wide text-primary hover:bg-secondary"
                   >
-                    {sections.teamCtaLabel}
+                    <EditableText contentId="about.team.ctaLabel" label="Team CTA label" value={sections.teamCtaLabel} as="span" />
                   </Link>
                 </div>
               </Reveal>
@@ -290,4 +317,6 @@ export default async function AboutPage() {
       <DonateBand />
     </div>
   );
+
+  return isEditorPreview ? <EditorPreviewBridge>{page}</EditorPreviewBridge> : page;
 }

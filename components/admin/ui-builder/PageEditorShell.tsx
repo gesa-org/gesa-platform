@@ -270,9 +270,15 @@ export default function PageEditorShell() {
             <div className="flex h-[300px] max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-6 text-center">
               <AlertTriangle size={20} className="text-muted-fg" />
               <p className="text-[13px] text-muted-fg">
-                {pageDef?.title ?? "This page"} doesn&apos;t support the visual click-to-edit canvas yet. Use the
-                existing Content Manager to edit its text, or the Global Theme tab here for site-wide colors and
-                typography.
+                {pageDef?.group === "legal"
+                  ? // Phase 135 — legal pages have a real, different reason
+                    // than "not built yet": their content lives in the
+                    // legal_pages table (title/body per slug), not
+                    // site_content, so this registry's dot-path patcher
+                    // can't target them. Content Manager's Legal Pages tab
+                    // already edits that table directly.
+                    `${pageDef?.title ?? "This page"} is managed in Content Manager's Legal Pages tab — its rich-text body and title live in a separate legal-content table, not this registry, so the visual canvas doesn't support it yet.`
+                  : `${pageDef?.title ?? "This page"} doesn't support the visual click-to-edit canvas yet. Use the existing Content Manager to edit its text, or the Global Theme tab here for site-wide colors and typography.`}
               </p>
             </div>
           )}

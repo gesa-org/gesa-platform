@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
-import { getPageContent } from "@/lib/content";
-import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
-import { getPageDefinition, getEditableFields } from "@/lib/ui-builder/pageRegistry";
-import { extractFieldValues, applyDraftPatch } from "@/lib/ui-builder/pageContentResolver";
+import { getPageDefinition, getEditableFields, isRichTextField } from "@/lib/ui-builder/pageRegistry";
+import { extractFieldValues, applyDraftPatch, getPageBaseContent } from "@/lib/ui-builder/pageContentResolver";
+import { sanitizeRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
 
 // Phase 133 — draft persistence for the Visual Page Editor's per-page text
 // content, parallel to app/api/admin/ui-builder/draft/route.ts (the global
@@ -16,23 +15,19 @@ import { extractFieldValues, applyDraftPatch } from "@/lib/ui-builder/pageConten
 // and write (applyDraftPatch / the PUT handler below only accepts
 // registered contentIds, silently drops anything else).
 //
-// Home is the only page with a registry today (see pageRegistry.ts) — an
-// unsupported pageKey returns 400, matching the spec's own "if the page is
-// unsupported for visual editing" branch.
+// Phase 135 — generalized from "Home is the only page with a registry" to
+// every page pageRegistry.ts lists with `supportsVisualEditor: true`, via
+// getPageBaseContent() (reads every one of a page's `contentSources` and
+// merges them, instead of this route knowing each page's fallback object
+// by name). An unsupported pageKey (still `false` for the 5 legal pages)
+// returns 400, matching the spec's own "if the page is unsupported for
+// visual editing" branch.
 
 async function requireAdminOrJson() {
   const me = await getCurrentProfile();
   if (!me) return { error: NextResponse.json({ error: "Not signed in." }, { status: 401 }) } as const;
   if (me.role !== "admin") return { error: NextResponse.json({ error: "Only administrators can use the Page Editor." }, { status: 403 }) } as const;
   return { me } as const;
-}
-
-function getFallbackForPage(pageKey: string): Record<string, unknown> {
-  // Only Home has a real fallback wired up this phase. Extending this to
-  // another page is one line here plus a registry entry in pageRegistry.ts
-  // (see EXECUTION_PLAN.md Phase 133, "how to add a new editable field").
-  if (pageKey === "home") return HOME_CONTENT_FALLBACK as unknown as Record<string, unknown>;
-  return {};
 }
 
 export async function GET(request: Request) {
@@ -46,8 +41,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "This page doesn't support the visual editor yet." }, { status: 400 });
   }
 
-  const fallback = getFallbackForPage(pageKey);
-  const published = await getPageContent(def.siteContentKey, fallback);
+  const published = await getPageBaseContent(pageKey);
 
   const supabase = await createClient();
   const { data: draftRow } = await supabase
@@ -83,11 +77,20 @@ export async function PUT(request: Request) {
   }
 
   // Only registered contentIds for this page survive into the saved patch —
-  // an unknown key in the payload is silently dropped, not stored.
-  const allowed = new Set(getEditableFields(pageKey).map((f) => f.contentId));
+  // an unknown key in the payload is silently dropped, not stored. Every
+  // value is also sanitized per its *registered* type, not whatever the
+  // client claims it is — a richText field's HTML goes through the
+  // toolbar's allowlist (sanitizeRichTextHtml); every other type has all
+  // HTML stripped outright (stripAllHtml), so a plainText/heading/ctaLabel
+  // field can never be used to smuggle markup even if a request is
+  // hand-crafted rather than sent from the real inspector UI.
+  const fieldsForPage = getEditableFields(pageKey);
+  const fieldByContentId = new Map(fieldsForPage.map((f) => [f.contentId, f] as const));
   const sanitized: Record<string, string> = {};
   for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
-    if (allowed.has(key) && typeof value === "string") sanitized[key] = value;
+    const field = fieldByContentId.get(key);
+    if (!field || typeof value !== "string") continue;
+    sanitized[key] = isRichTextField(field.type) ? sanitizeRichTextHtml(value) : stripAllHtml(value);
   }
 
   const supabase = await createClient();
@@ -124,7 +127,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Could not discard draft — try again." }, { status: 500 });
   }
 
-  const fallback = getFallbackForPage(pageKey);
-  const published = await getPageContent(def.siteContentKey, fallback);
+  const published = await getPageBaseContent(pageKey);
   return NextResponse.json({ ok: true, fields: extractFieldValues(pageKey, published) });
 }

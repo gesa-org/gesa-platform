@@ -8,6 +8,10 @@ export const metadata = {
 // Phase 98 — new route for the Header's "DONATE" CTA (previously "JOIN
 // GESA," which opened the volunteer application modal). See
 // components/donate/DonatePage.tsx for the actual page content/layout.
-export default function Page() {
-  return <DonatePage />;
+export default function Page({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  return <DonatePage searchParams={searchParams} />;
 }

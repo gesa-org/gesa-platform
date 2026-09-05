@@ -332,7 +332,8 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
               contentId="home.hero.description"
               label="Hero description"
               value={content.subtitle}
-              as="p"
+              as="div"
+              html
               className="mx-auto mt-5 max-w-[42rem] text-[16px] leading-relaxed text-espresso/75"
             />
             <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-[14px] font-medium text-espresso/80">
@@ -500,7 +501,8 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                           contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.description`}
                           label="Card description"
                           value={p.description}
-                          as="p"
+                          as="div"
+                          html
                           className="mt-1.5 text-[12.5px] leading-snug text-muted-fg"
                         />
                         <Link
@@ -535,7 +537,8 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
             contentId="home.footer-note"
             label="Closing note"
             value={content.footerNote}
-            as="p"
+            as="div"
+            html
             className="mt-8 text-center text-[18px] font-medium text-foreground"
           />
         </Reveal>

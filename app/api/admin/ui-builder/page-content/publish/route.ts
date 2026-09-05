@@ -2,20 +2,24 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
-import { getPageContent } from "@/lib/content";
-import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
-import { getPageDefinition } from "@/lib/ui-builder/pageRegistry";
-import { applyDraftPatch } from "@/lib/ui-builder/pageContentResolver";
+import { getPageDefinition, getEditableFields, isRichTextField } from "@/lib/ui-builder/pageRegistry";
+import { applyDraftPatch, getPageBaseContent, publishPageSources } from "@/lib/ui-builder/pageContentResolver";
+import { sanitizeRichTextHtml, stripAllHtml } from "@/lib/ui-builder/sanitizeRichText";
 
 // Phase 133 — "Publish" for one page's text content, parallel to
 // app/api/admin/ui-builder/publish/route.ts (the global theme tokens
 // publish) but scoped to a single page/route. Merges the draft patch onto
 // the currently published content (not a blind overwrite — this matters if
 // another admin's Content Manager edit landed on a field this draft never
-// touched) and writes the result back to the same site_content row the
+// touched) and writes the result back to the same site_content row(s) the
 // existing Content Manager reads/writes, then revalidates only that page's
 // own route — not the whole site, since page text doesn't affect any other
 // route the way a global color token does.
+//
+// Phase 135 — generalized to publishPageSources(), which fans a page's
+// resolved content back out across every one of its `contentSources`
+// (About writes two site_content rows, for example) instead of this route
+// assuming exactly one row per page.
 export async function POST(request: Request) {
   const me = await getCurrentProfile();
   if (!me) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
@@ -44,21 +48,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Nothing to publish — no draft changes yet." }, { status: 400 });
   }
 
-  const fallback = pageKey === "home" ? (HOME_CONTENT_FALLBACK as unknown as Record<string, unknown>) : {};
-  const currentPublished = await getPageContent(def.siteContentKey, fallback);
-  const merged = applyDraftPatch(pageKey, currentPublished, draftRow.schema as Record<string, unknown>);
+  // Defense in depth — the draft was already sanitized at PUT time
+  // (app/api/admin/ui-builder/page-content/draft/route.ts), but Publish
+  // re-sanitizes per field type here too rather than trusting the stored
+  // draft blindly, so a row written by some future/other code path can
+  // never reach the public site unsanitized.
+  const fieldByContentId = new Map(getEditableFields(pageKey).map((f) => [f.contentId, f] as const));
+  const rawPatch = draftRow.schema as Record<string, unknown>;
+  const sanitizedPatch: Record<string, string> = {};
+  for (const [key, value] of Object.entries(rawPatch)) {
+    const field = fieldByContentId.get(key);
+    if (!field || typeof value !== "string") continue;
+    sanitizedPatch[key] = isRichTextField(field.type) ? sanitizeRichTextHtml(value) : stripAllHtml(value);
+  }
+
+  const currentPublished = await getPageBaseContent(pageKey);
+  const merged = applyDraftPatch(pageKey, currentPublished, sanitizedPatch);
   const publishedAt = new Date().toISOString();
 
-  const { error: publishError } = await supabase.from("site_content").upsert(
-    {
-      key: def.siteContentKey,
-      value: { ...merged, published: true, publishedAt, publishedBy: me.id },
-    },
-    { onConflict: "key" }
-  );
-
-  if (publishError) {
-    return NextResponse.json({ error: "Could not publish — try again." }, { status: 500 });
+  const publishResult = await publishPageSources(pageKey, merged, me.id);
+  if (!publishResult.ok) {
+    return NextResponse.json({ error: publishResult.error }, { status: 500 });
   }
 
   revalidatePath(def.route);

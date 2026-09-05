@@ -8,6 +8,7 @@ import ParallaxMedia from '@/components/motion/ParallaxMedia';
 import ParallaxLayer from '@/components/motion/ParallaxLayer';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
+import EditableText from '@/components/ui-builder/public/EditableText';
 
 export const HERO_CONTENT_FALLBACK: HeroContent = {
   published: true,
@@ -139,27 +140,37 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
           <div className="max-w-2xl relative">
             <Reveal type="fade-up" distance="sm" duration={0.5}>
               <span className="relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary bg-[#fff8ea]/85 shadow-sm rounded-full px-4 py-1.5 mb-5">
-                <Sparkle size={13} /> {content.eyebrow}
+                <Sparkle size={13} /> <EditableText contentId="about.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />
               </span>
             </Reveal>
             <ScrollText distance={22}>
+              {/* Phase 135 — `title`/`highlight` feed <HighlightedText>,
+                  which needs plain strings (it splits `title` around the
+                  `highlight` substring), not a React node — so this one
+                  field isn't canvas-selectable this phase. It's still a
+                  real, registered, publishable field (about.hero.heading),
+                  editable via the Layers panel; it just won't highlight in
+                  the preview canvas the way every EditableText-wrapped
+                  field here does. */}
               <h1 className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
                 <HighlightedText text={content.title} highlight={content.highlight} />
               </h1>
             </ScrollText>
             <Reveal type="fade-up" delay={0.08}>
-              <p className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">{content.subtitle}</p>
+              <p className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">
+                <EditableText contentId="about.hero.description" label="Hero description" value={content.subtitle} as="span" />
+              </p>
             </Reveal>
 
             <StaggerGroup className="flex flex-wrap gap-4 mt-6">
               <StaggerItem className="inline-block">
                 <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
-                  {content.ctaPrimaryLabel} <ArrowRight size={18} />
+                  <EditableText contentId="about.hero.cta1Label" label="Primary CTA label" value={content.ctaPrimaryLabel} as="span" /> <ArrowRight size={18} />
                 </Link>
               </StaggerItem>
               <StaggerItem className="inline-block">
                 <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-card text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
-                  {content.ctaSecondaryLabel}
+                  <EditableText contentId="about.hero.cta2Label" label="Secondary CTA label" value={content.ctaSecondaryLabel} as="span" />
                 </Link>
               </StaggerItem>
             </StaggerGroup>

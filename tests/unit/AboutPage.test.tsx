@@ -17,7 +17,7 @@ jest.mock("@/lib/content", () => {
 });
 
 // Phase 84 — AboutPage renders <DonateBand /> (from Phase 75) as a plain
-// JSX child. `await AboutPage()` awaits AboutPage's own async body, but
+// JSX child. `await AboutPage({})` awaits AboutPage's own async body, but
 // DonateBand is itself a separate async Server Component (Phase 80 round
 // 2) — nesting it as unawaited JSX inside AboutPage's returned tree means
 // client ReactDOM's render() tries to mount the Promise DonateBand()
@@ -36,7 +36,7 @@ jest.mock("@/components/home/DonateBand", () => ({
 
 describe("AboutPage — founders photo/initials fallback", () => {
   it("shows the initials block when no founder has a photoUrl (today's real content)", async () => {
-    const jsx = await AboutPage();
+    const jsx = await AboutPage({});
     render(jsx);
 
     // ABOUT_SECTIONS_FALLBACK's founders both have photoUrl: "" today —
@@ -67,7 +67,7 @@ describe("AboutPage — founders photo/initials fallback", () => {
       return fallback;
     });
 
-    const jsx = await AboutPage();
+    const jsx = await AboutPage({});
     render(jsx);
 
     expect(screen.getByAltText("Ilana O'Malley")).toHaveAttribute("src", "https://cdn.example.com/ilana.jpg");
@@ -85,7 +85,7 @@ describe("AboutPage — founders photo/initials fallback", () => {
   // test (that section no longer renders at all) with a check that both
   // removed sections are actually gone.
   it("no longer renders the volunteer CTA band or the legal/tax-note section (Phase 85)", async () => {
-    const jsx = await AboutPage();
+    const jsx = await AboutPage({});
     render(jsx);
 
     expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.volunteerHeading)).not.toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("AboutPage — founders photo/initials fallback", () => {
   // confirms they're actually not rendered anymore rather than just
   // trusting the removed JSX.
   it("no longer renders the 'Why GESA exists' section (Phase 77)", async () => {
-    const jsx = await AboutPage();
+    const jsx = await AboutPage({});
     render(jsx);
 
     expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.missionHeading)).not.toBeInTheDocument();

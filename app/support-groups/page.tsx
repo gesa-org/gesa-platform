@@ -6,6 +6,9 @@ import Testimonials from "@/components/home/Testimonials";
 import DonateBand from "@/components/home/DonateBand";
 import { getSupportGroups, getTestimonials } from "@/lib/queries";
 import { getPageContent, SUPPORT_GROUPS_CONTENT_FALLBACK } from "@/lib/content";
+import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
+import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 export const revalidate = 60;
 
@@ -38,8 +41,15 @@ export const revalidate = 60;
 // is new content inserted after it, and the registration section below
 // picked up `id="support-groups-list"` so the new pathway cards' "Explore
 // Community" card and the hero's own tagline link can jump straight to it.
-export default async function SupportGroupsPage() {
-  const [groups, content, directoryContent, communityIntro, testimonials] = await Promise.all([
+// Phase 135 — three sources (banner, registration-flow labels, intro band)
+// merged into one object so a single per-page draft covers all of them;
+// destructured back apart afterward for the existing JSX (unchanged below).
+export default async function SupportGroupsPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const [groups, contentRaw, directoryContentRaw, communityIntroRaw, testimonials] = await Promise.all([
     getSupportGroups(),
     getPageContent("page_support_groups", SUPPORT_GROUPS_CONTENT_FALLBACK),
     getPageContent("component_support_groups_directory", SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK),
@@ -47,9 +57,24 @@ export default async function SupportGroupsPage() {
     getTestimonials(),
   ]);
 
-  return (
+  const { resolved, isEditorPreview } = await resolveEditorPreview(
+    "support-groups",
+    { ...contentRaw, directory: directoryContentRaw, intro: communityIntroRaw } as unknown as Record<string, unknown>,
+    searchParams
+  );
+  const content = resolved as unknown as typeof contentRaw;
+  const directoryContent = (resolved as unknown as { directory: typeof directoryContentRaw }).directory;
+  const communityIntro = (resolved as unknown as { intro: typeof communityIntroRaw }).intro;
+
+  const page = (
     <div className="reveal-page__main">
-      <PageHero gold icon={Users2} eyebrow={content.eyebrow} title={content.title} description={content.description}>
+      <PageHero
+        gold
+        icon={Users2}
+        eyebrow={<EditableText contentId="supportGroups.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />}
+        title={<EditableText contentId="supportGroups.hero.heading" label="Hero heading" value={content.title} as="span" />}
+        description={<EditableText contentId="supportGroups.hero.description" label="Hero description" value={content.description} as="span" />}
+      >
         <CommunityHeroExtras content={communityIntro} />
       </PageHero>
       <CommunityIntro content={communityIntro} />
@@ -65,4 +90,6 @@ export default async function SupportGroupsPage() {
       <DonateBand />
     </div>
   );
+
+  return isEditorPreview ? <EditorPreviewBridge>{page}</EditorPreviewBridge> : page;
 }

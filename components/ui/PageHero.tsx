@@ -6,7 +6,12 @@ import GoldWatermarks from "@/components/ui/GoldWatermarks";
 
 interface PageHeroProps {
   icon?: LucideIcon;
-  eyebrow: string;
+  // Phase 135 — widened from `string` to `ReactNode` (matching `title`/
+  // `description` below) so a page's own server component can pass an
+  // `<EditableText>` element here for the Visual Page Editor's click-to-
+  // select canvas. Every existing caller keeps passing a plain string,
+  // which renders exactly as before — this is a strictly additive change.
+  eyebrow: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   narrow?: boolean;

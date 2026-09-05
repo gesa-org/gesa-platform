@@ -4,6 +4,9 @@ import TherapistsDirectory, { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/co
 import DonateBand from "@/components/home/DonateBand";
 import { getActiveTherapists } from "@/lib/queries";
 import { getPageContent, THERAPISTS_CONTENT_FALLBACK } from "@/lib/content";
+import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
+import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 export const revalidate = 60;
 
@@ -17,16 +20,39 @@ export const revalidate = 60;
 //
 // Phase 47 — banner now uses the gold background treatment (`gold` prop
 // on PageHero) per Roy's request; copy/labels/filters unchanged.
-export default async function TherapistsPage() {
-  const [therapists, content, directoryContent] = await Promise.all([
+// Phase 135 — the banner (namespace "") and the directory filter sidebar
+// (namespace "directory") are merged into one object here so
+// resolveEditorPreview() can patch both from a single per-page draft, then
+// destructured back apart for the existing JSX below (which is otherwise
+// completely unchanged from before this phase).
+export default async function TherapistsPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const [therapists, contentRaw, directoryContentRaw] = await Promise.all([
     getActiveTherapists(),
     getPageContent("page_therapists", THERAPISTS_CONTENT_FALLBACK),
     getPageContent("component_therapists_directory", THERAPISTS_DIRECTORY_CONTENT_FALLBACK),
   ]);
 
-  return (
+  const { resolved, isEditorPreview } = await resolveEditorPreview(
+    "therapists",
+    { ...contentRaw, directory: directoryContentRaw } as unknown as Record<string, unknown>,
+    searchParams
+  );
+  const content = resolved as unknown as typeof contentRaw;
+  const directoryContent = (resolved as unknown as { directory: typeof directoryContentRaw }).directory;
+
+  const page = (
     <div className="reveal-page__main">
-      <PageHero gold icon={Users} eyebrow={content.eyebrow} title={content.title} description={content.description} />
+      <PageHero
+        gold
+        icon={Users}
+        eyebrow={<EditableText contentId="therapists.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />}
+        title={<EditableText contentId="therapists.hero.heading" label="Hero heading" value={content.title} as="span" />}
+        description={<EditableText contentId="therapists.hero.description" label="Hero description" value={content.description} as="span" />}
+      />
       {/* Phase 55 — Roy sent a reference screenshot showing this section on
           a warm cream background instead of the page's usual cool ivory
           (--background). Scoped to just this section (bg-clay-soft, the
@@ -54,4 +80,6 @@ export default async function TherapistsPage() {
       <DonateBand />
     </div>
   );
+
+  return isEditorPreview ? <EditorPreviewBridge>{page}</EditorPreviewBridge> : page;
 }

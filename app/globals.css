@@ -213,6 +213,103 @@
   }
 }
 
+/* Phase 134 — shared styling for sanitized rich-text output (see
+   lib/ui-builder/sanitizeRichText.ts's allowlist). Tailwind's preflight
+   reset strips list markers/blockquote indentation/hr borders by default,
+   which would otherwise make published rich text (bullets, numbered lists,
+   quotes, dividers) render with no visible structure at all — both here
+   (the admin's Tiptap editing canvas, `.gesa-rte-content`) and on the
+   public site (`.gesa-rich-content`, used by EditableText's HTML-rendering
+   branch) need this restored. One shared rule block so the two can never
+   drift apart and an admin's WYSIWYG editing canvas actually matches what
+   publishes. */
+.gesa-rte-content p,
+.gesa-rich-content p {
+  margin: 0 0 0.75em;
+}
+.gesa-rte-content p:last-child,
+.gesa-rich-content p:last-child {
+  margin-bottom: 0;
+}
+.gesa-rte-content h1,
+.gesa-rte-content h2,
+.gesa-rte-content h3,
+.gesa-rich-content h1,
+.gesa-rich-content h2,
+.gesa-rich-content h3 {
+  font-family: var(--font-serif);
+  font-weight: var(--ui-heading-weight, 600);
+  line-height: 1.25;
+  margin: 0.9em 0 0.4em;
+}
+.gesa-rte-content h1,
+.gesa-rich-content h1 {
+  font-size: 1.6em;
+}
+.gesa-rte-content h2,
+.gesa-rich-content h2 {
+  font-size: 1.35em;
+}
+.gesa-rte-content h3,
+.gesa-rich-content h3 {
+  font-size: 1.15em;
+}
+.gesa-rte-content ul,
+.gesa-rte-content ol,
+.gesa-rich-content ul,
+.gesa-rich-content ol {
+  margin: 0 0 0.75em;
+  padding-left: 1.4em;
+}
+.gesa-rte-content ul,
+.gesa-rich-content ul {
+  list-style: disc;
+}
+.gesa-rte-content ol,
+.gesa-rich-content ol {
+  list-style: decimal;
+}
+.gesa-rte-content li,
+.gesa-rich-content li {
+  margin: 0.2em 0;
+}
+.gesa-rte-content blockquote,
+.gesa-rich-content blockquote {
+  margin: 0 0 0.75em;
+  padding-left: 1em;
+  border-left: 3px solid var(--border);
+  color: var(--muted-fg);
+  font-style: italic;
+}
+.gesa-rte-content hr,
+.gesa-rich-content hr {
+  margin: 1.2em 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+.gesa-rte-content a,
+.gesa-rich-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.gesa-rte-content strong,
+.gesa-rich-content strong {
+  font-weight: 700;
+}
+.gesa-rte-content em,
+.gesa-rich-content em {
+  font-style: italic;
+}
+
+.gesa-rte-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-fg);
+  pointer-events: none;
+  height: 0;
+}
+
 @keyframes gold-sweep {
   from {
     background-position: -120% -120%;

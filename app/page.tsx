@@ -4,7 +4,7 @@ import DonateBand from "@/components/home/DonateBand";
 import { getPageContent } from "@/lib/content";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
-import { applyDraftPatch } from "@/lib/ui-builder/pageContentResolver";
+import { applyDraftPatch, sanitizeResolvedContent } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 
 // Phase 133 — this page is intentionally still `revalidate = 300` for every
@@ -95,6 +95,14 @@ export default async function Home({
       ) as typeof homeContent;
     }
   }
+
+  // Phase 134 — defense-in-depth: re-sanitizes every registered field (per
+  // its own type — richText through the toolbar's HTML allowlist, every
+  // other field stripped of HTML entirely) right before rendering, on top
+  // of the sanitization already applied when a value was saved. Covers both
+  // branches: the normal published `homeContent` and, in preview, the
+  // draft-merged `resolvedContent`.
+  resolvedContent = sanitizeResolvedContent("home", resolvedContent as unknown as Record<string, unknown>) as typeof homeContent;
 
   const page = (
     <div className="reveal-page__main flex flex-col">

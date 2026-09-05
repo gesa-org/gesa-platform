@@ -44,11 +44,23 @@ export default function EditorPreviewBridge({ children }: { children: ReactNode 
       } else if (data.type === "GESA_EDITOR_SET_SELECTION") {
         setSelectedContentId(data.contentId);
       } else if (data.type === "GESA_EDITOR_UPDATE_PREVIEW") {
-        // Imperative, targeted DOM write — only ever sets textContent
-        // (never innerHTML) on the one element matching a registered
-        // contentId, so a malformed/unexpected message can't inject markup.
-        const el = document.querySelector(`[data-gesa-content-id="${CSS.escape(data.contentId)}"]`);
-        if (el) el.textContent = data.value;
+        // Imperative, targeted DOM write on the one element matching a
+        // registered contentId. Plain fields (the vast majority) always use
+        // textContent, so a literal "<" an admin types mid-edit is never
+        // interpreted as markup. Only an element EditableText itself
+        // rendered with `data-gesa-html="true"` (a richText field) uses
+        // innerHTML — and by the time this message is sent, that value was
+        // already sanitized through the toolbar's allowlist in
+        // RichTextEditor's onUpdate, the same sanitizer the save/publish
+        // API routes re-run server-side.
+        const el = document.querySelector<HTMLElement>(`[data-gesa-content-id="${CSS.escape(data.contentId)}"]`);
+        if (el) {
+          if (el.dataset.gesaHtml === "true") {
+            el.innerHTML = data.value;
+          } else {
+            el.textContent = data.value;
+          }
+        }
       } else if (data.type === "GESA_EDITOR_SCROLL_TO_ELEMENT") {
         const el = document.querySelector(`[data-gesa-content-id="${CSS.escape(data.contentId)}"]`);
         el?.scrollIntoView({ behavior: "smooth", block: "center" });

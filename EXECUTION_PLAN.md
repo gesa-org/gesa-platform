@@ -5739,3 +5739,275 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 134 — Word-style rich-text toolbar for body-copy fields
+
+**Request:** enhance the Page Content inspector (Phase 133) with a modern rich-text toolbar — paragraph style,
+H1–H3, bold/italic/underline/strike, ordered/unordered lists, alignment, a link tool with an accessible dialog
+and safe-protocol validation, blockquote, divider, undo/redo, clear formatting — for body-copy fields only, using
+TipTap, with a field-type config system, safe HTML/JSON persistence, sanitization, and draft/publish/discard all
+still working.
+
+**Field-type system:** `lib/ui-builder/pageRegistry.ts`'s per-field `type` (previously a loose "text/textarea"
+distinction) became a real union, `ContentFieldType = "plainText" | "richText" | "heading" | "ctaLabel" | "url" |
+"image"`, with `isRichTextField(type)` as the single point of truth the rest of the phase checks. Every one of
+Home's 19 fields was reclassified against the spec's own mapping: hero eyebrow/badges/card labels/CTA labels stay
+`plainText`/`ctaLabel` (single-line inputs, no formatting), headings are `heading`, and the fields that are
+genuinely paragraph copy — hero description, each card's description, the footer note — became `richText`. `url`
+and `image` exist in the type but nothing uses them yet (Home has no such fields); adding one later is a config
+change, not new plumbing.
+
+**Editor:** `components/admin/ui-builder/RichTextEditor.tsx` wraps TipTap (`@tiptap/react` + `starter-kit` +
+`extension-underline`/`extension-link`/`extension-text-align`/`extension-placeholder`), lazy-loaded via
+`next/dynamic({ ssr: false })` in `PageEditorShell.tsx` so none of it ever ships to the public bundle — only the
+admin Page Editor route imports it. `RichTextToolbar.tsx` sits above it: paragraph-style select (Paragraph/H1/H2/
+H3), Bold/Italic/Underline/Strike, bullet/numbered list, left/center/right align, a Link button (opens
+`LinkEditorPopover.tsx`, a focus-trapped accessible dialog for the link text/URL/"open in new tab", also bound to
+Ctrl/Cmd+K), Blockquote, horizontal rule, Undo/Redo, and Clear Formatting. Every button reflects the live
+selection's active state (e.g. Bold highlights when the cursor is inside bold text), matching a normal word
+processor rather than a stateless button bar.
+
+**Persistence format — the phase's one real architectural decision:** rich text is stored as sanitized HTML
+**strings**, in the exact same string-typed fields `HomeContent` already had (e.g. `subtitle: string`), not as
+TipTap's native JSON. This was chosen specifically to satisfy the spec's own "must not break existing plain-text
+content, migration-safe fallback" requirement with zero migration step: a legacy value with no HTML tags in it
+(every field's current content) renders identically whether it's interpreted as plain text or as HTML, and
+`sanitizeResolvedContent` (below) makes that safe even if it's rendered with `dangerouslySetInnerHTML`. Switching
+to TipTap JSON later, if ever wanted, would need a real migration; this doesn't.
+
+**Sanitization (write-time + render-time, defense in depth):** `lib/ui-builder/sanitizeRichText.ts` is the one
+allowlist everything passes through — `sanitizeRichTextHtml()` for `richText` fields (tags: `p h1 h2 h3 strong em
+u s ul ol li a blockquote hr br`; only `style="text-align: left|center|right"` permitted, nothing else; `href`
+restricted to `https:/http:/mailto:/tel:` via `sanitize-html`'s `allowedSchemes`, any other scheme has its `href`
+attribute stripped rather than the tag being dropped; `target="_blank"` links get `rel="noopener noreferrer"`
+force-set server-side, not just left to the editor UI; `<script>/<style>/<textarea>/<noscript>` are removed tag
+**and** content, never leaking inert text) and `stripAllHtml()` for every other field type (all tags removed,
+text kept — a `plainText`/`heading`/`ctaLabel` field can never smuggle markup). Both the draft `PUT` and the
+publish `POST` routes run every incoming value through the correct function per the field's registry type before
+it touches `crm_ui_drafts` or `site_content`; `lib/ui-builder/pageContentResolver.ts`'s new
+`sanitizeResolvedContent()` re-runs the same allowlist on every registered field immediately before `app/page.tsx`
+renders it, so even a value that somehow got saved unsanitized (a hand-crafted API payload, a future bug) can't
+reach the public page unsanitized. Sanitizing already-clean HTML is a no-op, so this layering costs nothing on
+the common path.
+
+**Link safety:** `validateLinkUrl()` backs the `LinkEditorPopover`'s own client-side check (fast feedback, "Only
+https, http, mailto, and tel links are allowed" shown inline) using the same `https:/http:/mailto:/tel:` allowlist
+the server-side sanitizer enforces independently — a link an admin couldn't create through the UI also can't
+survive being POSTed directly, since both checks are separate code paths reaching the same rule, not one trusting
+the other.
+
+**Live preview / public rendering:** `EditableText.tsx` gained an `html` prop — `false` (the default, used by
+every non-rich field, completely unchanged behavior) renders `{value}` through React's normal auto-escaping;
+`true` (only ever passed for `richText` fields, from `Paths.tsx`) renders via `dangerouslySetInnerHTML`, safe only
+because the value reaching it has already been sanitized twice (write-time + `sanitizeResolvedContent`).
+`EditorPreviewBridge`'s `GESA_EDITOR_UPDATE_PREVIEW` handler marks which is which via a `data-gesa-html="true"`
+attribute the rich fields render with, so a live keystroke in the inspector updates the matching preview element
+via `innerHTML` for rich fields and `textContent` for everything else — a plain field typed into can never have a
+literal `<` misread as markup mid-edit.
+
+**Sandbox note (same category as Phase 133/134's earlier npm-install issue):** this bash environment enforces a
+hard ~178-second cap on every command regardless of the timeout requested, and background processes do not
+survive between separate tool calls (each call is an independent container) — so `npx jest` could not finish
+inside a single call for this phase's test file, the same limitation that earlier forced installing the TipTap/
+sanitize-html packages by editing `package.json` directly rather than running `npm install` to completion. The
+test file (`tests/unit/sanitizeRichText.test.ts`) was written and its assertions were manually verified line-by-
+line against `sanitizeRichText.ts`'s actual `sanitize-html` configuration rather than executed — run `npx jest
+tests/unit/sanitizeRichText.test.ts` once this deploys to confirm, or in any environment without that cap.
+
+**Tests written (`tests/unit/sanitizeRichText.test.ts`), covering the request's own test list:**
+- Formatting and saving rich content — every tag the toolbar can produce (headings, bold/italic/underline/
+  strike, lists, blockquote, hr, aligned paragraphs, a safe link) survives sanitization intact.
+- Unsafe links rejected/sanitized — `javascript:` hrefs are stripped (both in `sanitizeRichTextHtml` and in
+  `validateLinkUrl`), along with `data:` and other non-allowlisted schemes; `<script>` tags, inline `onclick`
+  handlers, disallowed tags (`iframe`, `div`, `style`), and non-text-align CSS are all removed while safe
+  surrounding text is kept.
+- Plain-text fields keep the original behavior — `stripAllHtml` strips all markup from a `plainText`/`heading`/
+  `ctaLabel` value, and an ordinary string with no tags passes through byte-for-byte.
+- Migration-safe fallback — legacy plain-text content with no HTML tags is unchanged by `sanitizeRichTextHtml`,
+  and sanitizing already-sanitized HTML is idempotent.
+- Rendering saved rich content in the public preview and discard restoring published rich content are covered
+  structurally by the write-time/render-time sanitization design above (both paths call the same two functions);
+  a full render/discard integration test needs a running app (dev server/browser), which this sandbox doesn't
+  have — flagged as QA follow-up alongside Phase 133's equivalent click-through note.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline both before and after this phase's
+changes, zero new errors introduced. Proactively grepped every new/modified `.tsx` file for the unescaped-
+apostrophe JSX pattern that broke two earlier builds — none found.
+
+**Left out of this phase, disclosed rather than faked:**
+- Font family/size/color/highlight, letter-spacing, and text-transform controls (not in this phase's field-copy
+  scope — those live in Phase 132's site-wide typography tokens instead).
+- A structured rich-text JSON persistence format (deliberately not used — see the persistence-format decision
+  above).
+- Table/image insertion inside rich text.
+- An actual jest run of the new test file, and a manual click-through of the toolbar in a live browser (both
+  blocked by this sandbox's lack of a working dev server/browser and the ~178s command cap — see the sandbox note
+  above). Most important to verify after deploying: open a `richText` field (e.g. the hero description) in the
+  Page Content inspector, apply each toolbar control once, Publish, and confirm the Home page renders the
+  formatting; then try pasting a `javascript:` link and confirm it's rejected.
+
+**Files changed:** `package.json`/`package-lock.json` (added `@tiptap/react`, `@tiptap/starter-kit`,
+`@tiptap/extension-underline`, `@tiptap/extension-link`, `@tiptap/extension-text-align`,
+`@tiptap/extension-placeholder`, `@tiptap/pm`, `sanitize-html`, `@types/sanitize-html`), `lib/ui-builder/
+pageRegistry.ts` (`ContentFieldType` union + `isRichTextField()`, all 19 Home fields reclassified),
+`lib/ui-builder/sanitizeRichText.ts` (new), `lib/ui-builder/pageContentResolver.ts`
+(`sanitizeResolvedContent()`), `components/admin/ui-builder/RichTextEditor.tsx` (new),
+`components/admin/ui-builder/RichTextToolbar.tsx` (new), `components/admin/ui-builder/
+LinkEditorPopover.tsx` (new), `components/admin/ui-builder/PageEditorShell.tsx` (renders the rich editor for
+`richText` fields), `app/api/admin/ui-builder/page-content/draft/route.ts` (per-field sanitization on write),
+`app/api/admin/ui-builder/page-content/publish/route.ts` (defense-in-depth re-sanitization before publish),
+`components/ui-builder/public/EditableText.tsx` (`html` prop), `components/ui-builder/public/
+EditorPreviewBridge.tsx` (`innerHTML` vs `textContent` branch), `components/home/Paths.tsx` (rich fields render
+via `html`/`as="div"`), `app/page.tsx` (`sanitizeResolvedContent` call), `app/globals.css` (`.gesa-rte-content`/
+`.gesa-rich-content` styling), `tests/unit/sanitizeRichText.test.ts` (new). No new database migrations — rich
+text reuses the same `crm_ui_drafts`/`site_content` storage Phase 133 already had.
+
+```
+del .git\index.lock
+git add package.json package-lock.json lib/ui-builder components/admin/ui-builder app/api/admin/ui-builder components/ui-builder/public/EditableText.tsx components/ui-builder/public/EditorPreviewBridge.tsx components/home/Paths.tsx app/page.tsx app/globals.css tests/unit/sanitizeRichText.test.ts EXECUTION_PLAN.md
+git commit -m "Phase 134: Word-style rich-text toolbar for body-copy fields"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 135 — Universal visual content editing: registry generalization + 7 more pages
+
+**Request:** a very large spec asking the UI Builder's "Page Content" tab to become the universal visual editor for
+every public page (13 named routes) plus global Header/Footer/navigation, with a full content-registry type system
+(scope model, 12 field types, sections/layers hierarchy), structured repeaters, a media library, publish-summary/
+audit-trail/version-history, and Content-Manager synchronization — with its own explicit "inspect first, then
+implement in 5 phases" instruction and an acknowledgment that this should ship as "a focused enhancement, not a
+full rewrite."
+
+**Inspection findings that shaped scope (per the request's own step 1-6):** a full architecture audit (via a
+read-only research pass) found that About/Our Professionals/Community/Donate/Intake/FAQ/Contact are *already*
+backed by `site_content` rows — the same storage Home uses — just not yet wired into `pageRegistry.ts`'s field
+map or `EditableText`. Global Header/Footer are *also* already fully `site_content`-backed (keys `site_header`/
+`page_footer`), not hardcoded, so their labels have been Content-Manager-editable all along; they only lack a
+Visual Editor entry. The 5 legal pages are structurally different: they live in a separate `legal_pages` table
+(`{slug, title, body, updated_at}`), not `site_content`, so this registry's dot-path patcher can't target them
+without a second resolver strategy. FAQ's question/answer list is real repeater data in a `faqs` table (`{id,
+question, answer, sort}`), already managed through Content Manager's `FaqManager`. These findings directly
+determined what this phase could safely and honestly ship.
+
+**Scope shipped this phase — real, working, disclosed rather than the full spec attempted blind:**
+- The **content registry generalized** from "Home is the only page with a field map, one `site_content` row per
+  page" to N pages, each with one or more named `contentSources` (`lib/ui-builder/pageRegistry.ts`'s new
+  `PageContentSource`/`PageDefinition.contentSources`), and a `contentScope: "page" | "global"` field per
+  registered item (every field registered so far is `"page"` — see the Left Out section for why global scope
+  isn't populated yet). `ContentFieldType` gained the remaining meaning-types the spec's registry type asked for
+  (`altText`, `formLabel`, `toggle`, `socialLink`, `navigationItem`, `repeater`) — declared for forward
+  compatibility (matching the existing `image`/`url` precedent from Phase 134), with `url` now having its first
+  real fields (every CTA/link destination registered this phase).
+- **Visual click-to-edit is now live for 7 more pages** — About, Our Professionals, Community (Support Groups),
+  Donate, Find Support/Intake, FAQ, and Contact — removing the "Global only" tag from all of them in the Page
+  Navigator. Each has its own field-specific Layers list, generated automatically by the existing (unchanged)
+  `PageEditorShell.tsx`/`usePageEditorState.ts` once a page has `supportsVisualEditor: true` and a field-def
+  array — confirming the Phase 133 architecture actually generalizes rather than needing per-page UI rework.
+- **Multi-`site_content`-row pages work end to end.** About (2 rows: hero + sections), Our Professionals and
+  Contact/FAQ/Donate/Intake (1-2 rows), and Community (3 rows: banner + registration flow + intro band) all
+  draft/publish correctly through two new shared helpers in `pageContentResolver.ts` — `getPageBaseContent()`
+  (reads and merges every one of a page's sources, nesting each under its namespace) and `publishPageSources()`
+  (splits a resolved object back apart and upserts each piece into its own row) — replacing the two API routes'
+  old Home-only fallback switch statement entirely.
+- **`resolveEditorPreview()`** (new, `pageContentResolver.ts`) consolidates the "check `?editorPreview=true`,
+  check real admin session, fetch `crm_ui_drafts`, patch, sanitize" logic that used to live only in Home's
+  `app/page.tsx` into one function every page's own `page.tsx` now calls — so the Phase 134 defense-in-depth
+  sanitization pass runs on every visual-editor-enabled page's render, not just Home's.
+- **`PageHero`** (`components/ui/PageHero.tsx`) had its `eyebrow` prop widened from `string` to `ReactNode` (one
+  line) so pages can pass an `<EditableText>` element there, same as `title`/`description` already allowed —
+  every existing caller passing a plain string is unaffected.
+- Fixed a real bug found during inspection: Phase 133's `PAGE_DEFINITIONS` had Intake pointed at a `"page_intake"`
+  site_content key that doesn't exist — the real key is `"component_intake_flow"`.
+- Added the 2 legal pages missing from `PAGE_DEFINITIONS` entirely (`cookies-policy`, `legal-notice`) so the
+  Pages list is now complete, even though none of the 5 legal pages support visual editing yet.
+- **Content Manager synchronization required no migration at all.** Every field registered this phase reads and
+  writes the exact same `site_content` row(s) Content Manager's existing per-page editors already use — an edit
+  made in either interface is immediately visible in the other, satisfying the spec's own "same content
+  records/API, no duplicate databases" requirement for free, simply by not inventing a second storage system.
+
+**Left out of this phase, disclosed rather than faked (this is the largest "left out" list of any phase so
+far — flagging that clearly rather than quietly shrinking scope):**
+- **Global Header/Footer/navigation visual editing.** A real architectural blocker, not a time-box cut: Header
+  and Footer render inside `app/layout.tsx`, which — unlike a page's own `page.tsx` — has no access to Next.js's
+  `searchParams`, so there's no server-side way for the layout to know "this request is the admin's authenticated
+  editor-preview iframe" the way every page.tsx in this phase does. Making this work needs a deliberate follow-up
+  (most likely: a client-side check using `useSearchParams()`, which *is* available at any depth regardless of
+  the layout/page boundary, paired with a lightweight authenticated API call to confirm admin status and fetch
+  the global draft, rather than the server-side gate every page uses today) — not something to bolt on
+  incorrectly under this phase's time constraints. Header/Footer content remains exactly as editable as it was
+  before this phase: fully, through Content Manager's `HeaderEditor`/`FooterEditor`.
+- **The 5 legal pages.** Need a second resolver strategy (read/patch/publish a `legal_pages` table row, not a
+  `site_content` JSON path) rather than a registry entry — real, scoped follow-up work. Content Manager's
+  `LegalPagesManager` remains their only editor; `PageEditorShell`'s unsupported-page message now explains why
+  for this group specifically, instead of implying "not built yet" the way it does for a true gap.
+  **A visible pre-publish confirmation for legal-page changes ("Confirm this content has been reviewed and
+  approved for legal accuracy") is specified for when this follow-up ships.**
+- **FAQ's question/answer repeater.** Real, structured, reorderable data in the `faqs` table — bringing it into
+  the visual canvas needs the `repeater` field type's real add/reorder/hide/delete editor (declared in
+  `ContentFieldType`, not built). `FaqManager` in Content Manager remains the place to manage FAQ entries; this
+  phase only registered the FAQ page's intro banner.
+- **A real media library / image field UI.** `image`/`altText` are declared field types; no image field is wired
+  to an upload/select control this phase (existing image fields — About's founder photos, the About hero
+  painting — stay Content Manager-only).
+- **`toggle`/`socialLink`/`navigationItem`/`repeater` UI controls.** Declared in `ContentFieldType`, not built.
+  No field uses them yet — nothing this phase needed a visibility toggle, a combined label+URL+icon control, or
+  a structured list editor to work correctly (nav items and social links in this codebase are already individual
+  named fields, e.g. `socialLinkedinHref`, not an array, so they don't structurally need `navigationItem`/
+  `socialLink` controls to be edited safely as plain `url`/`plainText` fields once Header/Footer are wired).
+- **DonateForm's interactive giving-box copy** (once/monthly toggle, preset/custom amounts, gift CTA) —
+  deliberately excluded per the spec's own "do not expose payment-provider keys, payment logic, or transactional
+  configuration" guardrail, since those labels sit directly beside real payment behavior. Stays Content
+  Manager-only.
+- **A publish confirmation summary, per-item audit trail, and version history/restore.** Publish behavior this
+  phase is unchanged from Phase 133 (one publish action per page, immediate). A structured "N items changed,
+  these pages affected, global vs. page-specific" summary and a `ui_builder_change_history` audit table are real,
+  scoped follow-up work, not attempted this phase.
+- **Several fields registered but not yet canvas-wrapped** (selectable and fully draft/publish-able via the
+  Layers panel, but without a live-highlighting DOM element in the preview this phase): every CTA/link
+  *destination* URL across every page (hrefs aren't visible text nodes to click), About's `hero.title` (feeds
+  `<HighlightedText>`, which needs a plain string rather than a React node), and Our Professionals' directory
+  filter labels (inside a client-side filter component not touched this phase). All of these still save to
+  draft and take effect correctly on Publish — they just won't visually update in the canvas until reload.
+
+**QA:** `tsc --noEmit` — identical to the same pre-existing 16-line baseline both before and after every change
+this phase, across three separate full passes as the work progressed. Two real, new type errors were caught and
+fixed: two existing test files (`AboutPage.test.tsx`, `DonatePage.test.tsx`) called their page component with
+zero arguments, which broke once the page gained a `searchParams` parameter — fixed by updating the test calls
+to pass `{}` explicitly (`DonatePage.tsx`, which isn't itself a Next.js route file, was given a default `= {}`
+parameter instead, since it isn't subject to Next's generated `PageProps` type-checking the way an actual
+`app/*/page.tsx` file is — confirmed by first trying `= {}` on the five real page files too and immediately
+seeing Next's own type-checker reject it, then reverting just those five). Also grepped every new/modified file
+for the unescaped-apostrophe JSX pattern that broke two earlier builds — none found (the one new user-facing
+string with an apostrophe is inside a JS template literal, not literal JSX text, so it was never at risk).
+**Not verified: an actual click-through of any of the 7 newly-wired pages in a live browser** (no dev server in
+this sandbox, same standing limitation as every previous UI Builder phase). Most important to verify after
+deploying: for at least About (2-source) and Community (3-source, the largest), open `/admin/ui-builder` → Page
+Content → select the page → turn on Edit mode → click the hero heading → confirm the inspector selects it and the
+preview updates live → Publish → load the real public page and confirm the change is there → then repeat for one
+of the other 5 pages to spot-check the pattern held.
+
+**Files changed:** `lib/ui-builder/pageRegistry.ts` (contentSources/contentScope, new field-type members, field
+arrays for About/Our Professionals/Community/Donate/Intake/FAQ/Contact, Intake site_content key fix, 2 missing
+legal pages added), `lib/ui-builder/pageContentResolver.ts` (`getPageBaseContent`, `publishPageSources`,
+`resolveEditorPreview`, fallback-object map), `app/api/admin/ui-builder/page-content/draft/route.ts` and
+`.../publish/route.ts` (generalized to the new helpers), `components/ui/PageHero.tsx` (`eyebrow` widened to
+`ReactNode`), `components/admin/ui-builder/PageEditorShell.tsx` (legal-page-specific unsupported message),
+`app/about/page.tsx` + `components/Hero.tsx`, `app/therapists/page.tsx`, `app/support-groups/page.tsx`,
+`app/donate/page.tsx` + `components/donate/DonatePage.tsx`, `app/intake/page.tsx`, `app/faq/page.tsx`,
+`app/contact/page.tsx` (editor-preview gate + `EditableText` wraps on each page's hero/banner and, for About,
+several rendered secondary sections), `tests/unit/AboutPage.test.tsx` (updated 4 call sites for the new
+required-arg shape). No new database migrations — every field reuses the existing `crm_ui_drafts`/`site_content`
+tables Phase 132/133 already created.
+
+```
+del .git\index.lock
+git add lib/ui-builder app/api/admin/ui-builder components/ui/PageHero.tsx components/admin/ui-builder/PageEditorShell.tsx app/about/page.tsx components/Hero.tsx app/therapists/page.tsx app/support-groups/page.tsx app/donate/page.tsx components/donate/DonatePage.tsx app/intake/page.tsx app/faq/page.tsx app/contact/page.tsx tests/unit/AboutPage.test.tsx EXECUTION_PLAN.md
+git commit -m "Phase 135: generalize Visual Page Editor to About/Our Professionals/Community/Donate/Intake/FAQ/Contact"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
