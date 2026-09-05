@@ -95,6 +95,15 @@
        request. Scoped to this new token instead, same pattern as
        --sage-soft/--slate-banner above. */
     --sand-brown: #cba560;
+    /* Roy sent a reference swatch ("#9BA689, Green Sage") for the Home
+       Stats row's band background — the one with the four Verified
+       Profiles/Multilingual Support/Clear Session Fees/Global Community
+       icon badges. That section previously used --sage-soft (#e3ead9, a
+       much paler wash) — not retuned directly, since --sage-soft is also
+       still used as-is on Donate's own trust-badges row, which wasn't part
+       of this request. Scoped to its own token instead, same pattern as
+       --sand-brown above. */
+    --green-sage: #9ba689;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;

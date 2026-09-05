@@ -40,6 +40,12 @@ const config: Config = {
         sand: {
           brown: "var(--sand-brown)",
         },
+        // Roy's "Green Sage" (#9BA689) swap for the Home Stats row band —
+        // see app/globals.css's --green-sage comment for why this is a new
+        // token rather than a retune of --sage-soft.
+        green: {
+          sage: "var(--green-sage)",
+        },
         muted: {
           DEFAULT: "var(--muted)",
           fg: "var(--muted-fg)",

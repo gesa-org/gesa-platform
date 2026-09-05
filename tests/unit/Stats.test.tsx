@@ -12,14 +12,23 @@ import Stats from "@/components/home/Stats";
 // directly to get its resolved JSX before passing that into render().
 // Phase 83 — redesigned from four counted-up numbers into four icon badges;
 // updated to assert the new badge labels instead of the old stat labels.
+// Later — Roy sent reference swatches for two more color swaps on this
+// exact row: the band background moved off the shared --sage-soft onto its
+// own --green-sage token ("Green Sage," #9BA689), and the 4 icon badges'
+// circle color moved from --card to --sand-brown ("Sand Brown," #CBA560).
+// Assertions updated to match both.
 describe("Stats", () => {
-  it("renders the real badge labels and uses the shared sage-soft background", async () => {
+  it("renders the real badge labels and uses the green-sage background with sand-brown badges", async () => {
     render(await Stats());
     expect(screen.getByText("Verified Profiles")).toBeInTheDocument();
     expect(screen.getByText("Global Community")).toBeInTheDocument();
 
     const section = screen.getByText("Verified Profiles").closest("section");
-    expect(section?.className).toContain("bg-sage-soft");
+    expect(section?.className).toContain("bg-green-sage");
+    expect(section?.className).not.toContain("bg-sage-soft");
     expect(section?.className).not.toContain("bg-card");
+
+    const badgeCircle = screen.getByText("Verified Profiles").previousElementSibling;
+    expect(badgeCircle?.className).toContain("bg-sand-brown");
   });
 });
