@@ -19,8 +19,22 @@ import {
   Undo2,
   Redo2,
   Eraser,
+  Superscript as SuperscriptIcon,
+  Subscript as SubscriptIcon,
+  Palette,
+  Highlighter,
+  ChevronDown,
+  Settings2,
 } from "lucide-react";
 import LinkEditorPopover, { type LinkPopoverValue } from "@/components/admin/ui-builder/LinkEditorPopover";
+import FontColorPopover from "@/components/admin/ui-builder/FontColorPopover";
+import FontSettingsDialog from "@/components/admin/ui-builder/FontSettingsDialog";
+import {
+  RICH_TEXT_FONT_FAMILY_OPTIONS,
+  RICH_TEXT_FONT_SIZE_OPTIONS,
+  RICH_TEXT_COLOR_SWATCHES,
+  RICH_TEXT_HIGHLIGHT_SWATCHES,
+} from "@/lib/ui-builder/richTextFontOptions";
 
 // Phase 134 — the Word-style formatting toolbar for richText fields.
 // Sticky at the top of the editor panel (the parent, RichTextEditor.tsx,
@@ -62,8 +76,76 @@ function Divider() {
   return <span className="mx-0.5 h-5 w-px flex-none bg-border" aria-hidden="true" />;
 }
 
+// Phase 136 — re-reads the shared textStyle mark's attributes fresh on
+// every render (RichTextToolbar itself re-renders on every selection change
+// via Tiptap's onTransaction, wired in RichTextEditor.tsx's parent — same
+// as every other `editor.isActive(...)` check already used throughout this
+// file), so the family/size/color/highlight controls below always reflect
+// whatever's under the current cursor/selection.
+function currentTextStyle(editor: Editor) {
+  return editor.getAttributes("textStyle") as {
+    fontFamily?: string | null;
+    fontSize?: string | null;
+    color?: string | null;
+    backgroundColor?: string | null;
+    caps?: "small" | "all" | null;
+  };
+}
+
 export default function RichTextToolbar({ editor }: { editor: Editor }) {
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
+  const [highlightPopoverOpen, setHighlightPopoverOpen] = useState(false);
+  const [caseMenuOpen, setCaseMenuOpen] = useState(false);
+  const [fontDialogOpen, setFontDialogOpen] = useState(false);
+
+  const textStyle = currentTextStyle(editor);
+
+  function mergeTextStyle(patch: Partial<ReturnType<typeof currentTextStyle>>) {
+    editor
+      .chain()
+      .focus()
+      .setMark("textStyle", { ...textStyle, ...patch })
+      .run();
+  }
+
+  // Phase 136 — "Aa" Change Case, matching Word's ribbon button of the same
+  // name: unlike the Font dialog's Small caps/All caps (CSS-only, the
+  // underlying letters are untouched — see richTextFontExtensions.ts),
+  // this one actually rewrites the selected characters, exactly like
+  // Word's own version does. Implemented by walking every text node inside
+  // the selection and replacing its slice of text while explicitly
+  // re-applying that node's own marks (bold/italic/etc. survive the
+  // rewrite) — a plain `insertText` would silently drop that formatting.
+  function changeCase(transform: (s: string) => string) {
+    const { from, to } = editor.state.selection;
+    if (from === to) {
+      setCaseMenuOpen(false);
+      return;
+    }
+    editor
+      .chain()
+      .focus()
+      .command(({ tr, state }) => {
+        type MarksArg = Parameters<typeof state.schema.text>[1];
+        const ranges: { start: number; end: number; text: string; marks: MarksArg }[] = [];
+        state.doc.nodesBetween(from, to, (node, pos) => {
+          if (!node.isText || !node.text) return;
+          const start = Math.max(pos, from);
+          const end = Math.min(pos + node.text.length, to);
+          if (start >= end) return;
+          ranges.push({ start, end, text: node.text.slice(start - pos, end - pos), marks: node.marks });
+        });
+        for (const r of ranges) {
+          const mappedStart = tr.mapping.map(r.start);
+          const mappedEnd = tr.mapping.map(r.end);
+          tr.replaceWith(mappedStart, mappedEnd, state.schema.text(transform(r.text), r.marks));
+        }
+        return true;
+      })
+      .run();
+    setCaseMenuOpen(false);
+  }
 
   const paragraphStyle = editor.isActive("heading", { level: 1 })
     ? "h1"
@@ -153,6 +235,82 @@ export default function RichTextToolbar({ editor }: { editor: Editor }) {
         <option value="h2">Heading 2</option>
         <option value="h3">Heading 3</option>
       </select>
+
+      {/* Phase 136 — Font family/size, mirroring the two dropdowns at the
+          left edge of Word's Font ribbon group. Curated lists (see
+          lib/ui-builder/richTextFontOptions.ts) — not free text, so a
+          choice here can never load a font the site doesn't already
+          serve. */}
+      <select
+        aria-label="Font family"
+        value={textStyle.fontFamily ?? ""}
+        onChange={(e) => mergeTextStyle({ fontFamily: e.target.value || null })}
+        className="mr-1 max-w-[130px] rounded-md border border-border bg-transparent px-1.5 py-1 text-[12px]"
+      >
+        {RICH_TEXT_FONT_FAMILY_OPTIONS.map((f) => (
+          <option key={f.label} value={f.value}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+      <select
+        aria-label="Font size"
+        value={textStyle.fontSize ?? ""}
+        onChange={(e) => mergeTextStyle({ fontSize: e.target.value || null })}
+        className="mr-1 w-[64px] rounded-md border border-border bg-transparent px-1.5 py-1 text-[12px]"
+      >
+        {RICH_TEXT_FONT_SIZE_OPTIONS.map((s) => (
+          <option key={s.label} value={s.value}>
+            {s.label}
+          </option>
+        ))}
+      </select>
+
+      {/* "Aa" Change Case — matches Word's own button of the same name.
+          Rewrites the selected characters (see changeCase() above); a
+          plain dropdown menu rather than a split-button, since none of
+          these five options needs a default "last used" behavior. */}
+      <div className="relative">
+        <ToolbarButton label="Change case" onClick={() => setCaseMenuOpen((v) => !v)}>
+          <span className="flex items-center text-[12px] font-semibold">
+            Aa <ChevronDown size={11} />
+          </span>
+        </ToolbarButton>
+        {caseMenuOpen && (
+          <div
+            role="menu"
+            className="absolute left-0 top-full z-20 mt-1 w-[170px] rounded-xl border border-border bg-card p-1 text-[12.5px] shadow-lg"
+          >
+            {[
+              { label: "Sentence case.", fn: (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() },
+              { label: "lowercase", fn: (s: string) => s.toLowerCase() },
+              { label: "UPPERCASE", fn: (s: string) => s.toUpperCase() },
+              {
+                label: "Capitalize Each Word",
+                fn: (s: string) => s.replace(/\S+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()),
+              },
+              {
+                label: "tOGGLE cASE",
+                fn: (s: string) =>
+                  s
+                    .split("")
+                    .map((c) => (c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()))
+                    .join(""),
+              },
+            ].map((opt) => (
+              <button
+                key={opt.label}
+                type="button"
+                role="menuitem"
+                onClick={() => changeCase(opt.fn)}
+                className="block w-full rounded-lg px-2.5 py-1.5 text-left hover:bg-secondary/60"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <Divider />
 
       <ToolbarButton label="Bold (Ctrl+B)" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
@@ -166,6 +324,59 @@ export default function RichTextToolbar({ editor }: { editor: Editor }) {
       </ToolbarButton>
       <ToolbarButton label="Strikethrough" active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}>
         <Strikethrough size={14} />
+      </ToolbarButton>
+      <ToolbarButton label="Superscript" active={editor.isActive("superscript")} onClick={() => editor.chain().focus().toggleMark("superscript").run()}>
+        <SuperscriptIcon size={14} />
+      </ToolbarButton>
+      <ToolbarButton label="Subscript" active={editor.isActive("subscript")} onClick={() => editor.chain().focus().toggleMark("subscript").run()}>
+        <SubscriptIcon size={14} />
+      </ToolbarButton>
+      <Divider />
+
+      <div className="relative">
+        <ToolbarButton label="Font color" active={Boolean(textStyle.color)} onClick={() => setColorPopoverOpen((v) => !v)}>
+          <span className="relative flex flex-col items-center">
+            <Palette size={14} />
+            <span className="mt-0.5 h-[3px] w-3.5 rounded-full" style={{ backgroundColor: textStyle.color ?? "var(--muted-fg)" }} />
+          </span>
+        </ToolbarButton>
+        {colorPopoverOpen && (
+          <FontColorPopover
+            title="Font color"
+            swatches={RICH_TEXT_COLOR_SWATCHES}
+            current={textStyle.color ?? null}
+            noColorLabel="Automatic"
+            onPick={(v) => {
+              mergeTextStyle({ color: v });
+              setColorPopoverOpen(false);
+            }}
+            onClose={() => setColorPopoverOpen(false)}
+          />
+        )}
+      </div>
+      <div className="relative">
+        <ToolbarButton label="Highlight color" active={Boolean(textStyle.backgroundColor)} onClick={() => setHighlightPopoverOpen((v) => !v)}>
+          <span className="relative flex flex-col items-center">
+            <Highlighter size={14} />
+            <span className="mt-0.5 h-[3px] w-3.5 rounded-full" style={{ backgroundColor: textStyle.backgroundColor ?? "var(--muted-fg)" }} />
+          </span>
+        </ToolbarButton>
+        {highlightPopoverOpen && (
+          <FontColorPopover
+            title="Highlight color"
+            swatches={RICH_TEXT_HIGHLIGHT_SWATCHES}
+            current={textStyle.backgroundColor ?? null}
+            noColorLabel="No color"
+            onPick={(v) => {
+              mergeTextStyle({ backgroundColor: v });
+              setHighlightPopoverOpen(false);
+            }}
+            onClose={() => setHighlightPopoverOpen(false)}
+          />
+        )}
+      </div>
+      <ToolbarButton label="Font settings…" onClick={() => setFontDialogOpen(true)}>
+        <Settings2 size={14} />
       </ToolbarButton>
       <Divider />
 
@@ -223,6 +434,7 @@ export default function RichTextToolbar({ editor }: { editor: Editor }) {
           onClose={() => setLinkPopoverOpen(false)}
         />
       )}
+      {fontDialogOpen && <FontSettingsDialog editor={editor} onClose={() => setFontDialogOpen(false)} />}
     </div>
   );
 }

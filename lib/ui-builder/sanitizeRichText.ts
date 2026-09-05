@@ -24,6 +24,14 @@ const ALLOWED_TAGS = [
   "blockquote",
   "hr",
   "br",
+  // Phase 136 — the Font ribbon group's superscript/subscript toggles
+  // (real <sup>/<sub> elements, matching Word's own output — see
+  // components/admin/ui-builder/richTextFontExtensions.ts) and the plain
+  // inline wrapper the rest of the Font group's character formatting
+  // (family/size/color/highlight/caps) renders onto.
+  "sup",
+  "sub",
+  "span",
 ];
 
 const ALLOWED_ATTRIBUTES: sanitizeHtml.IOptions["allowedAttributes"] = {
@@ -32,14 +40,38 @@ const ALLOWED_ATTRIBUTES: sanitizeHtml.IOptions["allowedAttributes"] = {
   h1: ["style"],
   h2: ["style"],
   h3: ["style"],
+  // Phase 136 — `span` only ever carries the Font group's own inline
+  // character-formatting styles (see ALLOWED_STYLES below); it has no
+  // other allowed attribute, so it can't be used to smuggle a class name,
+  // id, or event handler.
+  span: ["style"],
 };
 
-// Only these three are ever written by the toolbar's alignment buttons
-// (text-align: left/center/right) — `style` isn't a free-for-all attribute,
-// sanitize-html's `allowedStyles` below still constrains its value.
+// Phase 136 — curated, not free-form. Every value here is restricted to
+// either a fixed enum (text-align, text-transform, font-variant) or a
+// narrow, safe-by-construction pattern (a plain 6-digit hex color; a plain
+// pixel size in the Font group's own 12-36px range) — never an open-ended
+// value that could carry a CSS injection (e.g. `url(...)`, `expression(...)`).
 const ALLOWED_STYLES: sanitizeHtml.IOptions["allowedStyles"] = {
   "*": {
     "text-align": [/^left$/, /^center$/, /^right$/],
+    // A plain 6-digit hex only — matches exactly what
+    // lib/ui-builder/richTextFontOptions.ts's swatches and the Font
+    // dialog's color inputs ever produce.
+    color: [/^#[0-9a-fA-F]{6}$/],
+    "background-color": [/^#[0-9a-fA-F]{6}$/],
+    // Matches lib/ui-builder/richTextFontOptions.ts's RICH_TEXT_FONT_SIZE_OPTIONS
+    // range (12-36px) with a little headroom either side.
+    "font-size": [/^(1[0-9]|[2-3][0-9]|40)px$/],
+    // Matches the exact curated font-family stacks in
+    // lib/ui-builder/richTextFontOptions.ts (themselves the same stacks
+    // Phase 132's Global Theme Typography panel already offers) — letters,
+    // spaces, hyphens, commas, and quotes only, so a stack like
+    // `"Nunito Sans", ui-sans-serif, system-ui, sans-serif` passes while
+    // anything containing `(`, `;`, or `url` is rejected outright.
+    "font-family": [/^[a-zA-Z0-9\s,"'-]+$/],
+    "text-transform": [/^(uppercase|none)$/],
+    "font-variant": [/^(small-caps|normal)$/],
   },
 };
 

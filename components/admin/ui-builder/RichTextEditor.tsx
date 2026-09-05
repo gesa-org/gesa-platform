@@ -9,6 +9,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Placeholder from "@tiptap/extension-placeholder";
 import RichTextToolbar from "@/components/admin/ui-builder/RichTextToolbar";
 import { sanitizeRichTextHtml } from "@/lib/ui-builder/sanitizeRichText";
+import { TextStyle, Superscript, Subscript } from "@/components/admin/ui-builder/richTextFontExtensions";
 
 // Phase 134 — the reusable Tiptap-backed editor for richText fields. Only
 // ever imported by the admin Page Editor's inspector
@@ -46,6 +47,15 @@ export default function RichTextEditor({
         code: false,
       }),
       Underline,
+      // Phase 136 — the Font ribbon group (family/size/color/highlight/
+      // small-caps/all-caps share the one TextStyle mark; superscript/
+      // subscript are their own real <sup>/<sub> marks). See
+      // richTextFontExtensions.ts for why these are built in-house on top
+      // of the already-installed @tiptap/extension-text-style rather than
+      // three more small npm packages.
+      TextStyle,
+      Superscript,
+      Subscript,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Link.configure({
         openOnClick: false,
