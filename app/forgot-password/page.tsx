@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import Logo from "@/components/Logo";
+import GesaWordmark from "@/components/GesaWordmark";
 import { createClient } from "@/lib/supabase/client";
 
 // Phase 78 — the login page had no way for a user who forgot their password
@@ -45,7 +46,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-[400px] rounded-[var(--radius)] border border-border bg-card p-8 shadow-soft">
         <Link href="/" className="mb-6 flex items-center gap-2.5 font-sans text-[17px] font-medium tracking-[0.25em] text-[#5c6470]">
           <Logo size={32} />
-          GESA
+          <GesaWordmark />
         </Link>
         <h1 className="mb-1 text-2xl">Reset your password</h1>
         <p className="mb-6 text-sm text-muted-fg">

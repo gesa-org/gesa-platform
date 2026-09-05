@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Heart } from 'lucide-react';
 import AuthStatus from '@/components/AuthStatus';
 import Logo from '@/components/Logo';
+import GesaWordmark from '@/components/GesaWordmark';
 import LanguageSelector from '@/components/LanguageSelector';
 import NotificationBell from '@/components/admin/NotificationBell';
 import VolunteerPrimaryCta from '@/components/volunteer/VolunteerPrimaryCta';
@@ -52,7 +53,7 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
       <div className="max-w-[1160px] mx-auto px-6 flex items-center h-[74px] gap-5">
         <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#5c6470]">
           <Logo size={34} />
-          GESA
+          <GesaWordmark />
         </Link>
         {/* ms-2/ms-auto (CSS logical "margin-inline-start", not a physical
             margin-left) rather than ml-2/ml-auto — these automatically flip

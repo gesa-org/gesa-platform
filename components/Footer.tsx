@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck, Heart } from 'lucide-react';
 import Logo from '@/components/Logo';
+import GesaWordmark from '@/components/GesaWordmark';
 import VolunteerApplyButton from '@/components/volunteer/VolunteerApplyButton';
 import HelpUsGrowForm from '@/components/footer/HelpUsGrowForm';
 import Reveal from '@/components/motion/Reveal';
@@ -118,7 +119,7 @@ export default function Footer({
           <StaggerItem className="lg:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#b7c3d6]">
               <Logo size={34} />
-              GESA
+              <GesaWordmark />
             </Link>
             <p className="text-[#a8b4c8] max-w-[260px] text-[14.5px] mt-3.5 leading-relaxed">
               <EditableText contentId="global.footer.tagline" label="Tagline" value={content.tagline} as="span" />
