@@ -6330,3 +6330,49 @@ Roy — same as the last two phases: run those four one at a time, and paste bac
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 139: gap between the Home hero's trust badges and the three path cards
+
+**Request:** a screenshot showing the "Making space / Building strength / Moving forward" trust badges sitting
+flush against the Crisis/Veterans/Support card row below, with a note that the two sections feel "almost
+attached" — asked for 40-64px of breathing room on desktop, scaled down on tablet/mobile, with everything else
+(card sizing, alignment, internal spacing, typography, responsive column behavior, every other homepage section)
+left untouched.
+
+**Root cause, found by reading `components/home/Paths.tsx` directly:** the gold hero band has `pb-[210px]`
+(Phase 72) and the card row immediately below it has `-mt-[210px]` — an exactly-matched pair, deliberately
+designed so the card row's top edge lands precisely at the gold-to-white color transition partway down that
+padding, letting the cards visually "straddle" the seam. Because the two values exactly cancel, the cards'
+effective position landed exactly flush with the badges' own bottom edge — zero gap, which is exactly what the
+screenshot showed.
+
+**Fix:** left the gold band's `pb-[210px]` completely untouched (that's what controls where the color seam
+itself falls) and only made the card row's negative margin less negative, by the size of the desired gap at
+each breakpoint (mobile: `-mt-[186px]` → 24px gap; tablet/`sm:`: `-mt-[178px]` → 32px gap; desktop/`md:` and up:
+`-mt-[162px]` → 48px gap, inside Roy's requested 40-64px desktop range). The cards still float up over the same
+gold/white seam — they just sit a little lower against it than before, opening up the requested gap against the
+badges above without moving, resizing, or restyling anything else in the section (card grid, internal card
+layout, typography, and every other homepage section are all unchanged — this was a one-line class-string edit).
+
+**QA:** `tsc --noEmit` — identical to the established 16-line baseline, zero new errors (this was a pure
+Tailwind class change, no logic touched). **Not verified: a live browser render at each breakpoint** (same
+standing sandbox limitation as every other visual phase — no dev server here). Most important to check after
+deploying: confirm a visible ~24px/32px/48px gap now appears between the badges and the top card edge at mobile/
+tablet/desktop widths respectively, that the cards still visibly straddle the gold/white color seam (not fully
+on white now), and that no other homepage section shifted.
+
+**Files changed:** `components/home/Paths.tsx` only (the card row's `-mt-[210px]` class, plus two comments
+updated for accuracy — no other file touched).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 139: add gap between Home hero trust badges and the path cards"
+git push
+```
+
+Roy — same as the last several phases: run those four one at a time, and paste back what shows up right after
+`git commit` specifically.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

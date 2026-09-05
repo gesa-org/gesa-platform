@@ -304,9 +304,11 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           `next/image` calls, the `PATH_IMAGES` array that fed them, and the
           `next/image` import are all gone (see this file's Phase 121
           comment above `PATH_BADGE_ICONS`). The band's `pb-[210px]` (added
-          Phase 72 to match the card row's `-mt-[210px]` overlap) is
-          untouched — the gold/light seam the cards below straddle is
-          unaffected by this change. */}
+          Phase 72 to set the gold/light color seam the card row below
+          straddles) is untouched by this change or by Phase 139's gap
+          adjustment below — only the cards' own negative margin changed,
+          not this padding, so the seam's position is unaffected either
+          time. */}
       <div className="gold-banner relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-white/25 blur-[110px]" />
@@ -361,8 +363,20 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           GesaMark redesign made them visually heavier. Narrowed the row
           itself (`max-w-[860px] mx-auto`, on top of `wrap`'s own max-width)
           so three columns render as smaller cards even on wide screens,
-          rather than only shrinking each card's own fixed height. */}
-      <div className="wrap relative z-10 -mt-[210px] pb-16">
+          rather than only shrinking each card's own fixed height.
+          Phase 139 — Roy flagged the cards sitting flush against the trust
+          badges above (the negative margin exactly canceled the gold
+          band's own `pb-[210px]`, so the cards' top edge landed exactly at
+          the badges' bottom edge with zero gap). The gold band's own
+          `pb-[210px]` is untouched — that's what keeps the gold/white color
+          seam, and the "cards visually straddle it," exactly where Phase 72
+          put it. Only the cards' own negative margin got less negative, by
+          the size of the new gap at each breakpoint (210 minus the gap), so
+          the cards now sit lower relative to the badges while still
+          floating up over the same seam: 24px gap on mobile, 32px on
+          tablet (sm), 48px on desktop (md+) — within Roy's requested
+          40-64px desktop range, scaled down for smaller screens. */}
+      <div className="wrap relative z-10 -mt-[186px] sm:-mt-[178px] md:-mt-[162px] pb-16">
         <StaggerGroup className="mx-auto grid max-w-[860px] gap-5 md:grid-cols-3">
           {cards.map((p, i) => (
             /* Phase 72 — Roy asked for the paintings to display in full by
