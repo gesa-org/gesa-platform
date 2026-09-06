@@ -132,6 +132,13 @@ export default function PageEditorShell() {
         if (selectedContentId) postToIframe({ type: "GESA_EDITOR_SET_SELECTION", contentId: selectedContentId });
         return;
       }
+      if (event.data?.type === "GESA_EDITOR_CLEAR_SELECTION") {
+        // Escape was pressed inside the iframe (see EditorPreviewBridge.tsx)
+        // — mirror that here so the Layers panel/inspector deselect too,
+        // not just the canvas's own outline.
+        selectContentId(null);
+        return;
+      }
       if (isSelectMessage(event.data)) {
         // Phase 140 — Header/Footer/CrisisButton ("global" fields) render
         // on every page's canvas alongside whatever page is selected, so a
@@ -159,6 +166,20 @@ export default function PageEditorShell() {
     if (iframeReady) postToIframe({ type: "GESA_EDITOR_SET_EDIT_MODE", enabled: editModeEnabled });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editModeEnabled, iframeReady]);
+
+  // Escape also clears the selection when focus is in the admin chrome
+  // itself (e.g. right after clicking a Layers panel row) rather than
+  // inside the preview iframe — EditorPreviewBridge.tsx handles the
+  // iframe-focus case and relays it up via GESA_EDITOR_CLEAR_SELECTION,
+  // handled in the onMessage effect above.
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && selectedContentId) selectContentId(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedContentId]);
 
   function selectPage(pageKey: string) {
     setSelectedPageKey(pageKey);

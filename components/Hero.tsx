@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle } from 'lucide-react';
-import HighlightedText from '@/components/ui/HighlightedText';
+import { buildHighlightedHtml } from '@/components/ui/HighlightedText';
 import GoldWatermarks from '@/components/ui/GoldWatermarks';
 import Reveal from '@/components/motion/Reveal';
 import ScrollText from '@/components/motion/ScrollText';
@@ -144,17 +144,23 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
               </span>
             </Reveal>
             <ScrollText distance={22}>
-              {/* Phase 135 — `title`/`highlight` feed <HighlightedText>,
-                  which needs plain strings (it splits `title` around the
-                  `highlight` substring), not a React node — so this one
-                  field isn't canvas-selectable this phase. It's still a
-                  real, registered, publishable field (about.hero.heading),
-                  editable via the Layers panel; it just won't highlight in
-                  the preview canvas the way every EditableText-wrapped
-                  field here does. */}
-              <h1 className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6">
-                <HighlightedText text={content.title} highlight={content.highlight} />
-              </h1>
+              {/* Root-cause fix (see components/ui/HighlightedText.tsx's
+                  buildHighlightedHtml comment) — this field used to render
+                  through the React <HighlightedText> component directly,
+                  which needs plain strings and so couldn't be wrapped in
+                  <EditableText> at all, leaving it un-clickable in the
+                  canvas. buildHighlightedHtml produces the same visual
+                  result (the configured substring in `text-accent`) as a
+                  plain HTML string instead, so <EditableText> can render it
+                  directly as the real <h1> — genuinely clickable/
+                  selectable/live-updating now, like every other field here. */}
+              <EditableText
+                contentId="about.hero.heading"
+                label="Hero heading"
+                value={buildHighlightedHtml(content.title, content.highlight)}
+                as="h1"
+                className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6"
+              />
             </ScrollText>
             <Reveal type="fade-up" delay={0.08}>
               <div className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">
