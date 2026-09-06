@@ -41,7 +41,18 @@ export default function FindSupportModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-10 sm:py-16"
+      // Phase 148 — Roy flagged the panel sitting too close to the top of
+      // the popup, with the "How would you like to find support?" choice
+      // screen appearing right at the edge with barely any breathing room
+      // above it. Switched from `items-start` (pins the dialog to the top
+      // of the viewport, only `py-10 sm:py-16` above it) to `items-center`
+      // (vertically centers it whenever it's short enough to fit), and
+      // increased the vertical padding so there's real space above it even
+      // on a short viewport or once it scrolls to the top. `overflow-y-auto`
+      // on this outer layer still lets a tall step (e.g. Matches with
+      // several cards) scroll the whole dialog into view rather than
+      // clipping it.
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-16 sm:py-24"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

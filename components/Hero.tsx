@@ -32,10 +32,13 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   // stays "#how-it-works" (unchanged), but HeroFindSupportCta now
   // recognizes that exact value and opens the AI/Manual choice screen +
   // MatchWizard in a modal instead of letting the browser scroll — see
-  // components/find-support/HeroFindSupportCta.tsx. The label stays "See
-  // How It Works" (Roy's request was to place the flow *inside* this
-  // button, not to rename it back).
-  ctaPrimaryLabel: "See How It Works",
+  // components/find-support/HeroFindSupportCta.tsx.
+  //
+  // Phase 148 — Roy asked to rename this button from "See How It Works" to
+  // "Match Support". Href/behavior unchanged — still opens the modal via
+  // the same recognized `#how-it-works` sentinel value in
+  // HeroFindSupportCta, only the label changed.
+  ctaPrimaryLabel: "Match Support",
   ctaPrimaryHref: "#how-it-works",
   ctaSecondaryLabel: "Explore support groups",
   ctaSecondaryHref: "/support-groups",

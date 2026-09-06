@@ -83,7 +83,12 @@ export default function ChoiceScreen({ onChooseAi }: { onChooseAi: () => void })
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sand-brown/30 text-primary">
             {pending === "manual" ? <Loader2 size={20} className="animate-spin" /> : <Users size={20} />}
           </span>
-          <span className="text-[17px] font-semibold">Manual Support</span>
+          {/* Phase 148 — Roy asked to rename this option from "Manual
+              Support" to "Browse therapist" (its supporting description
+              below is unchanged). Purely a label change — `chooseManual`'s
+              behavior (log "manual" pathway, redirect to
+              /therapists?source=manual-support) is untouched. */}
+          <span className="text-[17px] font-semibold">Browse therapist</span>
           <span className="text-[13.5px] text-muted-fg">
             Browse our professionals and choose the person you feel is right for you.
           </span>
