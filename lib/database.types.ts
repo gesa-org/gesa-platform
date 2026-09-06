@@ -199,6 +199,13 @@ export type TherapistRow = {
   city: string | null;
   latitude: number | null;
   longitude: number | null;
+  // Phase 152 — which /intake?path= pathway(s) this therapist is available
+  // for (see the add_support_pathways_to_therapists migration). Values are
+  // the same keys /intake already recognizes: "crisis", "veteran",
+  // "general", "helpers". Replaces the old approach of running every active
+  // therapist through the AI/rule-based matcher and capping at 3 results —
+  // getTherapistsByPathway() filters on this column directly instead.
+  support_pathways: string[];
 }
 
 // Phase 126 — the `therapists_public` view's exact column list (see
@@ -239,6 +246,8 @@ export type PublicTherapistRow = Pick<
   | "offers_online"
   | "offers_in_person"
   | "city"
+  // Phase 152 — see this column's own comment on TherapistRow above.
+  | "support_pathways"
 > & {
   // Derived boolean, not the phone number itself — lets the UI offer/hide
   // the WhatsApp contact channel without ever sending a confidential

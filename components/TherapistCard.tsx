@@ -5,7 +5,19 @@ import type { PublicTherapistRow } from "@/lib/database.types";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
 import BookSessionButton from "@/components/therapists/BookSessionButton";
 
-export default function TherapistCard({ t }: { t: PublicTherapistRow }) {
+export default function TherapistCard({
+  t,
+  pathKey = "directory",
+}: {
+  t: PublicTherapistRow;
+  // Phase 152 — passed through to BookSessionButton so a booking made from
+  // an intake pathway page (e.g. "crisis"/"veteran"/"general") is tagged
+  // with that path in the CRM's session_bookings.path column, the same way
+  // the old IntakeMatchFlow used to. Defaults to "directory" (unchanged
+  // behavior) for every other caller of this card, e.g. the Our
+  // Professionals page.
+  pathKey?: string;
+}) {
   const initials = t.full_name
     .split(" ")
     .map((w) => w[0])
@@ -62,7 +74,7 @@ export default function TherapistCard({ t }: { t: PublicTherapistRow }) {
         </div>
       </Link>
       <div className="flex flex-col gap-1.5 px-[18px] pb-3 pt-2">
-        <BookSessionButton therapist={t} />
+        <BookSessionButton therapist={t} pathKey={pathKey} />
         <MessageTherapistButton therapistId={t.id} />
       </div>
     </div>

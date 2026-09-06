@@ -30,6 +30,31 @@ export async function getActiveTherapists(): Promise<PublicTherapistRow[]> {
   return data ?? [];
 }
 
+// Phase 152 — backs the Home page's three pathway cards
+// (components/home/Paths.tsx -> /intake?path=crisis|veteran|general|helpers).
+// Replaces the old approach (every active therapist run through
+// lib/ai/matchTherapists.ts's fuzzy matcher, capped at 3 results) with a
+// direct, database-driven filter on the new support_pathways column — see
+// the add_support_pathways_to_therapists migration.
+//
+// Deliberately also filters `is_verified` here, unlike getActiveTherapists()
+// above (whose own comment explains why the general directory intentionally
+// does NOT gate on is_verified). This is a scoped exception for the pathway
+// listing specifically, per an explicit requirement that these pages only
+// ever show active *and* verified professionals — it does not change the
+// general directory's own behavior.
+export async function getTherapistsByPathway(pathway: string): Promise<PublicTherapistRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapists_public")
+    .select("*")
+    .eq("is_verified", true)
+    .contains("support_pathways", [pathway])
+    .order("full_name");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getSupportGroups(): Promise<Tables<"support_groups">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("support_groups").select("*").order("title");

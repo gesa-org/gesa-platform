@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { Phone, MessageCircle, Globe2, ExternalLink, HeartPulse, ShieldCheck, HandHeart, Users } from "lucide-react";
-import { getCrisisResources, getActiveTherapists } from "@/lib/queries";
-import { matchTherapists } from "@/lib/ai/matchTherapists";
+import { getCrisisResources, getTherapistsByPathway } from "@/lib/queries";
 import { getPageContent } from "@/lib/content";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
-import IntakeMatchFlow from "@/components/intake/IntakeMatchFlow";
+import TherapistsDirectory, { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/components/TherapistsDirectory";
 import PageHero from "@/components/ui/PageHero";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
@@ -24,30 +23,27 @@ const PATH_ENTRY_ROUTE: Record<string, string> = {
   helpers: "helpers",
 };
 
-// Phase 20 — each path now feeds the same AI matching engine used by the
-// Find Your Therapist wizard (lib/ai/matchTherapists.ts) with a hint
-// describing what that path is about, instead of picking one therapist at
-// random. This is what lets "Reach out now" show a short, relevant list of
-// therapists to choose from rather than assigning just one.
-const PATH_MATCH_HINT: Record<string, { treatmentType: string; symptoms: string[] }> = {
-  crisis: {
-    treatmentType: "Crisis support",
-    symptoms: ["shaken by war, terror, or disaster", "needs fast, gentle help"],
-  },
-  veteran: {
-    treatmentType: "Veteran, reservist, and military family support",
-    symptoms: ["military service adjustment", "trauma from service", "strain on military families"],
-  },
-  general: {
-    treatmentType: "General emotional support",
-    symptoms: ["anxiety", "ongoing stress", "weight of antisemitism"],
-  },
-  helpers: {
-    treatmentType: "Support for helpers and caregivers",
-    symptoms: ["caregiver burnout", "compassion fatigue"],
-  },
+// Phase 152 — the page heading changes based on the selected pathway card
+// (components/home/Paths.tsx). Not Content-Manager-backed like the eyebrow/
+// hero title above it — a fixed, structural heading tied 1:1 to the pathway
+// key itself, not page-specific marketing copy an admin would rewrite.
+const PATHWAY_HEADING: Record<string, string> = {
+  crisis: "Available Resilience Support Professionals",
+  veteran: "Available Veterans Support Professionals",
+  general: "Available Support Professionals",
+  helpers: "Available Support Professionals for Helpers",
 };
 
+// Phase 152 — replaced the old AI/rule-based fuzzy matching approach (each
+// path fed a hardcoded { treatmentType, symptoms } hint into
+// lib/ai/matchTherapists.ts, capped at MAX_MATCHES = 3) with a direct
+// database filter on the new therapists.support_pathways column (see
+// getTherapistsByPathway() in lib/queries.ts and the
+// add_support_pathways_to_therapists migration). Every eligible therapist
+// now shows, not just up to 3 AI-picked ones — reusing the same
+// TherapistsDirectory component (with its filter sidebar, result count, and
+// TherapistCard grid) that the Our Professionals page uses, rather than a
+// second, parallel results UI.
 export default async function IntakePage({
   searchParams,
 }: {
@@ -65,18 +61,11 @@ export default async function IntakePage({
   };
   const label = PATH_LABEL[pathKey];
 
-  const therapists = await getActiveTherapists();
-  const hint = PATH_MATCH_HINT[pathKey];
-  const outcome =
-    therapists.length > 0
-      ? await matchTherapists({ symptoms: hint.symptoms, treatmentType: hint.treatmentType, genderPreference: "no_preference" }, therapists)
-      : { matches: [], genderPreferenceHonored: true };
-  const matches = outcome.matches
-    .map((r) => {
-      const therapist = therapists.find((t) => t.id === r.therapistId);
-      return therapist ? { therapist, reasoning: r.reasoning } : null;
-    })
-    .filter((m): m is { therapist: (typeof therapists)[number]; reasoning: string } => m !== null);
+  // Phase 152 — is_active is already enforced by the therapists_public view
+  // this reads from; is_verified is additionally hard-filtered inside
+  // getTherapistsByPathway() itself (see that function's own comment for why
+  // that's a scoped exception to the general directory's usual stance).
+  const therapists = await getTherapistsByPathway(pathKey);
 
   const crisisResources = pathKey === "crisis" ? await getCrisisResources() : [];
 
@@ -145,16 +134,51 @@ export default async function IntakePage({
             <EditableText contentId="intake.crisis.ongoingSupportPrompt" label="Ongoing-support prompt" value={content.ongoingSupportPrompt} as="span" />
           </div>
         )}
-        {matches.length > 0 ? (
-          <IntakeMatchFlow pathKey={pathKey} matches={matches} matchListIntro={content.matchListIntro} />
+
+        <h2 className="mb-1.5 text-center text-[22px]">
+          {PATHWAY_HEADING[pathKey] ?? PATHWAY_HEADING.general}
+        </h2>
+        <p className="mb-6 text-center text-[14.5px] text-muted-fg" aria-live="polite">
+          {therapists.length} professional{therapists.length === 1 ? "" : "s"} available.
+        </p>
+
+        {therapists.length > 0 ? (
+          <TherapistsDirectory therapists={therapists} content={THERAPISTS_DIRECTORY_CONTENT_FALLBACK} pathKey={pathKey} />
         ) : (
-          <p className="text-center text-muted-fg">
-            We don&apos;t have any verified therapists available right now — please check back soon or{" "}
-            <Link href="/contact" className="underline">
-              contact us
-            </Link>
-            .
-          </p>
+          // Phase 152 — every eligible pathway starts with whichever
+          // therapists an admin has explicitly assigned (see
+          // support_pathways/TherapistEditForm's new "Intake pathways"
+          // checkboxes) — "general" was backfilled for every active
+          // therapist, but "crisis"/"veteran"/"helpers" start empty until an
+          // admin opts specific professionals in. This is the honest,
+          // no-results state for that case, not an error.
+          <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-center text-muted-fg">
+            <p className="mb-1.5 font-semibold text-foreground">No therapists were found for this pathway.</p>
+            <p className="mb-5 text-[13.5px]">
+              We don&apos;t have a verified professional assigned to this pathway yet — please check back soon, browse
+              every professional, or reach out and we&apos;ll help you directly.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2.5">
+              <Link
+                href="/"
+                className="rounded-full border border-border bg-card px-5 py-2.5 text-[13.5px] font-semibold text-primary transition-colors hover:border-primary-600 hover:bg-accent-soft"
+              >
+                Change filters
+              </Link>
+              <Link
+                href="/therapists"
+                className="rounded-full border border-border bg-card px-5 py-2.5 text-[13.5px] font-semibold text-primary transition-colors hover:border-primary-600 hover:bg-accent-soft"
+              >
+                View all professionals
+              </Link>
+              <Link
+                href="/contact"
+                className="rounded-full bg-primary px-5 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-primary-600"
+              >
+                Contact GESA support
+              </Link>
+            </div>
+          </div>
         )}
       </div>
       </section>

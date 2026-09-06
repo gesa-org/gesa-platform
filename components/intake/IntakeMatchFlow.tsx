@@ -8,6 +8,16 @@ import IntakeBookingModal from "@/components/intake/IntakeBookingModal";
 import type { PublicTherapistRow } from "@/lib/database.types";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
+// Phase 152 — superseded. app/intake/page.tsx no longer renders this
+// component: it used to run every active therapist through
+// lib/ai/matchTherapists.ts (capped at MAX_MATCHES = 3) and show this
+// component's own short, AI-reasoning list. That's been replaced with a
+// direct database filter (therapists.support_pathways, via
+// getTherapistsByPathway()) feeding the full, reusable TherapistsDirectory
+// grid instead, so every eligible therapist shows rather than up to 3
+// AI-picked ones. Left on disk unused per this project's no-delete-data
+// convention — nothing else imports this component (confirmed via
+// repo-wide grep before this phase shipped).
 type Match = { therapist: PublicTherapistRow; reasoning: string };
 
 // Phase 20 — replaced the old single-random-therapist assignment with a

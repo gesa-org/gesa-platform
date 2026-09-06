@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
 import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
@@ -43,6 +43,15 @@ function unique(values: string[]) {
 // contain (so a future 90-min offering still shows up automatically).
 const STANDARD_DURATIONS = ["30", "45", "60"];
 
+// Phase 152 — how many result cards render before "Load more" is needed.
+// No pagination pattern existed anywhere in this app before this phase;
+// this is a plain client-side reveal (the full filtered list is already in
+// memory — see `therapists` prop — so there's no additional query to make),
+// not true server-side pagination. Good enough for the roster sizes this
+// directory has today, and avoids ever silently hiding results behind a
+// hard cap the way the old intake AI-match flow's `MAX_MATCHES = 3` did.
+const PAGE_SIZE = 12;
+
 // Shared pill styling for the radio-style "Definition" list and the
 // segmented "Duration"/"Gender" button grids — kept as one function so the
 // selected/unselected look stays identical across all three fields.
@@ -69,15 +78,28 @@ function RadioDot({ selected }: { selected: boolean }) {
 export default function TherapistsDirectory({
   therapists,
   content = THERAPISTS_DIRECTORY_CONTENT_FALLBACK,
+  pathKey,
 }: {
   therapists: PublicTherapistRow[];
   content?: TherapistsDirectoryContent;
+  // Phase 152 — passed straight through to each TherapistCard when this
+  // directory is reused on an intake pathway page (see app/intake/page.tsx)
+  // instead of the Our Professionals page. Left undefined by default so
+  // TherapistCard falls back to its own "directory" default, unchanged for
+  // every other existing caller of this component.
+  pathKey?: string;
 }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [lang, setLang] = useState("");
   const [duration, setDuration] = useState("");
   const [gender, setGender] = useState("");
+  // Phase 152 — session-format filter (Online/In-person), using the
+  // offers_online/offers_in_person columns added for Browse Therapist
+  // search (Phase 151). "" means no filter, same convention as every other
+  // field here.
+  const [sessionFormat, setSessionFormat] = useState<"" | "online" | "in_person">("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties)), [therapists]);
@@ -95,8 +117,18 @@ export default function TherapistsDirectory({
       (!role || t.specialties.includes(role)) &&
       (!lang || t.languages.includes(lang)) &&
       (!duration || t.session_lengths.includes(duration as PublicTherapistRow["session_lengths"][number])) &&
-      (!gender || t.gender === gender)
+      (!gender || t.gender === gender) &&
+      (!sessionFormat || (sessionFormat === "online" ? t.offers_online : t.offers_in_person))
   );
+
+  // Phase 152 — reset back to the first page of results whenever any filter
+  // changes, so "Load more" always starts fresh instead of showing a
+  // half-scrolled-in count against a brand new filtered set.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [name, role, lang, duration, gender, sessionFormat]);
+
+  const visible = filtered.slice(0, visibleCount);
 
   return (
     <div className="mt-10 grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
@@ -227,6 +259,27 @@ export default function TherapistsDirectory({
           </button>
         </div>
 
+        {/* Phase 152 — session-format filter, using the offers_online/
+            offers_in_person columns added for Browse Therapist search
+            (Phase 151). Same segmented-pill treatment as Gender above. */}
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-muted-fg">Session format</label>
+        <div className="mb-5 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setSessionFormat(sessionFormat === "online" ? "" : "online")}
+            className={optionClass(sessionFormat === "online", "text-center")}
+          >
+            Online
+          </button>
+          <button
+            type="button"
+            onClick={() => setSessionFormat(sessionFormat === "in_person" ? "" : "in_person")}
+            className={optionClass(sessionFormat === "in_person", "text-center")}
+          >
+            In-person
+          </button>
+        </div>
+
         <div className="flex flex-col gap-2.5">
           {/* Phase 63 — was a plain link to the generic Contact form; now
               opens the real volunteer therapist application. */}
@@ -245,16 +298,29 @@ export default function TherapistsDirectory({
 
       <div ref={resultsRef}>
         <div className="mb-3.5 text-sm text-muted-fg" aria-live="polite">
-          {filtered.length ? `Showing ${filtered.length} of ${therapists.length} therapists` : ""}
+          {filtered.length ? `Showing ${visible.length} of ${filtered.length} therapists` : ""}
         </div>
         {filtered.length ? (
-          <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
-            {filtered.map((t) => (
-              <StaggerItem key={t.id}>
-                <TherapistCard t={t} />
-              </StaggerItem>
-            ))}
-          </StaggerGroup>
+          <>
+            <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
+              {visible.map((t) => (
+                <StaggerItem key={t.id}>
+                  <TherapistCard t={t} pathKey={pathKey} />
+                </StaggerItem>
+              ))}
+            </StaggerGroup>
+            {visibleCount < filtered.length && (
+              <div className="mt-7 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                  className="rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-primary transition-colors hover:border-primary-600 hover:bg-accent-soft"
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">
             <EditableText contentId="therapists.directory.noResultsMessage" label="No-results message" value={content.noResultsMessage} as="span" />

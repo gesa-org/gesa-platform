@@ -44,6 +44,10 @@ function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistR
     offers_online: true,
     offers_in_person: false,
     city: null,
+    // Phase 152 — new required field (see the
+    // add_support_pathways_to_therapists migration); default added here for
+    // the same reason as offers_online/offers_in_person/city above.
+    support_pathways: [],
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

@@ -52,6 +52,12 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
   const [offersOnline, setOffersOnline] = useState(therapist.offers_online);
   const [offersInPerson, setOffersInPerson] = useState(therapist.offers_in_person);
   const [city, setCity] = useState(therapist.city ?? "");
+  // Phase 152 — which /intake?path= pathway(s) (Home page's three cards)
+  // this therapist is available for. See the
+  // add_support_pathways_to_therapists migration — "general" was backfilled
+  // for every active therapist at the time of that migration, but this
+  // checkbox set is the real, ongoing source of truth going forward.
+  const [supportPathways, setSupportPathways] = useState<string[]>(therapist.support_pathways);
   const [specialties, setSpecialties] = useState(therapist.specialties.join(", "));
   const [languages, setLanguages] = useState(therapist.languages.join(", "));
   const [isActive, setIsActive] = useState(therapist.is_active);
@@ -185,6 +191,7 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
         offers_online: offersOnline,
         offers_in_person: offersInPerson,
         city: city.trim() || null,
+        support_pathways: supportPathways,
         specialties: specialties
           .split(",")
           .map((s) => s.trim())
@@ -358,6 +365,40 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
           </div>
           <p className="mt-1 text-[12.5px] text-muted-fg">
             Controls whether this professional appears in Browse Therapist search results for each session type.
+          </p>
+        </div>
+
+        {/* Phase 152 — feeds the Home page's three pathway cards
+            ("I've been affected by a crisis" / "I serve, or support someone
+            who serves" / "I'm looking for professional support") ->
+            /intake?path=crisis|veteran|general. A therapist only shows up
+            on one of those pages once checked here. */}
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Intake pathways</label>
+          <div className="flex flex-wrap gap-4">
+            {[
+              { value: "crisis", label: "Resilience / crisis" },
+              { value: "veteran", label: "Veterans" },
+              { value: "general", label: "General support" },
+              { value: "helpers", label: "Helpers" },
+            ].map((p) => (
+              <label key={p.value} className="flex items-center gap-2 text-[13.5px]">
+                <input
+                  type="checkbox"
+                  checked={supportPathways.includes(p.value)}
+                  onChange={(e) =>
+                    setSupportPathways((prev) =>
+                      e.target.checked ? [...prev, p.value] : prev.filter((v) => v !== p.value)
+                    )
+                  }
+                  className="h-4 w-4"
+                />
+                {p.label}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-[12.5px] text-muted-fg">
+            Controls whether this professional appears on the "Available … Professionals" page for each pathway.
           </p>
         </div>
 
