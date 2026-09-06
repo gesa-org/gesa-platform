@@ -6733,4 +6733,33 @@ git push
 Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. One judgment call worth flagging: the hero's CTA button (which used to say "Find Support" and link out to this same page) now reads "See How It Works" and scrolls down to the "How GESA Works" cards instead — since a "Find Support" button on a page already titled "Find Support" that just scrolls down read redundant to me. Happy to change the label or behavior if you had something else in mind. Also worth knowing, still: this site has no mobile navigation menu at all — unrelated to this phase, flagged again in case it matters for how mobile visitors reach Find Support specifically.
 
 ---
+
+## Phase 146: bring the AI Matching flow back as a modal behind the Hero CTA
+
+**Request:** Asked me to clarified: rather than reviving the AI Matching architecture (choice screen + 4-step MatchWizard, built Phase 142/143, taken off its own page in Phase 145) as a separate page again, place it inside the "See How It Works" CTA button on the new Find Support page — clicking it should open the flow, not just scroll to the "How GESA Works" section.
+
+**Design choice, asked Roy directly:** whether the flow should open as a modal on this page, a dedicated sub-route, or an inline expanding section. Roy chose the modal.
+
+**What changed:**
+- New `components/find-support/FindSupportModal.tsx` — a modal wrapper (backdrop, Escape-to-close, click-outside-to-close, body-scroll lock while open, `max-h-[80vh]` scrollable content) around the existing, unchanged `FindSupportFlow` (the choice-screen/wizard toggle from Phase 142). Its own close "X" is a separate affordance from `ChoiceScreen`'s internal "X" (which still means "skip the AI/Manual question, go straight to Our Professionals" — untouched from Phase 142).
+- New `components/find-support/HeroFindSupportCta.tsx` — same recognized-default-href pattern as `VolunteerPrimaryCta` (`components/volunteer/VolunteerPrimaryCta.tsx`): only when the Hero's primary CTA href is still the exact default value it's held since Phase 145 (`#how-it-works`) does clicking it open the modal instead of behaving as a link; any other href an admin sets in Content Manager for this field keeps working as a plain link/anchor, so this doesn't quietly remove that field's flexibility.
+- `components/Hero.tsx` — added an optional `clinicLocations` prop (default `[]`, needed by `MatchWizard`'s Format & Location step), and the primary CTA now renders through `HeroFindSupportCta` instead of a plain `<Link>`. Label/href themselves (`ctaPrimaryLabel`/`ctaPrimaryHref`) are unchanged from Phase 145 — still "See How It Works" / `#how-it-works` — only the button's behavior changed.
+- `app/find-your-therapist/page.tsx` — now also fetches `getActiveClinicLocations()` (same call the old standalone Find Support page used to make) and passes it through to `<Hero>`.
+
+**What was deliberately left untouched:** `FindSupportFlow`, `ChoiceScreen`, and `MatchWizard` themselves — all exactly as they were at the end of Phase 143, just mounted inside a modal now instead of directly as a page's content. No backend/API-route changes; the wizard's own `support_requests` CRM-logging behavior (Phase 142) is unaffected either way.
+
+**QA:** `npx tsc --noEmit` — unchanged from the established 16-line baseline. Grepped every new/changed file for the unescaped-apostrophe JSX pattern — every match is inside a comment. Not verified in a live browser (same standing sandbox limitation as every phase since 132) — most important to check after deploying: (1) "See How It Works" opens the modal instead of scrolling; (2) Escape/backdrop-click/the modal's own "X" all close it cleanly; (3) the AI Support path inside the modal still reaches real match results end-to-end; (4) the modal scrolls internally instead of overflowing the viewport on a long step (e.g. Matches with several cards).
+
+**Files changed:** `components/find-support/FindSupportModal.tsx` (new), `components/find-support/HeroFindSupportCta.tsx` (new), `components/Hero.tsx`, `app/find-your-therapist/page.tsx`. No database changes.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 146: reopen AI Matching flow as a modal behind the hero CTA"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

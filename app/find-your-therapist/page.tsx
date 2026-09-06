@@ -7,6 +7,7 @@ import Reveal from "@/components/motion/Reveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
+import { getActiveClinicLocations } from "@/lib/queries";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
@@ -23,6 +24,13 @@ import EditableText from "@/components/ui-builder/public/EditableText";
 // wiring or the pageKey editable fields are registered under (see
 // lib/ui-builder/pageRegistry.ts's "about" entry, whose `route` now points
 // here).
+//
+// Phase 146 — the full AI Matching flow (choice screen + MatchWizard) is
+// back, now living behind the Hero's own primary CTA as a modal (see
+// HeroFindSupportCta/FindSupportModal) rather than as this page's whole
+// content the way it was pre-Phase-145. `clinicLocations` is fetched here
+// for that reason — MatchWizard needs it, and this is a Server Component
+// so the fetch happens here rather than client-side.
 export const metadata = {
   title: "Find Support — GESA",
   description: "Get matched with a verified volunteer therapist — free, confidential, and no account required.",
@@ -68,9 +76,14 @@ export default async function FindYourTherapistPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const [heroContentRaw, sectionsRaw] = await Promise.all([
+  const [heroContentRaw, sectionsRaw, clinicLocations] = await Promise.all([
     getPageContent("page_about_hero", HERO_CONTENT_FALLBACK),
     getPageContent("page_about_sections", ABOUT_SECTIONS_FALLBACK),
+    // Phase 146 — fetched here (same as the old standalone Find Support
+    // page used to) so it can be handed down to Hero -> HeroFindSupportCta
+    // -> the AI Matching modal's MatchWizard, which needs the active
+    // clinic list for its Format & Location step.
+    getActiveClinicLocations(),
   ]);
 
   const { resolved, isEditorPreview } = await resolveEditorPreview(
@@ -83,7 +96,7 @@ export default async function FindYourTherapistPage({
 
   const page = (
     <div className="reveal-page__main">
-      <Hero content={heroContent} />
+      <Hero content={heroContent} clinicLocations={clinicLocations} />
 
       {/* Phase 104 — Roy sent a screenshot of the "OUR STORY" mission
           section (eyebrow/heading/body, on the sage-soft wash) and asked to

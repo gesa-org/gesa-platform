@@ -9,6 +9,8 @@ import ParallaxLayer from '@/components/motion/ParallaxLayer';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
 import EditableText from '@/components/ui-builder/public/EditableText';
+import HeroFindSupportCta from '@/components/find-support/HeroFindSupportCta';
+import type { Tables } from '@/lib/database.types';
 
 export const HERO_CONTENT_FALLBACK: HeroContent = {
   published: true,
@@ -21,13 +23,18 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   // itself (Roy folded the old About page's content into the Find Support
   // page), so a "Find Support" button linking to "/find-your-therapist"
   // would point the page at itself — confusing, not a real action. Changed
-  // to an in-page anchor that scrolls down to the "How GESA Works" section
-  // instead (`id="how-it-works"`, added on that section in
-  // app/find-your-therapist/page.tsx); `scroll-behavior: smooth` is already
-  // set globally (app/globals.css), so this animates with no extra JS.
-  // Relabeled to match the new behavior — "Find Support" no longer made
-  // sense for a button that scrolls rather than navigates, on a page
-  // already titled "Find Support."
+  // to an in-page anchor, `#how-it-works` (the "How GESA Works" section's
+  // id, in app/find-your-therapist/page.tsx). Relabeled to "See How It
+  // Works" to match.
+  //
+  // Phase 146 — Roy asked to bring the full AI Matching flow back behind
+  // this exact button rather than reviving it as a separate page. The href
+  // stays "#how-it-works" (unchanged), but HeroFindSupportCta now
+  // recognizes that exact value and opens the AI/Manual choice screen +
+  // MatchWizard in a modal instead of letting the browser scroll — see
+  // components/find-support/HeroFindSupportCta.tsx. The label stays "See
+  // How It Works" (Roy's request was to place the flow *inside* this
+  // button, not to rename it back).
   ctaPrimaryLabel: "See How It Works",
   ctaPrimaryHref: "#how-it-works",
   ctaSecondaryLabel: "Explore support groups",
@@ -108,7 +115,18 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // gold (the eyebrow chip's background, and the subtitle/badges' color,
 // both previously tuned for a pale background) — no copy, links, CTAs, or
 // the painting/media panel changed.
-export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: HeroContent }) {
+export default function Hero({
+  content = HERO_CONTENT_FALLBACK,
+  clinicLocations = [],
+}: {
+  content?: HeroContent;
+  // Phase 146 — only needed so the primary CTA can hand it down to the
+  // AI Matching modal (MatchWizard needs the active clinic list for its
+  // Format & Location step). Defaults to [] rather than being required,
+  // since this component's own contract shouldn't force every caller to
+  // fetch clinic locations just to render a hero banner.
+  clinicLocations?: Tables<'clinic_locations'>[];
+}) {
   return (
     <section className="gold-banner relative border-b border-border pt-16 pb-20">
       {/* Decorative Background — kept as its own absolutely-positioned,
@@ -181,9 +199,20 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
 
             <StaggerGroup className="flex flex-wrap gap-4 mt-6">
               <StaggerItem className="inline-block">
-                <Link href={content.ctaPrimaryHref} className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]">
+                {/* Phase 146 — this button used to be a plain <Link> (Phase
+                    145 pointed it at "#how-it-works" to scroll down the
+                    page). It's now routed through HeroFindSupportCta, which
+                    opens the full AI Matching flow in a modal when the href
+                    is still that recognized default, and falls back to a
+                    normal link for any other href an admin sets — same
+                    pattern as VolunteerPrimaryCta. */}
+                <HeroFindSupportCta
+                  href={content.ctaPrimaryHref}
+                  clinicLocations={clinicLocations}
+                  className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]"
+                >
                   <EditableText contentId="about.hero.cta1Label" label="Primary CTA label" value={content.ctaPrimaryLabel} as="span" /> <ArrowRight size={18} />
-                </Link>
+                </HeroFindSupportCta>
               </StaggerItem>
               <StaggerItem className="inline-block">
                 <Link href={content.ctaSecondaryHref} className="inline-flex items-center justify-center gap-2 bg-card text-primary border-[1.5px] border-border hover:border-primary px-7 py-4 rounded-full text-[15px] font-semibold transition-all hover:-translate-y-[1px]">
