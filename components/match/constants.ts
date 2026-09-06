@@ -41,3 +41,17 @@ export const FORMAT_OPTIONS: { value: "online" | "call" | "in_person"; label: st
   { value: "call", label: "Call", description: "Phone / WhatsApp call" },
   { value: "in_person", label: "In-Person", description: "Meet at a clinic location" },
 ];
+
+// Phase 142 — a plain-language list, not tied to any therapist's actual
+// `languages` array (which is freer-form and partly non-English). Matching
+// still fuzzy-matches this against the roster's real language data.
+export const LANGUAGE_OPTIONS = [
+  "English",
+  "Hebrew",
+  "Arabic",
+  "Russian",
+  "French",
+  "Spanish",
+  "Amharic",
+  "Other / no preference",
+];

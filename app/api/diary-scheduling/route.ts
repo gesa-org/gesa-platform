@@ -32,6 +32,11 @@ export async function POST(request: Request) {
   // "diary_opened" so the intake record's own status reflects how far the
   // booking flow actually got, not just that a form was filled in.
   const intakeSubmissionId = (body?.intakeSubmissionId as string | undefined) || null;
+  // Phase 142 — set only when this handoff comes from the AI Support
+  // results screen (see BookSessionButton's supportRequestId prop). Links
+  // this event back to that client's support_requests row and advances its
+  // status, mirroring the intakeSubmissionId handling just above.
+  const supportRequestId = (body?.supportRequestId as string | undefined) || null;
 
   if (!therapistId || !diaryLink) {
     return NextResponse.json({ error: "therapistId and diaryLink are required" }, { status: 400 });
@@ -71,6 +76,13 @@ export async function POST(request: Request) {
       .update({ status: "diary_opened" })
       .eq("id", intakeSubmissionId)
       .eq("status", "intake_completed");
+  }
+
+  if (supportRequestId && inserted?.id) {
+    await adminSupabase
+      .from("support_requests")
+      .update({ status: "scheduled", diary_scheduling_event_id: inserted.id })
+      .eq("id", supportRequestId);
   }
 
   const { data: therapist } = await adminSupabase

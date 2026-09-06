@@ -563,7 +563,8 @@ function legalPageFields(pageKey: string): EditableFieldDef[] {
 const GLOBAL_EDITABLE_FIELDS: EditableFieldDef[] = [
   // Header
   { contentId: "global.header.homeLabel", path: "header.homeLabel", label: "Nav: \"About\" (links to /)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
-  { contentId: "global.header.aboutLabel", path: "header.aboutLabel", label: "Nav: \"Find Support\" (links to /about)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.aboutLabel", path: "header.aboutLabel", label: "Nav: \"Find Support\" (links to /find-your-therapist)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.aboutPageLabel", path: "header.aboutPageLabel", label: "Nav: \"About Us\" (links to /about)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   { contentId: "global.header.therapistsLabel", path: "header.therapistsLabel", label: "Nav: \"Our Professionals\"", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   { contentId: "global.header.supportGroupsLabel", path: "header.supportGroupsLabel", label: "Nav: \"Community\"", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   { contentId: "global.header.donateLabel", path: "header.donateLabel", label: "Donate button label", type: "ctaLabel", group: "Header navigation", maxLength: 40, contentScope: "global" },

@@ -1,7 +1,16 @@
-import { CalendarClock, ExternalLink, Mail } from "lucide-react";
+import { CalendarClock, ExternalLink, Mail, Sparkle } from "lucide-react";
 import { requireTherapist } from "@/lib/auth/requireTherapist";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables } from "@/lib/database.types";
+
+const SUPPORT_STATUS_LABEL: Record<string, string> = {
+  therapist_selected: "Client selected you",
+  booking_requested: "Booking requested",
+  scheduled: "Scheduled",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +45,14 @@ export default async function TherapistDashboardPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: sessionBookings }, { data: diaryEvents }] = await Promise.all([
+  // Phase 142 — support_requests has no RLS policies at all (service-role
+  // only — see the create_support_requests migration), so this one read
+  // uses the admin client instead of the cookie-based `supabase` above.
+  // Still scoped defense-in-depth to this therapist's own id, same as every
+  // other query on this page, even though there's no RLS to double up on
+  // here specifically.
+  const adminSupabase = createAdminClient();
+  const [{ data: sessionBookings }, { data: diaryEvents }, { data: supportRequests }] = await Promise.all([
     supabase
       .from("session_bookings")
       .select("id, client_name, session_date, session_time, contact_channel, status, created_at")
@@ -48,6 +64,11 @@ export default async function TherapistDashboardPage() {
       .select("id, client_name, client_email, created_at, status")
       .eq("therapist_id", self.therapist.id)
       .order("created_at", { ascending: false }),
+    adminSupabase
+      .from("support_requests")
+      .select("id, full_name, email, treatment_type, session_format, status, created_at")
+      .eq("selected_therapist_id", self.therapist.id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const bookings = (sessionBookings ?? []) as Pick<
@@ -57,6 +78,10 @@ export default async function TherapistDashboardPage() {
   const diaryHandoffs = (diaryEvents ?? []) as Pick<
     Tables<"diary_scheduling_events">,
     "id" | "client_name" | "client_email" | "created_at" | "status"
+  >[];
+  const aiSupportBookings = (supportRequests ?? []) as Pick<
+    Tables<"support_requests">,
+    "id" | "full_name" | "email" | "treatment_type" | "session_format" | "status" | "created_at"
   >[];
 
   const today = new Date().toISOString().slice(0, 10);
@@ -92,6 +117,40 @@ export default async function TherapistDashboardPage() {
                     {b.session_date} at {b.session_time.slice(0, 5)} · {CHANNEL_LABEL[b.contact_channel] ?? b.contact_channel}
                   </div>
                 </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+        <h2 className="mb-1 flex items-center gap-2 text-lg">
+          <Sparkle size={18} className="text-primary" /> AI Support Bookings
+        </h2>
+        <p className="mb-4 text-[13px] text-muted-fg">
+          Clients who found you through GESA&apos;s AI Support match and selected you as their preferred therapist.
+        </p>
+        {aiSupportBookings.length === 0 ? (
+          <p className="text-[14px] text-muted-fg">No AI Support matches yet.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {aiSupportBookings.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div>
+                  <div className="font-medium">{s.full_name || "A GESA client"}</div>
+                  {s.email && (
+                    <div className="flex items-center gap-1 text-[13px] text-muted-fg">
+                      <Mail size={12} /> {s.email}
+                    </div>
+                  )}
+                  <div className="text-[12.5px] text-muted-fg">
+                    {s.treatment_type ? `${s.treatment_type} · ` : ""}
+                    {new Date(s.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium text-muted-fg">
+                  {SUPPORT_STATUS_LABEL[s.status] ?? s.status}
+                </span>
               </li>
             ))}
           </ul>

@@ -20,6 +20,13 @@ export type MatchInput = {
   symptoms: string[];
   treatmentType: string | null;
   genderPreference: GenderPreference;
+  // Phase 142 — added for the AI Support rebuild. Both optional/soft
+  // signals (never hard filters like gender): a preferred language nudges
+  // the AI/rule-based scoring, and the client's own free-text "how are you
+  // feeling" answer gives the AI richer context than the fixed symptom
+  // checkboxes alone. Neither is ever required for a match to succeed.
+  preferredLanguage?: string | null;
+  feelingsText?: string | null;
 };
 
 export type MatchOutcome = {
@@ -86,7 +93,10 @@ export async function matchTherapists(
         "Only use ids that appear in the roster — it has already been filtered to the client's stated therapist-gender " +
         "preference when one was given and available, so you do not need to check gender yourself. Weight the preferred " +
         "treatment type heavily: strongly prefer therapists whose specialties list contains it or something clearly " +
-        "equivalent over ones that only share a loosely related keyword. Never mention that you are an AI.",
+        "equivalent over ones that only share a loosely related keyword. If a preferred_language is given, prefer " +
+        "therapists whose languages list includes it or an equivalent, but never exclude a therapist for lacking it. " +
+        "client_described_feelings (if present) is free-text context to help you judge fit — never quote or " +
+        "paraphrase it back in your reasoning, and never mention that you are an AI.",
       messages: [
         {
           role: "user",
@@ -94,6 +104,11 @@ export async function matchTherapists(
             client_described_experiences: input.symptoms,
             preferred_treatment_type: input.treatmentType,
             therapist_gender_preference: input.genderPreference,
+            preferred_language: input.preferredLanguage || null,
+            // Free-text context only — never quoted back in `reasoning`,
+            // per the system prompt's "one warm, plain-language sentence"
+            // instruction and this data's CRM-only handling elsewhere.
+            client_described_feelings: input.feelingsText || null,
             therapist_roster: roster,
           }),
         },
@@ -133,6 +148,8 @@ function ruleBasedMatch(input: MatchInput, candidates: CandidateTherapist[]): Th
   const needle = [...input.symptoms, input.treatmentType ?? ""].join(" ").toLowerCase();
   const words = needle.split(/[^a-z]+/).filter((w) => w.length > 3);
 
+  const language = (input.preferredLanguage ?? "").trim().toLowerCase();
+
   const scored = candidates.map((t) => {
     const specialtiesLower = t.specialties.map((s) => s.toLowerCase());
     const haystack = [...specialtiesLower, t.short_summary ?? "", t.bio ?? ""].join(" ").toLowerCase();
@@ -142,6 +159,9 @@ function ruleBasedMatch(input: MatchInput, candidates: CandidateTherapist[]): Th
     // gets weighted well above the generic word-count score above.
     if (treatment && specialtiesLower.includes(treatment)) score += 6;
     else if (treatment && haystack.includes(treatment)) score += 2;
+    // Language is a soft nudge only — never excludes a candidate, unlike
+    // gender which is already hard-filtered upstream.
+    if (language && t.languages.some((l) => l.toLowerCase().includes(language))) score += 3;
     return { therapist: t, score };
   });
 

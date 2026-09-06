@@ -30,10 +30,17 @@ import EditableText from '@/components/ui-builder/public/EditableText';
 // longer VolunteerPrimaryCta's recognized "open the modal" default, so it
 // now renders as a plain link to /donate — this field is genuinely a
 // donation field again.
+// "Find Support" flow rework — the "Find Support" nav item (`aboutLabel`)
+// used to link to `/about`; it now links to `/find-your-therapist`, the
+// real AI/Manual Support entry point (see lib/navigation.ts). A new
+// `aboutPageLabel` item was added right after it so `/about` — a real,
+// existing page — stays reachable from primary nav; see lib/content.ts's
+// HeaderContent comment for the full reasoning.
 export const HEADER_CONTENT_FALLBACK: HeaderContent = {
   published: true,
   homeLabel: "About",
   aboutLabel: "Find Support",
+  aboutPageLabel: "About Us",
   therapistsLabel: "Our Professionals",
   supportGroupsLabel: "Community",
   donateLabel: "DONATE",
@@ -41,10 +48,10 @@ export const HEADER_CONTENT_FALLBACK: HeaderContent = {
 };
 
 // Phase 35 (round 2) — nav labels and the Donate CTA are Content
-// Manager-editable via site_content key "site_header". The four main nav
-// items' destinations (/, /about, /therapists, /support-groups) stay fixed
-// — only their visible label text and the Donate button's label+link are
-// editable, matching Roy's "keep the current build structure" instruction.
+// Manager-editable via site_content key "site_header". Nav items'
+// destinations stay fixed in code — only their visible label text and the
+// Donate button's label+link are editable, matching Roy's "keep the
+// current build structure" instruction.
 // Header stays a plain component (not async) for the same reason Footer
 // does: content is fetched once in app/layout.tsx and passed down.
 export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?: HeaderContent }) {

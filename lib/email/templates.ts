@@ -17,6 +17,37 @@ function shell(bodyHtml: string) {
   </div>`;
 }
 
+// Phase 142 — sent to a therapist when an AI Support client selects them
+// from their match results (before any scheduling happens — see
+// /api/support-request/select-therapist). Deliberately minimal: name,
+// treatment-type/format context, and a reminder that the client's own
+// open-text "how are you feeling" answer is CRM-only, never included here.
+export function supportRequestTherapistNotificationEmail(
+  therapistName: string,
+  clientName: string,
+  treatmentType: string | null,
+  sessionFormatLabel: string | null
+) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">A new client selected you, ${therapistName}</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>${clientName}</strong> found you through GESA's
+      AI Support match and selected you as their preferred therapist.</p>
+    ${treatmentType ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Preferred treatment type:</strong> ${treatmentType}</p>` : ""}
+    ${sessionFormatLabel ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Preferred format:</strong> ${sessionFormatLabel}</p>` : ""}
+    <p style="color:#33352d;line-height:1.6;margin-top:10px;">
+      They'll be scheduling with you directly next — you'll get a separate notification once they do.
+    </p>
+  `);
+}
+
+export function supportRequestTeamNotificationEmail(clientName: string, clientEmail: string, therapistName: string) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">AI Support: therapist selected</h1>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>${clientName}</strong> (${clientEmail}) selected
+      <strong>${therapistName}</strong> from their AI Support matches.</p>
+  `);
+}
+
 export function welcomeEmail(fullName: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Welcome to GESA, ${fullName || "friend"}</h1>

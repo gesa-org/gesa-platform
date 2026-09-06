@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, BadgeCheck, Sparkle, Info } from "lucide-react";
 import Button from "@/components/ui/Button";
+import BookSessionButton from "@/components/therapists/BookSessionButton";
 import { GENDER_OPTIONS, TREATMENT_TYPES } from "@/components/match/constants";
 import type { WizardAnswers, TherapistMatch } from "@/components/match/types";
 
@@ -13,64 +13,42 @@ import type { WizardAnswers, TherapistMatch } from "@/components/match/types";
 const GENDER_LABELS = Object.fromEntries(GENDER_OPTIONS.map((g) => [g.value, g.label]));
 const TREATMENT_LABELS = Object.fromEntries(TREATMENT_TYPES.map((t) => [t.value, t.label]));
 
+// Phase 142 — this step used to fetch /api/match itself and manage its own
+// booking modal. Matching now happens once, at the "AI Support Match" submit
+// in MatchWizard (so the result can be tied to that same support_requests
+// row), and booking now reuses the same <BookSessionButton> the Our
+// Professionals directory uses (diary-link vs native, full self-report
+// scheduling flow) instead of a separate, narrower booking form — so this
+// component is now purely presentational: props in, therapist-selection
+// callback out.
 export default function StepMatches({
   answers,
+  matches,
+  matchError,
+  genderPreferenceHonored,
+  supportRequestId,
   onBack,
-  onSelectTherapist,
+  onTherapistSelected,
 }: {
   answers: WizardAnswers;
+  matches: TherapistMatch[] | null;
+  matchError: boolean;
+  genderPreferenceHonored: boolean;
+  supportRequestId: string | null;
   onBack: () => void;
-  onSelectTherapist: (match: TherapistMatch) => void;
+  onTherapistSelected: (match: TherapistMatch) => void;
 }) {
-  const [matches, setMatches] = useState<TherapistMatch[] | null>(null);
-  const [error, setError] = useState(false);
-  const [genderPreferenceHonored, setGenderPreferenceHonored] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setMatches(null);
-    setError(false);
-
-    fetch("/api/match", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        symptoms: answers.symptoms,
-        treatmentType: answers.treatmentType || null,
-        genderPreference: answers.genderPreference,
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("match request failed");
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setMatches(data.matches ?? []);
-          setGenderPreferenceHonored(data.genderPreferenceHonored ?? true);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <div>
       <h2 className="mb-1.5 flex items-center gap-2 text-[22px]">
         <Sparkle size={19} className="text-primary" /> Your matches
       </h2>
       <p className="mb-3 text-muted-fg">Based on what you shared, here are the therapists we think could be a good fit.</p>
+      <p className="mb-4 text-[12.5px] text-muted-fg">
+        These suggestions come from an automated match, not a clinical assessment — you choose who, if anyone, to
+        reach out to.
+      </p>
 
-      {/* Phase 59 — a plain summary of what was actually asked for, so the
-          client can tell at a glance whether the results below reflect
-          their stated gender preference and treatment type, rather than
-          having to guess from the cards alone. */}
       {(answers.genderPreference !== "no_preference" || answers.treatmentType) && (
         <div className="mb-4 flex flex-wrap gap-2">
           {answers.genderPreference !== "no_preference" && (
@@ -83,10 +61,15 @@ export default function StepMatches({
               Treatment: {TREATMENT_LABELS[answers.treatmentType] ?? answers.treatmentType}
             </span>
           )}
+          {answers.preferredLanguage && (
+            <span className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-[12.5px] font-medium text-foreground">
+              Language: {answers.preferredLanguage}
+            </span>
+          )}
         </div>
       )}
 
-      {!error &&
+      {!matchError &&
         matches !== null &&
         matches.length > 0 &&
         answers.genderPreference !== "no_preference" &&
@@ -105,7 +88,7 @@ export default function StepMatches({
           </div>
         )}
 
-      {error && (
+      {matchError && (
         <div className="rounded-xl border border-border bg-secondary/50 p-5 text-[14px] text-muted-fg">
           Something went wrong finding your matches. Please try again, or{" "}
           <a href="/contact" className="font-semibold text-primary">
@@ -115,7 +98,7 @@ export default function StepMatches({
         </div>
       )}
 
-      {!error && matches === null && (
+      {!matchError && matches === null && (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-[104px] animate-pulse rounded-[var(--radius)] border border-border bg-secondary/50" />
@@ -123,7 +106,7 @@ export default function StepMatches({
         </div>
       )}
 
-      {!error && matches !== null && matches.length === 0 && (
+      {!matchError && matches !== null && matches.length === 0 && (
         <div className="rounded-xl border border-border bg-secondary/50 p-5 text-[14px] text-muted-fg">
           We couldn&apos;t find a match right now. Please{" "}
           <a href="/contact" className="font-semibold text-primary">
@@ -133,7 +116,7 @@ export default function StepMatches({
         </div>
       )}
 
-      {!error && matches !== null && matches.length > 0 && (
+      {!matchError && matches !== null && matches.length > 0 && (
         <div className="space-y-3">
           {matches.map((match) => {
             const t = match.therapist;
@@ -145,7 +128,7 @@ export default function StepMatches({
             return (
               <div
                 key={t.id}
-                className="flex flex-col gap-4 rounded-[var(--radius)] border border-border bg-card p-5 sm:flex-row sm:items-center"
+                className="flex flex-col gap-4 rounded-[var(--radius)] border border-border bg-card p-5 sm:flex-row sm:items-start"
               >
                 <div className="relative h-16 w-16 flex-none overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent">
                   {t.photo_url ? (
@@ -161,19 +144,20 @@ export default function StepMatches({
                     <h3 className="text-[16px] font-semibold">{t.full_name}</h3>
                     {t.is_verified && <BadgeCheck size={15} className="text-primary" />}
                   </div>
-                  {/* Phase 59 — gender + top specialties shown plainly, so a
-                      client can verify for themselves that a card actually
-                      matches what they asked for instead of taking it on
-                      faith. */}
                   <p className="mt-0.5 text-[12.5px] text-muted-fg">
                     {t.gender && t.gender !== "no_preference" ? GENDER_LABELS[t.gender] ?? t.gender : "Gender not specified"}
                     {t.specialties.length > 0 && ` · ${t.specialties.slice(0, 2).join(", ")}`}
                   </p>
                   <p className="mt-0.5 text-[13.5px] italic text-muted-fg">&ldquo;{match.reasoning}&rdquo;</p>
+                  <div className="mt-3 max-w-[220px]">
+                    <BookSessionButton
+                      therapist={t}
+                      pathKey="ai-support"
+                      supportRequestId={supportRequestId}
+                      onFirstInteract={() => onTherapistSelected(match)}
+                    />
+                  </div>
                 </div>
-                <Button onClick={() => onSelectTherapist(match)} className="flex-none">
-                  Book a Session
-                </Button>
               </div>
             );
           })}

@@ -254,6 +254,56 @@ export type MatchRequestRow = {
   treatment_type: string | null;
 }
 
+// Phase 142 — unified CRM record for the "Find Support" flow (both the AI
+// Support and Manual Support pathways), replacing match_requests as the AI
+// wizard's write target. See EXECUTION_PLAN.md Phase 142 for the full flow.
+export type SupportPathway = "ai" | "manual";
+export type SupportRequestStatus =
+  | "started"
+  | "preferences_submitted"
+  | "matched"
+  | "no_match"
+  | "therapist_selected"
+  | "booking_requested"
+  | "scheduled"
+  | "completed"
+  | "cancelled"
+  | "redirected_manual";
+
+export type SupportRequestRow = {
+  id: string;
+  pathway: SupportPathway;
+  status: SupportRequestStatus;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  age_confirmed: boolean;
+  consent_at: string | null;
+  gender_preference: GenderPreference;
+  support_categories: string[];
+  treatment_type: string | null;
+  preferred_language: string | null;
+  session_format: SessionFormat | null;
+  clinic_location_id: string | null;
+  availability_notes: string | null;
+  accessibility_needs: string | null;
+  // Open-text "how are you feeling" field — sensitive, kept out of
+  // unsecured emails/notifications (see support-match/select-therapist
+  // routes' comments).
+  feelings_text: string | null;
+  crisis_disclaimer_shown_at: string | null;
+  matched_therapist_ids: string[];
+  ai_reasoning: Json | null;
+  gender_preference_honored: boolean;
+  selected_therapist_id: string | null;
+  preferred_date: string | null;
+  preferred_time: string | null;
+  diary_scheduling_event_id: string | null;
+  source_page: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type TranslationCacheRow = {
   created_at: string;
   id: string;
@@ -503,6 +553,34 @@ export type Database = {
             columns: ["selected_therapist_id"];
             isOneToOne: false;
             referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      support_requests: {
+        Row: SupportRequestRow;
+        Insert: Partial<SupportRequestRow> & Pick<SupportRequestRow, "pathway">;
+        Update: Partial<SupportRequestRow>;
+        Relationships: [
+          {
+            foreignKeyName: "support_requests_clinic_location_id_fkey";
+            columns: ["clinic_location_id"];
+            isOneToOne: false;
+            referencedRelation: "clinic_locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_requests_selected_therapist_id_fkey";
+            columns: ["selected_therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "support_requests_diary_scheduling_event_id_fkey";
+            columns: ["diary_scheduling_event_id"];
+            isOneToOne: false;
+            referencedRelation: "diary_scheduling_events";
             referencedColumns: ["id"];
           },
         ];

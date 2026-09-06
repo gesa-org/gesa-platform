@@ -45,9 +45,20 @@ export type PrimaryNavItem = {
   showOnMobile: boolean;
 };
 
+// "Find Support" flow rework — `findSupport` used to link to `/about`
+// (see the confusing Phase 88 relabeling explained in Header.tsx/
+// content.ts). Roy asked specifically for every "Find Support" link
+// site-wide to point at the real Find Support page instead — the one
+// people seeking a therapist should land on first — so this now links to
+// `/find-your-therapist`, which itself opens the AI Support/Manual Support
+// choice screen rather than going straight to a therapist list. `aboutPage`
+// is a new item added right after it so `/about` — a real, existing page
+// this change didn't touch — stays reachable from primary nav; it would
+// otherwise have had no nav entry left pointing to it at all.
 export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
   { key: "about", href: "/", contentField: "homeLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
-  { key: "findSupport", href: "/about", contentField: "aboutLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
+  { key: "findSupport", href: "/find-your-therapist", contentField: "aboutLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
+  { key: "aboutPage", href: "/about", contentField: "aboutPageLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "professionals", href: "/therapists", contentField: "therapistsLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "community", href: "/support-groups", contentField: "supportGroupsLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   {

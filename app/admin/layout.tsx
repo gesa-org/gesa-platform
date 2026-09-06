@@ -4,7 +4,13 @@ import AdminNav from "@/components/admin/AdminNav";
 const NAV = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/sessions", label: "Session bookings" },
-  { href: "/admin/match-requests", label: "Find Your Therapist" },
+  // Phase 142 — the "Find Support" flow rebuild replaced match_requests
+  // with the unified support_requests table (see EXECUTION_PLAN.md Phase
+  // 142). New requests land in "Find Support requests" below; this old
+  // page is left in place, unrelabeled, purely so admins can still see
+  // whatever rows existed in match_requests before this phase shipped.
+  { href: "/admin/support-requests", label: "Find Support requests" },
+  { href: "/admin/match-requests", label: "Find Your Therapist (legacy)" },
   { href: "/admin/bookings", label: "Booking requests" },
   { href: "/admin/volunteer-applications", label: "Volunteer Applications" },
   { href: "/admin/donations", label: "Donations" },

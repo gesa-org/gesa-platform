@@ -79,18 +79,21 @@ const COMPOSITE_SIMPLE_KEYS = new Set(["page_therapists", "page_support_groups",
 // Phase 105 — Roy pointed out these tabs didn't match what a visitor
 // actually sees in the live header nav, which is confusing since he's
 // picking a tab by the page's real-world name, not its internal route/key.
-// Phase 88 relabeled the header nav so "/" reads "About" and "/about" reads
+// Phase 88 relabeled the header nav so "/" reads "About" and "/about" read
 // "Find Support" (a deliberate swap, not a typo — see Header.tsx's own
-// comment) — so the tab for the homepage (page_home) is now named "About"
-// here, and the tab for the About page (page_about_hero/page_about_sections)
-// is named "Find Support", matching the nav exactly even though it means
-// the tab names don't match this file's own internal identifiers. Same idea
-// for "Our Therapists" → "Our Professionals" and "Support Groups" →
-// "Community" (Header.tsx's therapistsLabel/supportGroupsLabel).
+// comment) — so the tab for the homepage (page_home) is named "About" here.
+// "Find Support" flow rework — the nav's "Find Support" link now points at
+// the real Find Support/AI-Support entry point (/find-your-therapist), not
+// the About page, so this tab (page_about_hero/page_about_sections — the
+// actual About page's content) is renamed "About Us" to match the nav's new
+// "About Us" item instead, so an admin picking a tab by its real-world name
+// still lands on the right one. Same idea for "Our Therapists" → "Our
+// Professionals" and "Support Groups" → "Community" (Header.tsx's
+// therapistsLabel/supportGroupsLabel).
 const FIXED_TABS = [
   "Header",
   "About", // page_home — the header nav labels "/" as "About" (Phase 88)
-  "Find Support", // page_about_hero / page_about_sections — the actual About page, labeled "Find Support" in nav
+  "About Us", // page_about_hero / page_about_sections — the actual About page, labeled "About Us" in nav
   "Our Professionals", // page_therapists
   "Community", // page_support_groups
 ] as const;
@@ -148,7 +151,7 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Find Support" && (
+      {tab === "About Us" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Hero</h3>

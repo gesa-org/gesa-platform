@@ -2,21 +2,33 @@
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { TREATMENT_TYPES, GENDER_OPTIONS } from "@/components/match/constants";
+import { TREATMENT_TYPES, GENDER_OPTIONS, LANGUAGE_OPTIONS } from "@/components/match/constants";
 import type { GenderPreference } from "@/lib/database.types";
 
 export default function StepPreferences({
   treatmentType,
   genderPreference,
+  preferredLanguage,
+  availabilityNotes,
+  accessibilityNeeds,
   onTreatmentTypeChange,
   onGenderPreferenceChange,
+  onPreferredLanguageChange,
+  onAvailabilityNotesChange,
+  onAccessibilityNeedsChange,
   onBack,
   onNext,
 }: {
   treatmentType: string;
   genderPreference: GenderPreference;
+  preferredLanguage: string;
+  availabilityNotes: string;
+  accessibilityNeeds: string;
   onTreatmentTypeChange: (value: string) => void;
   onGenderPreferenceChange: (value: GenderPreference) => void;
+  onPreferredLanguageChange: (value: string) => void;
+  onAvailabilityNotesChange: (value: string) => void;
+  onAccessibilityNeedsChange: (value: string) => void;
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -55,6 +67,36 @@ export default function StepPreferences({
           </button>
         ))}
       </div>
+
+      <label className="mb-1.5 block text-sm font-semibold">Preferred language</label>
+      <select
+        value={preferredLanguage}
+        onChange={(e) => onPreferredLanguageChange(e.target.value)}
+        className="mb-6 w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+      >
+        <option value="">No preference</option>
+        {LANGUAGE_OPTIONS.map((lang) => (
+          <option key={lang} value={lang}>
+            {lang}
+          </option>
+        ))}
+      </select>
+
+      <label className="mb-1.5 block text-sm font-semibold">Availability (optional)</label>
+      <input
+        value={availabilityNotes}
+        onChange={(e) => onAvailabilityNotesChange(e.target.value)}
+        placeholder="e.g. weekday evenings, weekend mornings"
+        className="mb-6 w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+      />
+
+      <label className="mb-1.5 block text-sm font-semibold">Accessibility needs (optional)</label>
+      <input
+        value={accessibilityNeeds}
+        onChange={(e) => onAccessibilityNeedsChange(e.target.value)}
+        placeholder="Anything that would help a session work better for you"
+        className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+      />
 
       <div className="mt-7 flex items-center justify-between">
         <Button variant="outline" onClick={onBack}>

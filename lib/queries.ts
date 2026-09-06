@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables, PublicTherapistRow } from "@/lib/database.types";
 
 // Server-side read helpers. All of these run under the anon key + RLS —
@@ -288,6 +289,32 @@ export async function getAllMatchRequests(): Promise<MatchRequestWithTherapist[]
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as MatchRequestWithTherapist[];
+}
+
+export type SupportRequestWithTherapist = Tables<"support_requests"> & {
+  selected_therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email" | "contact_phone"> | null;
+  clinic_location: Pick<Tables<"clinic_locations">, "id" | "name" | "address"> | null;
+};
+
+// Phase 142 — unlike every other read helper in this file, support_requests
+// has zero RLS policies at all (by design — see the create_support_requests
+// migration's comment: this table collects more sensitive data, including
+// an open-text feelings field, than match_requests ever did). The signed-in
+// admin's own cookie-based client would be denied by RLS just like anon
+// would, so this one deliberately uses the service-role admin client. Safe
+// here specifically because this function is only ever called from
+// app/admin/support-requests/page.tsx, which sits behind requireAdmin() in
+// app/admin/layout.tsx — never from a public-facing route.
+export async function getAllSupportRequests(): Promise<SupportRequestWithTherapist[]> {
+  const adminSupabase = createAdminClient();
+  const { data, error } = await adminSupabase
+    .from("support_requests")
+    .select(
+      "*, selected_therapist:therapists(id, full_name, contact_email, contact_phone), clinic_location:clinic_locations(id, name, address)"
+    )
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as SupportRequestWithTherapist[];
 }
 
 // Admin-only monitoring view over client<->therapist chat. RLS on

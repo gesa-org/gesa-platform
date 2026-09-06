@@ -48,7 +48,30 @@ type SlotSelection = {
   appointmentType: SessionFormat;
 };
 
-export default function BookSessionButton({ therapist }: { therapist: PublicTherapistRow }) {
+export default function BookSessionButton({
+  therapist,
+  onFirstInteract,
+  pathKey = "directory",
+  supportRequestId,
+}: {
+  therapist: PublicTherapistRow;
+  // Phase 142 — fired once, the moment a client first opens either booking
+  // path (diary-link or native) for this therapist, before any modal opens.
+  // Used by the AI Support results screen to record "therapist selected" on
+  // the client's support_requests row — this component otherwise has no
+  // single "selection" moment distinct from starting to book.
+  onFirstInteract?: () => void;
+  // Tag stored on session_bookings.path for admin analytics — "directory"
+  // for the Our Professionals page (this component's original use), "ai-
+  // support" when rendered from the Find Support AI Support results screen.
+  pathKey?: string;
+  // Phase 142 — when set (AI Support only), passed through to
+  // /api/diary-scheduling so that route can link the resulting
+  // diary_scheduling_events row back to this client's support_requests row
+  // and advance its status to "scheduled". Left undefined for the Our
+  // Professionals directory's normal use of this component.
+  supportRequestId?: string | null;
+}) {
   const [open, setOpen] = useState(false); // native flow modal
   const [stage, setStage] = useState<Stage>("idle");
   // The intake record's id — kept around separately from `eventId` because
@@ -108,6 +131,7 @@ export default function BookSessionButton({ therapist }: { therapist: PublicTher
           therapistName: therapist.full_name,
           timeZone,
           intakeSubmissionId: forIntakeId,
+          supportRequestId: supportRequestId || undefined,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -194,7 +218,10 @@ export default function BookSessionButton({ therapist }: { therapist: PublicTher
     return (
       <>
         <button
-          onClick={() => setStage("intake")}
+          onClick={() => {
+            onFirstInteract?.();
+            setStage("intake");
+          }}
           className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-600"
         >
           <CalendarClock size={14} /> Choose a date and time <ExternalLink size={12} />
@@ -285,7 +312,10 @@ export default function BookSessionButton({ therapist }: { therapist: PublicTher
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          onFirstInteract?.();
+          setOpen(true);
+        }}
         className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-600"
       >
         <CalendarClock size={14} /> Book a Session
@@ -293,7 +323,7 @@ export default function BookSessionButton({ therapist }: { therapist: PublicTher
       {open && (
         <IntakeBookingModal
           therapist={therapist}
-          pathKey="directory"
+          pathKey={pathKey}
           onClose={() => setOpen(false)}
           onPickDifferentTherapist={() => setOpen(false)}
         />

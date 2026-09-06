@@ -223,12 +223,24 @@ export type FooterContent = {
 // New this round — the global header nav (components/Header.tsx) was fully
 // hardcoded. Same rule as the footer: link labels are editable, the Donate
 // button's href is editable too since it's a marketing CTA rather than
-// primary site navigation, but the four main nav items' destinations stay
-// fixed.
+// primary site navigation, but the main nav items' destinations stay fixed.
+//
+// "Find Support" flow rework — `aboutLabel`'s nav item ("Find Support")
+// used to link to `/about` (a Phase 88 relabeling: the item linking to `/`
+// reads "About," the one linking to `/about` reads "Find Support" — a
+// confusing swap kept as-is here since fixing it wasn't part of this
+// change). That item now correctly links to `/find-your-therapist` (the
+// real AI/Manual Support entry point), per Roy's explicit request that
+// "Find Support" stop pointing at the About page. That left `/about`
+// itself with no nav entry at all, which would have made a real, existing
+// page unreachable from primary navigation — `aboutPageLabel` is a new nav
+// item added specifically to keep `/about` reachable, not part of the
+// original "four main nav items."
 export type HeaderContent = {
   published: boolean;
   homeLabel: string;
   aboutLabel: string;
+  aboutPageLabel: string;
   therapistsLabel: string;
   supportGroupsLabel: string;
   donateLabel: string;

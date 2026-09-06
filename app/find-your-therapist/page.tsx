@@ -1,6 +1,6 @@
 import { Sparkle } from "lucide-react";
 import PageHero from "@/components/ui/PageHero";
-import MatchWizard from "@/components/match/MatchWizard";
+import FindSupportFlow from "@/components/find-support/FindSupportFlow";
 import { getActiveClinicLocations } from "@/lib/queries";
 import { getPageContent, FIND_YOUR_THERAPIST_CONTENT_FALLBACK } from "@/lib/content";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
@@ -44,7 +44,7 @@ export default async function FindYourTherapistPage({
         description={<EditableText contentId="find-your-therapist.hero.description" label="Hero description" value={content.description} as="span" />}
       />
       <section className="section wrap pt-0">
-        <MatchWizard clinicLocations={clinicLocations} />
+        <FindSupportFlow clinicLocations={clinicLocations} />
       </section>
     </>
   );

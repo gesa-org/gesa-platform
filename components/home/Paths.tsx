@@ -293,7 +293,8 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           Phase 121 — Roy sent a screenshot of this exact section (referring
           to it as "the About page" — this is the page the header's "About"
           nav item actually links to, `/`, a Phase 88 relabeling; the
-          literal `/about` URL is labeled "Find Support" in the nav and is a
+          literal `/about` URL is labeled "About Us" in the nav — "Find
+          Support" now links to `/find-your-therapist` instead — and is a
           different component, `components/Hero.tsx`) and asked for the
           gallery-wall artwork removed entirely and the remaining text
           centered, with no replacement image content. The old
