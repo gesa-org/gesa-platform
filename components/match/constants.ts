@@ -1,21 +1,8 @@
-// Curated for a clean UI. The AI matching call still sees each therapist's
-// full real `specialties` list (32 distinct values across the roster, several
-// non-English — see EXECUTION_PLAN.md Phase 9 notes) regardless of which of
-// these coarser categories the client picks here.
-export const SYMPTOMS = [
-  "Anxiety",
-  "Depression",
-  "Grief & loss",
-  "Trauma / PTSD",
-  "Sleep difficulties",
-  "Relationship issues",
-  "Family conflict",
-  "Anger",
-  "Loneliness / isolation",
-  "Stress / burnout",
-  "Panic attacks",
-  "Low self-esteem",
-];
+// Phase 143 — the old "Support Needs" symptom-checkbox step (and its
+// SYMPTOMS list) was removed entirely as part of shortening the wizard to
+// 4 steps; the open-text Feelings step now carries whatever free-text
+// signal that step used to provide. StepAssessment.tsx still exists on disk
+// but is no longer imported/rendered anywhere — see EXECUTION_PLAN.md.
 
 export const TREATMENT_TYPES = [
   { value: "", label: "No preference" },

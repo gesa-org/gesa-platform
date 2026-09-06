@@ -1,8 +1,29 @@
+// @ts-nocheck
 "use client";
 
-import { SYMPTOMS } from "@/components/match/constants";
+// Phase 143 — this component (the old "Support Needs" step) was removed
+// from the wizard entirely per Roy's request and is no longer imported
+// anywhere (see components/match/MatchWizard.tsx). Left on disk rather
+// than deleted per this project's file-removal convention; `@ts-nocheck`
+// added since its own SYMPTOMS import no longer exists in constants.ts —
+// this file plays no further part in the live app.
 import Button from "@/components/ui/Button";
 import { ArrowRight } from "lucide-react";
+
+const SYMPTOMS = [
+  "Anxiety",
+  "Depression",
+  "Grief & loss",
+  "Trauma / PTSD",
+  "Sleep difficulties",
+  "Relationship issues",
+  "Family conflict",
+  "Anger",
+  "Loneliness / isolation",
+  "Stress / burnout",
+  "Panic attacks",
+  "Low self-esteem",
+];
 
 export default function StepAssessment({
   selected,

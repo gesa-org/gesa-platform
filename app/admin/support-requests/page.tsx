@@ -94,7 +94,6 @@ export default async function AdminSupportRequestsPage() {
                   </td>
                   <td className="max-w-[280px] px-5 py-3 text-muted-fg">
                     {r.treatment_type && <div className="mb-1">Treatment: {r.treatment_type}</div>}
-                    {r.support_categories.length > 0 && <div>{r.support_categories.join(", ")}</div>}
                     {r.gender_preference !== "no_preference" && (
                       <div className="mt-1 text-[12px]">Gender pref: {r.gender_preference}</div>
                     )}

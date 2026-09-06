@@ -1,24 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import StepAssessment from "@/components/match/StepAssessment";
 import StepPreferences from "@/components/match/StepPreferences";
 import StepFormatLocation from "@/components/match/StepFormatLocation";
-import StepPersonalInfo from "@/components/match/StepPersonalInfo";
 import StepFeelings from "@/components/match/StepFeelings";
 import StepMatches from "@/components/match/StepMatches";
 import { EMPTY_ANSWERS, type WizardAnswers, type TherapistMatch } from "@/components/match/types";
 import type { Tables } from "@/lib/database.types";
 
-const STEP_LABELS = ["Support Needs", "Preferences", "Format & Location", "Your Info", "Feelings", "Matches"];
+// Phase 143 — shortened from 6 steps to 4: Roy asked to remove the old
+// "Support Needs" and "Your Info" steps entirely (their components,
+// StepAssessment.tsx and StepPersonalInfo.tsx, still exist on disk per this
+// project's no-delete convention for already-written files, but are no
+// longer imported/rendered anywhere in this flow — see EXECUTION_PLAN.md
+// Phase 143). Contact details (name/email/phone/consent) moved into a
+// compact section on the Matches step itself rather than their own step.
+const STEP_LABELS = ["Preferences", "Format & Location", "Feelings", "Matches"];
 
-// Phase 142 — this wizard now creates its own support_requests row (pathway
+// Phase 142 — this wizard creates its own support_requests row (pathway
 // "ai") the moment it mounts, i.e. the moment a client picks "AI Support" on
-// the choice screen — see /api/support-pathway. Every later step updates
-// that same row (via /api/support-match at the "AI Support Match" submit,
-// and /api/support-request/select-therapist when a match card's booking
-// button is first opened) rather than creating separate records, so the
-// whole journey is one CRM row from start to finish.
+// the choice screen — see /api/support-pathway. Later steps update that
+// same row (via /api/support-match at the "AI Support Match" submit, and
+// /api/support-request/select-therapist once contact details are filled in
+// and a match card's booking button is first opened) rather than creating
+// separate records, so the whole journey is one CRM row from start to
+// finish.
 export default function MatchWizard({ clinicLocations }: { clinicLocations: Tables<"clinic_locations">[] }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_ANSWERS);
@@ -69,10 +75,10 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
       const data = await res.json();
       setMatches(data.matches ?? []);
       setGenderPreferenceHonored(data.genderPreferenceHonored ?? true);
-      setStep(5);
+      setStep(3);
     } catch {
       setMatchError(true);
-      setStep(5);
+      setStep(3);
     } finally {
       setSubmittingMatch(false);
     }
@@ -91,6 +97,13 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
         supportRequestId,
         therapistId: match.therapist.id,
         therapistName: match.therapist.full_name,
+        // Phase 143 — contact details are now collected on this same step,
+        // so they're only ever known at exactly this moment; pass them
+        // through so the support_requests row gets them saved here.
+        fullName: answers.fullName,
+        email: answers.email,
+        phone: answers.phone || null,
+        agreedConsent: answers.agreedConsent,
       }),
     }).catch(() => {});
   }
@@ -117,75 +130,51 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
 
       <div className="rounded-[var(--radius)] border border-border bg-card p-6 shadow-soft sm:p-8">
         {step === 0 && (
-          <StepAssessment
-            selected={answers.symptoms}
-            onChange={(symptoms) => update("symptoms", symptoms)}
-            onNext={() => setStep(1)}
-          />
-        )}
-        {step === 1 && (
           <StepPreferences
             treatmentType={answers.treatmentType}
             genderPreference={answers.genderPreference}
             preferredLanguage={answers.preferredLanguage}
-            availabilityNotes={answers.availabilityNotes}
-            accessibilityNeeds={answers.accessibilityNeeds}
             onTreatmentTypeChange={(v) => update("treatmentType", v)}
             onGenderPreferenceChange={(v) => update("genderPreference", v)}
             onPreferredLanguageChange={(v) => update("preferredLanguage", v)}
-            onAvailabilityNotesChange={(v) => update("availabilityNotes", v)}
-            onAccessibilityNeedsChange={(v) => update("accessibilityNeeds", v)}
-            onBack={() => setStep(0)}
-            onNext={() => setStep(2)}
+            onNext={() => setStep(1)}
           />
         )}
-        {step === 2 && (
+        {step === 1 && (
           <StepFormatLocation
             sessionFormat={answers.sessionFormat}
             clinicLocationId={answers.clinicLocationId}
             clinicLocations={clinicLocations}
             onFormatChange={(v) => update("sessionFormat", v)}
             onClinicLocationChange={(v) => update("clinicLocationId", v)}
-            onBack={() => setStep(1)}
-            onNext={() => setStep(3)}
+            onBack={() => setStep(0)}
+            onNext={() => setStep(2)}
           />
         )}
-        {step === 3 && (
-          <StepPersonalInfo
-            fullName={answers.fullName}
-            email={answers.email}
-            phone={answers.phone}
-            ageConfirmed={answers.ageConfirmed}
-            agreedConsent={answers.agreedConsent}
-            onFullNameChange={(v) => update("fullName", v)}
-            onEmailChange={(v) => update("email", v)}
-            onPhoneChange={(v) => update("phone", v)}
-            onAgeConfirmedChange={(v) => update("ageConfirmed", v)}
-            onAgreedConsentChange={(v) => update("agreedConsent", v)}
-            onBack={() => setStep(2)}
-            onNext={() => setStep(4)}
-          />
-        )}
-        {step === 4 && (
+        {step === 2 && (
           <StepFeelings
             feelingsText={answers.feelingsText}
             crisisDisclaimerAcknowledged={answers.crisisDisclaimerAcknowledged}
             onFeelingsTextChange={(v) => update("feelingsText", v)}
             onCrisisDisclaimerAcknowledgedChange={(v) => update("crisisDisclaimerAcknowledged", v)}
-            onBack={() => setStep(3)}
+            onBack={() => setStep(1)}
             onSubmit={submitForMatches}
             submitting={submittingMatch}
             submitError={null}
           />
         )}
-        {step === 5 && (
+        {step === 3 && (
           <StepMatches
             answers={answers}
             matches={matches}
             matchError={matchError}
             genderPreferenceHonored={genderPreferenceHonored}
             supportRequestId={supportRequestId}
-            onBack={() => setStep(4)}
+            onFullNameChange={(v) => update("fullName", v)}
+            onEmailChange={(v) => update("email", v)}
+            onPhoneChange={(v) => update("phone", v)}
+            onAgreedConsentChange={(v) => update("agreedConsent", v)}
+            onBack={() => setStep(2)}
             onTherapistSelected={onTherapistSelected}
           />
         )}

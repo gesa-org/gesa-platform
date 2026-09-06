@@ -1,25 +1,25 @@
 import type { GenderPreference, PublicTherapistRow, SessionFormat } from "@/lib/database.types";
 
-// Phase 142 — extended for the "Find Support" AI Support rebuild. Every
-// field below is optional-safe (empty string / null / false) so existing
-// steps that don't touch the new fields don't need to change their own
-// update shape.
+// Phase 143 — shortened to 4 steps (Preferences, Format & Location,
+// Feelings, Matches). Removed entirely, per Roy's request: symptoms (the
+// old "Support Needs" step), availabilityNotes/accessibilityNeeds (unused
+// by matching, just stored), and ageConfirmed (the old "Your Info" step's
+// 18+ gate — dropped along with that step, not preserved elsewhere; see
+// EXECUTION_PLAN.md Phase 143 for the explicit disclosure on this).
+// fullName/email/phone/agreedConsent survive, but move from their own step
+// into a compact "Contact Details" section on the Matches step itself.
 export type WizardAnswers = {
-  symptoms: string[];
   treatmentType: string;
   genderPreference: GenderPreference;
   preferredLanguage: string;
-  availabilityNotes: string;
-  accessibilityNeeds: string;
   sessionFormat: SessionFormat | null;
   clinicLocationId: string | null;
-  // Step: Your Info
+  // Contact Details — collected on the Matches step, not a separate step.
   fullName: string;
   email: string;
   phone: string;
-  ageConfirmed: boolean;
   agreedConsent: boolean;
-  // Step: How You're Feeling
+  // Step: Feelings
   feelingsText: string;
   crisisDisclaimerAcknowledged: boolean;
 };
@@ -37,18 +37,14 @@ export type TherapistMatch = {
 };
 
 export const EMPTY_ANSWERS: WizardAnswers = {
-  symptoms: [],
   treatmentType: "",
   genderPreference: "no_preference",
   preferredLanguage: "",
-  availabilityNotes: "",
-  accessibilityNeeds: "",
   sessionFormat: null,
   clinicLocationId: null,
   fullName: "",
   email: "",
   phone: "",
-  ageConfirmed: false,
   agreedConsent: false,
   feelingsText: "",
   crisisDisclaimerAcknowledged: false,

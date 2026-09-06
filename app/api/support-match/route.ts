@@ -7,11 +7,20 @@ import type { GenderPreference, SessionFormat } from "@/lib/database.types";
 // Phase 142 — the AI Support wizard's matching endpoint, replacing
 // /api/match (kept in place, unused by this flow) as the write target for
 // the new unified support_requests table. Two things happen in one request:
-// 1) the client's full set of answers (collected across every wizard step)
-//    is saved onto their support_requests row for the first time — earlier
-//    steps only hold state in the browser, matching this app's existing
-//    "only write when there's something real to save" pattern.
+// 1) the client's preferences + feelings text (collected across the first 3
+//    wizard steps) are saved onto their support_requests row for the first
+//    time — earlier steps only hold state in the browser, matching this
+//    app's existing "only write when there's something real to save"
+//    pattern.
 // 2) the actual match runs, same roster/matching logic as /api/match.
+//
+// Phase 143 — symptoms/availabilityNotes/accessibilityNeeds and the
+// contact-details fields (fullName/email/phone/ageConfirmed/agreedConsent)
+// no longer arrive here at all: the "Support Needs" and "Your Info" steps
+// that used to collect them were removed from the wizard entirely.
+// Contact details are now collected later, on the Matches step itself, and
+// saved by /api/support-request/select-therapist instead — the only point
+// in the new flow where they actually exist.
 const GENDER_VALUES: GenderPreference[] = ["woman", "man", "nonbinary", "no_preference"];
 const FORMAT_VALUES: SessionFormat[] = ["online", "call", "in_person"];
 
@@ -24,23 +33,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "answers are required" }, { status: 400 });
   }
 
-  const symptoms = Array.isArray(answers.symptoms) ? (answers.symptoms as string[]).filter(Boolean) : [];
   const treatmentType = (answers.treatmentType as string | undefined) || null;
   const genderPreferenceRaw = (answers.genderPreference as string | undefined) ?? "no_preference";
   const genderPreference: GenderPreference = GENDER_VALUES.includes(genderPreferenceRaw as GenderPreference)
     ? (genderPreferenceRaw as GenderPreference)
     : "no_preference";
   const preferredLanguage = (answers.preferredLanguage as string | undefined) || null;
-  const availabilityNotes = (answers.availabilityNotes as string | undefined) || null;
-  const accessibilityNeeds = (answers.accessibilityNeeds as string | undefined) || null;
   const sessionFormatRaw = answers.sessionFormat as string | undefined;
   const sessionFormat = sessionFormatRaw && FORMAT_VALUES.includes(sessionFormatRaw as SessionFormat) ? (sessionFormatRaw as SessionFormat) : null;
   const clinicLocationId = (answers.clinicLocationId as string | undefined) || null;
-  const fullName = (answers.fullName as string | undefined)?.trim() || null;
-  const email = (answers.email as string | undefined)?.trim() || null;
-  const phone = (answers.phone as string | undefined)?.trim() || null;
-  const ageConfirmed = answers.ageConfirmed === true;
-  const agreedConsent = answers.agreedConsent === true;
   const feelingsText = (answers.feelingsText as string | undefined) || null;
 
   const supabase = await createClient();
@@ -62,19 +63,11 @@ export async function POST(request: Request) {
       .from("support_requests")
       .update({
         status: "preferences_submitted",
-        support_categories: symptoms,
         treatment_type: treatmentType,
         gender_preference: genderPreference,
         preferred_language: preferredLanguage,
-        availability_notes: availabilityNotes,
-        accessibility_needs: accessibilityNeeds,
         session_format: sessionFormat,
         clinic_location_id: sessionFormat === "in_person" ? clinicLocationId : null,
-        full_name: fullName,
-        email,
-        phone,
-        age_confirmed: ageConfirmed,
-        consent_at: agreedConsent ? new Date().toISOString() : null,
         feelings_text: feelingsText,
         crisis_disclaimer_shown_at: new Date().toISOString(),
       })
@@ -102,7 +95,7 @@ export async function POST(request: Request) {
   const therapists = baseTherapists.map((t) => ({ ...t, has_whatsapp: hasWhatsappById.get(t.id) ?? false }));
 
   const { matches: results, genderPreferenceHonored } = await matchTherapists(
-    { symptoms, treatmentType, genderPreference, preferredLanguage, feelingsText },
+    { treatmentType, genderPreference, preferredLanguage, feelingsText },
     therapists
   );
 

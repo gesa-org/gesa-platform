@@ -17,14 +17,19 @@ export type TherapistMatch = {
 // UI uses this to be upfront with the client rather than silently showing a
 // mismatched result and letting them think something's broken.
 export type MatchInput = {
-  symptoms: string[];
+  // Phase 143 — the wizard's old "Support Needs" symptom-checkbox step was
+  // removed entirely, so the current /api/support-match route no longer
+  // sends this. Left optional (rather than removed) so the older, still-
+  // present-but-unused /api/match route keeps compiling and working
+  // unchanged.
+  symptoms?: string[];
   treatmentType: string | null;
   genderPreference: GenderPreference;
   // Phase 142 — added for the AI Support rebuild. Both optional/soft
   // signals (never hard filters like gender): a preferred language nudges
   // the AI/rule-based scoring, and the client's own free-text "how are you
-  // feeling" answer gives the AI richer context than the fixed symptom
-  // checkboxes alone. Neither is ever required for a match to succeed.
+  // feeling" answer gives the AI richer context — now the primary free-text
+  // signal, since Phase 143 removed the symptom checkboxes above.
   preferredLanguage?: string | null;
   feelingsText?: string | null;
 };
@@ -101,7 +106,7 @@ export async function matchTherapists(
         {
           role: "user",
           content: JSON.stringify({
-            client_described_experiences: input.symptoms,
+            client_described_experiences: input.symptoms ?? [],
             preferred_treatment_type: input.treatmentType,
             therapist_gender_preference: input.genderPreference,
             preferred_language: input.preferredLanguage || null,
@@ -145,7 +150,7 @@ function extractJson(text: string): string {
 // scoring needed in here, gender is handled upstream as a hard filter now.
 function ruleBasedMatch(input: MatchInput, candidates: CandidateTherapist[]): TherapistMatch[] {
   const treatment = (input.treatmentType ?? "").trim().toLowerCase();
-  const needle = [...input.symptoms, input.treatmentType ?? ""].join(" ").toLowerCase();
+  const needle = [...(input.symptoms ?? []), input.treatmentType ?? ""].join(" ").toLowerCase();
   const words = needle.split(/[^a-z]+/).filter((w) => w.length > 3);
 
   const language = (input.preferredLanguage ?? "").trim().toLowerCase();

@@ -1,35 +1,32 @@
 "use client";
 
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { TREATMENT_TYPES, GENDER_OPTIONS, LANGUAGE_OPTIONS } from "@/components/match/constants";
 import type { GenderPreference } from "@/lib/database.types";
 
+// Phase 143 — Availability and Accessibility (optional free-text fields)
+// were removed per Roy's "shorten and de-duplicate the wizard" request —
+// neither fed into actual matching/filtering logic, just stored on the
+// support_requests row, so dropping them from the UI is a clean removal
+// with no matching-logic impact. This is also now the wizard's first step
+// (Support Needs, which used to precede it, was removed entirely), so
+// there's no Back button here — nothing behind it to go back to.
 export default function StepPreferences({
   treatmentType,
   genderPreference,
   preferredLanguage,
-  availabilityNotes,
-  accessibilityNeeds,
   onTreatmentTypeChange,
   onGenderPreferenceChange,
   onPreferredLanguageChange,
-  onAvailabilityNotesChange,
-  onAccessibilityNeedsChange,
-  onBack,
   onNext,
 }: {
   treatmentType: string;
   genderPreference: GenderPreference;
   preferredLanguage: string;
-  availabilityNotes: string;
-  accessibilityNeeds: string;
   onTreatmentTypeChange: (value: string) => void;
   onGenderPreferenceChange: (value: GenderPreference) => void;
   onPreferredLanguageChange: (value: string) => void;
-  onAvailabilityNotesChange: (value: string) => void;
-  onAccessibilityNeedsChange: (value: string) => void;
-  onBack: () => void;
   onNext: () => void;
 }) {
   return (
@@ -82,26 +79,7 @@ export default function StepPreferences({
         ))}
       </select>
 
-      <label className="mb-1.5 block text-sm font-semibold">Availability (optional)</label>
-      <input
-        value={availabilityNotes}
-        onChange={(e) => onAvailabilityNotesChange(e.target.value)}
-        placeholder="e.g. weekday evenings, weekend mornings"
-        className="mb-6 w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-      />
-
-      <label className="mb-1.5 block text-sm font-semibold">Accessibility needs (optional)</label>
-      <input
-        value={accessibilityNeeds}
-        onChange={(e) => onAccessibilityNeedsChange(e.target.value)}
-        placeholder="Anything that would help a session work better for you"
-        className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-      />
-
-      <div className="mt-7 flex items-center justify-between">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft size={16} /> Back
-        </Button>
+      <div className="mt-7 flex items-center justify-end">
         <Button onClick={onNext}>
           Continue <ArrowRight size={16} />
         </Button>

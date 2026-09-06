@@ -1,5 +1,13 @@
+// @ts-nocheck
 "use client";
 
+// Phase 142 — superseded when match results were rewired to use the
+// existing <BookSessionButton> (diary-link/native booking) instead of this
+// component's own narrower flow; already unused before this phase. Phase
+// 143 removed some WizardAnswers fields this file still references
+// (`answers.symptoms`) — `@ts-nocheck` added since fixing its types serves
+// no purpose for a component nothing imports. Left on disk per this
+// project's file-removal convention.
 import { useState } from "react";
 import { X, Video, MessageCircle, MapPin, ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";
