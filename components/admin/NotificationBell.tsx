@@ -15,6 +15,23 @@ import { createClient } from "@/lib/supabase/client";
 // other admin submission type already appears in.
 type NotificationKind = "match" | "booking" | "inquiry" | "session" | "sessionBooking" | "volunteer" | "groupRegistration";
 
+// Phase 150 — the shape returned by /api/admin/support-requests/notifications
+// (both branches: the admin listing has session_format/email/selected_therapist,
+// the therapist-scoped listing has preferred_date/preferred_time instead —
+// declared as one loose optional-everything type since this component reads
+// whichever fields are present either way).
+type SupportRequestNotification = {
+  id: string;
+  full_name: string | null;
+  email?: string | null;
+  session_format: string | null;
+  preferred_date?: string | null;
+  preferred_time?: string | null;
+  status: string;
+  created_at: string;
+  selected_therapist?: { full_name?: string | null } | null;
+};
+
 type NotificationItem = {
   id: string;
   kind: NotificationKind;
@@ -69,12 +86,15 @@ function timeAgo(iso: string): string {
 }
 
 // Role-gated: renders nothing for signed-out users or roles other than
-// admin/therapist. Admin sees recent inquiries/bookings/match-requests/
-// session bookings site-wide; a therapist (once a real account is linked via
-// therapists.profile_id — none exist yet in this environment, see
-// EXECUTION_PLAN.md Phase 10) sees only their own upcoming session requests,
-// enforced by the match_requests_therapist_read / booking_requests_therapist_read
-// RLS policies, not by anything in this component.
+// admin/therapist. Admin sees recent inquiries/bookings/Find Support
+// requests/session bookings site-wide; a therapist (once a real account is
+// linked via therapists.profile_id — none exist yet in this environment, see
+// EXECUTION_PLAN.md Phase 10) sees only their own upcoming session requests.
+// Most of these tables are enforced by RLS policies (booking_requests_
+// therapist_read etc.), not by anything in this component — but
+// support_requests has none at all (by design, see the admin branch's own
+// comment below), so that one piece is fetched through
+// /api/admin/support-requests/notifications instead (Phase 150).
 export default function NotificationBell() {
   const [role, setRole] = useState<"admin" | "therapist" | null>(null);
   const [items, setItems] = useState<NotificationItem[]>([]);
@@ -106,12 +126,19 @@ export default function NotificationBell() {
 
       if (profile?.role === "admin") {
         setRole("admin");
-        const [matches, bookings, inquiries, sessionBookings, volunteerApplications, groupRegistrations] = await Promise.all([
-          supabase
-            .from("match_requests")
-            .select("id, name, email, session_format, status, created_at, selected_therapist:therapists(full_name)")
-            .order("created_at", { ascending: false })
-            .limit(8),
+        // Phase 150 — was querying the legacy match_requests table via this
+        // same browser client, which nothing has written new rows into
+        // since Phase 142 shipped support_requests — meaning this bell had
+        // raised zero notifications for any real "Find Support" submission
+        // for several phases running. support_requests itself has zero RLS
+        // policies at all (by design — see getAllSupportRequests()'s own
+        // comment in lib/queries.ts), so it can't be queried directly from
+        // here the way match_requests could; fetched instead through the
+        // new /api/admin/support-requests/notifications route, which
+        // re-checks this caller's role server-side before using the
+        // service-role client.
+        const [matchesRes, bookings, inquiries, sessionBookings, volunteerApplications, groupRegistrations] = await Promise.all([
+          fetch("/api/admin/support-requests/notifications").then((r) => (r.ok ? r.json() : { requests: [] })),
           supabase
             .from("booking_requests")
             .select("id, name, email, entry_route, status, created_at, matched_therapist:therapists(full_name)")
@@ -146,14 +173,14 @@ export default function NotificationBell() {
         ]);
 
         const normalized: NotificationItem[] = [
-          ...(matches.data ?? []).map((m) => {
+          ...((matchesRes.requests ?? []) as SupportRequestNotification[]).map((m) => {
             const matchTherapistName = (m as { selected_therapist?: { full_name?: string | null } | null })
               .selected_therapist?.full_name;
             return {
               id: `match-${m.id}`,
               kind: "match" as const,
-              title: `New match request — ${m.name}`,
-              subtitle: `${FORMAT_LABEL[m.session_format] ?? m.session_format}${
+              title: `New Find Support request — ${m.full_name || m.email || "Anonymous"}`,
+              subtitle: `${m.session_format ? FORMAT_LABEL[m.session_format] ?? m.session_format : "No format yet"}${
                 matchTherapistName ? ` · ${matchTherapistName}` : ""
               }`,
               createdAt: m.created_at,
@@ -226,18 +253,24 @@ export default function NotificationBell() {
         }
         setRole("therapist");
 
-        const { data: sessions } = await supabase
-          .from("match_requests")
-          .select("id, name, session_format, preferred_date, preferred_time, status, created_at")
-          .eq("selected_therapist_id", therapist.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
+        // Phase 150 — was querying match_requests directly (same staleness
+        // bug as the admin feed above — nothing new since Phase 142), and
+        // support_requests can't be queried directly from this browser
+        // client either way (zero RLS policies — see the admin branch's
+        // comment above), so this now goes through the same
+        // /api/admin/support-requests/notifications route, which handles
+        // the therapist-role branch (looks up this therapist's own id,
+        // filters to their selected requests) server-side.
+        const sessionsRes: { requests?: SupportRequestNotification[] } = await fetch(
+          "/api/admin/support-requests/notifications"
+        ).then((r) => (r.ok ? r.json() : { requests: [] }));
+        const sessions = sessionsRes.requests ?? [];
 
-        const normalized: NotificationItem[] = (sessions ?? []).map((s) => ({
+        const normalized: NotificationItem[] = sessions.map((s) => ({
           id: `session-${s.id}`,
           kind: "session" as const,
-          title: `New session booked — ${s.name}`,
-          subtitle: `${FORMAT_LABEL[s.session_format] ?? s.session_format}${
+          title: `New session booked — ${s.full_name || "A client"}`,
+          subtitle: `${s.session_format ? FORMAT_LABEL[s.session_format] ?? s.session_format : "No format yet"}${
             s.preferred_date ? ` · ${s.preferred_date}` : ""
           }${s.preferred_time ? ` ${s.preferred_time}` : ""}`,
           createdAt: s.created_at,

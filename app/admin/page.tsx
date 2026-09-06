@@ -3,9 +3,9 @@ import {
   getAllBookingRequests,
   getAllGroupRegistrations,
   getAllInquiries,
-  getAllMatchRequests,
   getAllProfiles,
   getAllSessionBookings,
+  getAllSupportRequests,
   getAllTherapistApplications,
 } from "@/lib/queries";
 import SchedulingCalendar from "@/components/admin/SchedulingCalendar";
@@ -141,19 +141,32 @@ function MetricBar({ label, value, max, href }: { label: string; value: number; 
 }
 
 export default async function AdminOverviewPage() {
-  const [inquiries, bookings, registrations, profiles, matchRequests, sessionBookings, volunteerApplications] =
+  const [inquiries, bookings, registrations, profiles, supportRequests, sessionBookings, volunteerApplications] =
     await Promise.all([
       getAllInquiries(),
       getAllBookingRequests(),
       getAllGroupRegistrations(),
       getAllProfiles(),
-      getAllMatchRequests(),
+      // Phase 150 — was getAllMatchRequests() (the legacy, frozen-since-
+      // Phase-142 table). This dashboard had silently never been updated
+      // to read the real current "Find Support" data — every KPI tile,
+      // the trend chart, the activity feed, and the scheduling calendar
+      // were showing stale match_requests activity instead of actual
+      // current submissions. Swapped to the live table; see
+      // NotificationBell.tsx for the identical fix applied there.
+      getAllSupportRequests(),
       getAllSessionBookings(),
       getAllTherapistApplications(),
     ]);
 
   const newBookings = bookings.filter((b) => b.status === "new").length;
-  const newMatchRequests = matchRequests.filter((m) => m.status === "new").length;
+  // support_requests has no simple "new" status value (its 10-value status
+  // enum starts at "started", not "new") — recency is the honest signal
+  // here instead, same convention this file already used for inquiries
+  // (see `isNew` below).
+  const newSupportRequests = supportRequests.filter(
+    (r) => Date.now() - new Date(r.created_at).getTime() < 3 * 24 * 60 * 60 * 1000
+  ).length;
   const confirmedSessions = sessionBookings.filter((s) => s.status === "confirmed").length;
   const newVolunteerApplications = volunteerApplications.filter((a) => a.status === "new").length;
   const roleCounts = profiles.reduce<Record<string, number>>((acc, p) => {
@@ -172,10 +185,10 @@ export default async function AdminOverviewPage() {
       href: "/admin/sessions",
     },
     {
-      label: "Find Your Therapist",
-      value: matchRequests.length,
-      sub: `${newMatchRequests} new`,
-      href: "/admin/match-requests",
+      label: "Find Support requests",
+      value: supportRequests.length,
+      sub: `${newSupportRequests} new`,
+      href: "/admin/support-requests",
     },
     { label: "Booking requests", value: bookings.length, sub: `${newBookings} new`, href: "/admin/bookings" },
     // Phase 69 — was entirely missing from this dashboard before (no tile,
@@ -204,13 +217,13 @@ export default async function AdminOverviewPage() {
       createdAt: s.created_at,
       isNew: isNew(s.created_at),
     })),
-    ...matchRequests.map((m) => ({
-      type: "Find Your Therapist",
-      href: "/admin/match-requests",
-      label: "Find Your Therapist request",
-      email: m.email,
-      createdAt: m.created_at,
-      isNew: m.status === "new",
+    ...supportRequests.map((r) => ({
+      type: "Find Support request",
+      href: "/admin/support-requests",
+      label: `Find Support request (${r.pathway === "ai" ? "AI Support" : "Manual"})`,
+      email: r.email,
+      createdAt: r.created_at,
+      isNew: isNew(r.created_at),
     })),
     ...bookings.map((b) => ({
       type: "Booking request",
@@ -253,11 +266,12 @@ export default async function AdminOverviewPage() {
 
   // Phase 61 — Scheduling Overview now merges every real date-bearing
   // source on the site, not just confirmed sessions: session_bookings
-  // (session_date), match_requests (preferred_date, when the client gave
-  // one — otherwise created_at), booking_requests/inquiries/group
-  // registrations (created_at — the schema has no separate appointment
-  // date for these, so the date they were submitted is the honest date to
-  // show). Shows the current calendar month.
+  // (session_date), support_requests (preferred_date, when the client gave
+  // one — otherwise created_at; Phase 150 swapped this from the legacy
+  // match_requests table), booking_requests/inquiries/group registrations
+  // (created_at — the schema has no separate appointment date for these,
+  // so the date they were submitted is the honest date to show). Shows the
+  // current calendar month.
   const today = new Date();
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -273,12 +287,12 @@ export default async function AdminOverviewPage() {
       statusLabel: s.status,
       dotClass: s.status === "confirmed" ? "bg-amber" : "bg-muted-fg",
     })),
-    ...matchRequests.map((m) => ({
+    ...supportRequests.map((r) => ({
       kind: "match" as const,
-      dateIso: m.preferred_date ?? m.created_at.slice(0, 10),
-      time: m.preferred_date ? m.preferred_time ?? null : null,
-      personLabel: `${m.name} (${m.email})`,
-      statusLabel: m.preferred_date ? m.status : `${m.status}, submitted`,
+      dateIso: r.preferred_date ?? r.created_at.slice(0, 10),
+      time: r.preferred_date ? r.preferred_time ?? null : null,
+      personLabel: `${r.full_name || "Unknown"} (${r.email || "no email on file"})`,
+      statusLabel: r.preferred_date ? r.status : `${r.status}, submitted`,
       dotClass: "bg-clay",
     })),
     ...bookings.map((b) => ({
@@ -422,7 +436,7 @@ export default async function AdminOverviewPage() {
           <h2 className="mb-3 text-base text-primary">Trend</h2>
           <TrendChart points={trend} />
           <p className="mt-2 text-[11.5px] text-muted-fg">
-            All submissions (sessions, Find Your Therapist, bookings, inquiries, group registrations, volunteer
+            All submissions (sessions, Find Support requests, bookings, inquiries, group registrations, volunteer
             applications) by month.
           </p>
         </div>

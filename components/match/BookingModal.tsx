@@ -8,6 +8,16 @@
 // (`answers.symptoms`) — `@ts-nocheck` added since fixing its types serves
 // no purpose for a component nothing imports. Left on disk per this
 // project's file-removal convention.
+//
+// Phase 150 — CRM inquiry-architecture cleanup confirmed (repo-wide grep)
+// this is still imported nowhere; it was explicitly in scope to remove as
+// a "legacy session-request form" duplicate. The file itself couldn't be
+// physically deleted in this environment (the shell sandbox reported a
+// permissions error on this path), so it's neutered instead: the one route
+// it posts to, /api/match-booking, now returns 410 Gone and performs no
+// database write at all (see that route's own comment) — even if this
+// component were somehow rendered again, it can no longer create a
+// match_requests row.
 import { useState } from "react";
 import { X, Video, MessageCircle, MapPin, ArrowRight } from "lucide-react";
 import Button from "@/components/ui/Button";

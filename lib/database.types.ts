@@ -79,6 +79,11 @@ export type GroupRegistrationRow = {
   phone: string | null;
 }
 
+// Phase 150 — added status/admin_notes/source/consent columns (CRM
+// inquiry-architecture cleanup: status workflow, internal notes, audit
+// source-tagging, and recording the consent checkbox now collected on the
+// public forms). See the migration's own comment for the "New"/"Seen"/
+// "In Progress"/"Resolved"/"Archived" status values enforced at the DB level.
 export type InquiryRow = {
   created_at: string;
   email: string | null;
@@ -87,6 +92,10 @@ export type InquiryRow = {
   name: string | null;
   phone: string | null;
   type: string | null;
+  status: string;
+  admin_notes: string | null;
+  source: string | null;
+  consent: boolean;
 }
 
 export type LegalPageRow = {

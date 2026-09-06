@@ -5,11 +5,26 @@ import { useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
 
+// Phase 150 — this is the retained, single general-inquiry form on the
+// public website (confirmed via a full-repo audit: no other standalone
+// "inquiry modal"/contact form exists — HelpUsGrowForm in the footer is a
+// second, lighter entry point into this same `inquiries` table, not a
+// duplicate). Added a phone field and a required consent/privacy-policy
+// checkbox this phase, and tags every row it creates with
+// `source: "contact_form"` so /admin/inquiries can show where each inquiry
+// came from.
 export default function ContactForm() {
   const params = useSearchParams();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // Phase 150 — this is the retained, single general-inquiry form; the
+  // spec for it requires a consent/privacy-policy confirmation, which this
+  // form didn't previously collect (HelpUsGrowForm, the footer's lighter
+  // entry point into the same `inquiries` table, already had one). Added
+  // here to match, and gated on the submit button so a client can't send
+  // without checking it.
+  const [consent, setConsent] = useState(false);
   const defaultSubject = params.get("subject") ?? "";
 
   if (submitted) {
@@ -32,6 +47,7 @@ export default function ContactForm() {
         const payload = {
           name: String(data.get("name") ?? ""),
           email: String(data.get("email") ?? ""),
+          phone: String(data.get("phone") ?? ""),
           subject: String(data.get("subject") ?? ""),
           message: String(data.get("message") ?? ""),
         };
@@ -39,8 +55,15 @@ export default function ContactForm() {
         const { error: insertError } = await supabase.from("inquiries").insert({
           name: payload.name,
           email: payload.email,
+          phone: payload.phone || null,
           type: payload.subject,
           message: payload.message,
+          // Phase 150 — status/source/consent added to the inquiries table
+          // this phase (see the extend_inquiries_status_notes_source_
+          // consent migration); status defaults to "New" at the DB level,
+          // so only source/consent need setting explicitly here.
+          source: "contact_form",
+          consent,
         });
         setPending(false);
         if (insertError) {
@@ -74,6 +97,14 @@ export default function ContactForm() {
         />
       </div>
       <div>
+        <label className="mb-1.5 block text-sm font-semibold">Phone (optional)</label>
+        <input
+          name="phone"
+          type="tel"
+          className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+        />
+      </div>
+      <div>
         <label className="mb-1.5 block text-sm font-semibold">Subject</label>
         <select
           name="subject"
@@ -95,8 +126,24 @@ export default function ContactForm() {
           className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
         />
       </div>
+      <label className="flex items-start gap-2.5 text-[13px]">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          required
+          className="mt-0.5"
+        />
+        <span>
+          I agree to be contacted by GESA about this inquiry, in line with the{" "}
+          <a href="/privacy-policy" target="_blank" rel="noreferrer" className="font-semibold text-primary underline">
+            Privacy Policy
+          </a>
+          .
+        </span>
+      </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" block>
+      <Button type="submit" block disabled={pending || !consent}>
         {pending ? "Sending…" : "Send message"}
       </Button>
     </form>

@@ -6837,3 +6837,76 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 150: CRM inquiry-architecture cleanup — single Inquiries workflow, delete actions across CRM
+
+**Request:** Full structured spec (paraphrased): remove redundant/legacy inquiry-related sections, forms, modals, routes, dashboard cards, menu links and backend submission paths; keep exactly one active website Inquiry form feeding one CRM `/admin/inquiries` page; add secure Delete (with confirmation modal) across Inquiries, Session bookings, Find Support requests, Booking requests, Volunteer applications, Group registrations, and any legacy request area; extend the Inquiries record with status/notes/source/consent; don't silently drop legitimate data; report back with five specific deliverables.
+
+**Discovery, before changing anything:** audited every inquiry-adjacent form, table, route and nav entry in the repo.
+
+- `app/contact/ContactForm.tsx` and `components/footer/HelpUsGrowForm.tsx` both already insert into the single `public.inquiries` table — they aren't duplicates of each other, they're two distinct entry points (contact page vs. footer) into the one table the spec asks to keep as the sole destination. No redundant *inquiry* form existed to remove.
+- The genuine duplication was at the CRM/nav layer: `app/admin/layout.tsx`'s nav still listed `/admin/match-requests` as "Find Your Therapist (legacy)" — a page reading from the frozen `match_requests` table, which Phase 142 superseded with `support_requests`/`/admin/support-requests`. This is the "legacy route" the spec's own Discovery section calls out by name.
+- `components/match/BookingModal.tsx` (unused since Phase 142's booking-flow rewrite) and its two backing routes, `app/api/match-booking/route.ts` and `app/api/match/route.ts`, were confirmed via repo-wide grep to be called from nowhere live.
+- Found, and separately flagged rather than touched: a completely unrelated `gesa` schema in the same Supabase project, with its own `inquiries` table — leftover from a different/older backend, never queried by this codebase. Left untouched.
+- Found a real, previously-undetected bug as a side effect of this audit: the Overview dashboard and both branches of `NotificationBell.tsx` were still reading `match_requests` instead of `support_requests` — meaning real Find Support activity had been invisible from KPIs/activity feed/notifications since Phase 142 shipped. Fixed as part of this phase (see below).
+
+**Database change:** migration `extend_inquiries_status_notes_source_consent` applied to production project `iddeoavrlnvwwfopsacy` — added `status` (default `'New'`, checked against `New/Seen/In Progress/Resolved/Archived`), `admin_notes`, `source`, and `consent` (default `false`) to `public.inquiries`; existing rows backfilled with `source = 'legacy'`. `lib/database.types.ts`'s `InquiryRow` extended to match.
+
+**Website changes (retained form):**
+- `app/contact/ContactForm.tsx` — added optional `phone` field, added a required consent checkbox linking to the Privacy Policy (submit disabled until checked), insert payload now sends `phone`, `source: "contact_form"`, `consent`. Confirmed via comment as the sole general-inquiry form.
+- `components/footer/HelpUsGrowForm.tsx` — added `source: "help_us_grow"` to its insert payload (it already had a consent checkbox from Phase 70).
+- No forms were removed — there were none to remove that fed a different table or a dead endpoint.
+
+**CRM changes — new shared delete infrastructure** (none existed before this phase; the only prior delete anywhere was `FaqManager.tsx`'s unconfirmed one-click delete, left as-is since it's outside this spec's scope):
+- `components/admin/DeleteConfirmModal.tsx` — generic "This action cannot be undone" confirmation dialog.
+- `components/admin/DeleteRowButton.tsx` — stateful delete control (confirm → `DELETE` fetch to a per-table endpoint → remove row from local state → self-dismissing success/error toast).
+- Seven new server-authorized `DELETE` API routes, each re-checking `profile.role === "admin"` via `getCurrentProfile()` before using the service-role admin client: `app/api/admin/inquiries/delete`, `session-bookings/delete`, `support-requests/delete`, `match-requests/delete`, `booking-requests/delete`, `volunteer-applications/delete` (table `therapist_applications`), `group-registrations/delete`.
+- `app/api/admin/inquiries/update/route.ts` — new combined status + admin-notes update route, same auth pattern.
+
+**CRM changes — Inquiries page rebuilt as the single authoritative view:**
+- `app/admin/inquiries/page.tsx` now just fetches and hands off to the new `components/admin/InquiriesTable.tsx`: search across name/email/subject/message, status filter, date sort, a detail view (`InquiryDetailModal.tsx` — full record, editable admin notes, status dropdown via new `InquiryStatusSelect.tsx`, delete button), and a "No inquiries found." empty state.
+
+**CRM changes — Delete added to the other six retained sections**, each split into a Server-Component page (unchanged data-fetching) plus a new client Table component that adds a Delete column: `app/admin/sessions` (+`SessionBookingsTable.tsx`), `app/admin/support-requests` (+`SupportRequestsTable.tsx`), `app/admin/match-requests` (+`MatchRequestsTable.tsx`, kept its existing conflict-detection logic verbatim), `app/admin/bookings` (+`BookingRequestsTable.tsx`), `app/admin/volunteer-applications` (+`VolunteerApplicationsTable.tsx`), `app/admin/registrations` (+`GroupRegistrationsTable.tsx`).
+
+**CRM changes — nav/dashboard cleanup and the notification bug fix:**
+- `app/admin/layout.tsx` — removed the "Find Your Therapist (legacy)" nav entry pointing at `/admin/match-requests`. The page itself is left in place and reachable by direct URL (not deleted — no data loss), consistent with this project's standing no-delete-data convention; only the nav link that promoted it as an active workflow is gone.
+- `app/admin/page.tsx` (Overview dashboard) — swapped `getAllMatchRequests()` for `getAllSupportRequests()` throughout: KPI tile relabeled "Find Your Therapist" → "Find Support requests" (now links to `/admin/support-requests`), activity feed and calendar events now built from `support_requests` rows instead of the frozen `match_requests` table.
+- `components/admin/NotificationBell.tsx` — both the admin and therapist branches were querying `match_requests` directly from the browser client (stale since Phase 142). Fixed to call a new `app/api/admin/support-requests/notifications/route.ts` instead — required because `support_requests` deliberately has **zero RLS policies** (service-role access only, by design, since it collects an open-text feelings field), so a direct browser-client query would have silently returned nothing. Caught this myself before shipping by re-checking `lib/queries.ts`'s own comment on `support_requests` and confirming via a direct `pg_policies` query, rather than shipping a silently-broken notification feed.
+
+**Legacy routes/components — retired in place, not physically deleted:** `app/api/match-booking/route.ts` and `app/api/match/route.ts` now unconditionally return `410 Gone` with no database write (their original implementations are preserved in git history); `components/match/BookingModal.tsx` (their only caller, already dead) got an explanatory comment. These three were in scope for outright deletion, but this sandbox's shell reported "Operation not permitted" on all three `rm` attempts — an environmental constraint, not a decision. Neutering the routes achieves the same practical outcome (they can never create a new record again) without physically removing the files.
+
+**Data/legacy handling:** no inquiry-adjacent table or row was deleted. `match_requests` (table and its existing rows) is untouched and still reachable at `/admin/match-requests` by direct URL — only unlinked from nav and dashboard KPIs, since Roy's spec explicitly asked to preserve "Therapist matching requests" as a concept while removing the legacy/duplicate nav entry. The unrelated `gesa`-schema `inquiries` table was confirmed out of scope for this codebase and left completely untouched. Existing `inquiries` rows were backfilled with `source = 'legacy'` rather than deleted or hidden.
+
+**Judgment call flagged for Roy:** the spec's own preserve-list included both "Find Support requests" and "Therapist matching requests," which read as slightly redundant given the nav already labeled `/admin/match-requests` "(legacy)" and the Discovery section named `/admin/match-requests` as an example legacy route. Interpreted the self-labeled "(legacy)" entry as the one intended for nav/dashboard removal, and kept the page and its data alive and reachable rather than deleting anything — flagging this interpretation here rather than blocking on a question, given how detailed the rest of the spec was.
+
+**QA:** `npx tsc --noEmit` — one real regression caught and fixed (`app/api/admin/inquiries/update/route.ts`'s update payload needed `Partial<Pick<InquiryRow, "status" | "admin_notes">>` typing instead of `Record<string, unknown>`); confirmed back to the established 16-line baseline (1 pre-existing ESM-import error + 15 across pre-existing test files) with zero new errors afterward. Grepped every one of the ~33 files touched/created this phase for the unescaped-apostrophe JSX pattern; every hit is inside a comment, a non-JSX-text attribute value (e.g. a `placeholder` string), or a plain string default — none is a literal JSX text-node apostrophe needing `&apos;`. Not verified in a live browser (same standing sandbox limitation as every phase since 132).
+
+**Deliverables:**
+
+1. **Removed/retired legacy paths:** nav entry "Find Your Therapist (legacy)" → `/admin/match-requests` (removed from `app/admin/layout.tsx`; page/data left reachable, not deleted); Overview dashboard and both `NotificationBell` branches no longer read `match_requests` (now `support_requests`, the latter via the new `/api/admin/support-requests/notifications` route); `app/api/match-booking/route.ts` and `app/api/match/route.ts` — retired in place, now return `410 Gone`, no DB write; `components/match/BookingModal.tsx` — confirmed unused, commented as retired (physical deletion blocked by sandbox permissions, not a decision).
+2. **Retained inquiry form:** `app/contact/ContactForm.tsx`. Fields: full name, email, phone (optional), subject (existing `type`/category field), message, consent checkbox (required, linked to Privacy Policy), submission date/time (`created_at`, system-generated). `components/footer/HelpUsGrowForm.tsx` remains a second legitimate entry point into the same `inquiries` table (footer contact form, not a duplicate of the contact-page form).
+3. **CRM sections where Delete was added (7):** Inquiries, Session bookings, Find Support requests, Find Your Therapist/match-requests (legacy, kept functional but unlinked), Booking requests, Volunteer applications, Group registrations.
+4. **Data/migration handling:** `inquiries` table extended with `status`/`admin_notes`/`source`/`consent` columns (migration applied to production); existing rows tagged `source = 'legacy'`; no rows deleted anywhere; `match_requests` table/data preserved and still reachable by direct URL; the unrelated `gesa`-schema `inquiries` table confirmed out of scope and left untouched.
+5. **QA checklist:**
+   - `tsc --noEmit` clean at established 16-line baseline — **pass**
+   - Apostrophe/JSX-quote grep across all changed files — **pass** (no unescaped literal JSX text-node apostrophes)
+   - Delete routes re-check `role === "admin"` server-side before deleting — **pass** (code-level; not exercised against a live session in this sandbox)
+   - Contact form retains validation/consent-gated submit — **pass** (code-level)
+   - NotificationBell / Overview dashboard now source from `support_requests` instead of stale `match_requests` — **pass** (code-level fix; live behavior not browser-verified, per standing sandbox limitation)
+   - Live-browser verification of submission flow, duplicate-prevention, filtering, status updates, and delete-confirmation UX — **not run**, same standing limitation as every phase since 132; flagged for Roy to check after deploy.
+
+**Files changed:** `lib/database.types.ts`; `components/admin/DeleteConfirmModal.tsx`, `DeleteRowButton.tsx`, `InquiryStatusSelect.tsx`, `InquiryDetailModal.tsx`, `InquiriesTable.tsx`, `SessionBookingsTable.tsx`, `SupportRequestsTable.tsx`, `MatchRequestsTable.tsx`, `BookingRequestsTable.tsx`, `VolunteerApplicationsTable.tsx`, `GroupRegistrationsTable.tsx`, `NotificationBell.tsx` (all new or edited, `components/admin/`); `app/api/admin/inquiries/delete`, `update`, `session-bookings/delete`, `support-requests/delete`, `support-requests/notifications`, `match-requests/delete`, `booking-requests/delete`, `volunteer-applications/delete`, `group-registrations/delete` (all new, `app/api/admin/`); `app/api/match-booking/route.ts`, `app/api/match/route.ts` (retired in place); `app/admin/inquiries/page.tsx`, `sessions/page.tsx`, `support-requests/page.tsx`, `match-requests/page.tsx`, `bookings/page.tsx`, `volunteer-applications/page.tsx`, `registrations/page.tsx`, `layout.tsx`, `page.tsx` (all edited, `app/admin/`); `app/contact/ContactForm.tsx`; `components/footer/HelpUsGrowForm.tsx`; `components/match/BookingModal.tsx` (comment only). Database: one migration applied to production project `iddeoavrlnvwwfopsacy` (`inquiries` table extended).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 150: unify CRM inquiry workflow, add delete actions across CRM, fix stale match_requests reads"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
+
+A few things worth your attention before you review: the `match_requests`/"Find Your Therapist (legacy)" nav link is gone but the page and its data are still there — let me know if you actually want that data cleaned up or archived rather than just unlinked. Also, three files (`BookingModal.tsx` and its two API routes) couldn't be physically deleted because of a sandbox permissions error — they're neutralized instead (dead code, routes always return 410), functionally equivalent to removal but the files remain on disk. And separate from all of this: there's an unrelated `gesa` schema sitting in the same Supabase project with its own old `inquiries` table — it's not connected to this app at all, but flagging it in case it's something you want cleaned up on the Supabase side someday.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

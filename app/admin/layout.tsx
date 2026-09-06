@@ -6,11 +6,21 @@ const NAV = [
   { href: "/admin/sessions", label: "Session bookings" },
   // Phase 142 — the "Find Support" flow rebuild replaced match_requests
   // with the unified support_requests table (see EXECUTION_PLAN.md Phase
-  // 142). New requests land in "Find Support requests" below; this old
-  // page is left in place, unrelabeled, purely so admins can still see
-  // whatever rows existed in match_requests before this phase shipped.
+  // 142). New requests land in "Find Support requests" below.
+  //
+  // Phase 150 — CRM inquiry-architecture cleanup, per a full-repo audit:
+  // "Find Your Therapist (legacy)" (app/admin/match-requests) duplicated
+  // this exact workflow with frozen, pre-Phase-142 data, and the Overview
+  // dashboard/notification bell were still silently reading match_requests
+  // instead of support_requests — meaning current Find Support activity
+  // was undercounted/misrepresented since Phase 142 shipped (see
+  // app/admin/page.tsx and components/admin/NotificationBell.tsx, both
+  // fixed this phase). The nav link is removed here so there's only one
+  // discoverable destination for this workflow; the page itself is left
+  // working and reachable by direct URL (/admin/match-requests) for
+  // historical/audit access to whatever rows existed before Phase 142 —
+  // not deleted, per this project's no-delete-data convention.
   { href: "/admin/support-requests", label: "Find Support requests" },
-  { href: "/admin/match-requests", label: "Find Your Therapist (legacy)" },
   { href: "/admin/bookings", label: "Booking requests" },
   { href: "/admin/volunteer-applications", label: "Volunteer Applications" },
   { href: "/admin/donations", label: "Donations" },

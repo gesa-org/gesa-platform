@@ -89,6 +89,12 @@ export default function HelpUsGrowForm({
           phone,
           type: "Help us grow",
           message,
+          // Phase 150 — tags this form's rows so /admin/inquiries can show
+          // which of the two live forms created each one, for audit
+          // purposes; `consent` here is this form's existing over-18 +
+          // Privacy Policy checkbox (already required to submit, above).
+          source: "help_us_grow",
+          consent,
         });
         setPending(false);
         if (insertError) {
