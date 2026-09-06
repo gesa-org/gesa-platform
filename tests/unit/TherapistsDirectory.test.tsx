@@ -36,6 +36,14 @@ function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistR
     diary_link_status: "unset",
     price_note: null,
     has_whatsapp: false,
+    // Phase 151 — new required fields (see the
+    // add_browse_search_columns_to_therapists migration); this fixture
+    // predates that phase, so defaults are added here rather than making
+    // the type itself optional and letting a real missing value slip by
+    // unnoticed elsewhere.
+    offers_online: true,
+    offers_in_person: false,
+    city: null,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,

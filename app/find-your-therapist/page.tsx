@@ -7,7 +7,7 @@ import Reveal from "@/components/motion/Reveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
-import { getActiveClinicLocations } from "@/lib/queries";
+import { getActiveClinicLocations, getActiveTherapists } from "@/lib/queries";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
@@ -76,7 +76,7 @@ export default async function FindYourTherapistPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const [heroContentRaw, sectionsRaw, clinicLocations] = await Promise.all([
+  const [heroContentRaw, sectionsRaw, clinicLocations, therapists] = await Promise.all([
     getPageContent("page_about_hero", HERO_CONTENT_FALLBACK),
     getPageContent("page_about_sections", ABOUT_SECTIONS_FALLBACK),
     // Phase 146 — fetched here (same as the old standalone Find Support
@@ -84,6 +84,11 @@ export default async function FindYourTherapistPage({
     // -> the AI Matching modal's MatchWizard, which needs the active
     // clinic list for its Format & Location step.
     getActiveClinicLocations(),
+    // Phase 151 — same pattern, for the new Browse Therapist search modal,
+    // which needs the active therapist roster to filter against (the exact
+    // same list/query Our Professionals already uses — no separate/parallel
+    // therapist list).
+    getActiveTherapists(),
   ]);
 
   const { resolved, isEditorPreview } = await resolveEditorPreview(
@@ -96,7 +101,7 @@ export default async function FindYourTherapistPage({
 
   const page = (
     <div className="reveal-page__main">
-      <Hero content={heroContent} clinicLocations={clinicLocations} />
+      <Hero content={heroContent} clinicLocations={clinicLocations} therapists={therapists} />
 
       {/* Phase 104 — Roy sent a screenshot of the "OUR STORY" mission
           section (eyebrow/heading/body, on the sage-soft wash) and asked to

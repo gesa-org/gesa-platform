@@ -18,10 +18,16 @@ export default function FindSupportModal({
   open,
   onClose,
   clinicLocations,
+  onChooseBrowse,
 }: {
   open: boolean;
   onClose: () => void;
   clinicLocations: Tables<"clinic_locations">[];
+  // Phase 151 — passed straight through to FindSupportFlow/ChoiceScreen.
+  // HeroFindSupportCta owns what actually happens when this fires (closing
+  // this modal and opening BrowseTherapistModal in its place) — see that
+  // file's own comment.
+  onChooseBrowse: () => void;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -77,7 +83,7 @@ export default function FindSupportModal({
           <X size={18} />
         </button>
         <div className="max-h-[80vh] overflow-y-auto pt-2">
-          <FindSupportFlow clinicLocations={clinicLocations} />
+          <FindSupportFlow clinicLocations={clinicLocations} onChooseBrowse={onChooseBrowse} />
         </div>
       </div>
     </div>

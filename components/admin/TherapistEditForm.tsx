@@ -43,6 +43,15 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
   const [diaryLink, setDiaryLink] = useState(therapist.diary_link ?? "");
   const [country, setCountry] = useState(therapist.country ?? "");
   const [priceNote, setPriceNote] = useState(therapist.price_note ?? "");
+  // Phase 151 — offers_online/offers_in_person/city are new (see the
+  // add_browse_search_columns_to_therapists migration), added purely so the
+  // Find Support page's new "Browse therapist" search has something real to
+  // filter on. offers_online defaults true and offers_in_person defaults
+  // false for every existing record, matching the column defaults — an
+  // admin only needs to touch these to mark someone as in-person-capable.
+  const [offersOnline, setOffersOnline] = useState(therapist.offers_online);
+  const [offersInPerson, setOffersInPerson] = useState(therapist.offers_in_person);
+  const [city, setCity] = useState(therapist.city ?? "");
   const [specialties, setSpecialties] = useState(therapist.specialties.join(", "));
   const [languages, setLanguages] = useState(therapist.languages.join(", "));
   const [isActive, setIsActive] = useState(therapist.is_active);
@@ -173,6 +182,9 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
         diary_link_status: diaryLinkStatus,
         country: country.trim() || null,
         price_note: priceNote.trim() || null,
+        offers_online: offersOnline,
+        offers_in_person: offersInPerson,
+        city: city.trim() || null,
         specialties: specialties
           .split(",")
           .map((s) => s.trim())
@@ -296,14 +308,57 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-semibold">Price note (optional)</label>
+            <label className="mb-1.5 block text-sm font-semibold">City (optional)</label>
             <input
-              value={priceNote}
-              onChange={(e) => setPriceNote(e.target.value)}
-              placeholder="e.g. Free"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Tel Aviv"
               className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Price note (optional)</label>
+          <input
+            value={priceNote}
+            onChange={(e) => setPriceNote(e.target.value)}
+            placeholder="e.g. Free"
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        {/* Phase 151 — feeds the new Browse Therapist search on the Find
+            Support page (see EXECUTION_PLAN.md Phase 151). Session-type
+            availability didn't exist as a concept anywhere in this schema
+            before this phase, so every existing therapist defaults to
+            online-only (offers_online true, offers_in_person false) until
+            an admin says otherwise here. */}
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Session types offered</label>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-[13.5px]">
+              <input
+                type="checkbox"
+                checked={offersOnline}
+                onChange={(e) => setOffersOnline(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Online
+            </label>
+            <label className="flex items-center gap-2 text-[13.5px]">
+              <input
+                type="checkbox"
+                checked={offersInPerson}
+                onChange={(e) => setOffersInPerson(e.target.checked)}
+                className="h-4 w-4"
+              />
+              In-person
+            </label>
+          </div>
+          <p className="mt-1 text-[12.5px] text-muted-fg">
+            Controls whether this professional appears in Browse Therapist search results for each session type.
+          </p>
         </div>
 
         <div>

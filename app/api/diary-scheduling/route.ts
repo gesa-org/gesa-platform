@@ -37,6 +37,15 @@ export async function POST(request: Request) {
   // this event back to that client's support_requests row and advances its
   // status, mirroring the intakeSubmissionId handling just above.
   const supportRequestId = (body?.supportRequestId as string | undefined) || null;
+  // Phase 151 — same booking-source tracking added to /api/intake-booking;
+  // this table never had a `path`/source column at all before this phase
+  // (see the add_browse_search_metadata_to_bookings migration), so all 4 of
+  // these are null except when this handoff comes from Browse Therapist
+  // search (see BookSessionButton's bookingMetadata prop).
+  const path = (body?.path as string | undefined) || null;
+  const searchSessionType = (body?.searchSessionType as string | undefined) || null;
+  const searchCountry = (body?.searchCountry as string | undefined) || null;
+  const searchCityOrAddress = (body?.searchCityOrAddress as string | undefined) || null;
 
   if (!therapistId || !diaryLink) {
     return NextResponse.json({ error: "therapistId and diaryLink are required" }, { status: 400 });
@@ -53,6 +62,10 @@ export async function POST(request: Request) {
       client_phone: clientPhone,
       time_zone: timeZone,
       intake_submission_id: intakeSubmissionId,
+      path,
+      search_session_type: searchSessionType,
+      search_country: searchCountry,
+      search_city_or_address: searchCityOrAddress,
     })
     .select("id")
     .maybeSingle();

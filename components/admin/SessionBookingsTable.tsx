@@ -17,6 +17,11 @@ const PATH_LABELS: Record<string, string> = {
   general: "Seeking support",
   helpers: "Helping the helpers",
   directory: "Our Therapists directory",
+  // Phase 151 — Browse Therapist search (Find Support page). Reuses this
+  // existing `path` column as the "Source" tag the CRM spec asked for,
+  // rather than adding a second, duplicate column — see
+  // EXECUTION_PLAN.md Phase 151.
+  browse_therapist: "Browse Therapist",
 };
 
 type Booking = Awaited<ReturnType<typeof getAllSessionBookings>>[number];

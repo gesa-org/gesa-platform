@@ -16,9 +16,19 @@ import { Sparkle, Users, X, Loader2 } from "lucide-react";
 // dismissing the choice and going straight to Our Professionals — the same
 // destination Manual Support goes to — which is the least-friction way to
 // let someone skip the question entirely.
-export default function ChoiceScreen({ onChooseAi }: { onChooseAi: () => void }) {
+export default function ChoiceScreen({
+  onChooseAi,
+  onChooseBrowse,
+}: {
+  onChooseAi: () => void;
+  // Phase 151 — fired when the "Browse therapist" card itself is clicked
+  // (not the header's "X"), opening the new guided Browse Therapist search
+  // modal instead of redirecting straight to /therapists. See
+  // HeroFindSupportCta.tsx, which owns the modal-swap this triggers.
+  onChooseBrowse: () => void;
+}) {
   const router = useRouter();
-  const [pending, setPending] = useState<"ai" | "manual" | null>(null);
+  const [pending, setPending] = useState<"ai" | "manual" | "browse" | null>(null);
 
   async function logPathway(pathway: "ai" | "manual") {
     try {
@@ -42,6 +52,22 @@ export default function ChoiceScreen({ onChooseAi }: { onChooseAi: () => void })
     setPending("ai");
     await logPathway("ai");
     onChooseAi();
+  }
+
+  // Phase 151 — the "Browse therapist" card no longer redirects straight to
+  // /therapists; it opens the new guided search instead (see
+  // BrowseTherapistModal). Still logged as the "manual" pathway for CRM
+  // purposes — it's the same fundamental "I'll pick my own therapist rather
+  // than being AI-matched" choice `chooseManual` always represented, just
+  // with a guided search step in front of it now instead of landing
+  // directly on the full, unfiltered directory. The header's "X" (still
+  // `chooseManual`, unchanged) keeps its own separate, simpler "skip
+  // straight to the full directory" behavior.
+  async function chooseBrowse() {
+    setPending("browse");
+    await logPathway("manual");
+    setPending(null);
+    onChooseBrowse();
   }
 
   return (
@@ -76,18 +102,20 @@ export default function ChoiceScreen({ onChooseAi }: { onChooseAi: () => void })
 
         <button
           type="button"
-          onClick={chooseManual}
+          onClick={chooseBrowse}
           disabled={pending !== null}
           className="flex flex-col items-start gap-3 rounded-[var(--radius)] border border-border bg-card p-6 text-left shadow-soft transition-colors hover:border-primary-600 disabled:opacity-60"
         >
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sand-brown/30 text-primary">
-            {pending === "manual" ? <Loader2 size={20} className="animate-spin" /> : <Users size={20} />}
+            {pending === "browse" ? <Loader2 size={20} className="animate-spin" /> : <Users size={20} />}
           </span>
           {/* Phase 148 — Roy asked to rename this option from "Manual
               Support" to "Browse therapist" (its supporting description
-              below is unchanged). Purely a label change — `chooseManual`'s
-              behavior (log "manual" pathway, redirect to
-              /therapists?source=manual-support) is untouched. */}
+              below is unchanged).
+              Phase 151 — this card now opens the guided Browse Therapist
+              search modal (`chooseBrowse`) instead of redirecting straight
+              to /therapists (`chooseManual`, still used by the header's "X"
+              only — see this component's own comment above). */}
           <span className="text-[17px] font-semibold">Browse therapist</span>
           <span className="text-[13.5px] text-muted-fg">
             Browse our professionals and choose the person you feel is right for you.

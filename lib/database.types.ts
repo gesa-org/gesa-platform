@@ -155,6 +155,17 @@ export type TestimonialRow = {
 // a full authenticated row is unchanged.
 export type DiaryLinkStatus = "valid" | "invalid" | "unset";
 
+// Phase 151 — offers_online/offers_in_person/city/latitude/longitude added
+// for the Browse Therapist search (Find Support page). See the
+// add_browse_search_columns_to_therapists migration. Defaults chosen so no
+// existing record silently claims a capability it never had: offers_online
+// defaults true (the pre-existing booking flow — diary links, email/
+// WhatsApp/Zoom — was already inherently remote-first), offers_in_person
+// defaults false (nothing in the prior model distinguished this at all).
+// latitude/longitude are nullable and, in practice, null for every record
+// today — there is no geocoding step anywhere in this app; Browse
+// Therapist's in-person matching falls back to country/city text matching
+// whenever they're absent, and never claims a precise distance in that case.
 export type TherapistRow = {
   bio: string | null;
   contact_email: string | null;
@@ -183,6 +194,11 @@ export type TherapistRow = {
   verified_at: string | null;
   verified_by: string | null;
   years_experience: number | null;
+  offers_online: boolean;
+  offers_in_person: boolean;
+  city: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 // Phase 126 — the `therapists_public` view's exact column list (see
@@ -216,6 +232,13 @@ export type PublicTherapistRow = Pick<
   | "price_note"
   | "created_at"
   | "updated_at"
+  // Phase 151 — the 3 public-safe browse-search fields (see the
+  // therapists_public view's own extension). latitude/longitude are
+  // deliberately excluded — the view itself doesn't expose them either,
+  // since no browser-side code needs raw coordinates.
+  | "offers_online"
+  | "offers_in_person"
+  | "city"
 > & {
   // Derived boolean, not the phone number itself — lets the UI offer/hide
   // the WhatsApp contact channel without ever sending a confidential
@@ -331,7 +354,11 @@ export type TherapistWeeklyHoursRow = {
   created_at: string;
 }
 
-export type ContactChannel = "email" | "whatsapp" | "zoom";
+// Phase 151 — "in_person" added for Browse Therapist's in-person search
+// branch (see the add_in_person_contact_channel migration widening
+// session_bookings' CHECK constraint). Every value before this one is
+// unchanged/still remote-only.
+export type ContactChannel = "email" | "whatsapp" | "zoom" | "in_person";
 export type BookingStatus = "confirmed" | "cancelled";
 
 export type SessionBookingRow = {
@@ -356,6 +383,11 @@ export type SessionBookingRow = {
   path: string | null;
   status: BookingStatus;
   created_at: string;
+  // Phase 151 — only ever set when `path` is "browse_therapist"; null for
+  // every booking made through any other path (directory, ai-support, etc.).
+  search_session_type: string | null;
+  search_country: string | null;
+  search_city_or_address: string | null;
 }
 
 // Phase 129 — extends Phase 126's "opened" event log into the full
@@ -402,6 +434,14 @@ export type DiarySchedulingEventRow = {
   external_booking_id: string | null;
   confirmed_at: string | null;
   slot_source: SlotSource;
+  // Phase 151 — this table never had a booking-source tag before; all 4 of
+  // these are null for every row recorded before this phase, and only ever
+  // set (path = "browse_therapist" + the 3 search fields) for a diary
+  // handoff started from the Browse Therapist search flow.
+  path: string | null;
+  search_session_type: string | null;
+  search_country: string | null;
+  search_city_or_address: string | null;
 };
 
 export type ParticipatedBefore = "yes" | "no";

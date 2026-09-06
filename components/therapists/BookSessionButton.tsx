@@ -54,6 +54,7 @@ export default function BookSessionButton({
   pathKey = "directory",
   supportRequestId,
   ctaLabel,
+  bookingMetadata,
 }: {
   therapist: PublicTherapistRow;
   // Phase 142 — fired once, the moment a client first opens either booking
@@ -80,6 +81,18 @@ export default function BookSessionButton({
   // Professionals directory (`pathKey="directory"`), which wasn't part of
   // this request.
   ctaLabel?: string;
+  // Phase 151 — set only when this button is rendered from the Find
+  // Support page's new Browse Therapist search results. Threaded through to
+  // whichever booking path actually runs (native intake or diary-link
+  // handoff) so the resulting session_bookings/diary_scheduling_events row
+  // is tagged with where it came from and what the client searched for —
+  // see this component's own onIntakeSuccess/openCalendar below, and
+  // EXECUTION_PLAN.md Phase 151 for the full field list.
+  bookingMetadata?: {
+    sessionType: "online" | "in_person";
+    country: string;
+    cityOrAddress: string | null;
+  };
 }) {
   const [open, setOpen] = useState(false); // native flow modal
   const [stage, setStage] = useState<Stage>("idle");
@@ -141,6 +154,11 @@ export default function BookSessionButton({
           timeZone,
           intakeSubmissionId: forIntakeId,
           supportRequestId: supportRequestId || undefined,
+          // Phase 151 — see this component's bookingMetadata prop comment.
+          path: bookingMetadata ? "browse_therapist" : undefined,
+          searchSessionType: bookingMetadata?.sessionType,
+          searchCountry: bookingMetadata?.country,
+          searchCityOrAddress: bookingMetadata?.cityOrAddress,
         }),
       });
       const data = await res.json().catch(() => null);
@@ -332,7 +350,8 @@ export default function BookSessionButton({
       {open && (
         <IntakeBookingModal
           therapist={therapist}
-          pathKey={pathKey}
+          pathKey={bookingMetadata ? "browse_therapist" : pathKey}
+          bookingMetadata={bookingMetadata}
           onClose={() => setOpen(false)}
           onPickDifferentTherapist={() => setOpen(false)}
         />

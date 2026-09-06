@@ -10,7 +10,10 @@ import {
 import type { ContactChannel } from "@/lib/database.types";
 
 const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
-const CHANNEL_VALUES: ContactChannel[] = ["email", "whatsapp", "zoom"];
+// Phase 151 — "in_person" added for bookings coming from Browse Therapist's
+// in-person search branch (see the add_in_person_contact_channel migration
+// widening session_bookings' own CHECK constraint to match).
+const CHANNEL_VALUES: ContactChannel[] = ["email", "whatsapp", "zoom", "in_person"];
 
 // Phase 20 — books an actual, conflict-free slot (as opposed to
 // /api/booking and /api/match-booking, which only ever record a
@@ -36,6 +39,13 @@ export async function POST(request: Request) {
   const sessionTime = body?.sessionTime as string | undefined;
   const contactChannelRaw = body?.contactChannel as string | undefined;
   const path = (body?.path as string | undefined) ?? null;
+  // Phase 151 — only ever present (non-undefined) when this request came
+  // from Browse Therapist search (see IntakeBookingModal/BookSessionButton's
+  // bookingMetadata prop) — null for every other booking path, same as
+  // `path` itself already was before this phase.
+  const searchSessionType = (body?.searchSessionType as string | undefined) ?? null;
+  const searchCountry = (body?.searchCountry as string | undefined) ?? null;
+  const searchCityOrAddress = (body?.searchCityOrAddress as string | undefined) ?? null;
 
   if (!name || !email || !therapistId || !sessionDate || !sessionTime) {
     return NextResponse.json(
@@ -97,6 +107,9 @@ export async function POST(request: Request) {
     session_time: sessionTime,
     contact_channel: contactChannel,
     path,
+    search_session_type: searchSessionType,
+    search_country: searchCountry,
+    search_city_or_address: searchCityOrAddress,
   });
 
   if (insertError) {

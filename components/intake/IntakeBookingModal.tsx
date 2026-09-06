@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Mail, MessageCircle, Video, ArrowLeft, CalendarDays, CalendarCheck2 } from "lucide-react";
+import { Mail, MessageCircle, Video, ArrowLeft, CalendarDays, CalendarCheck2, MapPin } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import type { ContactChannel, PublicTherapistRow } from "@/lib/database.types";
@@ -52,15 +52,28 @@ const CHANNELS: { id: ContactChannel; label: string; icon: typeof Mail; descript
 export default function IntakeBookingModal({
   therapist,
   pathKey,
+  bookingMetadata,
   onClose,
   onPickDifferentTherapist,
 }: {
   therapist: PublicTherapistRow;
   pathKey: string;
+  // Phase 151 — set only when this modal was opened from Browse Therapist
+  // search results (see BookSessionButton's own prop comment). When
+  // sessionType is "in_person", the usual "how should we connect?"
+  // email/WhatsApp/Zoom picker below doesn't apply — none of those are an
+  // in-person meeting — so it's replaced with a fixed in-person indicator
+  // and the booking is recorded with contact_channel "in_person" instead.
+  bookingMetadata?: {
+    sessionType: "online" | "in_person";
+    country: string;
+    cityOrAddress: string | null;
+  };
   onClose: () => void;
   onPickDifferentTherapist: () => void;
 }) {
-  const [channel, setChannel] = useState<ContactChannel>("email");
+  const isInPersonSearch = bookingMetadata?.sessionType === "in_person";
+  const [channel, setChannel] = useState<ContactChannel>(isInPersonSearch ? "in_person" : "email");
   const [date, setDate] = useState(addDaysIso(1));
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -166,6 +179,12 @@ export default function IntakeBookingModal({
           sessionTime: selectedTime,
           contactChannel: channel,
           path: pathKey,
+          // Phase 151 — undefined (omitted) for every booking that isn't
+          // from Browse Therapist search, so /api/intake-booking only ever
+          // stores these 3 fields for that one flow.
+          searchSessionType: bookingMetadata?.sessionType,
+          searchCountry: bookingMetadata?.country,
+          searchCityOrAddress: bookingMetadata?.cityOrAddress,
         }),
       });
       const data = await res.json();
@@ -215,6 +234,11 @@ export default function IntakeBookingModal({
               Check your email — {therapist.full_name} will reach out to confirm any final details.
             </p>
           )}
+          {channel === "in_person" && (
+            <p className="mt-4 rounded-xl bg-accent-soft px-4 py-3 text-sm text-primary-600">
+              Check your email — {therapist.full_name} will confirm the exact meeting location with you.
+            </p>
+          )}
         </div>
       </Modal>
     );
@@ -233,29 +257,52 @@ export default function IntakeBookingModal({
       <p className="mb-5 text-[14px] text-muted-fg">Pick how you&apos;d like to connect and a time that works.</p>
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-        <div>
-          <label className="mb-2 block text-sm font-semibold">How should we connect you?</label>
-          <div className="grid grid-cols-3 gap-2">
-            {CHANNELS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setChannel(c.id)}
-                className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-center transition-colors ${
-                  channel === c.id
-                    ? "border-primary bg-accent-soft text-primary"
-                    : "border-border text-muted-fg hover:border-primary-600"
-                }`}
-              >
-                <c.icon size={18} />
-                <span className="text-[13px] font-semibold">{c.label}</span>
-              </button>
-            ))}
+        {isInPersonSearch ? (
+          // Phase 151 — this booking came from Browse Therapist's in-person
+          // search branch. None of email/WhatsApp/Zoom is a real "how should
+          // we connect" choice for an in-person meeting, so the picker is
+          // replaced with a fixed indicator confirming the format and where,
+          // using the therapist's own country/city (not the raw search
+          // input) since that's the actual meeting location.
+          <div className="flex items-start gap-2.5 rounded-xl border border-border bg-secondary/50 p-3.5 text-[13px] text-muted-fg">
+            <MapPin size={16} className="mt-0.5 flex-none text-primary" />
+            <span>
+              In-person session
+              {(therapist.city || therapist.country) && (
+                <>
+                  {" "}
+                  with {therapist.full_name} in{" "}
+                  {[therapist.city, therapist.country].filter(Boolean).join(", ")}
+                </>
+              )}
+              . Our team will confirm the exact meeting location with you.
+            </span>
           </div>
-          <p className="mt-1.5 text-[12.5px] text-muted-fg">
-            {CHANNELS.find((c) => c.id === channel)?.description}
-          </p>
-        </div>
+        ) : (
+          <div>
+            <label className="mb-2 block text-sm font-semibold">How should we connect you?</label>
+            <div className="grid grid-cols-3 gap-2">
+              {CHANNELS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setChannel(c.id)}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-center transition-colors ${
+                    channel === c.id
+                      ? "border-primary bg-accent-soft text-primary"
+                      : "border-border text-muted-fg hover:border-primary-600"
+                  }`}
+                >
+                  <c.icon size={18} />
+                  <span className="text-[13px] font-semibold">{c.label}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[12.5px] text-muted-fg">
+              {CHANNELS.find((c) => c.id === channel)?.description}
+            </p>
+          </div>
+        )}
 
         <div>
           <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold">

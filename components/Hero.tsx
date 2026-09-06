@@ -10,7 +10,7 @@ import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
 import EditableText from '@/components/ui-builder/public/EditableText';
 import HeroFindSupportCta from '@/components/find-support/HeroFindSupportCta';
-import type { Tables } from '@/lib/database.types';
+import type { Tables, PublicTherapistRow } from '@/lib/database.types';
 
 export const HERO_CONTENT_FALLBACK: HeroContent = {
   published: true,
@@ -121,6 +121,7 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 export default function Hero({
   content = HERO_CONTENT_FALLBACK,
   clinicLocations = [],
+  therapists = [],
 }: {
   content?: HeroContent;
   // Phase 146 — only needed so the primary CTA can hand it down to the
@@ -129,6 +130,9 @@ export default function Hero({
   // since this component's own contract shouldn't force every caller to
   // fetch clinic locations just to render a hero banner.
   clinicLocations?: Tables<'clinic_locations'>[];
+  // Phase 151 — same reasoning as clinicLocations above, for the new
+  // Browse Therapist search modal (needs the active therapist roster).
+  therapists?: PublicTherapistRow[];
 }) {
   return (
     <section className="gold-banner relative border-b border-border pt-16 pb-20">
@@ -212,6 +216,7 @@ export default function Hero({
                 <HeroFindSupportCta
                   href={content.ctaPrimaryHref}
                   clinicLocations={clinicLocations}
+                  therapists={therapists}
                   className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]"
                 >
                   <EditableText contentId="about.hero.cta1Label" label="Primary CTA label" value={content.ctaPrimaryLabel} as="span" /> <ArrowRight size={18} />
