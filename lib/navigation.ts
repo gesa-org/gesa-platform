@@ -50,15 +50,23 @@ export type PrimaryNavItem = {
 // content.ts). Roy asked specifically for every "Find Support" link
 // site-wide to point at the real Find Support page instead — the one
 // people seeking a therapist should land on first — so this now links to
-// `/find-your-therapist`, which itself opens the AI Support/Manual Support
-// choice screen rather than going straight to a therapist list. `aboutPage`
-// is a new item added right after it so `/about` — a real, existing page
-// this change didn't touch — stays reachable from primary nav; it would
-// otherwise have had no nav entry left pointing to it at all.
+// `/find-your-therapist`. Phase 144 added a separate `aboutPage` item
+// (`/about`) alongside it so that route stayed reachable from primary nav.
+//
+// Phase 145 — Roy reversed course entirely: the About page's content is now
+// what renders AT `/find-your-therapist` (see app/find-your-therapist/
+// page.tsx), and `/about` itself is a permanent redirect to that same route
+// (next.config.mjs). With both URLs now pointing at one destination, having
+// two separate nav entries ("Find Support" and "About Us") would show a
+// visitor the same page twice under different labels — exactly the
+// confusion Roy asked to eliminate. The `aboutPage` item is removed
+// entirely rather than left pointing at a redirect; `contentField:
+// "aboutPageLabel"` on HeaderContent is left defined but now unused/
+// orphaned data, same "don't delete data just because a section stopped
+// reading it" precedent as Footer's `exploreAboutLabel` etc.
 export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
   { key: "about", href: "/", contentField: "homeLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "findSupport", href: "/find-your-therapist", contentField: "aboutLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
-  { key: "aboutPage", href: "/about", contentField: "aboutPageLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "professionals", href: "/therapists", contentField: "therapistsLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "community", href: "/support-groups", contentField: "supportGroupsLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   {

@@ -17,23 +17,21 @@ test.describe("Site navigation", () => {
   // Home link itself reads "About" instead), "/therapists" reads "Our
   // Professionals", and "/support-groups" reads "Community".
   //
-  // "Find Support" flow rework — Roy asked for every "Find Support" link
-  // site-wide to point at the real Find Support entry point instead of the
-  // About page. "Find Support" now links to "/find-your-therapist" (which
-  // opens the AI/Manual Support choice — see find-support-flow.spec.ts for
-  // that screen's own coverage); a new "About Us" nav item was added so
-  // "/about" — untouched by this change — stays reachable.
+  // Phase 145 — Roy reversed the Phase 144 "About Us" nav item entirely:
+  // the About page's content now renders AT /find-your-therapist (see
+  // app/find-your-therapist/page.tsx), "/about" is just a permanent
+  // redirect to that same URL (next.config.mjs), and there is exactly one
+  // nav link for this destination ("Find Support") — no separate "About
+  // Us" link exists anywhere anymore, so that assertion is replaced with a
+  // check that "/about" redirects instead of a second nav link to click.
   test("header nav links reach the right pages", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("link", { name: "Find Support" }).first().click();
     await expect(page).toHaveURL(/\/find-your-therapist$/);
-    await expect(page.getByRole("heading", { name: /a guided match, just for you/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /emotional support should feel human/i })).toBeVisible();
 
-    await page.goto("/");
-    await page.getByRole("link", { name: "About Us" }).first().click();
-    await expect(page).toHaveURL(/\/about$/);
-    await expect(page.getByRole("heading", { name: /the path to emotional recovery begins here/i })).toBeVisible();
+    await expect(page.getByRole("navigation").getByRole("link", { name: "About Us" })).toHaveCount(0);
 
     await page.getByRole("link", { name: "Our Professionals" }).first().click();
     await expect(page).toHaveURL(/\/therapists$/);
@@ -41,6 +39,15 @@ test.describe("Site navigation", () => {
 
     await page.getByRole("link", { name: "Community" }).first().click();
     await expect(page).toHaveURL(/\/support-groups$/);
+  });
+
+  // Phase 145 — /about used to be a real, separate page; it's now a
+  // permanent (308) redirect to /find-your-therapist so old links/bookmarks
+  // still land somewhere real instead of a 404.
+  test("/about redirects permanently to /find-your-therapist", async ({ page }) => {
+    const response = await page.goto("/about");
+    expect(response?.url()).toMatch(/\/find-your-therapist$/);
+    await expect(page.getByRole("heading", { name: /emotional support should feel human/i })).toBeVisible();
   });
 
   // Blog is intentionally disabled (Phase 32) — no header link anymore, and

@@ -9,7 +9,7 @@ export default function HeaderEditor({ initial }: { initial: HeaderContent }) {
       contentKey="site_header"
       initial={initial}
       note={
-        'This controls the sticky header shown on every page. Nav link destinations stay fixed — only the visible labels and the Donate button are editable. "Find Support" links to the Find Your Therapist page (the AI/Manual Support entry point); "About Us" links to the About page.'
+        'This controls the sticky header shown on every page. Nav link destinations stay fixed — only the visible labels and the Donate button are editable. "Find Support" links to /find-your-therapist, which now shows the former About page content — there is no separate "About Us" nav item anymore (Phase 145).'
       }
       groups={[
         {
@@ -17,7 +17,6 @@ export default function HeaderEditor({ initial }: { initial: HeaderContent }) {
           fields: [
             { key: "homeLabel", label: "Home" },
             { key: "aboutLabel", label: "Find Support" },
-            { key: "aboutPageLabel", label: "About Us" },
             { key: "therapistsLabel", label: "Our Therapists" },
             { key: "supportGroupsLabel", label: "Support Groups" },
           ],

@@ -26,12 +26,18 @@ import type { FooterContent, HeaderContent } from "@/lib/content";
 // stop being part of the reveal effect entirely, so only the Footer stays
 // hidden-then-revealed on scroll. DonateBand moved out of this fixed layer
 // and into each of the four reveal-enabled pages' own normal content flow
-// (app/page.tsx, app/about/page.tsx, app/therapists/page.tsx,
+// (app/page.tsx, app/find-your-therapist/page.tsx, app/therapists/page.tsx,
 // app/support-groups/page.tsx) — it now renders as a plain, always-visible
 // section at the end of each page, same as any other section on those
 // pages, rather than sitting fixed underneath the page waiting to be
 // scrolled into view.
-const REVEAL_ROUTES = new Set(["/", "/about", "/therapists", "/support-groups"]);
+//
+// Phase 145 — the former About page's content (and its reveal-page__main
+// wrapper) moved to app/find-your-therapist/page.tsx, and `/about` is now
+// just a redirect to that route (next.config.mjs) — so this set tracks that
+// move rather than "/about" itself, which a visitor's browser never
+// actually renders anymore.
+const REVEAL_ROUTES = new Set(["/", "/find-your-therapist", "/therapists", "/support-groups"]);
 
 // footerContent is fetched once in app/layout.tsx (a Server Component) and
 // passed down here — this component stays "use client" for usePathname(),

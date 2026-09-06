@@ -98,10 +98,21 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     ],
   },
   { pageKey: "home", route: "/", title: "Home", group: "core", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_home" }] },
+  // Phase 145 — this entry's `route` moved from "/about" to
+  // "/find-your-therapist" (Roy asked to fold the About page's content into
+  // the Find Support page and remove About Us as a separate destination).
+  // `pageKey`/`title`/`contentSources` are unchanged on purpose: every
+  // "about.*" contentId already registered below (ABOUT_EDITABLE_FIELDS)
+  // still matches this page's rendered content 1:1, and the two
+  // site_content keys it reads are the same rows admins have always edited
+  // — only the URL it's served at changed. The old, separate
+  // "find-your-therapist" pageKey entry (a simple eyebrow/title/description
+  // banner) is removed entirely below, since that route no longer renders
+  // that content.
   {
     pageKey: "about",
-    route: "/about",
-    title: "About",
+    route: "/find-your-therapist",
+    title: "Find Support",
     group: "core",
     supportsVisualEditor: true,
     contentSources: [
@@ -146,18 +157,13 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
   },
   { pageKey: "faq", route: "/faq", title: "FAQ", group: "support", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_faq" }] },
   { pageKey: "contact", route: "/contact", title: "Contact", group: "support", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_contact" }] },
-  // Phase 140 — two real, live pages a site-wide audit found with zero
-  // registry entry at all (not even the `supportsVisualEditor: false`
-  // placeholder the 5 legal pages had) — both simple, single-`site_content`-
-  // row banner pages, same shape as FAQ/Contact above.
-  {
-    pageKey: "find-your-therapist",
-    route: "/find-your-therapist",
-    title: "Find Your Therapist",
-    group: "support",
-    supportsVisualEditor: true,
-    contentSources: [{ namespace: "", siteContentKey: "page_find_your_therapist" }],
-  },
+  // Phase 140 — this page's own registry entry (a simple eyebrow/title/
+  // description banner at "find-your-therapist") was removed in Phase 145:
+  // /find-your-therapist now renders the "about" pageKey's content instead
+  // (see that entry's `route` above), so a second registry entry pointing
+  // at the same URL would just be dead weight/an editor dead-end. Phase 140
+  // also registered a "donate-thank-you" entry alongside it — that one is
+  // untouched below.
   {
     pageKey: "donate-thank-you",
     route: "/donate/thank-you",
@@ -509,13 +515,14 @@ const CONTACT_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "contact.hero.description", path: "description", label: "Hero description", type: "plainText", group: "Hero", maxLength: 400, contentScope: "page" },
 ];
 
-// Phase 140 — Find Your Therapist. Single source, same SimplePageContent
-// banner shape as FAQ/Contact above.
-const FIND_YOUR_THERAPIST_EDITABLE_FIELDS: EditableFieldDef[] = [
-  { contentId: "find-your-therapist.hero.eyebrow", path: "eyebrow", label: "Hero eyebrow", type: "plainText", group: "Hero", maxLength: 80, contentScope: "page" },
-  { contentId: "find-your-therapist.hero.heading", path: "title", label: "Hero heading", type: "heading", group: "Hero", maxLength: 140, contentScope: "page" },
-  { contentId: "find-your-therapist.hero.description", path: "description", label: "Hero description", type: "plainText", group: "Hero", maxLength: 400, contentScope: "page" },
-];
+// Phase 140 introduced a "Find Your Therapist" simple-banner field set here
+// (find-your-therapist.hero.eyebrow/heading/description). Phase 145 removed
+// it: /find-your-therapist no longer renders that banner content at all —
+// it renders the "about" pageKey's ABOUT_EDITABLE_FIELDS instead (see the
+// "about" PAGE_DEFINITIONS entry's `route` above). Kept out of
+// FIELDS_BY_PAGE below rather than left as dead data, since a stale field
+// set an admin could still select in the Page Editor would let them "edit"
+// content nothing on the page reads anymore.
 
 // Phase 140 — Donate's post-checkout thank-you page. Not registered before
 // this phase at all — its 3 status states (paid/failed-like/still-
@@ -564,7 +571,12 @@ const GLOBAL_EDITABLE_FIELDS: EditableFieldDef[] = [
   // Header
   { contentId: "global.header.homeLabel", path: "header.homeLabel", label: "Nav: \"About\" (links to /)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   { contentId: "global.header.aboutLabel", path: "header.aboutLabel", label: "Nav: \"Find Support\" (links to /find-your-therapist)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
-  { contentId: "global.header.aboutPageLabel", path: "header.aboutPageLabel", label: "Nav: \"About Us\" (links to /about)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  // Phase 145 — the "About Us" nav item (`aboutPage` in lib/navigation.ts)
+  // this field used to label was removed entirely, so the field itself is
+  // gone from this registry too — leaving it here would let an admin "edit"
+  // a nav label nothing renders anymore. `HeaderContent.aboutPageLabel`
+  // itself is left defined/unused in lib/content.ts, per the no-delete-data
+  // convention.
   { contentId: "global.header.therapistsLabel", path: "header.therapistsLabel", label: "Nav: \"Our Professionals\"", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   { contentId: "global.header.supportGroupsLabel", path: "header.supportGroupsLabel", label: "Nav: \"Community\"", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   { contentId: "global.header.donateLabel", path: "header.donateLabel", label: "Donate button label", type: "ctaLabel", group: "Header navigation", maxLength: 40, contentScope: "global" },
@@ -635,7 +647,6 @@ const FIELDS_BY_PAGE: Record<string, EditableFieldDef[]> = {
   intake: INTAKE_EDITABLE_FIELDS,
   faq: FAQ_EDITABLE_FIELDS,
   contact: CONTACT_EDITABLE_FIELDS,
-  "find-your-therapist": FIND_YOUR_THERAPIST_EDITABLE_FIELDS,
   "donate-thank-you": DONATE_THANK_YOU_EDITABLE_FIELDS,
   "privacy-policy": legalPageFields("privacy-policy"),
   "cookies-policy": legalPageFields("cookies-policy"),

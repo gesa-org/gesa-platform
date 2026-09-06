@@ -17,14 +17,19 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   highlight: "",
   subtitle:
     "GESA (Global Emotional Support Alliance) connects you with a verified volunteer therapist for free, culturally sensitive emotional support.",
-  // Phase 144 — label changed to "Find Support" to match the nav item and
-  // this page's own title exactly (Roy's "use consistent wording" request,
-  // to make it unambiguous that this button and the nav's "Find Support"
-  // item are the same destination, not two different things). The href was
-  // already correct — this button has always linked out to the real Find
-  // Support page rather than embedding any matching flow here.
-  ctaPrimaryLabel: "Find Support",
-  ctaPrimaryHref: "/find-your-therapist",
+  // Phase 145 — this Hero now renders directly on /find-your-therapist
+  // itself (Roy folded the old About page's content into the Find Support
+  // page), so a "Find Support" button linking to "/find-your-therapist"
+  // would point the page at itself — confusing, not a real action. Changed
+  // to an in-page anchor that scrolls down to the "How GESA Works" section
+  // instead (`id="how-it-works"`, added on that section in
+  // app/find-your-therapist/page.tsx); `scroll-behavior: smooth` is already
+  // set globally (app/globals.css), so this animates with no extra JS.
+  // Relabeled to match the new behavior — "Find Support" no longer made
+  // sense for a button that scrolls rather than navigates, on a page
+  // already titled "Find Support."
+  ctaPrimaryLabel: "See How It Works",
+  ctaPrimaryHref: "#how-it-works",
   ctaSecondaryLabel: "Explore support groups",
   ctaSecondaryHref: "/support-groups",
   backgroundImage: "/images/about/hero-painting-v2.jpg",

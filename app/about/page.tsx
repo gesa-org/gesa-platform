@@ -11,6 +11,17 @@ import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
+// Phase 145 — Roy asked to remove the standalone About Us page and fold its
+// content into the Find Support page instead. This file's JSX was copied
+// over to app/find-your-therapist/page.tsx (which now owns rendering for
+// this content, still via the same "page_about_hero"/"page_about_sections"
+// site_content keys and "about" pageKey/editable-field registrations), and
+// `/about` itself is now a permanent redirect to `/find-your-therapist`
+// (next.config.mjs's `redirects()`) — a config-level redirect is resolved
+// before Next.js ever matches a request to this route, so this component
+// never actually runs in production anymore. Left in place, unreachable,
+// rather than deleted — per this project's standing rule against removing
+// already-written files/content without confirming first.
 export const metadata = {
   title: "About — GESA",
   description: "Who we are: GESA's mission, how it works, and the founders behind it.",

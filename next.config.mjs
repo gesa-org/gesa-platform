@@ -36,6 +36,23 @@ const nextConfig = {
       },
     ],
   },
+  // Phase 145 — Roy asked to fold the old standalone About Us page into the
+  // Find Support page (app/find-your-therapist/page.tsx now renders what
+  // used to be app/about/page.tsx's content) and to remove About Us as a
+  // separate destination site-wide. `/about` stays a real, working URL
+  // rather than a dead link or 404 — it just permanently forwards visitors
+  // (and search engines) to the new canonical location. `permanent: true`
+  // sends a 308, so crawlers/browsers update bookmarks/index entries to the
+  // new URL instead of re-requesting `/about` forever.
+  async redirects() {
+    return [
+      {
+        source: "/about",
+        destination: "/find-your-therapist",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
