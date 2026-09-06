@@ -53,6 +53,7 @@ export default function BookSessionButton({
   onFirstInteract,
   pathKey = "directory",
   supportRequestId,
+  ctaLabel,
 }: {
   therapist: PublicTherapistRow;
   // Phase 142 — fired once, the moment a client first opens either booking
@@ -71,6 +72,14 @@ export default function BookSessionButton({
   // and advance its status to "scheduled". Left undefined for the Our
   // Professionals directory's normal use of this component.
   supportRequestId?: string | null;
+  // Phase 149 — Roy asked for the Find Support match cards specifically
+  // (StepMatches.tsx) to read "Choose therapist" instead of this button's
+  // default "Choose a date and time"/"Book a Session" copy. Left optional
+  // and defaulting to the original labels below, rather than changing them
+  // globally, since this component is also reused unchanged by the Our
+  // Professionals directory (`pathKey="directory"`), which wasn't part of
+  // this request.
+  ctaLabel?: string;
 }) {
   const [open, setOpen] = useState(false); // native flow modal
   const [stage, setStage] = useState<Stage>("idle");
@@ -224,7 +233,7 @@ export default function BookSessionButton({
           }}
           className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-600"
         >
-          <CalendarClock size={14} /> Choose a date and time <ExternalLink size={12} />
+          <CalendarClock size={14} /> {ctaLabel ?? "Choose a date and time"} <ExternalLink size={12} />
         </button>
 
         {stage === "intake" && (
@@ -318,7 +327,7 @@ export default function BookSessionButton({
         }}
         className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-primary-600"
       >
-        <CalendarClock size={14} /> Book a Session
+        <CalendarClock size={14} /> {ctaLabel ?? "Book a Session"}
       </button>
       {open && (
         <IntakeBookingModal

@@ -164,11 +164,20 @@ export default function StepMatches({
                     </p>
                     <p className="mt-0.5 text-[13.5px] italic text-muted-fg">&ldquo;{match.reasoning}&rdquo;</p>
                     <div className="mt-3 max-w-[220px]">
+                      {/* Phase 149 — Roy asked for this card's CTA to read
+                          "Choose therapist" instead of BookSessionButton's
+                          default label (either "Choose a date and time" for
+                          diary-link therapists, or "Book a Session" for
+                          native ones) — scoped to just this screen via the
+                          new `ctaLabel` prop, so the Our Professionals
+                          directory's own use of this same component is
+                          unaffected. */}
                       <BookSessionButton
                         therapist={t}
                         pathKey="ai-support"
                         supportRequestId={supportRequestId}
                         onFirstInteract={() => onTherapistSelected(match)}
+                        ctaLabel="Choose therapist"
                       />
                     </div>
                   </div>

@@ -6813,4 +6813,27 @@ git push
 Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
 
 ---
+
+## Phase 149: rename match-card CTA to "Choose therapist"
+
+**Request:** Replace the "Choose a date and time" label with "Choose therapist" on each therapist match card in the Find Support results.
+
+**What changed:**
+- `components/therapists/BookSessionButton.tsx` — added an optional `ctaLabel` prop. When set, it overrides this button's default text in both branches: "Choose a date and time" (therapists with a diary link) and "Book a Session" (therapists without one). Left as an opt-in override rather than changing the defaults outright, since this exact component is also reused unchanged by the Our Professionals directory (`pathKey="directory"`), which wasn't part of this request — that page's buttons still read "Choose a date and time"/"Book a Session" as before.
+- `components/match/StepMatches.tsx` — passes `ctaLabel="Choose therapist"` on the `<BookSessionButton>` rendered for each match card, so every card on the Find Support results screen now reads "Choose therapist" regardless of whether that particular therapist has a diary link or not (covers both branches with one consistent label, since the request asked for it on "each" match card).
+
+**QA:** `npx tsc --noEmit` — unchanged from the established 16-line baseline. Grepped both changed files for the unescaped-apostrophe JSX pattern — every match is inside a comment. Not verified in a live browser (same standing sandbox limitation as every phase since 132) — most important to check after deploying: every match card in the Find Support results reads "Choose therapist," and the Our Professionals directory's own booking buttons are unaffected.
+
+**Files changed:** `components/therapists/BookSessionButton.tsx`, `components/match/StepMatches.tsx`. No database or API-route changes.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 149: rename match-card CTA to Choose therapist"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
