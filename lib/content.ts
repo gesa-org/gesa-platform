@@ -551,9 +551,15 @@ export const CONTACT_CONTENT_FALLBACK: SimplePageContent = {
 
 // Phase 80 round 2 — the Find Your Therapist wizard's PageHero banner had no
 // Content Manager wiring at all until now.
+// Phase 144 — eyebrow changed from "Find Your Therapist" to "Find Support"
+// to match the nav label and the About page's CTA exactly (Roy's "use
+// consistent wording across the website" request) — this page has no
+// published site_content row yet (confirmed against the live DB), so this
+// fallback is exactly what's rendering today; changing it here changes the
+// live copy directly, with no separate CMS update needed.
 export const FIND_YOUR_THERAPIST_CONTENT_FALLBACK: SimplePageContent = {
   published: true,
-  eyebrow: "Find Your Therapist",
+  eyebrow: "Find Support",
   title: "A guided match, just for you",
   description:
     "Answer a few quick questions and we'll match you with a verified volunteer therapist suited to your needs — free, confidential, and no account required.",

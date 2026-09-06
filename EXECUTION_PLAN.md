@@ -6660,3 +6660,43 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 144: remove ambiguity between Find Support and About Us
+
+**Request:** Roy flagged that the AI matching experience seemed associated with both the main nav's "Find Support" page and the About Us page's own "Find Support" CTA, and asked for `/find-your-therapist` to stay the single, unambiguous home for the AI Match flow — About Us should stay purely informational, its CTA a plain redirect, never an embedded/duplicated matching form — with consistent "Find Support" wording used everywhere (nav label, page title, About's CTA, and a supporting line: "Get matched with a verified volunteer therapist.").
+
+**Audit first, before changing anything — the good news:** this was already structurally correct, not a real duplication bug.
+- `components/Hero.tsx` (the About page's hero, confirmed via `app/about/page.tsx` — the only place this component is used) renders its CTA as a plain `<Link href={content.ctaPrimaryHref}>` — no `MatchWizard`, no `FindSupportFlow`, no matching-related state of any kind on the About page. There was never a second AI Match experience living on `/about`.
+- `MatchWizard`/`FindSupportFlow`/every wizard step component is imported in exactly one place site-wide: `app/find-your-therapist/page.tsx` (confirmed via a repo-wide search) — one source of truth, as required.
+- The header/footer nav (`lib/navigation.ts`'s shared `PRIMARY_NAVIGATION`, read by both `Header.tsx` and `Footer.tsx`'s Explore column) already correctly has `findSupport` → `/find-your-therapist` and a separate `aboutPage` → `/about` entry, from Phase 142a. No drift between header and footer — Footer's Explore column has read from this same shared list, not its own copy, since Phase 117.
+- Queried the live production `site_content` row for `page_about_hero` directly: the published CTA already reads `"ctaPrimaryLabel": "FIND SUPPORT"` with `"ctaPrimaryHref": "/find-your-therapist"` — already correct on the live site today, most likely from whoever edited it after Phase 142a shipped. No live-content bug to fix here either.
+
+**What was actually inconsistent, and what changed:**
+- `/find-your-therapist`'s own eyebrow badge read "Find Your Therapist" (a different phrase from the nav's "Find Support" label) and its browser-tab title read "Find Your Therapist — GESA". Queried the live `site_content` table for `page_find_your_therapist` — **no row exists**, meaning this page has always rendered from the code fallback (`FIND_YOUR_THERAPIST_CONTENT_FALLBACK` in `lib/content.ts`), so changing that fallback changes the live page directly, no separate CMS update needed. Eyebrow changed to "Find Support"; `app/find-your-therapist/page.tsx`'s `metadata.title` (the actual browser-tab/SEO title, the one part of this page not admin-editable via Content Manager) changed to "Find Support — GESA". The on-page `<h1>` itself ("A guided match, just for you") was left as is — it's a warm expansion of the same idea, not a second, conflicting name for the page.
+- `components/Hero.tsx`'s own **code fallback** (`HERO_CONTENT_FALLBACK.ctaPrimaryLabel`) still said "Find your therapist", out of sync with the live-published "FIND SUPPORT" value found above — updated to "Find Support" so a future reset-to-defaults (or a fresh environment with no published row) shows the same consistent wording the live site already has, rather than regressing back to the old phrase.
+- Added the requested supporting line, "Get matched with a verified volunteer therapist.", directly under the About Hero's CTA button pair. Deliberately **not** wired as a new Content-Manager field — this component already has an established precedent for small, fixed (non-editable) reassurance text right below this exact spot (the three trust badges — "Verified Professionals," "100% Free Sessions," "Global Community" — are plain hardcoded strings, not `EditableText`-wrapped), and this new line serves the same structural-clarity purpose as those, tied permanently to the CTA's fixed destination rather than being page-specific marketing copy an admin would need to customize per campaign.
+
+**Validation against the request's own checklist:**
+- Header "Find Support" → `/find-your-therapist`: confirmed via `lib/navigation.ts`.
+- About Us "Find Support" CTA → `/find-your-therapist`: confirmed both in code (plain `Link`) and in the live published `site_content` row.
+- About Us stays informational, no AI Match flow embedded: confirmed via full read-through of `app/about/page.tsx` — Hero, "How GESA Works," Founder spotlight, movement/Team & Advisors, DonateBand, nothing else.
+- `/find-your-therapist` still shows the original AI matching experience: confirmed unchanged from Phase 143 (`FindSupportFlow` → choice screen → `MatchWizard`'s now-4-step flow).
+- Desktop nav + footer point to the same canonical route: confirmed (shared `PRIMARY_NAVIGATION` list, no separate copies).
+- **Mobile navigation:** flagged, not fixed — this codebase has no dedicated mobile nav menu at all today (`Header.tsx`'s `<nav>` is `hidden md:flex`; confirmed no `MobileNav`-style component exists anywhere in the repo). Mobile visitors currently get zero header nav links, full stop — a pre-existing gap unrelated to this request, not something "Find Support" or "About Us" specifically broke. Nothing to validate here since there's nothing mobile-specific pointing anywhere, right or wrong; flagging in case Roy wants a real mobile menu built as a separate, future ask.
+- No broken routes/duplicate forms/duplicate matching states: confirmed — no new routes added, no components deleted, no matching-flow code touched at all this phase.
+
+**QA:** `npx tsc --noEmit` — unchanged from the established 16-line baseline. Grepped every changed file for the unescaped-apostrophe JSX pattern — every match is inside a comment or pre-existing copy; the new caption line has no apostrophe at all. Not verified in a live browser (same standing sandbox limitation as every phase since 132) — most important to check after deploying: (1) the About page's hero CTA still reads "FIND SUPPORT" and opens `/find-your-therapist`; (2) that page's browser tab now reads "Find Support — GESA" and its eyebrow badge reads "Find Support"; (3) the new reassurance line renders under the About CTA without crowding the trust badges below it.
+
+**Files changed:** `app/find-your-therapist/page.tsx` (`metadata.title`), `lib/content.ts` (`FIND_YOUR_THERAPIST_CONTENT_FALLBACK.eyebrow`), `components/Hero.tsx` (`HERO_CONTENT_FALLBACK.ctaPrimaryLabel`, new fixed caption line). No database changes — the one live `site_content` row involved (`page_about_hero`) was already correct and wasn't touched; `page_find_your_therapist` has no row to touch. No routing, matching-logic, or component-structure changes of any kind.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 144: consistent Find Support wording, confirm no About Us duplication"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Short version of the finding: there wasn't actually a second AI Match flow living on About Us — its CTA already redirected correctly, live on the site today. The confusion was wording drift (this page's own eyebrow/title said "Find Your Therapist" instead of "Find Support"), which is now aligned everywhere. Separately, worth knowing: this site has no mobile navigation menu at all yet — not something this request broke, but worth a look if mobile visitors are part of how people are finding (or failing to find) Support in the first place.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -17,7 +17,13 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
   highlight: "",
   subtitle:
     "GESA (Global Emotional Support Alliance) connects you with a verified volunteer therapist for free, culturally sensitive emotional support.",
-  ctaPrimaryLabel: "Find your therapist",
+  // Phase 144 — label changed to "Find Support" to match the nav item and
+  // this page's own title exactly (Roy's "use consistent wording" request,
+  // to make it unambiguous that this button and the nav's "Find Support"
+  // item are the same destination, not two different things). The href was
+  // already correct — this button has always linked out to the real Find
+  // Support page rather than embedding any matching flow here.
+  ctaPrimaryLabel: "Find Support",
   ctaPrimaryHref: "/find-your-therapist",
   ctaSecondaryLabel: "Explore support groups",
   ctaSecondaryHref: "/support-groups",
@@ -180,6 +186,20 @@ export default function Hero({ content = HERO_CONTENT_FALLBACK }: { content?: He
                 </Link>
               </StaggerItem>
             </StaggerGroup>
+
+            {/* Phase 144 — a short, fixed reassurance line under the CTA
+                pair, so the "Find Support" button's destination is obvious
+                before it's even clicked. Not wrapped in EditableText/CMS-
+                backed like the fields above it — same "fixed, not editable"
+                treatment this component already gives the trust badges just
+                below (Verified Professionals/100% Free Sessions/Global
+                Community are plain hardcoded strings too), since this is a
+                structural clarity aid tied to the CTA's fixed destination,
+                not page-specific marketing copy an admin would need to
+                rewrite per campaign. */}
+            <p className="mt-3 text-[13.5px] text-primary/70">
+              Get matched with a verified volunteer therapist.
+            </p>
 
             {/* Badges */}
             <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-primary/85 text-[14px] font-medium">
