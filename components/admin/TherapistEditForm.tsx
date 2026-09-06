@@ -398,7 +398,7 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
             ))}
           </div>
           <p className="mt-1 text-[12.5px] text-muted-fg">
-            Controls whether this professional appears on the "Available … Professionals" page for each pathway.
+            Controls whether this professional appears on the &ldquo;Available … Professionals&rdquo; page for each pathway.
           </p>
         </div>
 

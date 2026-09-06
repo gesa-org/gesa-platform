@@ -7044,3 +7044,38 @@ One more thing worth your attention: right now, only therapists you (or another 
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 152 (fix): build failure — unescaped double quotes in JSX text
+
+**What happened:** Roy ran the Phase 152 git block and the Vercel build failed at the lint step:
+```
+./components/admin/TherapistEditForm.tsx
+401:63  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+401:89  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+```
+
+**Root cause:** the new "Intake pathways" checkbox group's helper text literally quoted the page heading: `Controls whether this professional appears on the "Available … Professionals" page for each pathway.` — plain double quotes typed directly in JSX text. This project's own established QA convention for every phase up to now only ever grepped for the **apostrophe** pattern (`react/no-unescaped-entities` also flags apostrophes, and that's the far more common case in this codebase's prose), never double quotes — so this is a real gap in that convention, not just a one-off miss, and it's worth fixing the convention itself going forward, not just this one line.
+
+**Fix:** changed the line to use `&ldquo;`/`&rdquo;` instead of literal `"` characters.
+
+**Also fixed the underlying QA gap, not just the symptom:** wrote a one-off Node script (using this repo's own `@babel/parser`/`@babel/traverse` dependencies, already installed) that parses a file's real AST and flags any `JSXText` node whose **raw source** (not the HTML-entity-decoded value Babel normally exposes) contains a literal `'` or `"` — this correctly ignores text already written with `&apos;`/`&quot;`/`&ldquo;`/`&rdquo;` etc. and, unlike a line-based grep, correctly handles JSX text that starts on a different line than its opening tag (the exact situation that let this bug slip through the first time — a plain per-line regex can't see a `>` on one line and a `"` two lines later as connected).
+
+Ran it against all 17 files touched across Phase 151 and Phase 152 — confirmed clean (only the one now-fixed line had ever been a real hit; every other apostrophe/quote in these files, previously spot-checked individually, really was inside a comment or a non-JSX-text string, as those manual checks concluded). `npx eslint` itself could not be run to confirm independently — it hangs past this sandbox's command-timeout ceiling the same way `npx jest` does (same underlying network-mounted-filesystem cause as that long-documented limitation), even with `--print-config` alone (no actual linting). `npx tsc --noEmit` re-run after the fix — still exactly the established 16-line baseline, byte-for-byte identical output to the pre-fix run.
+
+The scratch script (`scratch_check_jsx_text.cjs`) was a throwaway QA tool, not part of the app — the sandbox's shell couldn't delete it (same permissions error as other undeletable files noted elsewhere in this document), so it's emptied out with an explanatory comment instead; safe to delete by hand.
+
+**Recommendation for future phases:** the apostrophe-only grep convention (`grep -noP "[a-zA-Z]'[a-zA-Z]"`) used throughout this changelog should be widened to also catch `"` — or, better, this phase's AST-based script should become the standard check instead of a regex, since it doesn't have the multi-line blind spot a grep does.
+
+**Files changed:** `components/admin/TherapistEditForm.tsx` (one line), `scratch_check_jsx_text.cjs` (new, then emptied per the note above).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 152 fix: escape literal quotes in TherapistEditForm JSX text (build failure)"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. This should clear the build failure — let me know if `npm run build` (or the Vercel build) still fails after this and I'll dig further.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
