@@ -97,9 +97,17 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
         supportRequestId,
         therapistId: match.therapist.id,
         therapistName: match.therapist.full_name,
-        // Phase 143 — contact details are now collected on this same step,
-        // so they're only ever known at exactly this moment; pass them
-        // through so the support_requests row gets them saved here.
+        // Phase 143 collected name/email/phone/consent on this same step so
+        // they could be passed through here at the moment a client picked a
+        // therapist. Phase 147 removed that "Your contact details" card
+        // from StepMatches entirely (Roy's request) — nothing in this
+        // wizard ever sets `answers.fullName`/`email`/`phone`/
+        // `agreedConsent` anymore, so these now always send as blank/false.
+        // Left wired rather than stripped out, per the no-delete-data
+        // convention (WizardAnswers keeps the fields; the API route still
+        // accepts and stores them) — flagged to Roy since it means the
+        // support_requests row this creates no longer captures real contact
+        // info through this path at all.
         fullName: answers.fullName,
         email: answers.email,
         phone: answers.phone || null,
@@ -170,10 +178,6 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
             matchError={matchError}
             genderPreferenceHonored={genderPreferenceHonored}
             supportRequestId={supportRequestId}
-            onFullNameChange={(v) => update("fullName", v)}
-            onEmailChange={(v) => update("email", v)}
-            onPhoneChange={(v) => update("phone", v)}
-            onAgreedConsentChange={(v) => update("agreedConsent", v)}
             onBack={() => setStep(2)}
             onTherapistSelected={onTherapistSelected}
           />

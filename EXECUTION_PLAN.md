@@ -6762,4 +6762,29 @@ git push
 Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
 
 ---
+
+## Phase 147: remove the "Your contact details" card from Step 4 (Your matches)
+
+**Request:** Remove the entire "Your contact details" card from the AI Matching wizard's Matches step — full name, email, phone (optional), and the consent checkbox/Privacy Policy text — while keeping the therapist-match cards and their "Choose a date and time" actions unchanged.
+
+**What changed:**
+- `components/match/StepMatches.tsx` — removed the whole "Your contact details" `<div>` (the two-column name/email row, the phone input, the consent checkbox + Privacy Policy link) that used to sit between the match-preferences summary chips and the first therapist card. Also removed the gating logic that went with it: each match card's booking action used to conditionally render either the real `<BookSessionButton>` (once name/email/consent were valid) or a disabled "Add contact details above" placeholder — with the card gone, there's nothing left to gate on, so `<BookSessionButton>` now always renders unconditionally, same props as before (`therapist`, `pathKey="ai-support"`, `supportRequestId`, `onFirstInteract`). Removed the now-dead `touched`/`contactErrors`/`contactValid`/`EMAIL_RE` state and logic, the `Lock` icon import, and the `onFullNameChange`/`onEmailChange`/`onPhoneChange`/`onAgreedConsentChange` props (nothing in this component calls them anymore).
+- `components/match/MatchWizard.tsx` — stopped passing those four now-unused callback props to `<StepMatches>`.
+
+**What was deliberately left untouched — and the consequence worth flagging:** `WizardAnswers.fullName`/`email`/`phone`/`agreedConsent` (the data model) and `MatchWizard`'s `onTherapistSelected`, which still POSTs those same four fields to `/api/support-request/select-therapist` when a client picks a therapist — left wired rather than stripped out, per this project's no-delete-data convention. The real consequence: since nothing in the UI collects these values anymore, that POST now always sends a blank name/email/null phone/`agreedConsent: false`. In plain terms — **the support_requests row created when someone picks a therapist through the AI Matching flow no longer captures the client's real name, email, phone, or consent at all**, since Step 4 was the only place in the flow that ever asked for them. If Roy wants that contact info still captured somewhere (CRM follow-up, the actual booking/diary-scheduling flow that runs after "Choose a date and time" is clicked, etc.), that's a separate decision I didn't make unilaterally — flagged here rather than silently leaving a gap.
+
+**QA:** `npx tsc --noEmit` — unchanged from the established 16-line baseline. Grepped both changed files for the unescaped-apostrophe JSX pattern — every match is inside a comment. Not verified in a live browser (same standing sandbox limitation as every phase since 132) — most important to check after deploying: (1) the contact-details card is gone from Step 4; (2) match cards and their "Choose a date and time" buttons render and open exactly as before; (3) the booking flow that follows still works end-to-end even with no name/email captured at this step.
+
+**Files changed:** `components/match/StepMatches.tsx`, `components/match/MatchWizard.tsx`. No database or API-route changes.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 147: remove contact-details card from AI Matching Step 4"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Please also see the flag above about contact info no longer being captured anywhere in this flow now that this card is gone — let me know if that's intentional or if it should be collected somewhere else instead.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
