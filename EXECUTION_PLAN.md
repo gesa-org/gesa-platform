@@ -7182,3 +7182,30 @@ Roy — the live site is already fixed (I corrected the published content direct
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 156: sync the "Resilience"/"Veterans"/"Support" names still left over downstream of Home's WAR/TERROR/DISASTER rename
+
+**Request:** "change the cards name 'Resilience, Veterans, Support' to 'WAR, TERROR, DISASTER'."
+
+**Checked the actual live cards first:** Home's three cards' own front labels were already "WAR"/"TERROR"/"DISASTER" — confirmed directly against the live `page_home` site_content row, not just the code — so Phase 154's rename itself needed no further changes. What Phase 154 didn't touch were two places downstream that still used the *old* names ("Resilience"/"Veterans"/"Support," not even Phase 154's own placeholder "Crisis"/"Veterans"/"Support" — "Resilience" specifically was this pathway's very first name, from Phase 152), which is what this request was actually asking to fix:
+
+1. **`app/intake/page.tsx`'s `PATHWAY_HEADING` map** — the heading shown after clicking through from a card (its own comment literally says "the page heading changes based on the selected pathway card") still read "Available Resilience Support Professionals" / "Available Veterans Support Professionals" / "Available Support Professionals" for the `crisis`/`veteran`/`general` pathways — a visitor clicking the "WAR" card landed on a page headed "Resilience," a mismatch. Updated to "Available WAR Support Professionals" / "Available TERROR Support Professionals" / "Available DISASTER Support Professionals." The 4th, unrelated `helpers` pathway heading ("Available Support Professionals for Helpers") is untouched — no card links to it today.
+2. **`components/admin/TherapistEditForm.tsx`'s "Intake pathways" checkboxes** — the admin-facing labels an admin sees when assigning a therapist to a pathway still read "Resilience / crisis" / "Veterans" / "General support," which would've left an admin unable to tell these map to the now-renamed "War"/"Terror"/"Disaster" cards. Updated the three labels to "War / crisis" / "Terror / veteran" / "Disaster / general support." The underlying `value`s (`crisis`/`veteran`/`general`/`helpers`) are completely unchanged — those are real data (the `support_pathways` column values and the `/intake?path=` keys), not display text, so no therapist's existing pathway assignment is affected.
+
+**What was deliberately left untouched:** the `crisis`/`veteran`/`general`/`helpers` route keys and database values everywhere they appear (URLs, the `support_pathways` column, `PATH_ENTRY_ROUTE`) — this phase only renamed *visible text*, consistent with how Phase 154's own card-label rename worked (the front badge label changed, the underlying `/intake?path=` links did not).
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on both changed files — clean. Grepped the codebase for "Resilience" afterward — the only remaining occurrence is the `helpers` pathway comment block context, not a visible label. Could not click through in a live browser — same standing sandbox limitation as every phase since 132.
+
+**Files changed:** `app/intake/page.tsx`, `components/admin/TherapistEditForm.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 156: sync intake heading + admin pathway labels to War/Terror/Disaster"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

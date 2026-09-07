@@ -368,18 +368,24 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
           </p>
         </div>
 
-        {/* Phase 152 — feeds the Home page's three pathway cards
-            ("I've been affected by a crisis" / "I serve, or support someone
-            who serves" / "I'm looking for professional support") ->
+        {/* Phase 152 — feeds the Home page's three pathway cards ->
             /intake?path=crisis|veteran|general. A therapist only shows up
-            on one of those pages once checked here. */}
+            on one of those pages once checked here.
+            Phase 156 — the three cards' own front labels are now "War" /
+            "Terror" / "Disaster" (Phase 154, replacing "Crisis"/"Veterans"/
+            "Support"), so these checkbox labels were updated to match —
+            otherwise an admin checking "Resilience / crisis" here would have
+            no way to tell it's the same pathway as the live "War" card.
+            The underlying `value`s (crisis/veteran/general/helpers) are
+            unchanged — those are the real `support_pathways` column values
+            and the `/intake?path=` keys, not display text. */}
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Intake pathways</label>
           <div className="flex flex-wrap gap-4">
             {[
-              { value: "crisis", label: "Resilience / crisis" },
-              { value: "veteran", label: "Veterans" },
-              { value: "general", label: "General support" },
+              { value: "crisis", label: "War / crisis" },
+              { value: "veteran", label: "Terror / veteran" },
+              { value: "general", label: "Disaster / general support" },
               { value: "helpers", label: "Helpers" },
             ].map((p) => (
               <label key={p.value} className="flex items-center gap-2 text-[13.5px]">

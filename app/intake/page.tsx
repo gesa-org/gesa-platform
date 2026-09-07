@@ -27,10 +27,18 @@ const PATH_ENTRY_ROUTE: Record<string, string> = {
 // (components/home/Paths.tsx). Not Content-Manager-backed like the eyebrow/
 // hero title above it — a fixed, structural heading tied 1:1 to the pathway
 // key itself, not page-specific marketing copy an admin would rewrite.
+// Phase 156 — Home's three cards were renamed "War"/"Terror"/"Disaster"
+// (Phase 154), replacing "Crisis"/"Veterans"/"Support" as the front badge
+// labels; these headings previously still read "Resilience"/"Veterans"/
+// "Support" (their original Phase 152 names, from before that rename), so a
+// visitor clicking through no longer saw a heading matching the card they
+// came from. Updated the crisis/veteran/general entries to match; "helpers"
+// isn't one of the three renamed cards (no card links to it today) and is
+// left as-is.
 const PATHWAY_HEADING: Record<string, string> = {
-  crisis: "Available Resilience Support Professionals",
-  veteran: "Available Veterans Support Professionals",
-  general: "Available Support Professionals",
+  crisis: "Available WAR Support Professionals",
+  veteran: "Available TERROR Support Professionals",
+  general: "Available DISASTER Support Professionals",
   helpers: "Available Support Professionals for Helpers",
 };
 
