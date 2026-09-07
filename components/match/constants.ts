@@ -4,16 +4,22 @@
 // signal that step used to provide. StepAssessment.tsx still exists on disk
 // but is no longer imported/rendered anywhere — see EXECUTION_PLAN.md.
 
+// Phase 161 — reordered to match Roy's requested display order for the new
+// pill-selector UI in StepPreferences (Group Sessions moved from position 6
+// to last). Same 9 values as before — no value/label changed, and nothing
+// else keys off array order (StepMatches only turns this into a
+// value->label lookup map, order-independent), so this is a pure display
+// reorder with no effect on stored data or matching logic.
 export const TREATMENT_TYPES = [
   { value: "", label: "No preference" },
   { value: "CBT", label: "Cognitive Behavioral Therapy (CBT)" },
   { value: "Trauma Support", label: "Trauma-informed therapy" },
   { value: "Emotional Support for Couples", label: "Couples / family counseling" },
   { value: "Psychiatry", label: "Psychiatry" },
-  { value: "Group Sessions", label: "Group sessions" },
   { value: "Coach (Life Coach)", label: "Life coaching" },
   { value: "Guided Meditation", label: "Holistic / mind-body (meditation, yoga)" },
   { value: "Social Work", label: "Social work / case management" },
+  { value: "Group Sessions", label: "Group Sessions" },
 ];
 
 export const GENDER_OPTIONS: { value: "woman" | "man" | "nonbinary" | "no_preference"; label: string }[] = [

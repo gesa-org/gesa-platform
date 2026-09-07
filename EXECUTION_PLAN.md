@@ -7368,3 +7368,33 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 161: "Preferred treatment type" is now a clickable pill selector
+
+**Request:** Roy asked to replace Step 1 (Your Preferences) of the AI Matching wizard's native `<select>` dropdown for "Preferred treatment type" with a clickable pill/card interface — single-select, "No preference" as the default, visibly highlighted selected state, all 9 existing options retained, no change to matching logic/stored data/validation/step navigation/Continue button, responsive, and accessible (semantic radio-group behavior, keyboard nav, visible focus, adequate touch targets).
+
+**What changed:** `components/match/StepPreferences.tsx` — the `<select>`/`<option>` block became a `<fieldset>` of pill-shaped `<label>`s, each wrapping a real `<input type="radio" name="treatmentType">` (visually hidden via `sr-only`, not removed from the accessibility tree or from keyboard flow). Same visual pattern already used one field down for "Therapist gender preference" (border/background swap on selection), plus a small check icon on the selected pill.
+
+Using real `<input type="radio">` elements sharing one `name` — rather than a hand-rolled set of `<button>`s with manual `aria-checked`/roving-tabindex — means the browser itself provides: mutual exclusivity (selecting one radio natively deselects every other one in the group, so "select a treatment type" and "return to No preference" both fall out for free, no extra state-clearing code needed), full keyboard support (Tab into the group, arrow keys to move between options, Space to select), and a real accessible name/role per option — all platform behavior instead of reimplemented ARIA. Each pill is a `min-h-[44px]` tap target and wraps via `flex flex-wrap`, so it reads as neat wrapped rows on desktop and stacks into comfortably-spaced full-width-ish tap targets on narrow mobile viewports without any separate mobile-only markup.
+
+The component's actual data contract to `MatchWizard` — `treatmentType: string` in, `onTreatmentTypeChange(value: string)` out — is byte-for-byte unchanged; only the DOM/interaction that produces that same string changed. `MatchWizard.tsx`, `WizardAnswers`, the `/api/support-match` route, and the matching engine in `lib/ai/matchTherapists.ts` were not touched.
+
+**Also changed:** `components/match/constants.ts` — reordered `TREATMENT_TYPES` to match the display order Roy specified (Group Sessions moved from position 6 to last; every other option's position/value/label is untouched). This is a pure array-order change: `StepMatches.tsx`'s only other use of this array builds a value→label lookup object from it (`Object.fromEntries`), which is order-independent, so nothing downstream is affected by the reorder.
+
+**What was deliberately left untouched:** the "Therapist gender preference" button row and "Preferred language" dropdown just below/above this field (Roy explicitly asked to leave these as-is), the Continue button and step-navigation logic, and every other wizard step.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on both touched files — clean. Traced the interaction logic by hand rather than assuming: default state (`treatmentType === ""`) checks the "No preference" radio since its `value=""` matches; clicking any other pill fires `onChange` with that pill's non-empty value, which becomes the new `treatmentType`, so the "No preference" radio's `checked` prop (`treatmentType === ""`) becomes false automatically — no manual "clear no-preference" step required, same one-way for the reverse. Not verified in a live browser or with a screen reader — same standing sandbox limitation as every phase since 132; worth clicking through Step 1 (select a type, switch to another, return to No preference, hit Continue) once it's live to confirm the full flow still reaches the results step with no errors.
+
+**Files changed:** `components/match/StepPreferences.tsx`, `components/match/constants.ts`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 161: replace treatment-type dropdown with accessible pill selector"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Once it's live, please click through Step 1 of AI Matching: pick a treatment type, switch to a different one, go back to "No preference," and confirm Continue still takes you into the results step normally.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
