@@ -63,14 +63,10 @@ interface PageHeroProps {
 // them up from one change. FAQ/Contact/legal pages pass `gold={false}` (or
 // omit it) and are completely unaffected.
 //
-// Phase 159 — `--slate-banner` (the color `.gold-banner` reads) went from a
-// light slate-gray to a deep navy. The eyebrow chip's background is already
-// its own near-white pill regardless of `gold`, so its dark text stays
-// readable either way — but the title and description previously had no
-// (or a dark) color of their own here, relying on sitting on a light
-// background. Both now switch to white/white-80 specifically when
-// `gold` is true, so they stay legible against the new dark banner; the
-// non-gold FAQ/Contact/legal path is completely unchanged.
+// Phase 159 — briefly made the title/description switch to white/white-80
+// when `gold` is true, to stay legible on a deep-navy banner background;
+// reverted alongside the rest of that phase once Roy said the new color
+// didn't work on the live site.
 export default function PageHero({
   icon: Icon,
   eyebrow,

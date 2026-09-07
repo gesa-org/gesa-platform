@@ -119,15 +119,10 @@ export const HERO_CONTENT_FALLBACK: HeroContent = {
 // both previously tuned for a pale background) — no copy, links, CTAs, or
 // the painting/media panel changed.
 //
-// Phase 159 — `.gold-banner`'s background (`--slate-banner`) went from a
-// light slate-gray to a deep navy. The eyebrow chip keeps its own light
-// pill background either way, so it's untouched — but the headline
-// (`text-foreground`), description, reassurance line, and badge row
-// (all previously dark tones tuned for the old light background) would
-// have become nearly unreadable on the new dark one, so all four switch to
-// white/white-with-opacity. The badge icons (`text-accent`, a sage green)
-// and both CTA buttons keep their own colors unchanged — sage green and
-// the buttons' own fills already read fine against a dark background.
+// Phase 159 — briefly switched the headline, description, reassurance
+// line, and badge row to white/white-with-opacity to stay legible on a
+// deep-navy `.gold-banner` background; reverted alongside the rest of that
+// phase once Roy said the new color didn't work on the live site.
 export default function Hero({
   content = HERO_CONTENT_FALLBACK,
   clinicLocations = [],
@@ -205,11 +200,11 @@ export default function Hero({
                 label="Hero heading"
                 value={buildHighlightedHtml(content.title, content.highlight)}
                 as="h1"
-                className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-white leading-[1.08] tracking-[-0.025em] mb-6"
+                className="relative font-serif text-[clamp(38px,5vw,60px)] font-semibold text-foreground leading-[1.08] tracking-[-0.025em] mb-6"
               />
             </ScrollText>
             <Reveal type="fade-up" delay={0.08}>
-              <div className="text-[20px] text-white/80 leading-[1.55] mb-8 max-w-[34rem]">
+              <div className="text-[20px] text-primary/80 leading-[1.55] mb-8 max-w-[34rem]">
                 <EditableText contentId="about.hero.description" label="Hero description" value={content.subtitle} as="span" />
               </div>
             </Reveal>
@@ -249,12 +244,12 @@ export default function Hero({
                 structural clarity aid tied to the CTA's fixed destination,
                 not page-specific marketing copy an admin would need to
                 rewrite per campaign. */}
-            <p className="mt-3 text-[13.5px] text-white/70">
+            <p className="mt-3 text-[13.5px] text-primary/70">
               Get matched with a verified volunteer therapist.
             </p>
 
             {/* Badges */}
-            <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-white/85 text-[14px] font-medium">
+            <StaggerGroup className="flex flex-wrap gap-6 mt-10 text-primary/85 text-[14px] font-medium">
               <StaggerItem className="inline-block">
                 <span className="flex items-center gap-2">
                   <ShieldCheck className="text-accent" size={18} /> Verified Professionals

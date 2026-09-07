@@ -7312,3 +7312,33 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 159 (revert): dark navy hero-band recolor undone
+
+**Request:** Roy: "Revert the Phase 159 it seems the color is not good to the website." — the dark navy banner didn't work visually once live, so the whole phase is reversed.
+
+**What changed:** every file Phase 159 touched, undone exactly, nothing more:
+- `app/globals.css` — `--slate-banner` back to `#aab8c5` (the Phase 130 light slate-gray).
+- `components/ui/GoldWatermarks.tsx` — all 7 icon instances back to `text-foreground opacity-[0.05]`.
+- `components/ui/PageHero.tsx` — `<h1>` title back to no gold-conditional color at all; description back to `gold ? "text-primary/80" : "text-muted-fg"`.
+- `components/Hero.tsx` — headline back to `text-foreground`; description/reassurance line/badge row back to `text-primary/80`, `text-primary/70`, `text-primary/85` respectively.
+- `components/home/Paths.tsx` — headline/subtitle/badge row + their 3 icons back to `text-espresso` and its opacity variants. Phase 154/155/158's card content (WAR/TERROR/DISASTER labels, captions, DISASTER's logo recolor, DISASTER's CTA link) was in the same file and left completely untouched.
+- `components/support-groups/CommunityIntro.tsx` — secondary hero button back to `border-primary`/`text-primary`/`hover:bg-white/40`; tagline row and its 3 links back to `text-primary/80`/`hover:text-primary`.
+
+Each file's Phase 159 comment block was replaced with a short "tried and reverted" note rather than deleted outright, so the history of what was attempted stays visible for anyone reading the code later.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker across all 5 reverted files — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132; this should visually match whatever the site looked like before Phase 159 shipped.
+
+**Files changed:** `app/globals.css`, `components/ui/GoldWatermarks.tsx`, `components/ui/PageHero.tsx`, `components/Hero.tsx`, `components/home/Paths.tsx`, `components/support-groups/CommunityIntro.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 159 (revert): undo dark navy hero-band recolor"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically, and confirm the banners look right again once it's live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

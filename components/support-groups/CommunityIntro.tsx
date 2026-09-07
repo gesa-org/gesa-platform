@@ -63,14 +63,10 @@ export const COMMUNITY_INTRO_FALLBACK: CommunityIntroContent = {
   closingSubtitle: "Choose the pathway that reflects what you need today.",
 };
 
-// Phase 159 — this renders inside Support Groups' gold-banner PageHero
-// (app/support-groups/page.tsx passes it as PageHero's `children`), which
-// went from a light slate-gray background to a deep navy. The primary
-// button (solid `bg-primary`, `text-white`) was already unaffected — but
-// the secondary button (`border-primary`/`text-primary` on a transparent
-// fill) and the tagline row (`text-primary/80`) were dark tones sitting
-// directly on that background, tuned for the old light banner, and needed
-// to switch to white to stay legible on the new dark one.
+// Phase 159 — briefly switched the secondary button and tagline row to
+// white to stay legible on a deep-navy gold-banner background; reverted
+// alongside the rest of that phase once Roy said the new color didn't work
+// on the live site.
 export function CommunityHeroExtras({ content }: { content: CommunityIntroContent }) {
   return (
     <>
@@ -84,23 +80,23 @@ export function CommunityHeroExtras({ content }: { content: CommunityIntroConten
           </Link>
           <VolunteerPrimaryCta
             href={content.heroSecondaryHref}
-            className="inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-white bg-transparent px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-all hover:-translate-y-px hover:bg-white/15"
+            className="inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-primary bg-transparent px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-primary transition-all hover:-translate-y-px hover:bg-white/40"
           >
             {content.heroSecondaryLabel}
           </VolunteerPrimaryCta>
         </div>
       </StaggerItem>
       <StaggerItem>
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[13px] font-medium text-white/80">
-          <Link href={content.tagline1Href} className="hover:text-white hover:underline">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[13px] font-medium text-primary/80">
+          <Link href={content.tagline1Href} className="hover:text-primary hover:underline">
             {content.tagline1Label}
           </Link>
           <span aria-hidden="true">·</span>
-          <Link href={content.tagline2Href} className="hover:text-white hover:underline">
+          <Link href={content.tagline2Href} className="hover:text-primary hover:underline">
             {content.tagline2Label}
           </Link>
           <span aria-hidden="true">·</span>
-          <Link href={content.tagline3Href} className="hover:text-white hover:underline">
+          <Link href={content.tagline3Href} className="hover:text-primary hover:underline">
             {content.tagline3Label}
           </Link>
         </div>

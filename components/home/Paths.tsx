@@ -350,13 +350,11 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           adjustment below — only the cards' own negative margin changed,
           not this padding, so the seam's position is unaffected either
           time. */}
-      {/* Phase 159 — `.gold-banner`'s background (`--slate-banner`) went from
-          a light slate-gray to a deep navy. The eyebrow chip keeps its own
-          light `bg-white/70` pill either way, so it's untouched — but the
-          headline/subtitle/badge row below it were `text-espresso` (dark,
-          almost the same tone as the new navy background), so all three,
-          plus their icons, switched to white/white-with-opacity to stay
-          legible. */}
+      {/* Phase 159 — briefly switched the headline/subtitle/badge row (and
+          their icons) below the eyebrow chip to white/white-with-opacity to
+          stay legible on a deep-navy `.gold-banner` background; reverted
+          alongside the rest of that phase once Roy said the new color
+          didn't work on the live site. */}
       <div className="gold-banner relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-white/25 blur-[110px]" />
@@ -374,7 +372,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
             </span>
             <h1
               id="paths-heading"
-              className="mx-auto mt-6 max-w-[18ch] font-serif text-[clamp(38px,5.5vw,64px)] leading-[1.08] text-white"
+              className="mx-auto mt-6 max-w-[18ch] font-serif text-[clamp(38px,5.5vw,64px)] leading-[1.08] text-espresso"
             >
               <EditableText contentId="home.hero.heading" label="Hero heading" value={content.title} as="span" />
             </h1>
@@ -384,19 +382,19 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
               value={content.subtitle}
               as="div"
               html
-              className="mx-auto mt-5 max-w-[42rem] text-[16px] leading-relaxed text-white/75"
+              className="mx-auto mt-5 max-w-[42rem] text-[16px] leading-relaxed text-espresso/75"
             />
-            <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-[14px] font-medium text-white/80">
+            <div className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-3 text-[14px] font-medium text-espresso/80">
               <span className="inline-flex items-center gap-2">
-                <ShieldCheck size={17} className="text-white/60" aria-hidden="true" />
+                <ShieldCheck size={17} className="text-espresso/60" aria-hidden="true" />
                 <EditableText contentId="home.hero.badge1" label="Trust badge 1" value={content.badge1Label} as="span" />
               </span>
               <span className="inline-flex items-center gap-2">
-                <HeartHandshake size={17} className="text-white/60" aria-hidden="true" />
+                <HeartHandshake size={17} className="text-espresso/60" aria-hidden="true" />
                 <EditableText contentId="home.hero.badge2" label="Trust badge 2" value={content.badge2Label} as="span" />
               </span>
               <span className="inline-flex items-center gap-2">
-                <Users size={17} className="text-white/60" aria-hidden="true" />
+                <Users size={17} className="text-espresso/60" aria-hidden="true" />
                 <EditableText contentId="home.hero.badge3" label="Trust badge 3" value={content.badge3Label} as="span" />
               </span>
             </div>
