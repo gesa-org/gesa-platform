@@ -7114,3 +7114,39 @@ One thing worth your attention: since this band renders on four different pages 
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 154: Home's 3 pathway cards — category badge moved above the frame, relabeled WAR/TERROR/DISASTER, new caption added below the frame
+
+**Request:** on the homepage's three flip cards, move each card's category label ("WAR"/"TERROR"/"DISASTER") above the beige frame instead of below it, and add a new line of text below the frame ("Gifted Professional Support" on cards 1 and 2, "Global Professional Directory" on card 3) — without changing the existing layout, typography, colors, buttons, responsiveness, or card interactions otherwise.
+
+**Clarified with Roy first:** no page on the live site currently has cards literally labeled "WAR"/"TERROR"/"DISASTER" — Home's three cards (`components/home/Paths.tsx`) are today labeled "Crisis"/"Veterans"/"Support," and the "beige background frame" description matched that same section's existing wood-frame-and-cream-mat front-face design exactly. Asked which section was meant before touching anything, given how much this would have redirected the work if wrong; Roy confirmed Home's existing three cards.
+
+**What changed:** on each card's *front* face (the side shown before hover/flip — the back face's title/description/CTA button are completely untouched):
+- The gold category-badge pill, which used to sit *below* the wood frame with a visible gap, now sits *above* it, in the same flex column, same `gap-3` rhythm — only its position in the column order changed.
+- The three badge labels themselves changed from "Crisis"/"Veterans"/"Support" to **"War"/"Terror"/"Disaster"** (rendered uppercase via the pill's existing CSS, so this reads exactly like the request's "WAR"/"TERROR"/"DISASTER").
+- A new short caption line was added *below* the frame: **"Gifted Professional Support"** on cards 1 and 2, **"Global Professional Directory"** on card 3.
+- The frame itself (wood border, cream mat, colored canvas with the GesaMark) is completely unchanged — same size logic (`flex-1 min-h-0`), same colors, same artwork.
+
+**Kept data-driven, not hardcoded:** the new caption is a real Content Manager field, not a hardcoded string, matching how the front badge label already worked. Added `card1FrontCaption`/`card2FrontCaption`/`card3FrontCaption` to `HomeContent` (`lib/content.ts`), the `HOME_CONTENT_FALLBACK` object (`components/home/Paths.tsx`), the visual Page Editor's Layers panel (`lib/ui-builder/pageRegistry.ts` — one new field per card, immediately after that card's existing badge-label field, same "Crisis card"/"Veterans card"/"Support card" groups), and the classic Content Manager's Home form (`components/admin/content/HomeEditor.tsx` — one new field per card, right after that card's front-badge-label field). Every existing editing surface for this page can now manage the new text the same way it already manages the badge label.
+
+**Equal height / no overlap, verified by construction, not just by eye:** the front face is a `flex flex-col` column with a fixed, definite height (the card's own fixed `h-[300px]`, stretched via `absolute inset-0`). The badge pill and the new caption are both `flex-none` (fixed size, driven by their own text), while the frame between them keeps `flex-1 min-h-0` — meaning the frame is the one piece that absorbs whatever height the pill, the caption, and the two gaps between them don't use. This guarantees no overflow or overlap at any of the three cards' identical height, and both new/changed pieces are already centered (`items-center` on the column) the same way the pill always was, so alignment stays consistent across all three cards and every breakpoint (the column layout has no responsive variants to diverge between mobile/tablet/desktop).
+
+**Explicitly left untouched, per the request's own scope:** the flip/hover interaction, the back face (heading/description/"Reach out now" CTA button), the card's fixed height, the gold hero band above the cards, the frame's own colors/artwork, and every other page's content.
+
+**Semantic markup:** the category label and caption render as two separate `EditableText` elements (both `as="span"`), matching the existing badge label's own markup pattern — not merged into one string.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline (1 pre-existing ESM-import error + 15 across 5 pre-existing test files), zero new errors; no existing test fixtures reference `HomeContent` so nothing needed updating there. Re-ran the AST-based JSXText quote/apostrophe checker (parses real syntax trees via this repo's own `@babel/parser`/`@babel/traverse`, checks raw source rather than Babel's entity-decoded `.value`) across all 4 files touched this phase — clean. Could not run `npx jest` or `npx eslint` — same long-standing, previously-documented sandbox limitation as every phase since 132. Not verified in a live browser — same standing limitation as every phase since 132; the flex-column height math above was reasoned through explicitly for that reason, not just assumed to look right.
+
+**Files changed:** `components/home/Paths.tsx`, `lib/content.ts`, `lib/ui-builder/pageRegistry.ts`, `components/admin/content/HomeEditor.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 154: move Home card category badges above the frame, relabel War/Terror/Disaster, add caption below frame"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Worth a visual double-check on your end once it's live, since I couldn't render this in a browser from here.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

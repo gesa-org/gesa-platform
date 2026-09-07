@@ -332,14 +332,20 @@ const HOME_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "home.hero.badge2", path: "badge2Label", label: "Trust badge 2", type: "plainText", group: "Hero", maxLength: 40, contentScope: "page" },
   { contentId: "home.hero.badge3", path: "badge3Label", label: "Trust badge 3", type: "plainText", group: "Hero", maxLength: 40, contentScope: "page" },
   { contentId: "home.crisis-card.label", path: "card1FrontLabel", label: "Crisis card badge label", type: "plainText", group: "Crisis card", maxLength: 20, contentScope: "page" },
+  // Phase 154 — new caption line below the card's frame, added right after
+  // its badge label field (same field order as they render top-to-bottom in
+  // the card itself: badge label, then frame, then this caption).
+  { contentId: "home.crisis-card.caption", path: "card1FrontCaption", label: "Crisis card front caption", type: "plainText", group: "Crisis card", maxLength: 40, contentScope: "page" },
   { contentId: "home.crisis-card.title", path: "card1Title", label: "Crisis card heading", type: "heading", group: "Crisis card", maxLength: 100, contentScope: "page" },
   { contentId: "home.crisis-card.description", path: "card1Description", label: "Crisis card description", type: "richText", group: "Crisis card", maxLength: 300, contentScope: "page" },
   { contentId: "home.crisis-card.cta", path: "card1CtaLabel", label: "Crisis card CTA label", type: "ctaLabel", group: "Crisis card", maxLength: 40, contentScope: "page" },
   { contentId: "home.veterans-card.label", path: "card2FrontLabel", label: "Veterans card badge label", type: "plainText", group: "Veterans card", maxLength: 20, contentScope: "page" },
+  { contentId: "home.veterans-card.caption", path: "card2FrontCaption", label: "Veterans card front caption", type: "plainText", group: "Veterans card", maxLength: 40, contentScope: "page" },
   { contentId: "home.veterans-card.title", path: "card2Title", label: "Veterans card heading", type: "heading", group: "Veterans card", maxLength: 100, contentScope: "page" },
   { contentId: "home.veterans-card.description", path: "card2Description", label: "Veterans card description", type: "richText", group: "Veterans card", maxLength: 300, contentScope: "page" },
   { contentId: "home.veterans-card.cta", path: "card2CtaLabel", label: "Veterans card CTA label", type: "ctaLabel", group: "Veterans card", maxLength: 40, contentScope: "page" },
   { contentId: "home.support-card.label", path: "card3FrontLabel", label: "Support card badge label", type: "plainText", group: "Support card", maxLength: 20, contentScope: "page" },
+  { contentId: "home.support-card.caption", path: "card3FrontCaption", label: "Support card front caption", type: "plainText", group: "Support card", maxLength: 40, contentScope: "page" },
   { contentId: "home.support-card.title", path: "card3Title", label: "Support card heading", type: "heading", group: "Support card", maxLength: 100, contentScope: "page" },
   { contentId: "home.support-card.description", path: "card3Description", label: "Support card description", type: "richText", group: "Support card", maxLength: 300, contentScope: "page" },
   { contentId: "home.support-card.cta", path: "card3CtaLabel", label: "Support card CTA label", type: "ctaLabel", group: "Support card", maxLength: 40, contentScope: "page" },

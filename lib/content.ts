@@ -88,6 +88,13 @@ export type HomeContent = {
   card1FrontLabel: string;
   card2FrontLabel: string;
   card3FrontLabel: string;
+  // Phase 154 — Roy asked for a short line of descriptive text beneath each
+  // card's frame (front face), separate from the badge label above it (see
+  // components/home/Paths.tsx's Phase 154 comment for the layout change
+  // this supports) and from the back face's own title/description above.
+  card1FrontCaption: string;
+  card2FrontCaption: string;
+  card3FrontCaption: string;
 };
 
 // Powers components/Hero.tsx, currently only used on About — kept general

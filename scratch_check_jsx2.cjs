@@ -1,8 +1,8 @@
-// One-off ad-hoc QA script used during Phase 153 (adding DonateBand to the
-// Page Content Layers panel) to re-run the AST-based JSXText quote/
-// apostrophe check established in the Phase 152 build-fix across the 5
-// files touched this phase. Result: clean, no unescaped quotes/apostrophes
-// found. Not part of the app — nothing imports or runs it. The sandbox's
-// shell can't delete this file (permissions error, same limitation noted
-// elsewhere in EXECUTION_PLAN.md), so it's emptied out instead. Safe to
-// delete manually if you'd like it gone.
+// One-off ad-hoc QA script, reused across the Phase 152 build-fix and every
+// phase since to re-run the AST-based JSXText quote/apostrophe check on
+// whichever files were touched that phase (most recently Phase 154's
+// Home pathway-card relabel) — clean every time it's been run. Not part of
+// the app — nothing imports or runs it. The sandbox's shell can't delete
+// this file (permissions error, same limitation noted elsewhere in
+// EXECUTION_PLAN.md), so it's emptied out instead. Safe to delete manually
+// if you'd like it gone.

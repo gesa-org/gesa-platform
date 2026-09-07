@@ -50,9 +50,26 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // "VETERANS," and "SJPPORT" (a typo for "SUPPORT") — matching each card's
   // actual category rather than an abstract art-piece name, so these three
   // labels changed to match that reference exactly, corrected for the typo.
-  card1FrontLabel: "Crisis",
-  card2FrontLabel: "Veterans",
-  card3FrontLabel: "Support",
+  // Phase 154 — Roy sent a revised reference restyling the front face's
+  // category badge: instead of "Crisis"/"Veterans"/"Support" (this card's
+  // own general category), the badge now names the specific hardship each
+  // card addresses — "War"/"Terror"/"Disaster" — matching card1's own back-
+  // face description ("For anyone shaken by war, terror, or disaster.")
+  // rather than the abstract category name. Card 2 and 3's back faces keep
+  // their existing Veterans/Support titles and copy untouched — only the
+  // front badge label changed, same "front label is independent of the back
+  // face's own heading" precedent Phase 97 already established.
+  card1FrontLabel: "War",
+  card2FrontLabel: "Terror",
+  card3FrontLabel: "Disaster",
+  // Phase 154 — new short caption line under each card's frame, per Roy's
+  // reference. Cards 1 and 2 share identical wording on purpose (both are
+  // "gifted professional support" pathways); card 3 reads differently
+  // ("Global Professional Directory") since it points to the general,
+  // browsable Our Professionals directory rather than a gifted-session path.
+  card1FrontCaption: "Gifted Professional Support",
+  card2FrontCaption: "Gifted Professional Support",
+  card3FrontCaption: "Global Professional Directory",
 };
 
 // Phase 16 — replaced the scroll-pinned, 300vh-tall crossfade showcase
@@ -271,9 +288,9 @@ const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] =
 // explicit request for "a golden effect hover" on them specifically.
 export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: HomeContent }) {
   const cards = [
-    { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink, frontLabel: content.card1FrontLabel },
-    { title: content.card2Title, description: content.card2Description, ctaLabel: content.card2CtaLabel, ctaLink: content.card2CtaLink, frontLabel: content.card2FrontLabel },
-    { title: content.card3Title, description: content.card3Description, ctaLabel: content.card3CtaLabel, ctaLink: content.card3CtaLink, frontLabel: content.card3FrontLabel },
+    { title: content.card1Title, description: content.card1Description, ctaLabel: content.card1CtaLabel, ctaLink: content.card1CtaLink, frontLabel: content.card1FrontLabel, frontCaption: content.card1FrontCaption },
+    { title: content.card2Title, description: content.card2Description, ctaLabel: content.card2CtaLabel, ctaLink: content.card2CtaLink, frontLabel: content.card2FrontLabel, frontCaption: content.card2FrontCaption },
+    { title: content.card3Title, description: content.card3Description, ctaLabel: content.card3CtaLabel, ctaLink: content.card3CtaLink, frontLabel: content.card3FrontLabel, frontCaption: content.card3FrontCaption },
   ];
 
   return (
@@ -428,8 +445,35 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                   {(() => {
                     const FrontIcon = PATH_FRONT_BADGE_ICONS[i] ?? PATH_FRONT_BADGE_ICONS[PATH_FRONT_BADGE_ICONS.length - 1];
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
+                    const cardKey = CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1];
                     return (
+                      /* Phase 154 — Roy asked for the category badge to move
+                         above the frame (it used to sit below it, with the
+                         same visible gap) and for a new caption line to
+                         appear below the frame instead. Same flex column,
+                         same gap-3 rhythm between every piece — only the
+                         badge's position in the column changed, plus one new
+                         flex-none child at the end. The frame itself keeps
+                         `flex-1 min-h-0`, so it's still the piece that
+                         absorbs whatever height the badge + gaps + new
+                         caption don't use, keeping the whole card the same
+                         fixed h-[300px] with no overflow. */
                       <div className="absolute inset-0 flex flex-col items-center gap-3 [backface-visibility:hidden]">
+                        {/* Gold label pill — now sits above the frame with a
+                            visible gap, per the revised reference. Icon +
+                            label are separate from the back face's badge/
+                            title (PATH_BADGE_ICONS / p.title) since they show
+                            at different flip states. */}
+                        <div className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
+                          <FrontIcon size={14} className="text-espresso" aria-hidden="true" />
+                          <EditableText
+                            contentId={`home.${cardKey}.label`}
+                            label="Card badge label"
+                            value={p.frontLabel}
+                            as="span"
+                            className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
+                          />
+                        </div>
                         {/* Wood frame — layered gradients approximate grain
                             instead of one flat tone, sharp corners (no
                             border-radius) to match the reference exactly,
@@ -462,22 +506,20 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             </div>
                           </div>
                         </div>
-                        {/* Gold label pill — sits below the frame with a
-                            visible gap, per the reference, rather than
-                            overlapping it. Icon + label are separate from
-                            the back face's badge/title (PATH_BADGE_ICONS /
-                            p.title) since they show at different flip
-                            states. */}
-                        <div className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
-                          <FrontIcon size={14} className="text-espresso" aria-hidden="true" />
-                          <EditableText
-                            contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.label`}
-                            label="Card badge label"
-                            value={p.frontLabel}
-                            as="span"
-                            className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
-                          />
-                        </div>
+                        {/* Caption — new Phase 154 line below the frame,
+                            distinct from the badge above it and from the
+                            back face's own title/description. Kept small and
+                            single-line-height so it never competes with the
+                            frame above or the card's fixed height; `px-2`
+                            keeps it clear of the card's own rounded edges at
+                            narrow widths. */}
+                        <EditableText
+                          contentId={`home.${cardKey}.caption`}
+                          label="Card front caption"
+                          value={p.frontCaption}
+                          as="span"
+                          className="flex-none px-2 text-center text-[11.5px] font-medium leading-snug text-espresso/80"
+                        />
                       </div>
                     );
                   })()}

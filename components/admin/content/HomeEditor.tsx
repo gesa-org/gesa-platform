@@ -44,6 +44,11 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
               help: "Phase 97: shown on the gold badge over the card's front (framed artwork) face, before it's flipped. Separate from the title below, which is the back face's heading shown after flipping.",
             },
             {
+              key: "card1FrontCaption",
+              label: "Card 1 — front caption (below the frame)",
+              help: "Phase 154: a short line shown under the card's frame on its front face, below the badge above.",
+            },
+            {
               key: "card1Title",
               label: "Card 1 — title (crisis)",
               help: "Note: the visible headline/description on the homepage card is baked into its photo and won't change here — this field and the description below only affect screen-reader text. The CTA link is the one field that changes what visitors actually experience.",
@@ -56,6 +61,11 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
               label: "Card 2 — front badge label",
               help: "Phase 97: shown on the gold badge over the card's front (framed artwork) face, before it's flipped.",
             },
+            {
+              key: "card2FrontCaption",
+              label: "Card 2 — front caption (below the frame)",
+              help: "Phase 154: a short line shown under the card's frame on its front face, below the badge above.",
+            },
             { key: "card2Title", label: "Card 2 — title (veterans)" },
             { key: "card2Description", label: "Card 2 — description", multiline: true },
             { key: "card2CtaLabel", label: "Card 2 — CTA label (screen-reader only)" },
@@ -64,6 +74,11 @@ export default function HomeEditor({ initial }: { initial: HomeContent }) {
               key: "card3FrontLabel",
               label: "Card 3 — front badge label",
               help: "Phase 97: shown on the gold badge over the card's front (framed artwork) face, before it's flipped.",
+            },
+            {
+              key: "card3FrontCaption",
+              label: "Card 3 — front caption (below the frame)",
+              help: "Phase 154: a short line shown under the card's frame on its front face, below the badge above.",
             },
             { key: "card3Title", label: "Card 3 — title (general support)" },
             { key: "card3Description", label: "Card 3 — description", multiline: true },
