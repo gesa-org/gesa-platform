@@ -136,6 +136,15 @@ export type SupportGroupRow = {
   register_url: string | null;
   schedule: string | null;
   title: string;
+  // Phase 157 — every group's facilitator/schedule/capacity/location has
+  // been fabricated placeholder data since Phase 2/3 (no real facilitator or
+  // session was ever confirmed). Gates whether the public page shows the
+  // real, confirmed details + registration flow ("active") or a "Coming
+  // Soon" state with no invented details and no way to register
+  // ("coming_soon" — the default for every row, including future ones,
+  // until someone deliberately confirms a group). See
+  // components/SupportGroupsInteractive.tsx.
+  status: "coming_soon" | "active";
 }
 
 export type TestimonialRow = {

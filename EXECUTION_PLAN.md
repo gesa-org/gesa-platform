@@ -7209,3 +7209,41 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 157: Community page — all 6 support groups marked "Coming Soon," no fabricated details, no registration path
+
+**Request:** the six support-group cards on `/support-groups` (Diaspora Voices, Grief Companions, Healing After Conflict, Helping the Helpers, New Beginnings, Steady Ground) show a facilitator, schedule, and capacity — but none of that has actually been confirmed. Keep each card's title/format/description, remove every invented detail, add a clear "Coming Soon" status, and make sure clicking through never lets a visitor register, book, or otherwise proceed as if a real session exists.
+
+**Confirmed the data was genuinely fabricated, not just under-labeled:** queried the live `support_groups` table directly — all six rows had facilitator names ("Ari Goldberg," "Dr. Priya Nair," "Dr. Naomi Feldman," "Dr. Layla Haddad," "Sven Larsson," "Yusuf Demir"), specific weekly schedules, seat counts, and locations, all of it traced back to `lib/sample-support-groups.ts`'s own header comment: "Placeholder support-group data for Phase 2 (UI only)." That placeholder data was apparently carried into the real table when it was seeded and never replaced with anything real — every one of the "confirmed" details visitors were seeing was invented.
+
+**Schema change:** migration `add_status_to_support_groups` — added `status text not null default 'coming_soon'` to `support_groups`, with a check constraint limiting it to `'coming_soon'` / `'active'`. Defaults to `'coming_soon'`, not `'active'` — the safer default, so any group added later (real or not) starts hidden-behind-a-badge until someone deliberately flips it live, rather than accidentally shipping fabricated-looking details again by default.
+
+**Data change:** a follow-up `UPDATE` cleared `facilitator_name`, `schedule`, `capacity`, `location`, and `register_url` to `null` on all six rows (all now `status = 'coming_soon'`) — the fabricated values are gone from the database, not just hidden by the UI. Confirmed via the update's own `returning` clause that all six now have every one of those fields `null`.
+
+**UI change — `components/SupportGroupsInteractive.tsx`:**
+- A new `isGroupAvailable(g)` helper (`g.status === "active"`) gates two branches: the card grid and the details drawer. Nothing assumes "no data" means "active" — a group only gets the original, full experience once it's explicitly `"active"`.
+- **Card (not available):** keeps title, the existing Online/In-person format badge, and description, unchanged. Adds a new "Coming Soon" badge (real text, not icon-only, stacked below the format badge) and swaps the facilitator/schedule/capacity row for one line: "This community session is currently being prepared. Facilitator and schedule details will be announced soon." The card itself gets a muted look (`opacity-80 saturate-[0.65]`) and an `aria-label` ending "— coming soon, not yet available" — visually and to screen readers, distinctly different from an available card.
+- **Drawer (not available):** clicking the card still opens the same slide-in drawer (same motion, same close button, same backdrop) — but its content is a dedicated unavailable-state panel instead of the facilitator/schedule/capacity block and Register button: an hourglass icon, the group's title, its format badge plus the Coming Soon badge, then "This support group is not yet available" / "We are currently finalizing the facilitator and session schedule for this group. Please check back soon for updates.," and exactly two actions — "Back to Community" (closes the drawer) and "Explore Other Support Options" (a real `next/link` to `/therapists`). No facilitator avatar/initials, no schedule, no capacity, no register button, and no way to reach the registration form — that form/modal still exists in the file (for a future `"active"` group) but nothing in the coming-soon path can open it.
+- **Card (available)** and the **register form** are both byte-for-byte the same as before this phase — this only added a second, parallel branch; it didn't touch the original one, so a group that's later flipped to `"active"` with real data filled in gets the exact original card + drawer + registration experience back automatically.
+
+**Data-driven, not hardcoded:** everything above branches on `g.status`/`active.status`, a real database column — not a hardcoded "there are no real groups yet" assumption in the component. Adding a real, confirmed group later means only two things: fill in `facilitator_name`/`schedule`/`capacity`/`location` for real, and set `status = 'active'` — no code or redesign needed.
+
+**Consistency across breakpoints:** the change is entirely inside the existing 2-column `sm:grid-cols-2` card grid and the existing full-height drawer — no new breakpoint-specific markup was added or needed, so mobile/tablet/desktop behavior is identical to how the original cards/drawer already responded.
+
+**What was deliberately left untouched:** the page's own layout, hero, CommunityIntro section, testimonials, and DonateBand; the `group_registrations` table and its insert/email-notification logic (still fully working, just currently unreachable from the UI for every group); `lib/sample-support-groups.ts` (already self-documented as superseded placeholder data, left in place per the standing no-delete-without-confirming convention).
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on the changed component — clean. Updated `tests/e2e/support-groups.spec.ts`, which previously asserted the *old* behavior (fabricated facilitator text visible, a working Register flow) — rewrote it to assert the new Coming Soon badge/copy, that the old fake names never render, and that clicking a card opens the unavailable-state panel with no Register button/email field and a real `/therapists` link, instead of a registration form. Could not execute this Playwright spec (or `npx jest`) in this sandbox — same long-standing, previously-documented limitation as every phase since 132; the spec is written and ready to run in CI/locally, not fabricated as passing. Not verified in a live browser — same standing limitation.
+
+**Files changed:** `components/SupportGroupsInteractive.tsx`, `lib/database.types.ts`, `tests/e2e/support-groups.spec.ts`. **Database:** migration `add_status_to_support_groups` (schema) + one scoped `UPDATE` clearing fabricated values on all 6 rows, both applied directly to production project `iddeoavrlnvwwfopsacy`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 157: mark all support groups Coming Soon, remove fabricated details, block registration until confirmed"
+git push
+```
+
+Roy — the live site is already updated (both the schema change and the data cleanup are already applied to production), so all six cards should already show "Coming Soon" with no invented facilitator/schedule info, and clicking any of them should show the "not yet available" message instead of a registration form. The git block above just brings the code in sync. Please double check the live page when you get a chance, since I can't render a browser from here — and whenever a group's facilitator and schedule are actually confirmed, let me know and I'll flip that one group's `status` to `active` and fill in the real details, which will restore its normal card/drawer/registration experience automatically.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
