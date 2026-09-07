@@ -7247,3 +7247,33 @@ Roy — the live site is already updated (both the schema change and the data cl
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 158: recolor the DISASTER card's logo mark
+
+**Request:** Roy sent a photo of the DISASTER/"Global Professional Directory" card's front face and asked to update the logo's colors inside the frame to match it.
+
+**What changed:** `components/home/Paths.tsx`'s `PATH_FRONT_STYLES[2].mark` (the DISASTER card's `GesaMark` recolor — index 2 of the 3 cards, confirmed by its `bg-[#5f7a91]` blue-gray canvas already matching the reference photo exactly) — updated by eye from the reference photo:
+- `outerRing`: pale pink `#f0d9e8` → deep navy `#33465a`
+- `middleRing`: pale yellow `#f5e08a` → crimson red `#c0392b`
+- `innerRing`: orange `#e0955c` → the same crimson red `#c0392b` as `middleRing`, so the two crescents read as one continuous red band — matching the reference, and following the same "innerRing repeats an adjacent ring's tone" pattern the other two cards already use (there it's `innerRing`/`dot` that match; here it's `innerRing`/`middleRing`, since the reference's dot is a distinct gold rather than matching the red).
+- `dot`: orange `#e0955c` → gold `#e8b23e`
+
+`bg` (canvas background) and `frame` (gold wood-frame border) were already an exact match to the reference and are untouched, along with every other card, the caption/label/description text, and the flip/hover behavior.
+
+**Caveat:** matched by eye against the reference photo, not pixel-sampled — if any of the three tones look off once live, send exact hex codes (or a cropped close-up) and I'll dial them in precisely.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors (this is a pure data change, no new JSX). Not verified in a live browser — same standing sandbox limitation as every phase since 132; worth a visual check once it's live.
+
+**Files changed:** `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 158: recolor DISASTER card's logo mark to navy/red/gold"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically, and let me know if the colors need any further adjustment once you see it live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -240,9 +240,18 @@ const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] =
     mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
+    // Phase 158 — Roy sent a reference photo of this card (DISASTER/"Global
+    // Professional Directory") with the mark recolored to the site's real
+    // navy/red/gold brand palette instead of the pale pink/yellow/orange
+    // pastel it had — matched by eye from that photo (outer crescent: deep
+    // navy; middle + inner crescents: one continuous crimson-red band, same
+    // "innerRing repeats an adjacent tone" approach the other two cards
+    // already use, just paired with middleRing here instead of the dot;
+    // dot: gold). `bg`/`frame` (the blue-gray canvas + gold wood frame) were
+    // already an exact match in the reference and are untouched.
     bg: "bg-[#5f7a91]",
     frame: "border-clay",
-    mark: { outerRing: "#f0d9e8", middleRing: "#f5e08a", innerRing: "#e0955c", dot: "#e0955c" },
+    mark: { outerRing: "#33465a", middleRing: "#c0392b", innerRing: "#c0392b", dot: "#e8b23e" },
   },
 ];
 
