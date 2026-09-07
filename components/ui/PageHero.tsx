@@ -62,6 +62,15 @@ interface PageHeroProps {
 // `gold` prop, same as the other gold-only styling above — picks both of
 // them up from one change. FAQ/Contact/legal pages pass `gold={false}` (or
 // omit it) and are completely unaffected.
+//
+// Phase 159 — `--slate-banner` (the color `.gold-banner` reads) went from a
+// light slate-gray to a deep navy. The eyebrow chip's background is already
+// its own near-white pill regardless of `gold`, so its dark text stays
+// readable either way — but the title and description previously had no
+// (or a dark) color of their own here, relying on sitting on a light
+// background. Both now switch to white/white-80 specifically when
+// `gold` is true, so they stay legible against the new dark banner; the
+// non-gold FAQ/Contact/legal path is completely unchanged.
 export default function PageHero({
   icon: Icon,
   eyebrow,
@@ -98,11 +107,15 @@ export default function PageHero({
           </span>
         </StaggerItem>
         <StaggerItem>
-          <h1 className="mx-auto mb-2.5 mt-1 max-w-[760px] text-[clamp(32px,4.5vw,44px)]">{title}</h1>
+          <h1
+            className={`mx-auto mb-2.5 mt-1 max-w-[760px] text-[clamp(32px,4.5vw,44px)] ${gold ? "text-white" : ""}`}
+          >
+            {title}
+          </h1>
         </StaggerItem>
         {description && (
           <StaggerItem>
-            <div className={`mx-auto max-w-[620px] ${gold ? "text-primary/80" : "text-muted-fg"}`}>{description}</div>
+            <div className={`mx-auto max-w-[620px] ${gold ? "text-white/80" : "text-muted-fg"}`}>{description}</div>
           </StaggerItem>
         )}
         {children}

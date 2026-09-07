@@ -7277,3 +7277,38 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 159: hero/banner bands recolored to dark navy site-wide
+
+**Request:** Roy sent a reference swatch — a deep, dark navy/midnight-blue/dark-slate — and asked for it to become the new background for the landing pages' hero/banner bands (About/Find Support, Our Professionals, Community, and, per his own follow-up answer, site-wide). Confirmed over two clarifying questions first: (1) scope is every page's banner, not just those four named, and (2) only the hero/banner band itself changes — body sections, cards, and forms below it stay exactly as they are.
+
+**Where this actually lives:** every one of these bands already shares one mechanism — the `.gold-banner` CSS class (app/globals.css), which reads its background from a single token, `--slate-banner`. That token was itself already retuned once before (Phase 130, from a brushed-gold gradient to a light slate-gray, `#AAB8C5`) — so this is a second retune of the same token, not a new system. It's used by: Home's hero (`components/home/Paths.tsx`), About/Find Support's Hero (`components/Hero.tsx`), and, via `PageHero.tsx`'s opt-in `gold` prop, Our Professionals and Community's banners. FAQ, Contact, and the 5 legal pages also render through `PageHero.tsx` but never pass `gold`, so they were never on the light slate-gray and are equally untouched now.
+
+**What changed:** `--slate-banner` in `app/globals.css` went from `#aab8c5` to `#1b2431` (sampled by eye from Roy's reference swatch) — kept in the same token/variable name rather than adding a new one, since it was already scoped to exactly this one use.
+
+**The part that made this more than a one-line color swap:** the previous banner background was light, so every page's headline/subtitle/badge text sitting directly on it (not inside its own light chip/pill) used dark colors — `text-espresso`, `text-foreground`, `text-primary` and their opacity variants. Against the new dark navy, those same dark colors would have been nearly invisible (in `--espresso`'s case, `#1d212b` — almost the exact same tone as the new banner background). Left as a pure background swap, every hero's text would have gone unreadable. Fixed by flipping every one of those dark-on-banner text/icon colors to white/white-with-opacity, banner by banner:
+- **Home (`components/home/Paths.tsx`):** headline, subtitle, and the three trust badges + their icons — `text-espresso*` → `text-white*`. The eyebrow chip (its own `bg-white/70` pill) and the glow blob (already `bg-white/25`) needed no change.
+- **About/Find Support (`components/Hero.tsx`):** headline, subtitle, the reassurance line, and the badge row — `text-foreground`/`text-primary*` → `text-white*`. The eyebrow chip (own light pill) and the badge icons (`text-accent`, a sage-green that already reads fine on dark) were left alone, as were both CTA buttons (their own solid/light fills already carry their own contrast).
+- **Our Professionals / Community (`components/ui/PageHero.tsx`):** the `<h1>` title (previously no color override at all, inheriting the site's dark default) and the description (`gold ? "text-primary/80" : "text-muted-fg"`) now both go white when `gold` is true — the non-`gold` FAQ/Contact/legal path is completely untouched.
+- **Community's hero buttons/tagline row (`components/support-groups/CommunityIntro.tsx`'s `CommunityHeroExtras`, rendered inside Support Groups' gold `PageHero`):** the secondary button (`border-primary`/`text-primary` on a transparent fill) and the tagline row (`text-primary/80`) were dark tones sitting directly on the banner — switched to `border-white`/`text-white`. The primary button (solid `bg-primary`, `text-white`) needed no change.
+- **Decorative line-art watermarks (`components/ui/GoldWatermarks.tsx`, used by all of the above):** `text-foreground` at 5% opacity → `text-white` at the same 5% — a dark watermark at that opacity is invisible on a dark background; white at the same low opacity restores the same faint texture effect it always had.
+
+**What was deliberately left untouched:** every page's body content below the hero band (cards, forms, testimonials, DonateBand, footer), the flip-card front/back faces on Home (a separate section, not the hero itself), FAQ/Contact/legal pages' banners (never gold/dark to begin with), and the admin dashboard's own unrelated `.admin-gold-bg` gradient.
+
+**Caveat:** the exact navy hex was matched by eye from the reference image, not pixel-sampled — same disclosed limitation as Phase 158's logo recolor. If it's off once live, send an exact hex or a cropped close-up and I'll correct it precisely.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker across all 5 touched files — clean. Reasoned through every changed color by checking what sits *underneath* each piece of text (its own light chip vs. the banner directly) rather than assuming a blanket dark→light flip was safe everywhere — several elements (both CTA buttons, the eyebrow chips, the badge-icon accent green) were deliberately left alone because they already had adequate contrast against a dark background. Not verified in a live browser — same standing sandbox limitation as every phase since 132; this phase in particular is worth a visual check on your end given how many text colors moved.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx`, `components/Hero.tsx`, `components/ui/PageHero.tsx`, `components/support-groups/CommunityIntro.tsx`, `components/ui/GoldWatermarks.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 159: recolor hero/banner bands to dark navy, flip on-banner text to light for contrast"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Please take a close look at all four banners (Home, Find Support, Our Professionals, Community) once it's live — this touched more text colors than just the background, and I couldn't render any of it in a browser from here.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

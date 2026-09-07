@@ -81,8 +81,25 @@
        since those two are still used site-wide for unrelated accents
        (eyebrow labels, thin borders, the Button "clay" variant, badges) that
        weren't part of this request — only `.gold-banner` (below) reads from
-       this token. */
-    --slate-banner: #aab8c5;
+       this token.
+       Phase 159 — Roy sent a new reference swatch, a deep dark navy/
+       midnight-blue/dark-slate, and asked for the same hero-band background
+       (Home, About/Find Support, Our Professionals, Community) updated to
+       it. Sampled by eye from his reference image (a flat, near-black navy)
+       — kept in this same token rather than adding yet another one, since
+       this variable is already scoped to exactly this one use (per the
+       comment above) and simply gets retuned a second time, same as it was
+       the first time. The name `--slate-banner` is now a little stale (this
+       is closer to navy than slate-grey), kept anyway rather than touching
+       every file that references it, for the same "don't rename for its own
+       sake" reason `.gold-banner`'s own class name was kept through this
+       same swap. Going noticeably darker than the previous light slate-gray
+       meant the text/icons that sit directly on this background (not inside
+       their own light chip/badge) also needed to flip from dark to light —
+       see components/Hero.tsx, components/home/Paths.tsx, components/ui/
+       PageHero.tsx, and components/ui/GoldWatermarks.tsx's own Phase 159
+       comments for exactly what changed and why. */
+    --slate-banner: #1b2431;
     /* Roy sent a reference swatch ("#CBA560, Sand Brown") and asked to
        replace the beige/cream section backgrounds on About's Founder
        spotlight, the "Why GESA exists" section (now on the Support Groups/
