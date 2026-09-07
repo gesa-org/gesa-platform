@@ -12,6 +12,7 @@ import { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/components/TherapistsDi
 import { SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK } from "@/components/SupportGroupsInteractive";
 import { COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityIntro";
 import { DONATE_PAGE_FALLBACK } from "@/components/donate/DonatePage";
+import { DONATE_BAND_CONTENT_FALLBACK } from "@/components/home/DonateBand";
 import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import { getPageDefinition } from "@/lib/ui-builder/pageRegistry";
 import { getEditableFields, getRichTextMode } from "@/lib/ui-builder/pageRegistry";
@@ -44,6 +45,10 @@ const FALLBACK_BY_SITE_CONTENT_KEY: Record<string, Record<string, unknown>> = {
   component_support_groups_directory: SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK as unknown as Record<string, unknown>,
   component_community_intro: COMMUNITY_INTRO_FALLBACK as unknown as Record<string, unknown>,
   page_donate: DONATE_PAGE_FALLBACK as unknown as Record<string, unknown>,
+  // Phase 153 — DonateBand.tsx's shared "Your gift keeps care free" band,
+  // registered under the "about" page's new "donate" namespace (see
+  // pageRegistry.ts's "about" PAGE_DEFINITIONS entry).
+  component_donate_band: DONATE_BAND_CONTENT_FALLBACK as unknown as Record<string, unknown>,
   component_intake_flow: INTAKE_FLOW_CONTENT_FALLBACK as unknown as Record<string, unknown>,
   page_faq: FAQ_CONTENT_FALLBACK as unknown as Record<string, unknown>,
   page_contact: CONTACT_CONTENT_FALLBACK as unknown as Record<string, unknown>,

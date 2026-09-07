@@ -118,6 +118,14 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     contentSources: [
       { namespace: "hero", siteContentKey: "page_about_hero" },
       { namespace: "sections", siteContentKey: "page_about_sections" },
+      // Donation/Support CTA group added here — DonateBand.tsx is a single
+      // shared component also rendered on Home, Our Professionals, and
+      // Community (see that file's own Phase 80/83 comments), but its
+      // "Team & Advisors" neighbor in the Layers panel only exists on this
+      // page, so this is where its fields are namespaced/owned. A Publish
+      // from this page's editor also revalidates the other 3 routes that
+      // render the same component (see the publish route's own comment).
+      { namespace: "donate", siteContentKey: "component_donate_band" },
     ],
   },
   {
@@ -373,6 +381,23 @@ const ABOUT_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "about.team.intro", path: "sections.teamIntro", label: "Team section intro", type: "plainText", group: "Team & Advisors", maxLength: 280, contentScope: "page" },
   { contentId: "about.team.ctaLabel", path: "sections.teamCtaLabel", label: "Team CTA label", type: "ctaLabel", group: "Team & Advisors", maxLength: 40, contentScope: "page" },
   { contentId: "about.team.ctaUrl", path: "sections.teamCtaHref", label: "Team CTA URL", type: "url", group: "Team & Advisors", contentScope: "page" },
+  // Donation/Support CTA — DonateBand.tsx (components/home/DonateBand.tsx),
+  // the "Your gift keeps care free" band. This is a single component shared
+  // identically across Home, Our Professionals, and Community too (see that
+  // file's own Phase 80/83 comments) — namespaced under "about" here since
+  // that's this Layers panel's home and the only page with a "Team &
+  // Advisors" group to sit after. `path` values are prefixed "donate."
+  // (this source's namespace, added to PAGE_DEFINITIONS' "about" entry
+  // above) into DonateBandContent's own field names (lib/content.ts).
+  { contentId: "about.donate.headline", path: "donate.headline", label: "Donation band heading", type: "heading", group: "Donation / Support CTA", maxLength: 140, contentScope: "page" },
+  { contentId: "about.donate.subtitle", path: "donate.subtitle", label: "Donation band body", type: "plainText", group: "Donation / Support CTA", maxLength: 240, contentScope: "page" },
+  { contentId: "about.donate.cta1Label", path: "donate.cta1Label", label: "CTA 1 label (\"Join as a professional\")", type: "ctaLabel", group: "Donation / Support CTA", maxLength: 40, contentScope: "page" },
+  { contentId: "about.donate.cta1Url", path: "donate.cta1Href", label: "CTA 1 URL", type: "url", group: "Donation / Support CTA", contentScope: "page" },
+  { contentId: "about.donate.cta2Label", path: "donate.cta2Label", label: "CTA 2 label (\"Explore the community\")", type: "ctaLabel", group: "Donation / Support CTA", maxLength: 40, contentScope: "page" },
+  { contentId: "about.donate.cta2Url", path: "donate.cta2Href", label: "CTA 2 URL", type: "url", group: "Donation / Support CTA", contentScope: "page" },
+  { contentId: "about.donate.crisisText", path: "donate.crisisText", label: "Crisis line text", type: "plainText", group: "Donation / Support CTA", maxLength: 100, contentScope: "page" },
+  { contentId: "about.donate.crisisLinkLabel", path: "donate.crisisLinkLabel", label: "Crisis link label", type: "ctaLabel", group: "Donation / Support CTA", maxLength: 60, contentScope: "page" },
+  { contentId: "about.donate.crisisLinkUrl", path: "donate.crisisLinkHref", label: "Crisis link URL", type: "url", group: "Donation / Support CTA", contentScope: "page" },
 ];
 
 // Phase 135 — Our Professionals (Therapists). Banner fields (namespace "")

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Heart } from "lucide-react";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { getPageContent, type DonateBandContent } from "@/lib/content";
+import EditableText from "@/components/ui-builder/public/EditableText";
 
 // Phase 80 round 2 — this band is rendered identically on Home, About, Our
 // Therapists, and Support Groups (Phase 75), so one Content Manager save
@@ -30,33 +31,48 @@ export const DONATE_BAND_CONTENT_FALLBACK: DonateBandContent = {
 const PILL_CLASS =
   "inline-flex items-center rounded-full border border-white/70 px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-white/10";
 
-export default async function DonateBand() {
-  const content = await getPageContent("component_donate_band", DONATE_BAND_CONTENT_FALLBACK);
+// Phase 153 — registered in the Page Content Layers panel as "Donation /
+// Support CTA" on the About/Find Support page (see lib/ui-builder/
+// pageRegistry.ts's "about" entry — that's the only page with a "Team &
+// Advisors" group for this to sit after), even though this component also
+// renders unchanged on Home, Our Professionals, and Community. An optional
+// `content` prop lets a page that already resolved this band's content
+// (published + admin's in-progress draft, via resolveEditorPreview) pass it
+// straight through instead of this component re-fetching published-only
+// content itself — used only by app/find-your-therapist/page.tsx today, so
+// that page's editor preview reflects unpublished edits live. Every other
+// render site keeps calling `<DonateBand />` with no props, unchanged.
+export default async function DonateBand({ content: contentProp }: { content?: DonateBandContent } = {}) {
+  const content = contentProp ?? (await getPageContent("component_donate_band", DONATE_BAND_CONTENT_FALLBACK));
   const crisisLinkIsExternal = content.crisisLinkHref.startsWith("http");
 
   return (
     <section className="section bg-gradient-to-br from-primary to-primary-600">
       <div className="wrap text-center">
-        <h2 className="mb-2.5 font-serif text-[34px] font-semibold text-white">{content.headline}</h2>
-        <p className="mx-auto max-w-[560px] text-white/80">{content.subtitle}</p>
+        <h2 className="mb-2.5 font-serif text-[34px] font-semibold text-white">
+          <EditableText contentId="about.donate.headline" label="Donation band heading" value={content.headline} as="span" />
+        </h2>
+        <p className="mx-auto max-w-[560px] text-white/80">
+          <EditableText contentId="about.donate.subtitle" label="Donation band body" value={content.subtitle} as="span" />
+        </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5">
           <VolunteerPrimaryCta href={content.cta1Href} className={PILL_CLASS}>
-            {content.cta1Label}
+            <EditableText contentId="about.donate.cta1Label" label="CTA 1 label" value={content.cta1Label} as="span" />
           </VolunteerPrimaryCta>
           <Link href={content.cta2Href} className={PILL_CLASS}>
-            {content.cta2Label}
+            <EditableText contentId="about.donate.cta2Label" label="CTA 2 label" value={content.cta2Label} as="span" />
           </Link>
         </div>
         <p className="mt-5 flex items-center justify-center gap-1.5 text-[14px] text-white/80">
           <Heart size={15} className="flex-none" />
-          {content.crisisText}{" "}
+          <EditableText contentId="about.donate.crisisText" label="Crisis line text" value={content.crisisText} as="span" />{" "}
           <a
             href={content.crisisLinkHref}
             target={crisisLinkIsExternal ? "_blank" : undefined}
             rel={crisisLinkIsExternal ? "noreferrer" : undefined}
             className="underline underline-offset-2 hover:text-white"
           >
-            {content.crisisLinkLabel}
+            <EditableText contentId="about.donate.crisisLinkLabel" label="Crisis link label" value={content.crisisLinkLabel} as="span" />
           </a>
         </p>
       </div>

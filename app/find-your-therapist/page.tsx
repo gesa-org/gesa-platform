@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, HeartHandshake, Users, Globe2, Mail } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
-import DonateBand from "@/components/home/DonateBand";
+import DonateBand, { DONATE_BAND_CONTENT_FALLBACK } from "@/components/home/DonateBand";
 import Reveal from "@/components/motion/Reveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
@@ -76,9 +76,14 @@ export default async function FindYourTherapistPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const [heroContentRaw, sectionsRaw, clinicLocations, therapists] = await Promise.all([
+  const [heroContentRaw, sectionsRaw, donateContentRaw, clinicLocations, therapists] = await Promise.all([
     getPageContent("page_about_hero", HERO_CONTENT_FALLBACK),
     getPageContent("page_about_sections", ABOUT_SECTIONS_FALLBACK),
+    // Phase 153 — DonateBand's own site_content row, fetched here (instead
+    // of left to that component's internal self-fetch) so this page's
+    // editor-preview draft layer below can reach it too — the same
+    // published-content object DonateBand would fetch itself either way.
+    getPageContent("component_donate_band", DONATE_BAND_CONTENT_FALLBACK),
     // Phase 146 — fetched here (same as the old standalone Find Support
     // page used to) so it can be handed down to Hero -> HeroFindSupportCta
     // -> the AI Matching modal's MatchWizard, which needs the active
@@ -93,11 +98,12 @@ export default async function FindYourTherapistPage({
 
   const { resolved, isEditorPreview } = await resolveEditorPreview(
     "about",
-    { hero: heroContentRaw, sections: sectionsRaw } as unknown as Record<string, unknown>,
+    { hero: heroContentRaw, sections: sectionsRaw, donate: donateContentRaw } as unknown as Record<string, unknown>,
     searchParams
   );
   const heroContent = (resolved as unknown as { hero: typeof heroContentRaw }).hero;
   const sections = (resolved as unknown as { sections: typeof sectionsRaw }).sections;
+  const donateContent = (resolved as unknown as { donate: typeof donateContentRaw }).donate;
 
   const page = (
     <div className="reveal-page__main">
@@ -353,7 +359,7 @@ export default async function FindYourTherapistPage({
           layer (see SiteFooterSlot.tsx) so it's a normal, always-visible
           section instead of part of the hidden-until-scroll effect — only
           the Footer stays inside that reveal layer now. */}
-      <DonateBand />
+      <DonateBand content={donateContent} />
     </div>
   );
 

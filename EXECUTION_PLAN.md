@@ -7079,3 +7079,38 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 153: DonateBand wired into Page Content as a new "Donation / Support CTA" Layers group
+
+**Request:** add the "Your gift keeps care free" donate band (headline, body, its two CTA buttons "Join as a professional"/"Explore the community", and the closing crisis-resources line) to the visual Page Editor's Layers panel, as a new group positioned right after "Team & Advisors."
+
+**Investigation first:** `components/home/DonateBand.tsx` already reads its copy from a real `site_content` row (`component_donate_band`, via `getPageContent()`) — it just had never been wired into the Layers-panel/Page-Editor registry (`lib/ui-builder/pageRegistry.ts`) at all, on any page. Confirmed it's a single shared component rendered identically on four pages — Home, Our Professionals, Community, and Find Support (`app/page.tsx`, `app/therapists/page.tsx`, `app/support-groups/page.tsx`, `app/find-your-therapist/page.tsx`) — via `EXECUTION_PLAN.md`'s own Phase 80/83 history. "Team & Advisors" itself only exists on the Find Support page's registry entry (`pageKey: "about"`, `ABOUT_EDITABLE_FIELDS` — Home has no such group), so "right after Team & Advisors" placed the new group there rather than on Home.
+
+**What changed:**
+- `lib/ui-builder/pageRegistry.ts` — added a third `contentSource` to the `"about"` page definition (`{ namespace: "donate", siteContentKey: "component_donate_band" }`), and 9 new fields to `ABOUT_EDITABLE_FIELDS` under a new `"Donation / Support CTA"` group, right after the existing `"Team & Advisors"` fields: heading, body, both CTA labels + URLs, crisis line text, and the crisis link's label + URL.
+- `lib/ui-builder/pageContentResolver.ts` — added `DonateBand.tsx`'s existing `DONATE_BAND_CONTENT_FALLBACK` export to `FALLBACK_BY_SITE_CONTENT_KEY` under `component_donate_band`, so the generic draft/publish machinery has a fallback for this row the same way every other registered page does.
+- `components/home/DonateBand.tsx` — wrapped the headline, body, both CTA labels, crisis text, and crisis link label in `EditableText` (URLs are still fully editable/publishable via the Layers panel, just not canvas-wrapped — same precedent already used for every other URL field in this registry, e.g. `about.movement.ctaUrl`). Also gained an optional `content` prop: when provided, the component renders it directly instead of self-fetching published-only content; every existing caller (Home/Our Professionals/Community, plus the dead, redirect-only `app/about/page.tsx`) still calls `<DonateBand />` with no props and is completely unaffected.
+- `app/find-your-therapist/page.tsx` (the page that actually serves the "about" pageKey's Find Support route, per Phase 145) — now fetches `component_donate_band`'s content alongside its existing hero/sections fetches, passes it through `resolveEditorPreview("about", ...)` under the new `donate` namespace, and hands the resolved result to `<DonateBand content={donateContent} />` — so an admin's unpublished draft edits to this band now show live in this page's editor preview, the same as every other field on this page already does.
+- `app/api/admin/ui-builder/page-content/publish/route.ts` — Publish for the `"about"` pageKey now also calls `revalidatePath` for `/`, `/therapists`, and `/support-groups` in addition to its own route, since a publish here writes the one shared `component_donate_band` row those three other pages also render — without this, publishing a donate-band change from the Find Support page's editor would show up there but leave the other three pages' caches stale.
+
+**Judgment call flagged for Roy:** DonateBand is genuinely one component, one `site_content` row, rendered on four separate pages — there's no single page it "belongs" to. It's registered under the Find Support page's registry (`pageKey: "about"`) purely because that's the only page with a "Team & Advisors" group for the new group to sit after, per your instruction. This is the same trade-off this app already made for Header/Footer/Crisis Button (registered once, under a `"global"` pseudo-page, even though they render everywhere) — clicking the donate band while previewing Home, Our Professionals, or Community in the Page Editor will correctly select and edit this same content, but the breadcrumb/page context it resolves to will read "Find Support," not whichever page you're actually looking at. Didn't build a second copy of these fields under Home's own registry to avoid two separate site_content-editing paths drifting out of sync with each other.
+
+**What was deliberately left untouched:** the existing Content Manager form for this same row (`components/admin/content/DonateBandEditor.tsx`, under its own "Donate Band" tab) — it already edits the identical `component_donate_band` site_content row through the older, non-visual Content Manager interface, and continues to work exactly as before; the two editing surfaces share one row, so a save in either is immediately visible in the other, same as every other dual-registered field in this registry.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline (1 pre-existing ESM-import error + 15 across 5 pre-existing test files), zero new errors. Re-ran the Phase 152 AST-based JSXText quote/apostrophe checker (parses each file's real syntax tree via this repo's own `@babel/parser`/`@babel/traverse`, checks raw source rather than Babel's entity-decoded `.value`) across all 5 files touched this phase — clean, nothing flagged. Grepped every render site of `<DonateBand` to confirm the 4 unchanged callers still pass no props and the one changed caller passes `content` correctly. Could not run `npx jest` or `npx eslint` — same long-standing, previously-documented sandbox limitation as every phase since 132 (both hang indefinitely with zero output on this mounted filesystem). Not verified in a live browser — same standing limitation as every phase since 132. No new pure-logic unit test needed — this phase is registry/wiring plumbing (no new computation to test), matching the same reasoning Phase 152 gave for not adding one for its own database-filter change.
+
+**Files changed:** `lib/ui-builder/pageRegistry.ts`, `lib/ui-builder/pageContentResolver.ts`, `components/home/DonateBand.tsx`, `app/find-your-therapist/page.tsx`, `app/api/admin/ui-builder/page-content/publish/route.ts`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 153: add Donation/Support CTA group to Page Content Layers panel"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
+
+One thing worth your attention: since this band renders on four different pages but now only shows up in one page's Layers panel (Find Support, right after Team & Advisors, per your instruction), you'll want to open the Page Editor on Find Support specifically when you want to edit this content — not Home, Our Professionals, or Community, even though the edit affects all four.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -82,6 +82,20 @@ export async function POST(request: Request) {
     revalidatePath("/", "layout");
   } else {
     revalidatePath(def.route);
+    // Phase 153 — About's "donate" content source is DonateBand.tsx, a
+    // single component also rendered as-is on Home, Our Professionals, and
+    // Community (see components/home/DonateBand.tsx's own comment). A
+    // publish from About's editor writes the one shared "component_donate_
+    // band" site_content row those other 3 routes read too, so their caches
+    // need invalidating alongside About's own route — otherwise an admin
+    // publishing a donate-band change here would see it update on
+    // /find-your-therapist but not on the other 3 pages until they next
+    // revalidate on their own.
+    if (pageKey === "about") {
+      revalidatePath("/");
+      revalidatePath("/therapists");
+      revalidatePath("/support-groups");
+    }
   }
 
   return NextResponse.json({ ok: true, publishedAt, route: def.route });
