@@ -106,6 +106,17 @@ export default function HeroEditor({ contentKey, initial }: { contentKey: string
             onChange={(e) => setCtaPrimaryHref(e.target.value)}
             className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
           />
+          {/* Fixed one production incident where this field got edited to
+              "/Find-your-therapist" (this page's own URL), which silently
+              disabled the AI Matching modal — HeroFindSupportCta only opens
+              it when this value is exactly "#how-it-works"; anything else
+              renders as a plain link instead, so the button quietly stopped
+              doing anything. Added this note so the next edit here doesn't
+              repeat that by accident. */}
+          <p className="mt-1 text-[12px] text-muted-fg">
+            Leave as <code className="rounded bg-secondary px-1 py-0.5">#how-it-works</code> to keep this button
+            opening the AI Matching flow. Any other value turns it into a plain link instead.
+          </p>
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Secondary CTA label</label>

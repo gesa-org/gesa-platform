@@ -7342,3 +7342,29 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 160: fixed the dead "AI Matching" button on the Find Support hero
+
+**Request:** Roy sent a screenshot of the Find Support page's hero (the "AI Matching" / "JOIN THE MOVEMENT" buttons) — the "AI Matching" button had stopped doing anything, and asked for it fixed.
+
+**Root cause:** the button's behavior is decided by `components/find-support/HeroFindSupportCta.tsx` — it only opens the AI Matching modal (FindSupportModal + MatchWizard) when its `href` prop is *exactly* the recognized sentinel string `"#how-it-works"`; any other value silently falls back to rendering a plain `<Link>` instead (by design, so an admin can repoint this CTA at an ordinary URL if they ever want to). Queried the live `site_content` row (`page_about_hero`, which feeds this Hero via Content Manager) and found `ctaPrimaryHref` had been changed at some point to `"/Find-your-therapist"` — the Find Support page's own URL. Since this Hero already renders on that exact page, that value pointed the button at the page it was already on: not a broken link exactly, but functionally dead (a no-op), and it also silently disabled the AI Matching modal since the value no longer matched the sentinel. `ctaPrimaryLabel` itself ("AI Matching") was untouched and unrelated to the bug — only the href regressed.
+
+**Fix:** updated the production `site_content` row directly (`ctaPrimaryHref` → back to `"#how-it-works"`) via Supabase, restoring the button to its working state — no code needed to fix the immediate bug, since the component logic itself was correct. Also added a short help note under the "Primary CTA link" field in `components/admin/content/HeroEditor.tsx` (the admin form that edits this exact value) explaining that this field must stay `#how-it-works` to keep the AI Matching modal wired up, so the next admin edit here doesn't reintroduce the same regression by accident.
+
+**What was deliberately left untouched:** `HeroFindSupportCta.tsx`'s own logic (correct as-is — this was a data problem, not a code bug), the button's label, the secondary "JOIN THE MOVEMENT" button and its own href, and every other `site_content` row.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on the one touched file — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132; please click "AI Matching" once this is live to confirm the modal opens.
+
+**Files changed:** `components/admin/content/HeroEditor.tsx` (code). Production data: `site_content` row `page_about_hero`, field `ctaPrimaryHref` (via direct Supabase update, disclosed here rather than routed through a normal admin save).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 160: add admin hint for AI Matching CTA sentinel href"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. The button itself should already be working right now (the fix was a direct data update, live immediately) — this git push is just for the admin-form hint. Please confirm "AI Matching" opens the modal again once you check.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
