@@ -7150,3 +7150,35 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 155: fix — "DISASTER" card's "BROWSE THE DIRECTORY" button was routing into the intake flow instead of Our Professionals
+
+**Bug report:** the DISASTER-tagged card (heading "OPEN TO EVERYONE — Find professional support," CTA "BROWSE THE DIRECTORY") was linking to `/intake?path=general` — the free-session intake/onboarding flow — instead of `/therapists`, the real, paid, book-directly Our Professionals directory this card's own subtext ("Compare profiles, approaches and fees. Choose and book directly." / "Paid sessions · Fees shown before booking") describes.
+
+**Where this actually lives:** confirmed this is the same Home page card set from Phase 154 (`components/home/Paths.tsx`) — Roy had since gone into Content Manager and re-edited the live copy independently of that phase's own fallback text: card 1 → "WAR" / "I've been affected," card 2 → "TERROR" / "I serve or support someone who serves," card 3 → "DISASTER" / "OPEN TO EVERYONE — Find professional support," with CTA labels changed to "EXPLORE GIFTED SUPPORT" (cards 1–2) and "BROWSE THE DIRECTORY" (card 3). Queried the live `page_home` row directly to confirm exactly which field held the wrong value, rather than guessing from the code fallback (which still had Phase 154's original placeholder text, not Roy's own edits) — confirmed `card3CtaLink` was the one stale field: `card1CtaLink`/`card2CtaLink` were already correctly `/intake?path=crisis`/`/intake?path=veteran`.
+
+**Fix — two places, both needed:**
+1. **Live production content** (`site_content` row, key `page_home`, project `iddeoavrlnvwwfopsacy`): updated `card3CtaLink` from `/intake?path=general` to `/therapists` directly via a scoped SQL update (`update ... where key = 'page_home' and value->>'card3CtaLink' = '/intake?path=general'`) — this is the actual value visitors hit today, a content row, not code, so this took effect immediately without needing a deploy. Verified the update only touched `card3CtaLink` — `card1CtaLink`/`card2CtaLink` confirmed unchanged in the same query's output.
+2. **Code fallback** (`components/home/Paths.tsx`'s `HOME_CONTENT_FALLBACK.card3CtaLink`) — also had the same stale `/intake?path=general` value (this predates Roy's content edits and Phase 154 never touched CTA links, only the front badge label/caption). Fixed here too so a future unpublish/reset-to-default doesn't reintroduce the exact same bug.
+
+**Verified no duplicate/hardcoded copy of this link exists anywhere else:** `Paths.tsx` renders its three cards from one `cards.map()` — no separate mobile/desktop markup, no second card instance — and the CTA's `href` always comes from `content.card3CtaLink` (a single field), never a literal string in the JSX. Grepped the whole codebase for `path=general` afterward — the only remaining occurrence is this changelog entry's own explanatory text; the `/intake` page itself still legitimately supports `?path=general` as a real, working destination for other entry points, this fix just changes what this one card's button points to.
+
+**Client-side navigation confirmed, no change needed:** the card's CTA already renders as a plain `next/link` `<Link href={p.ctaLink}>` (unchanged by this fix) — the same `next/link` Link component Header.tsx's own nav uses for "Our Professionals" — so this was already a client-side transition, never a full page reload, on both the old and new destination.
+
+**What was deliberately left untouched:** cards 1 ("WAR" / "I've been affected") and 2 ("TERROR" / "I serve or support someone who serves") — their `/intake?path=crisis` and `/intake?path=veteran` destinations were already correct and are unchanged, along with every other piece of both cards' copy, styling, and the flip interaction.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on `components/home/Paths.tsx` — clean (this fix only touched a data string and a comment, no new JSX). Manually traced `/therapists`'s own render path (`app/therapists/page.tsx` → `TherapistsDirectory`/`TherapistCard`) to confirm it's the real, existing, unmodified directory page with search, specialty/language/duration/gender filters, and booking actions — nothing about that page needed to change, only what points to it. Could not click through in a live browser to confirm visually — same standing sandbox limitation as every phase since 132; the production content fix is a plain, already-live URL, so this is lower-risk than a code/UI change would be, but worth a quick click-through on your end regardless.
+
+**Files changed:** `components/home/Paths.tsx` (fallback only). **Database:** one scoped `UPDATE` on the `site_content` row `key = 'page_home'` in production project `iddeoavrlnvwwfopsacy` — no migration file, since this is a content-value fix, not a schema change.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 155 fix: correct DISASTER card's CTA fallback link to /therapists"
+git push
+```
+
+Roy — the live site is already fixed (I corrected the published content directly, since that's a data value, not code), so "Browse the Directory" on the DISASTER card should already land on Our Professionals right now — please double check by clicking it live. The git block above just keeps the code's own fallback default in sync, so run those four one at a time and paste back what's after `git commit` whenever convenient.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

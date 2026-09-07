@@ -42,7 +42,21 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   card3Title: "Seeking support",
   card3Description: "For anyone carrying anxiety, ongoing stress, or the weight of antisemitism. Start here — more is coming.",
   card3CtaLabel: "Reach out now",
-  card3CtaLink: "/intake?path=general",
+  // Phase 155 — Roy's live-edited version of this card (published content,
+  // not this fallback) relabeled it "DISASTER" / "OPEN TO EVERYONE — Find
+  // professional support" with a "BROWSE THE DIRECTORY" CTA meant to route
+  // browsers to the real, bookable Our Professionals directory (paid
+  // sessions, fees shown up front — not the free-session intake/onboarding
+  // flow the other two cards use). That published row's own `card3CtaLink`
+  // was still the original "/intake?path=general" from before this card was
+  // repurposed, so clicking "Browse the Directory" wrongly sent visitors
+  // into the intake flow instead. Fixed directly in the published
+  // `page_home` site_content row (this card's actual live destination), and
+  // fixed here in the fallback too so a fresh/reset install doesn't
+  // reintroduce the same mismatch — cards 1 and 2's `/intake?path=crisis`
+  // and `/intake?path=veteran` are genuinely intake-flow destinations and
+  // are untouched.
+  card3CtaLink: "/therapists",
   // Phase 97 — front-face badge labels (see the HomeContent type comment
   // in lib/content.ts).
   // Phase 100 — Roy sent a new reference image for the front face (see the
