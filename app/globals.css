@@ -167,6 +167,24 @@
     animation: gold-sheen 7s ease-in-out infinite;
     pointer-events: none;
   }
+
+  /* Phase 163 — Roy sent a page-specific palette spec for the Home page
+     only ("Page 1 · Home": ivory dominant, gold "owns the hero band
+     outright", no sage/no blue-gray anywhere on that page), asking the
+     hero band to go fully gold while every other .gold-banner page (Find
+     Support, Our Professionals, Community) keeps the existing
+     --slate-banner light slate-gray untouched. Scoped to this one page via
+     an extra class on top of .gold-banner (added only in
+     components/home/Paths.tsx) rather than retuning --slate-banner
+     itself, since that token is shared by all four gold-banner pages and
+     this request was explicitly Home-only. Reuses the exact gold gradient
+     already used by this same page's badge pills (--clay/--amber) rather
+     than a new color, per Roy's "keep gold/sand color for the accent"
+     instruction — the ::before sheen sweep, GoldWatermarks icons, and
+     every hover effect from .gold-banner above are untouched. */
+  .gold-banner.home-hero {
+    background: linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%);
+  }
   @media (prefers-reduced-motion: reduce) {
     .gold-banner::before {
       animation: none;

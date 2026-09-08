@@ -7430,3 +7430,33 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 163: Home page recolored to Roy's gold/ivory palette spec
+
+**Request:** Roy sent a design-system reference card labeled "Page 1 · Home" (ivory 62% / deep blue 26% / gold 12%, "gold may own the hero band outright... fill the primary button on an ivory card... the 3px rule on a pathway card," "gold may not sit on the deep blue band or hold a paragraph longer than the hero," "no sage, no blue-gray anywhere on this page") plus a second image sampling four colors — asking to locate and replace those colors on the "About" page. Confirmed over `AskUserQuestion` first that "About" here means the Home page (reached via the top-nav "About" item — the WAR/TERROR/DISASTER pathway-card page), not the separate founder-story page at `/find-your-therapist`, since the reference card's own "Page 1 · Home" label pointed there and the nav labeling on this site is a known source of confusion (see Phase 121/145's own comments on it).
+
+**What changed, scoped to the Home page only:**
+- **Hero band → gold.** `app/globals.css` gained a new `.gold-banner.home-hero` rule (gold gradient, reusing the exact `--clay`/`--amber` gold already used by this page's own badge pills) layered on top of the shared `.gold-banner` class, and `components/home/Paths.tsx`'s hero `<div>` picked up the `home-hero` class. The shared `--slate-banner` token itself is untouched, so Find Support, Our Professionals, and Community — the other three pages that also use `.gold-banner` — keep their existing light slate-gray background exactly as before. The existing `text-espresso` headline/subtitle/badge colors already read as dark-on-light and stay legible on the new gold background (the same combination this page's very first gold-banner design used, before Phase 130's slate-gray retune) — no text-color changes needed.
+- **Pathway card back face — "the 3px rule."** The ivory/`bg-clay-soft` back face's own border went from a muted `border border-clay/30` (1px, 30% opacity) to a full-strength `border-[3px] border-clay`.
+- **Pathway card back face — "fill the primary button."** The "Reach out now" CTA button's fill went from `bg-espresso` (dark navy) + white text to solid `bg-clay` gold + `text-espresso`, matching this codebase's own established "dark text on gold, never white-on-gold" convention (see `Button.tsx`'s Phase 36 comment, which deliberately moved the shared "clay" button variant away from exactly that low-contrast combination). Hover darkens to `--amber` with white text.
+- **Trust-badge strip — no sage.** `components/home/Stats.tsx`'s `bg-green-sage` band (this component only renders on Home, not shared with any other page) became `bg-clay-soft` — the same pale gold/ivory wash already used on this page's cards, rather than a new color. The `--green-sage` token itself is untouched in `globals.css` in case it's wanted elsewhere later.
+
+**What was deliberately left untouched, per Roy's own instructions:** the three pathway cards' own frame/mat/canvas/mark colors ("keep... three cards color palettes" — `PATH_FRONT_STYLES` in `Paths.tsx` is unchanged, including card 2's sage-toned canvas, which is a card-specific color rather than a page-section background); the flip/hover mechanics (`.gold-card-hover`, `group-hover`/`group-focus-within`); `GoldWatermarks` ("globe details"); and `DonateBand.tsx`'s dark navy closing band, which is shared across four pages and already had no gold sitting on it (white text/borders only) — satisfying "gold may not sit on the deep blue band" with no change needed. Two items named in the reference card — an "Online tag" and an "avatar disc" — don't exist anywhere on this page (no such elements in `Paths.tsx`/`Stats.tsx`), so there was nothing to apply them to; flagging this rather than guessing at an unrelated page.
+
+**Verification:** rendered a standalone color/contrast mockup (Python/Pillow) of the exact hex values used — gold gradient hero text, the gold-filled button, and the `clay-soft` trust strip — and confirmed dark espresso text stays clearly legible against all three before shipping, rather than assuming from hex codes alone.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on both touched files — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132; worth a visual check of the Home page (and a quick check that Find Support/Our Professionals/Community's hero bands are unaffected) once it's live.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx`, `components/home/Stats.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 163: Home page gold/ivory palette — gold hero band, gold pathway-card button, 3px card rule, remove sage from trust strip"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Please double-check Find Support, Our Professionals, and Community once it's live too — this phase was scoped to the Home page only, so their hero bands should look exactly as they did before.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

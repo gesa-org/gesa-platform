@@ -354,8 +354,17 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           their icons) below the eyebrow chip to white/white-with-opacity to
           stay legible on a deep-navy `.gold-banner` background; reverted
           alongside the rest of that phase once Roy said the new color
-          didn't work on the live site. */}
-      <div className="gold-banner relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
+          didn't work on the live site.
+          Phase 163 — added the `home-hero` class (app/globals.css) so this
+          one page's hero band reads as solid gold ("gold owns the hero band
+          outright," per Roy's Home-page palette spec), while every other
+          `.gold-banner` page keeps the shared light slate-gray
+          `--slate-banner` background untouched. The existing `text-espresso`
+          headline/subtitle/badge colors below already read as dark text on
+          a light background, which stays legible on gold too (same
+          combination the very first gold-banner design used, before Phase
+          130's slate-gray retune) — no text-color changes needed here. */}
+      <div className="gold-banner home-hero relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-white/25 blur-[110px]" />
           {/* Phase 67 — same faint line-art watermark texture as About's
@@ -562,7 +571,14 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                   {(() => {
                     const BadgeIcon = PATH_BADGE_ICONS[i] ?? PATH_BADGE_ICONS[PATH_BADGE_ICONS.length - 1];
                     return (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden rounded-[20px] border border-clay/30 bg-clay-soft p-5 text-center shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                      // Phase 163 — Roy's Home-page palette spec calls for "the 3px
+                      // rule on a pathway card": this ivory/`bg-clay-soft` back
+                      // face's own border went from a muted `border border-clay/30`
+                      // (1px, 30% opacity) to a full-strength 3px gold rule framing
+                      // the whole card. The card's colors otherwise (frame, mat,
+                      // canvas, mark, corner brackets) are the "three cards' color
+                      // palette" Roy explicitly said to keep — untouched.
+                      <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden rounded-[20px] border-[3px] border-clay bg-clay-soft p-5 text-center shadow-lg [backface-visibility:hidden] [transform:rotateY(180deg)]">
                         {/* Gold corner brackets */}
                         <span className="pointer-events-none absolute left-2.5 top-2.5 h-3.5 w-3.5 rounded-tl-md border-l-2 border-t-2 border-clay" />
                         <span className="pointer-events-none absolute right-2.5 top-2.5 h-3.5 w-3.5 rounded-tr-md border-r-2 border-t-2 border-clay" />
@@ -590,9 +606,20 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                           html
                           className="mt-1.5 text-[12.5px] leading-snug text-muted-fg"
                         />
+                        {/* Phase 163 — Roy's Home-page palette spec calls for gold
+                            to "fill the primary button on an ivory card": this
+                            button's fill went from `bg-espresso` (dark navy) to a
+                            solid `bg-clay` gold, with `text-espresso` instead of
+                            white — matching this codebase's established
+                            "dark text on gold, never white text on gold" pattern
+                            (see Button.tsx's Phase 36 comment on the "clay"
+                            variant) rather than repeating the low-contrast
+                            combination that pattern was deliberately moved away
+                            from. Border stays gold (now matching the fill) and
+                            hover darkens to --amber, the same gold family. */}
                         <Link
                           href={p.ctaLink}
-                          className="relative z-10 mt-3.5 inline-flex w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-espresso px-[18px] py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#141820]"
+                          className="relative z-10 mt-3.5 inline-flex w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-clay px-[18px] py-2 text-[12.5px] font-semibold text-espresso transition-colors hover:bg-amber hover:text-white"
                         >
                           <EditableText
                             contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.cta`}

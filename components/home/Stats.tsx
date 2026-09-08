@@ -27,6 +27,16 @@ export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
 // --sage-soft. Moved to its own --green-sage token rather than retuning
 // --sage-soft, since that token is still used as-is on Donate's trust-
 // badges row, which wasn't part of this request.
+// Phase 163 — Roy's Home-page palette spec explicitly rules out sage
+// ("no sage, no blue-gray anywhere on this page") in favor of an ivory-
+// dominant page with gold reserved for specific accents. This row sits on
+// the Home page only (this component isn't shared with any other page,
+// unlike DonateBand below it), so `bg-green-sage` → `bg-clay-soft` — the
+// site's existing pale gold/ivory wash token, already used elsewhere on
+// this same page for the pathway cards' back faces, rather than a brand
+// new color. The `--green-sage` token itself is untouched in globals.css
+// in case it's wanted again elsewhere; only this one usage changed. The
+// icon circles (`bg-sand-brown`) were already gold-family and unaffected.
 export default async function Stats() {
   const content = await getPageContent("component_home_stats", HOME_STATS_CONTENT_FALLBACK);
   const badges = [
@@ -37,7 +47,7 @@ export default async function Stats() {
   ];
 
   return (
-    <section className="border-y border-border bg-green-sage py-10">
+    <section className="border-y border-border bg-clay-soft py-10">
       <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
         {badges.map((b) => (
           <StaggerItem key={b.label} className="flex items-center gap-3.5">
