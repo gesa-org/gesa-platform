@@ -7621,3 +7621,36 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 169: crisis button now shows verified, country-specific emergency/crisis resources (was US-only for every visitor)
+
+**Request:** Roy asked for the "You are not alone" crisis modal to add a country/region selector so the resources shown are accurate for wherever the visitor actually is, instead of the same four US-specific resources (911, 988, Crisis Text Line, 988 chat) being shown to every visitor worldwide — the same gap flagged as Q1 in VentVest's QA test plan and answered "Not Implemented" in the QA response document delivered earlier. Explicit requirement: preserve the modal's exact visual structure/branding/spacing, add the country dropdown only, and never invent or guess a number — build a maintainable, sourced data layer instead.
+
+**What changed:**
+- **New data layer**, `lib/crisisResources.ts`: a typed `CrisisResource[]` array covering 23 countries (US, Canada, UK, Ireland, Australia, New Zealand, Japan, Singapore, Philippines, Germany, France, Netherlands, Spain, Italy, Sweden, Norway, Denmark, Finland, Poland, India, South Africa, Brazil, Mexico), each record carrying a real `sourceUrl` and `verifiedDate` (2026-09-09) rather than an invented number. Every fact was checked against an official or recognized source (government/health-ministry pages, the lifeline organizations' own sites, etc.) via live web research this phase, not filled in from memory — see `MAINTAINING_CRISIS_RESOURCES.md` for the full sourcing standard and how to add/re-verify a country. `getResourcesForCountry()` returns emergency services first, then crisis/suicide lines, then everything else; `hasVerifiedResources()` tells the UI when to show the safe fallback instead of guessing.
+- **`lib/countries.ts`** gained `COUNTRY_OPTIONS` (ISO code + name + dial code + flag-emoji) alongside the existing `COUNTRY_NAMES` — same technique already used by `PhoneNumberInput.tsx`, exported once here so the new selector doesn't duplicate it a third time.
+- **New components** (`components/crisis/`): `CountrySelector.tsx` (a real ARIA combobox — searchable by typing, fully keyboard-operable via Up/Down/Home/End/Enter/Escape, no native `<select>` used since the spec called for genuine search-as-you-type), `CrisisResourceCard.tsx` (same card shell — rounded-2xl border, accent-soft icon tile — the four original hardcoded cards used, so a country-specific card looks identical to what it replaces), and `CrisisResourceList.tsx` (renders the neutral pre-selection prompt, the resource cards, or the safe "we couldn't verify a local crisis line for this location" fallback with a Befrienders Worldwide link).
+- **`components/CrisisButton.tsx`**: replaced the four hardcoded resource cards with the country selector + dynamic resource list. Added a fixed, always-visible universal notice ("If you are in immediate danger or may act on thoughts of harming yourself or someone else, contact local emergency services now.") above the selector, independent of any country being picked. The existing CMS-editable heading/subtitle/disclaimer are untouched. Selection persists for the current browser session only (`sessionStorage`, not `localStorage`) so reopening the modal doesn't reset it; there is no geolocation call or permission prompt anywhere in this feature — the selector always starts unset unless the visitor picked a country earlier this session.
+- **`components/admin/content/CrisisButtonEditor.tsx`**: removed the "Resource 1-4" editable-field groups (no longer rendered) and added a note pointing future edits to `lib/crisisResources.ts`/`MAINTAINING_CRISIS_RESOURCES.md` instead. The underlying `CrisisButtonContent` type keeps those fields for backward compatibility with any already-published content row; they're just inert now.
+- **New doc**, `MAINTAINING_CRISIS_RESOURCES.md`: sourcing standard, the "never guess a number" rule, and step-by-step instructions for adding, updating, or re-verifying a country's entries.
+- **New tests**, `tests/unit/CrisisResources.test.tsx`: covers the data layer (US-only lookup, no US numbers leaking into other countries' results, unverified country returns the fallback, `tel:`/`sms:` href formatting) and both components (keyboard operation, search-filtering, selection, Escape-to-close, resource swap on country change).
+
+**What was left untouched:** Modal.tsx (portal/animation/escape-key/backdrop-click behavior), the button's own trigger/position/icon, the CMS-editable heading/subtitle/disclaimer content and their `EditableText` wiring, every other `.gold-banner`/page-specific styling from prior phases.
+
+**Data accuracy note for Roy:** this covers 23 countries with real, sourced data — not the whole world. Any country not in the list shows the safe fallback (no guessed number) rather than nothing or a wrong one. A few entries carry an inline caveat where sources disagreed on hours (e.g. Italy's Telefono Amico, Denmark's Livslinien) — see the `note` field on those records and `MAINTAINING_CRISIS_RESOURCES.md` for how to extend or re-verify coverage.
+
+**Verification:** `npx tsc --noEmit` — back to the established 16-line baseline, zero new errors. `npx jest tests/unit/CrisisResources.test.tsx` could not be run to completion in this sandbox (jest hangs here — the same standing limitation noted since Phase 152); the suite is written and ready to run in CI/locally before merging. No live browser available in this sandbox either; a static HTML approximation was rendered to confirm content order and structure, and every Tailwind class on the new cards/selector was copied directly from the original hardcoded resource cards and existing site inputs (not reinvented), so visual styling should match the existing modal — please double-check the live rendering once deployed, especially the dropdown's open/closed states and the fallback message for a country outside the 23 covered.
+
+**Files changed:** `lib/crisisResources.ts` (new), `lib/countries.ts`, `components/crisis/CountrySelector.tsx` (new), `components/crisis/CrisisResourceCard.tsx` (new), `components/crisis/CrisisResourceList.tsx` (new), `components/CrisisButton.tsx`, `components/admin/content/CrisisButtonEditor.tsx`, `MAINTAINING_CRISIS_RESOURCES.md` (new), `tests/unit/CrisisResources.test.tsx` (new).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 169: country-specific crisis/emergency resources with verified data layer"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line. Once it's live, please specifically check: the dropdown opens/searches correctly on mobile, the fallback message shows for a country like, say, China or Kenya (not in the initial 23), and the four US cards still look right when United States is selected.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

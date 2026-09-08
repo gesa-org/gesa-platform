@@ -1,10 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { LifeBuoy, Phone, MessageCircle, Globe2, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LifeBuoy } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import type { CrisisButtonContent } from "@/lib/content";
 import EditableText from "@/components/ui-builder/public/EditableText";
+import CountrySelector from "@/components/crisis/CountrySelector";
+import CrisisResourceList from "@/components/crisis/CrisisResourceList";
+
+// Phase 169 — session-only persistence for the country the visitor picked
+// in this modal, so closing and reopening it (or navigating between pages,
+// since this button is rendered globally) doesn't make them re-pick every
+// time. Deliberately sessionStorage, not localStorage: this is a small UX
+// convenience for one visit, not something that should survive across a
+// shared/public computer's next session. Guarded for the SSR render pass
+// (sessionStorage doesn't exist server-side) and for the file:// / privacy
+// modes where reading storage can throw.
+const COUNTRY_STORAGE_KEY = "gesa_crisis_country";
+
+function readStoredCountry(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.sessionStorage.getItem(COUNTRY_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredCountry(code: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(COUNTRY_STORAGE_KEY, code);
+  } catch {
+    // Ignore — worst case the visitor re-picks their country next time.
+  }
+}
 
 // Phase 80 round 2 — this button/modal renders on every single page (wired
 // once in app/layout.tsx) but was fully hardcoded. Since it's a Client
@@ -13,8 +43,14 @@ import EditableText from "@/components/ui-builder/public/EditableText";
 // fix as Header/Footer: app/layout.tsx (a Server Component) fetches this
 // once and passes it down as a prop, defaulting to this fallback so the
 // button still works even if that fetch is ever skipped in a test render.
-const ICONS = [Phone, MessageCircle, Globe2, ExternalLink];
-
+//
+// Phase 169 — the four resource1-4 fields below are kept only so existing
+// published `component_crisis_button` content rows (and CrisisButtonEditor's
+// type) don't break; they are no longer read or rendered anywhere in this
+// component. Every visitor used to see the same US-only 988/911/741741
+// resources regardless of where they actually were — QA flagged this (see
+// EXECUTION_PLAN.md Phase 169). Resources are now looked up per-country from
+// lib/crisisResources.ts via the selector below instead.
 export const CRISIS_BUTTON_CONTENT_FALLBACK: CrisisButtonContent = {
   published: true,
   triggerLabel: "In crisis? Get help",
@@ -37,41 +73,25 @@ export const CRISIS_BUTTON_CONTENT_FALLBACK: CrisisButtonContent = {
 
 export default function CrisisButton({ content = CRISIS_BUTTON_CONTENT_FALLBACK }: { content?: CrisisButtonContent }) {
   const [open, setOpen] = useState(false);
+  // Starts unset on both server and first client render (readStoredCountry()
+  // itself already guards for `window === undefined`, but reading it inside
+  // useState's initializer would still make the very first client render
+  // disagree with the server's — this component isn't SSRed at all since
+  // it's rendered inside a Client Component tree, but doing the read in an
+  // effect instead is the same safe pattern Modal.tsx above already uses
+  // for its own `mounted` flag). No geolocation call anywhere here — a
+  // returning visitor's country reappears only because they picked it
+  // earlier this session, never because we looked up their location.
+  const [countryCode, setCountryCode] = useState<string | null>(null);
 
-  const resources = [
-    {
-      icon: ICONS[0],
-      titleId: "global.crisisButton.resource1Title",
-      title: content.resource1Title,
-      descId: "global.crisisButton.resource1Description",
-      desc: content.resource1Description,
-      href: content.resource1Href,
-    },
-    {
-      icon: ICONS[1],
-      titleId: "global.crisisButton.resource2Title",
-      title: content.resource2Title,
-      descId: "global.crisisButton.resource2Description",
-      desc: content.resource2Description,
-      href: content.resource2Href,
-    },
-    {
-      icon: ICONS[2],
-      titleId: "global.crisisButton.resource3Title",
-      title: content.resource3Title,
-      descId: "global.crisisButton.resource3Description",
-      desc: content.resource3Description,
-      href: content.resource3Href,
-    },
-    {
-      icon: ICONS[3],
-      titleId: "global.crisisButton.resource4Title",
-      title: content.resource4Title,
-      descId: "global.crisisButton.resource4Description",
-      desc: content.resource4Description,
-      href: content.resource4Href,
-    },
-  ];
+  useEffect(() => {
+    setCountryCode(readStoredCountry());
+  }, []);
+
+  function handleCountryChange(code: string) {
+    setCountryCode(code);
+    writeStoredCountry(code);
+  }
 
   return (
     <>
@@ -87,32 +107,27 @@ export default function CrisisButton({ content = CRISIS_BUTTON_CONTENT_FALLBACK 
         <h3 className="text-lg font-semibold m-0">
           <EditableText contentId="global.crisisButton.modalHeading" label="Modal heading" value={content.modalHeading} as="span" />
         </h3>
-        <p className="text-muted-fg mt-1.5 mb-4">
+        <p className="text-muted-fg mt-1.5 mb-3">
           <EditableText contentId="global.crisisButton.modalSubtitle" label="Modal subtitle" value={content.modalSubtitle} as="span" />
         </p>
-        <div className="flex flex-col gap-2.5">
-          {resources.map((r) => (
-            <a
-              key={r.titleId}
-              href={r.href}
-              target={r.href.startsWith("http") ? "_blank" : undefined}
-              rel="noreferrer"
-              className="flex items-center gap-3.5 rounded-2xl border border-border p-3.5 hover:border-primary transition-colors"
-            >
-              <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] bg-accent-soft text-primary">
-                <r.icon size={18} />
-              </span>
-              <span>
-                <strong className="block">
-                  <EditableText contentId={r.titleId} label="Resource title" value={r.title} as="span" />
-                </strong>
-                <span className="text-sm text-muted-fg">
-                  <EditableText contentId={r.descId} label="Resource description" value={r.desc} as="span" />
-                </span>
-              </span>
-            </a>
-          ))}
+
+        {/* Fixed, non-editable safety copy — always visible regardless of
+            which country (if any) is selected below, per the requirement
+            that a universal emergency notice never depends on a dropdown
+            selection having been made. The CMS-editable `disclaimer` field
+            further down is GESA's own "we are not an emergency service"
+            framing and stays separate from this. */}
+        <p className="mb-4 rounded-xl bg-secondary/50 px-3.5 py-3 text-[13.5px] font-medium text-foreground">
+          If you are in immediate danger or may act on thoughts of harming yourself or someone else, contact local
+          emergency services now.
+        </p>
+
+        <div className="mb-4">
+          <CountrySelector value={countryCode} onChange={handleCountryChange} />
         </div>
+
+        <CrisisResourceList countryCode={countryCode} />
+
         <div className="mt-3 rounded-xl bg-accent-soft px-3.5 py-3 text-sm text-primary-600">
           <EditableText contentId="global.crisisButton.disclaimer" label="Disclaimer" value={content.disclaimer} as="span" />
         </div>
