@@ -190,6 +190,24 @@
   .gold-banner.home-hero {
     background: var(--clay-soft);
   }
+  /* Phase 166 — Roy flagged the moving sheen highlight (`.gold-banner`'s
+     ::before above, `gold-sheen` keyframes below) as "missing" on the Home
+     hero specifically. It was never actually removed — the shared rule
+     still runs on every `.gold-banner` page — but its sweep is a plain
+     white highlight (`rgba(255,255,255,0.4)`), which read clearly against
+     the medium-toned slate-gray/gold backgrounds this effect was designed
+     for, and is nearly invisible against `--clay-soft`'s very pale ivory
+     (Phase 164) — white-on-near-white has almost no contrast to see. Rather
+     than brightening the shared white sweep (which would change Find
+     Support/Our Professionals/Community too), this higher-specificity
+     `.home-hero::before` override only changes the sweep's *color* to a
+     warm gold highlight built from this page's own --clay token, so it
+     reads as a genuine gold shimmer sliding across the ivory band. Position,
+     size, and the `gold-sheen` animation itself are inherited unchanged
+     from the base rule above — only `background` is overridden here. */
+  .gold-banner.home-hero::before {
+    background: linear-gradient(115deg, transparent 22%, rgba(191, 160, 70, 0.65) 42%, rgba(236, 212, 143, 0.85) 50%, rgba(191, 160, 70, 0.65) 58%, transparent 78%);
+  }
   @media (prefers-reduced-motion: reduce) {
     .gold-banner::before {
       animation: none;
