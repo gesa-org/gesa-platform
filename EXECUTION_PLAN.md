@@ -7516,6 +7516,32 @@ Roy — same as every phase: please run those four one at a time, and paste back
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
 
+## Phase 166: restored the visible gold sheen sweep on the Home hero
+
+**Request:** Roy said the gold hovering/sliding effect on the Home/About hero band was missing, and asked for it back — explicitly clarifying not to bring back the gold background, just make the moving sheen effect visible again.
+
+**Root cause:** the animated sheen sweep itself (`.gold-banner::before`, a diagonal highlight that slides across the band every 7 seconds) was never removed — it's a white highlight, `rgba(255,255,255,0.4)`, which read clearly against the darker `--slate-banner` slate-gray the other three gold-banner pages still use. Once Phase 164 recolored this page's hero to `--clay-soft` (a pale, near-white ivory), that same white sweep became almost invisible against a background nearly as light as the sweep itself — present in the DOM and still animating, just not visible without a live side-by-side diff.
+
+**Fix:** `app/globals.css` gained a `.gold-banner.home-hero::before` override that swaps just the sweep's color to a warm gold (the same `--clay` tone used throughout this page) at higher opacity, so it shows up against the ivory background the same way white used to show up against slate-gray. The background itself (Phase 164/165's ivory) is untouched, per Roy's explicit clarification. Every other `.gold-banner` page keeps the original white sweep exactly as before.
+
+**Verification:** rendered a mockup of the gold sweep at a mid-animation frame against the actual `--clay-soft` background before shipping, rather than assuming from the CSS alone — confirmed it reads as a clear, soft gold shimmer.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. CSS-only change, no JSX touched, so the quote/apostrophe checker wasn't re-run this phase. Not verified in a live browser (animation timing/easing in particular) — same standing sandbox limitation as every phase since 132; worth watching it sweep once it's live.
+
+**Files changed:** `app/globals.css`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 166: restore visible gold sheen sweep on Home hero (ivory background unchanged)"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically, and confirm the sweep is visible (and still moving smoothly) once it's live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
 ## Phase 166: restored the visible gold sheen on the Home hero band
 
 **Request:** Roy flagged the "gold hovering/sliding effect" on the Home page's hero band as missing, and asked for it brought back, visible and aesthetic.

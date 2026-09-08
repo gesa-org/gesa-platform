@@ -190,6 +190,23 @@
   .gold-banner.home-hero {
     background: var(--clay-soft);
   }
+  /* Phase 166 — Roy flagged the animated sheen sweep (`.gold-banner::before`
+     above) as "missing" specifically on this page after Phase 164 recolored
+     the hero to `--clay-soft`. It was never actually removed — the sweep is
+     a white highlight (rgba(255,255,255,.4)) that reads clearly against the
+     darker `--slate-banner` slate-gray the other three gold-banner pages
+     still use, but is nearly invisible against this page's own pale,
+     near-white ivory background, so it looked gone without a live diff.
+     Explicit clarification from Roy: keep the ivory background exactly as
+     it is (Phase 164/165), just make the sweep itself visible again — so
+     rather than reverting the background, this overrides just the sweep's
+     color for `.home-hero`, to a warm gold (the same --clay tone used
+     throughout this page) at higher opacity, which shows up against ivory
+     the way white used to show up against slate-gray. Every other
+     `.gold-banner` page keeps the original white sweep untouched. */
+  .gold-banner.home-hero::before {
+    background: linear-gradient(115deg, transparent 30%, rgba(191, 160, 70, 0.55) 45%, transparent 60%);
+  }
   /* Phase 166 — Roy flagged the moving sheen highlight (`.gold-banner`'s
      ::before above, `gold-sheen` keyframes below) as "missing" on the Home
      hero specifically. It was never actually removed — the shared rule
