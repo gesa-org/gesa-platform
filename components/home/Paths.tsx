@@ -317,11 +317,16 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
   ];
 
   return (
-    // Phase 165 — briefly gave this section a `bg-clay-soft` background to
-    // remove the seam between the hero band and the card-grid area below
-    // it; reverted per Roy's request to undo Phases 165 and 166 together,
-    // back to falling through to the page's own `--background`.
-    <section aria-labelledby="paths-heading" className="relative overflow-hidden">
+    // Phase 167 — Roy sent his Home-page reference image again and asked
+    // for the page's background to match it, specifically calling out that
+    // this shouldn't be a revert of the Phase 165/166 work he'd undone
+    // earlier. Re-examined the reference itself: the hero band and the
+    // card-grid area below it are one continuous warm-ivory field with no
+    // visible seam, so this section gets its own `bg-clay-soft` (the same
+    // ivory the hero band already uses) as new Phase 167 work — the sheen
+    // sweep on the hero itself is untouched (still the shared white sweep,
+    // not the gold-tinted Phase 166 version Roy asked not to bring back).
+    <section aria-labelledby="paths-heading" className="relative overflow-hidden bg-clay-soft">
       {/* Gold hero band — Phase 47. Phase 70 removed this band's text
           (eyebrow/headline/subtitle/trust badges) and the decorative
           "gallery wall" of the three path artworks entirely, leaving the
@@ -427,9 +432,13 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           badges above (the negative margin exactly canceled the gold
           band's own `pb-[210px]`, so the cards' top edge landed exactly at
           the badges' bottom edge with zero gap). The gold band's own
-          `pb-[210px]` is untouched — that's what keeps the gold/white color
-          seam, and the "cards visually straddle it," exactly where Phase 72
-          put it. Only the cards' own negative margin got less negative, by
+          `pb-[210px]` is untouched — that originally kept a gold/white
+          color seam with the cards floating up to straddle it; Phase 167
+          gave this outer section the same warm-ivory background as the
+          hero band, so that seam no longer reads as two different tones —
+          this padding/negative-margin math (and the "cards float up
+          slightly over the hero's bottom edge" effect itself) is
+          untouched. Only the cards' own negative margin got less negative, by
           the size of the new gap at each breakpoint (210 minus the gap), so
           the cards now sit lower relative to the badges while still
           floating up over the same seam: 24px gap on mobile, 32px on

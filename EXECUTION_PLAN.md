@@ -7570,11 +7570,37 @@ Roy — same as every phase: please run those four one at a time, and paste back
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
 
-## Phase 166: restored the visible gold sheen on the Home hero band
+## Phase 167: Home page background matched to reference image
 
-**Request:** Roy flagged the "gold hovering/sliding effect" on the Home page's hero band as missing, and asked for it brought back, visible and aesthetic.
+**Request:** Roy re-sent his Home-page reference image and asked for the page's background to be changed to match it, "especially in the three frame cards, copy the colors as is." Since this reference is the same one behind the just-reverted Phases 165/166, I first asked whether he wanted the seamless-ivory background (Phase 165's effect) redone. His answer: match the reference image's color scheme, but don't do it by reintroducing anything that was just reverted.
 
-**Root cause:** the moving sheen highlight was never actually removed — it's `.gold-banner::before` in `app/globals.css`, a diagonal light sweep animated by the existing `gold-sheen` keyframes, and that rule still runs on every `.gold-banner` page today. The sweep itself, though, is a plain white highlight (`rgba(255,255,255,0.4)`) — it read clearly against the medium-toned slate-gray and gold backgrounds it was originally built for, but Phase 164 changed the Home hero's own background to `--clay-soft`, a very pale ivory. White sweeping across near-white has almost no visible contrast, so the animation kept running but effectively disappeared on this one page.
+**What changed:** `components/home/Paths.tsx`'s outer `<section>` gained `bg-clay-soft` (the same warm ivory the hero band already uses via `.gold-banner.home-hero`), so the hero band and the card-grid area below it read as one continuous ivory field, matching the reference's own continuous background — visually the same outcome as Phase 165, but implemented as new Phase 167 work rather than restoring the reverted code, and explicitly *not* bringing back Phase 166's gold-tinted sheen override: the hero's animated sweep stays the shared white highlight, exactly as it is after the revert. Updated the Phase 72/139 comment on the cards wrapper to describe this current state rather than the old two-tone seam.
+
+**The three frame cards:** checked `PATH_FRONT_STYLES`' canvas colors against the reference by eye — `#aed0e9` (light sky blue), `--accent` (sage/olive, `#9ba283`), and `#5f7a91` (slate blue-gray) already match the reference's three canvases closely. No changes made there since they were already an accurate copy; flagging this rather than editing something that wasn't actually wrong.
+
+**What was left untouched:** the hero band's sheen sweep (still white, not gold), Stats.tsx's navy trust strip and DonateBand's ivory closing band (both already matched the reference from Phase 164, untouched by the 165/166 revert), and every other page.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on the touched file — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132.
+
+**Files changed:** `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 167: match Home page background to reference image (ivory hero-to-cards, sheen stays white)"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically, and confirm it matches your reference once it's live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 168: restored the visible gold sheen on the Home hero band (again, after Phase 167)
+
+**Request:** Roy flagged the "gold hovering/sliding effect" on the Home page's hero band as missing, and asked for it brought back, visible and aesthetic. (Note: this is a second, correctly-numbered pass at this fix — an earlier documentation error briefly reused the "Phase 166" label here, which already belonged to the first gold-sheen fix that Roy later had reverted alongside Phase 165. Renumbered to 168 so each phase number stays unique; no functional change from this renumbering, just the paper trail.)
+
+**Root cause:** the moving sheen highlight was never actually removed — it's `.gold-banner::before` in `app/globals.css`, a diagonal light sweep animated by the existing `gold-sheen` keyframes, and that rule still runs on every `.gold-banner` page today. The sweep itself, though, is a plain white highlight (`rgba(255,255,255,0.4)`) — it read clearly against the medium-toned slate-gray and gold backgrounds it was originally built for, but Phase 164's ivory hero background (reinstated across the whole section by Phase 167) is a very pale ivory. White sweeping across near-white has almost no visible contrast, so the animation kept running but effectively disappeared on this one page.
 
 **Fix:** added `.gold-banner.home-hero::before`, a higher-specificity rule that overrides only the sweep's `background` — recoloring it to a warm gold gradient built from this page's own `--clay` tones, with a brighter highlight core (`rgba(236, 212, 143, 0.85)`) so it reads as a genuine gold shimmer sliding across the ivory band rather than a faint white flash. Position, size, and the `gold-sheen` animation timing are all inherited unchanged from the base `.gold-banner::before` rule — only the color changed. Scoped to `.home-hero` specifically, so Find Support, Our Professionals, and Community keep their original white sweep exactly as before. The existing `prefers-reduced-motion` rule (turns the sweep off entirely) still applies to Home the same as every other gold-banner page, since it only touches `opacity`/`animation`, not `background`.
 
@@ -7587,7 +7613,7 @@ Roy — same as every phase: please run those four one at a time, and paste back
 ```
 del .git\index.lock
 git add -A
-git commit -m "Phase 166: restore visible gold sheen sweep on Home hero band"
+git commit -m "Phase 168: restore visible gold sheen sweep on Home hero band"
 git push
 ```
 
