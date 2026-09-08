@@ -7460,3 +7460,32 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 164: Home page palette refined to ivory hero + navy trust strip
+
+**Request:** Right after Phase 163 shipped, Roy sent a fuller mockup of the same Home page superseding the earlier "gold owns the hero band" spec: an ivory/cream hero band and closing band, with a solid dark-navy trust-badge strip in between, and gold pulled back to just the pill badges, frames, and icon circles.
+
+**What changed, still scoped to the Home page only:**
+- **Hero band.** `.gold-banner.home-hero` in `app/globals.css` went from the Phase 163 gold gradient to a flat `var(--clay-soft)` (the same pale ivory/gold-wash token already used by this page's pathway-card back faces) — still scoped to the `home-hero` class only, so the other three `.gold-banner` pages are unaffected either way.
+- **Trust-badge strip.** `components/home/Stats.tsx` went from `bg-clay-soft` (Phase 163) to `bg-primary` (this site's standard deep-navy dark band). Label text flipped from `text-primary` to `text-primary-fg` (the token's own paired light color for text on `--primary`) so it stays legible against the now-dark background; the gold icon circles were already fine against a dark band and are untouched.
+- **Closing CTA band.** `components/home/DonateBand.tsx` — shared across Home, Find Support, Our Professionals, and Community — gained an opt-in `variant?: "navy" | "ivory"` prop (default `"navy"`, i.e. every existing call site's exact current look, unchanged). `app/page.tsx` (Home) is the only caller passing `variant="ivory"`, which swaps the section to `bg-clay-soft` with dark `text-espresso` copy and solid navy (`bg-primary`/`text-primary-fg`) pill buttons in place of the outlined white pills. Find Support, Our Professionals, and Community keep the original dark-navy gradient band exactly as before.
+
+**What was left untouched:** the pathway cards' own frame/mat/canvas/mark colors and the Phase 163 gold button/3px-rule changes on their back faces (still gold-on-ivory, matching this newer mockup too), `GoldWatermarks`, the flip/hover mechanics, and the shared `Header` — the mockup's dark header background reads as an artifact of whatever tool generated the reference image (same pattern as the earlier reference card naming an "Online tag"/"avatar disc" that don't exist on this page either), not a literal ask, and `Header.tsx` is shared site-wide rather than Home-only, so it wasn't touched without being asked directly.
+
+**Verification:** rendered a second color/contrast mockup (Python/Pillow) of the new hex values — ivory hero text, navy trust-strip text, and the ivory closing band's navy button — and confirmed all three read cleanly before shipping.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on all three touched files — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132; worth a visual check of Home, plus a quick check that Find Support/Our Professionals/Community's closing bands are unaffected, once it's live.
+
+**Files changed:** `app/globals.css`, `components/home/Stats.tsx`, `components/home/DonateBand.tsx`, `app/page.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 164: Home page palette refined — ivory hero and closing band, navy trust strip"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically. Please check Find Support, Our Professionals, and Community's closing "Be part of the change" band once it's live too — it should still look exactly as it did before this phase.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

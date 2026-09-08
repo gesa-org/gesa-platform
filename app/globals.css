@@ -177,13 +177,18 @@
      an extra class on top of .gold-banner (added only in
      components/home/Paths.tsx) rather than retuning --slate-banner
      itself, since that token is shared by all four gold-banner pages and
-     this request was explicitly Home-only. Reuses the exact gold gradient
-     already used by this same page's badge pills (--clay/--amber) rather
-     than a new color, per Roy's "keep gold/sand color for the accent"
-     instruction — the ::before sheen sweep, GoldWatermarks icons, and
-     every hover effect from .gold-banner above are untouched. */
+     this request was explicitly Home-only.
+     Phase 164 — Roy then sent a fuller page mockup superseding that gold
+     hero: ivory/cream hero band, with gold pulled back to just the pill
+     badges/frames/icons and a dark-navy trust-strip band instead. Swapped
+     this rule's background from the Phase 163 gold gradient to
+     `--clay-soft` (the same pale gold/ivory wash already used by this
+     page's pathway-card back faces) so the hero reads as part of the same
+     ivory family as the rest of the page, rather than inventing a new
+     tone. Still scoped to `.home-hero` only — the other three
+     `.gold-banner` pages are unaffected either way. */
   .gold-banner.home-hero {
-    background: linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%);
+    background: var(--clay-soft);
   }
   @media (prefers-reduced-motion: reduce) {
     .gold-banner::before {

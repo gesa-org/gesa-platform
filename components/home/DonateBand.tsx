@@ -31,6 +31,17 @@ export const DONATE_BAND_CONTENT_FALLBACK: DonateBandContent = {
 const PILL_CLASS =
   "inline-flex items-center rounded-full border border-white/70 px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors hover:bg-white/10";
 
+// Phase 164 — Roy sent a fuller Home-page mockup putting this closing band
+// on an ivory background instead of the dark navy gradient every other
+// page using this component keeps. Since this one component renders
+// unchanged on Home, Find Support, Our Professionals, and Community (see
+// the Phase 153 comment above), an opt-in `variant` prop scopes the new
+// look to whichever caller asks for it — only app/page.tsx (Home) passes
+// `variant="ivory"`; every other call site omits the prop and keeps
+// today's dark-navy band exactly as before.
+const IVORY_PILL_CLASS =
+  "inline-flex items-center rounded-full bg-primary px-6 py-3 text-[13px] font-semibold uppercase tracking-wide text-primary-fg transition-colors hover:bg-primary-600";
+
 // Phase 153 — registered in the Page Content Layers panel as "Donation /
 // Support CTA" on the About/Find Support page (see lib/ui-builder/
 // pageRegistry.ts's "about" entry — that's the only page with a "Team &
@@ -42,35 +53,39 @@ const PILL_CLASS =
 // content itself — used only by app/find-your-therapist/page.tsx today, so
 // that page's editor preview reflects unpublished edits live. Every other
 // render site keeps calling `<DonateBand />` with no props, unchanged.
-export default async function DonateBand({ content: contentProp }: { content?: DonateBandContent } = {}) {
+export default async function DonateBand({
+  content: contentProp,
+  variant = "navy",
+}: { content?: DonateBandContent; variant?: "navy" | "ivory" } = {}) {
   const content = contentProp ?? (await getPageContent("component_donate_band", DONATE_BAND_CONTENT_FALLBACK));
   const crisisLinkIsExternal = content.crisisLinkHref.startsWith("http");
+  const isIvory = variant === "ivory";
 
   return (
-    <section className="section bg-gradient-to-br from-primary to-primary-600">
+    <section className={isIvory ? "section bg-clay-soft" : "section bg-gradient-to-br from-primary to-primary-600"}>
       <div className="wrap text-center">
-        <h2 className="mb-2.5 font-serif text-[34px] font-semibold text-white">
+        <h2 className={`mb-2.5 font-serif text-[34px] font-semibold ${isIvory ? "text-espresso" : "text-white"}`}>
           <EditableText contentId="about.donate.headline" label="Donation band heading" value={content.headline} as="span" />
         </h2>
-        <p className="mx-auto max-w-[560px] text-white/80">
+        <p className={`mx-auto max-w-[560px] ${isIvory ? "text-espresso/75" : "text-white/80"}`}>
           <EditableText contentId="about.donate.subtitle" label="Donation band body" value={content.subtitle} as="span" />
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3.5">
-          <VolunteerPrimaryCta href={content.cta1Href} className={PILL_CLASS}>
+          <VolunteerPrimaryCta href={content.cta1Href} className={isIvory ? IVORY_PILL_CLASS : PILL_CLASS}>
             <EditableText contentId="about.donate.cta1Label" label="CTA 1 label" value={content.cta1Label} as="span" />
           </VolunteerPrimaryCta>
-          <Link href={content.cta2Href} className={PILL_CLASS}>
+          <Link href={content.cta2Href} className={isIvory ? IVORY_PILL_CLASS : PILL_CLASS}>
             <EditableText contentId="about.donate.cta2Label" label="CTA 2 label" value={content.cta2Label} as="span" />
           </Link>
         </div>
-        <p className="mt-5 flex items-center justify-center gap-1.5 text-[14px] text-white/80">
+        <p className={`mt-5 flex items-center justify-center gap-1.5 text-[14px] ${isIvory ? "text-espresso/75" : "text-white/80"}`}>
           <Heart size={15} className="flex-none" />
           <EditableText contentId="about.donate.crisisText" label="Crisis line text" value={content.crisisText} as="span" />{" "}
           <a
             href={content.crisisLinkHref}
             target={crisisLinkIsExternal ? "_blank" : undefined}
             rel={crisisLinkIsExternal ? "noreferrer" : undefined}
-            className="underline underline-offset-2 hover:text-white"
+            className={`underline underline-offset-2 ${isIvory ? "hover:text-espresso" : "hover:text-white"}`}
           >
             <EditableText contentId="about.donate.crisisLinkLabel" label="Crisis link label" value={content.crisisLinkLabel} as="span" />
           </a>

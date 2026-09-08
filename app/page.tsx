@@ -108,7 +108,12 @@ export default async function Home({
     <div className="reveal-page__main flex flex-col">
       <Paths content={resolvedContent} />
       <Stats />
-      <DonateBand />
+      {/* Phase 164 — `variant="ivory"` opts this one render of the shared
+          DonateBand into Roy's Home-page palette (ivory background, dark
+          navy text/pills) — every other page that renders <DonateBand />
+          (Find Support, Our Professionals, Community) omits the prop and
+          keeps the original dark-navy band unchanged. */}
+      <DonateBand variant="ivory" />
     </div>
   );
 

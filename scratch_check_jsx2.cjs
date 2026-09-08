@@ -2,7 +2,7 @@ const fs = require("fs");
 const parser = require("@babel/parser");
 const traverse = require("@babel/traverse").default;
 
-const files = ["components/home/Paths.tsx", "components/home/Stats.tsx"];
+const files = ["components/home/Stats.tsx", "components/home/DonateBand.tsx", "app/page.tsx"];
 
 let bad = 0;
 for (const f of files) {

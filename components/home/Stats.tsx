@@ -37,6 +37,16 @@ export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
 // new color. The `--green-sage` token itself is untouched in globals.css
 // in case it's wanted again elsewhere; only this one usage changed. The
 // icon circles (`bg-sand-brown`) were already gold-family and unaffected.
+// Phase 164 — Roy sent a fuller Home-page mockup putting this row on a
+// solid deep-navy band instead (matching the "deep blue" share of his
+// palette spec), with the rest of the page (hero, closing band) reading
+// ivory around it. `bg-clay-soft` → `bg-primary` (the same deep-slate navy
+// used by this site's other dark bands, e.g. DonateBand below it). Label
+// text flips from `text-primary` to `text-primary-fg` (this token's own
+// "readable text on --primary" pairing, see globals.css) since dark-navy
+// text on a now-dark-navy background would be invisible — the gold icon
+// circles (`bg-sand-brown text-primary`) already read fine against a dark
+// band and are untouched.
 export default async function Stats() {
   const content = await getPageContent("component_home_stats", HOME_STATS_CONTENT_FALLBACK);
   const badges = [
@@ -47,14 +57,14 @@ export default async function Stats() {
   ];
 
   return (
-    <section className="border-y border-border bg-clay-soft py-10">
+    <section className="border-y border-border bg-primary py-10">
       <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
         {badges.map((b) => (
           <StaggerItem key={b.label} className="flex items-center gap-3.5">
             <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-sand-brown text-primary shadow-sm">
               <b.icon size={22} />
             </span>
-            <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary">
+            <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary-fg">
               {b.label}
             </span>
           </StaggerItem>
