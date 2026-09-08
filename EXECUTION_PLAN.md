@@ -7489,3 +7489,29 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 165: removed the ivory-vs-dirty-white seam below the Home hero
+
+**Request:** Roy sent two screenshots of the live Home page showing the card-grid area just below the hero band — a light gray-blue background behind the "Where would you like to begin?" heading and around the three pathway cards — and asked for it to become the same warm ivory as the hero band, not a separate white/gray tone.
+
+**Root cause:** the hero band (`.gold-banner.home-hero`) has its own opaque `--clay-soft` background, but it only covers the hero `<div>` itself. The card-grid area right below it sits in the outer `<section>` wrapper, which had no background of its own and so fell through to the page's generic `--background` token — a cool, slightly blue-gray tone (labeled "Powder Ivory" in `globals.css`'s own comments, but visually reading as a plain light gray next to the warmer clay-soft hero, which is exactly the "dirty white vs. warm ivory" mismatch Roy flagged). This two-tone split was actually original, intentional design (see the Phase 72/139 comments — the cards were deliberately built to "float up and straddle" that seam), but it stopped making sense visually once Phase 164 made the hero itself warm ivory instead of gold.
+
+**Fix:** `components/home/Paths.tsx`'s outer `<section>` now carries `bg-clay-soft` directly, so the entire area from the top of the hero through the card grid and the closing note reads as one continuous warm ivory field, with no seam. Updated the Phase 72/139 comment on the cards wrapper to note the seam is now visually gone (the underlying padding/negative-margin math that makes the cards float up slightly over the hero's bottom edge is untouched — only the color it's floating over changed).
+
+**What was left untouched:** the hero band's own background rule, the cards' own frame/mat/canvas/mark colors, `Stats.tsx`'s navy trust strip and `DonateBand`'s ivory closing band (both separate sibling sections in `app/page.tsx`, unaffected by this section-level change), and every other page — this section only renders on Home.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on the touched file — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132; worth a visual check once it's live to confirm the seam is fully gone.
+
+**Files changed:** `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 165: remove ivory/dirty-white seam below Home hero band"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically, and confirm the seam is gone once it's live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
