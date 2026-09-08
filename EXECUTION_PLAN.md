@@ -7398,3 +7398,35 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 162: DISASTER card's logo mark recolored again — purple/teal/peach
+
+**Request:** Roy sent a new reference photo of the About page's DISASTER card (same framed "Global Professional Directory" card recolored in Phase 158) asking for the mark's colors updated to match: a softer purple/teal/peach palette this time.
+
+**What changed:** `components/home/Paths.tsx`'s `PATH_FRONT_STYLES[2].mark` — the same four-color slot used by every card, this one card's index confirmed (as in Phase 158) by its `bg-[#5f7a91]` blue-gray canvas matching the reference exactly:
+- `outerRing`: navy `#33465a` → dusty lavender-purple `#a99bc9`
+- `middleRing`: crimson `#c0392b` → mint `#8ad4c2`
+- `innerRing`: crimson `#c0392b` → a slightly deeper teal `#4a9d92`, so the two crescents read as a shaded "C" wave (mint outer, teal inner) instead of one flat tone
+- `dot`: gold `#e8b23e` → soft peach `#f2b385`
+
+`bg`/`frame` (the blue-gray canvas and gold wood frame) were an exact match in the reference and are untouched, as is every other card and the caption/label/description text.
+
+**Verification:** rendered this exact SVG mark with these exact hex values locally (via cairosvg) and visually compared it side by side with Roy's reference photo before shipping, rather than only eyeballing hex codes on a color picker — same overall shape, same relative color placement (purple outer crescent, mint-to-teal wave, peach dot).
+
+**Caveat:** matched by eye against the reference photo, not pixel-sampled — if any of the four tones look off once live, send exact hex codes or a cropped close-up and I'll dial them in precisely.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors (pure data/hex-string change, no new JSX). Not verified in a live browser — same standing sandbox limitation as every phase since 132; worth a visual check once it's live.
+
+**Files changed:** `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 162: recolor DISASTER card's logo mark to purple/teal/peach"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically, and let me know if the colors need any further adjustment once you see it live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
