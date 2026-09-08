@@ -7542,6 +7542,34 @@ Roy — same as every phase: please run those four one at a time, and paste back
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
 
+## Phase 165/166 (revert): undid the seam-removal and gold-sheen override
+
+**Request:** Roy: "Revert the Phase 166, and Phase 165 of the GESA website."
+
+**What was reverted:**
+- **Phase 166** — the `.gold-banner.home-hero::before` gold-tinted sweep override in `app/globals.css` is removed; the Home hero's sheen sweep falls back to the shared `.gold-banner::before` white highlight, same as the other three gold-banner pages.
+- **Phase 165** — `components/home/Paths.tsx`'s outer `<section>` lost the `bg-clay-soft` background added to remove the hero/card-grid seam; it's back to falling through to the page's own `--background`, and the Phase 72/139 comment on the cards wrapper is restored to its original wording describing that seam as intentional.
+
+Both files' comment blocks now note briefly what was tried and that it was reverted, rather than being silently deleted, consistent with how every other revert this session has been handled.
+
+**What was left untouched:** Phase 164's ivory hero/closing-band palette and navy trust strip (Stats.tsx, DonateBand's ivory variant) — Roy's revert request named only Phases 165 and 166, so those stay exactly as they are.
+
+**QA:** `npx tsc --noEmit` — confirmed back to the established 16-line baseline, zero new errors. Re-ran the AST-based JSXText quote/apostrophe checker on the touched file — clean. Not verified in a live browser — same standing sandbox limitation as every phase since 132.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 165/166 (revert): undo Home hero/card-grid seam removal and gold sheen override"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line specifically.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
 ## Phase 166: restored the visible gold sheen on the Home hero band
 
 **Request:** Roy flagged the "gold hovering/sliding effect" on the Home page's hero band as missing, and asked for it brought back, visible and aesthetic.
