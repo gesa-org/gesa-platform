@@ -383,7 +383,21 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           130's slate-gray retune) — no text-color changes needed here. */}
       <div className="gold-banner home-hero relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
-          <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-white/25 blur-[110px]" />
+          {/* Phase 171 — Roy flagged a hard seam where this band's gold
+              tone met the flat gray section below it, and asked for "whole
+              ash gray with goldish accent" instead. The seam itself was the
+              animated sheen sweep in `.gold-banner.home-hero::before`
+              (app/globals.css) — a large `inset:-20%` overlay spanning
+              nearly the entire tall hero box, hard-clipped by
+              `overflow: hidden` right at the boundary this section shares
+              with Paths' cards area. That sheen is now disabled for this
+              page (see globals.css). This blob — small (420x560) and
+              heavily blurred (110px) near the very top of a much taller
+              hero — already faded to fully transparent well before
+              reaching that boundary, so retinting it gold (was white) makes
+              it the sole "goldish accent," with no edge for a seam to ever
+              form on. */}
+          <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-clay/30 blur-[110px]" />
           {/* Phase 67 — same faint line-art watermark texture as About's
               gold Hero band and the gold PageHero banners (Our Therapists,
               Support Groups), for consistency across every gold section. */}

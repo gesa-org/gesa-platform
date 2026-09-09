@@ -7686,3 +7686,31 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 171: removed the hard gold/gray seam on the Home hero, replaced it with a soft goldish glow
+
+**Request:** Roy sent two close-up crops of a hard horizontal line where the hero band's gold tone met the flat gray section below it, plus a full screenshot showing the gold wash cutting off abruptly right above the three picture-frame cards, and asked for it to read as "whole ash gray with goldish accent" instead — more of a soft accent than a hard-edged band.
+
+**Root cause:** the hero's animated sheen sweep (`.gold-banner.home-hero::before` in `app/globals.css`, gold-tinted since Phase 168) inherits its size and position from the shared base rule — `inset: -20%`, spanning nearly the entire hero box, including its tall `pb-[210px]` bottom padding — and is hard-clipped by `.gold-banner`'s `overflow: hidden`. Once Phase 170 made the hero's flat background and the cards-section's flat background the same `--home-gray`, that clipped sweep edge became the only visible discontinuity at the boundary — showing as a hard gold-to-gray line exactly where Roy's crops pointed.
+
+**What changed:**
+- **`app/globals.css`**: `.gold-banner.home-hero::before`'s `background` changed from the gold-tinted gradient to `none`, turning off the moving sheen for this page specifically. The base `.gold-banner::before` rule (the shared white sweep used on Find Support, Our Professionals, and Community) is untouched — this only affects Home.
+- **`components/home/Paths.tsx`**: the existing decorative glow blob behind the headline (`absolute left-1/2 top-0 h-[420px] w-[560px] ... blur-[110px]`) recolored from `bg-white/25` to `bg-clay/30` — a warm gold tint using the already-registered `clay` Tailwind color. This blob sits near the top of a much taller hero and fades to full transparency well before it could ever reach the section boundary below, so it now serves as the sole "goldish accent," with no hard edge for a seam to form on.
+
+**What was left untouched:** the base `.gold-banner::before` sweep and every other `.gold-banner` page; the hero's flat `--home-gray` background from Phase 170; the gold pill badge, picture-frame mats, icons, and `GoldWatermarks`; the `gold-sheen` keyframe animation itself (still defined, still used elsewhere — just not painting anything on Home now that its background is `none`).
+
+**Verification:** `git diff` confirms exactly the two intended one-line changes (plus explanatory comments) in `app/globals.css` and `components/home/Paths.tsx` — no other files touched. `npx tsc --noEmit` repeatedly hit this sandbox's session time limit before finishing this round (a standing environment constraint noted in earlier phases, not specific to this change); given the edit is a CSS background value and a Tailwind class rename with no new imports, types, or logic, the type-check risk here is minimal, but please flag if anything looks off after deploying. No live browser is available in this sandbox to visually confirm the blend, so please take a look at the live Home page and let me know if the seam is gone and the accent reads the way you pictured it — happy to adjust the glow's tint/size/opacity if it's too subtle or too strong.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 171: remove hard gold/gray seam on Home hero, soften to a goldish glow accent"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line, and let me know how the hero looks live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

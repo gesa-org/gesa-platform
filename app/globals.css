@@ -227,9 +227,24 @@
      this page's own --clay token, with a brighter highlight core, so it
      reads as a genuine gold shimmer sliding across the ivory band. Position,
      size, and the `gold-sheen` animation itself are inherited unchanged
-     from the base rule above — only `background` is overridden here. */
+     from the base rule above — only `background` is overridden here.
+     Phase 171 — Roy flagged a hard seam between the hero's gold tone and
+     the flat gray section below it (Phase 170 made both areas the same
+     `--home-gray` base, but this sweep is a large, `inset:-20%` overlay
+     sized to the *entire* hero box — including its tall `pb-[210px]`
+     bottom padding — so whenever the animation swept low enough, its
+     `overflow: hidden`-clipped edge landed right at the hero/cards-section
+     boundary, showing as an abrupt gold-to-gray line at that exact instant
+     rather than the paragraph above's intended shimmer). Disabled here
+     (background set to `none`) rather than repositioned/shrunk, since any
+     bounded version still risks a visible edge as it animates across a box
+     this tall — the small, permanently-faded glow blob in Paths.tsx (now
+     tinted gold, see that file) is a more reliable "goldish accent" for
+     this page: a blur-based radial glow fades to nothing well inside its
+     own box on its own, with no edge to ever land on. The moving sheen is
+     untouched on every other `.gold-banner` page. */
   .gold-banner.home-hero::before {
-    background: linear-gradient(115deg, transparent 22%, rgba(191, 160, 70, 0.65) 42%, rgba(236, 212, 143, 0.85) 50%, rgba(191, 160, 70, 0.65) 58%, transparent 78%);
+    background: none;
   }
   @media (prefers-reduced-motion: reduce) {
     .gold-banner::before {
