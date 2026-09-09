@@ -487,7 +487,29 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                CTA link) needs to be reachable and visible on focus, not
                just mouse hover. */
             <StaggerItem key={i}>
-              <div className="gold-card-hover group h-[300px] [perspective:1400px]">
+              {/* Phase 172 — Roy sent a screen recording of the Community
+                  page ("Choose your pathway" cards, components/support-
+                  groups/CommunityIntro.tsx) and asked for that section's
+                  hover feel copied here. Those cards use the shared `Card`
+                  component's hover treatment (components/ui/Card.tsx):
+                  `hover:-translate-y-0.5 hover:shadow-lg`, a lift + shadow
+                  on top of whatever content is already showing — no flip.
+                  This card is a different shape (a 3D flip revealing a back
+                  face, via `.gold-card-hover` + `group-hover:rotateY`), so
+                  copying the shadow half isn't safe as a plain Tailwind
+                  utility: `.gold-card-hover:hover` already sets its own
+                  gold-tinted `box-shadow` in globals.css, and stacking
+                  Tailwind's plain-black `hover:shadow-lg` on the same
+                  element risks an unpredictable which-one-wins fight
+                  between the two same-specificity rules. The lift has no
+                  such conflict (`.gold-card-hover` never touches
+                  `transform`, only `.group-hover:[transform:rotateY(180deg)]`
+                  one element deeper), so it's added here directly:
+                  `transition-transform duration-300 hover:-translate-y-1`
+                  gives this card the same "lifts toward you on hover" motion
+                  Community's cards have, layered on top of the existing
+                  flip and gold sweep, both left untouched. */}
+              <div className="gold-card-hover group h-[300px] [perspective:1400px] transition-transform duration-300 hover:-translate-y-1">
                 <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
                   {/* Front face — Phase 97 first restyled this as framed/
                       matted artwork with a gold badge dome overlapping the

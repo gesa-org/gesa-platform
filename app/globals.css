@@ -127,8 +127,18 @@
        --clay-soft itself (still used site-wide for buttons/badges/admin-nav
        chips) is untouched. The dark-navy trust-strip/closing band elsewhere
        on this page already matches this reference image's footer tone
-       (close to the existing --primary) and needed no change. */
-    --home-gray: #c2c3c8;
+       (close to the existing --primary) and needed no change.
+       Phase 172 — Roy sent a new flat-color swatch and asked for it to
+       replace this page's background exactly. Sampled directly from the
+       swatch (RGB 176,186,195 → #B0BAC3, averaged over its center region to
+       avoid the swatch image's own border) — a touch darker/grayer than the
+       Phase 170 value above, still visibly distinct from --secondary/--muted
+       (#B7C3D6). Kept this same token/variable (rather than adding a new
+       one) since every rule reading it already implements the "one
+       continuous field across hero + cards + trust strip" treatment Phase
+       170 established — updating the single value here recolors all of
+       them at once, no other file needed to change. */
+    --home-gray: #b0bac3;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;

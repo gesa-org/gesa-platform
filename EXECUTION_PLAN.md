@@ -7714,3 +7714,31 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 172: Home page recolored to a new flat swatch; pathway cards now lift on hover, matching Community
+
+**Request:** Roy sent a flat color swatch and asked for it to become the About/Home page's background color exactly, and separately sent a screen recording of the Community page asking for that page's card hover effect to be copied onto the About page's cards, after the color change.
+
+**Color sourced:** sampled directly from the swatch image (center region only, to exclude the image's own border) — RGB (176, 186, 195) → `#B0BAC3`. A touch darker and grayer than the Phase 170 gray (#C2C3C8), and still visibly distinct from the existing `--secondary`/`--muted` token (#B7C3D6).
+
+**What changed:**
+- **`app/globals.css`**: updated the `--home-gray` token's value from `#c2c3c8` to `#b0bac3`. Every rule that already reads this token — the hero band's background, and (via the same token) Paths.tsx's cards section and Stats.tsx's trust-badge strip — picks up the new color automatically from this one change; no other file needed editing for the color itself.
+- **`components/home/Paths.tsx`**: added a hover lift to the three pathway cards' outer wrapper (`transition-transform duration-300 hover:-translate-y-1`), matching the "lifts toward you" motion Community's own "Choose your pathway" cards have (via the shared `Card` component's `hover:-translate-y-0.5 hover:shadow-lg hover:border-accent` in `components/ui/Card.tsx`). Only the lift was copied as a plain Tailwind utility — Home's cards already have their own gold-tinted `box-shadow` on hover from `.gold-card-hover` (globals.css), and stacking Tailwind's plain-black `hover:shadow-lg` on the same element would pit two same-specificity CSS rules against each other with no reliable winner. The existing 3D flip (front artwork face to back title/CTA face) and the gold sweep are both untouched — the lift layers on top of them.
+
+**What was left untouched:** the hero's animated sheen (disabled for Home since Phase 171, unaffected by a color-only change), the gold pill badges/frame/mat colors on the cards, the dark-navy trust-strip label colors, and every other `.gold-banner`/shared-component page (Find Support, Our Professionals, Community itself).
+
+**Verification:** `npx tsc --noEmit` — back to the established 16-line baseline, zero new errors. `git diff` confirms exactly the two intended edits in `app/globals.css` and `components/home/Paths.tsx`. No live browser in this sandbox to confirm the rendered color/hover feel directly — please check the live Home page and flag if the lift feels too subtle/too strong, or if the color needs another pass.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 172: Home page recolored to new swatch, pathway cards gain Community's hover lift"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line, and let me know how the color and the card hover feel live.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
