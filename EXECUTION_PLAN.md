@@ -7742,3 +7742,49 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 173: interactive, mouse-reactive icon background for the Home ("About" nav) hero
+
+**Request:** a polished, accessible, near-full-screen hero background for the About page, styled after the existing Find Support / Our Professionals / Community decorative-icon treatment, with icons (hearts, chat bubbles, sparkles/stars, people, calm circles/waves) that brighten, scale up, and glow as the cursor approaches — smooth, GPU-friendly, respecting reduced motion and touch devices, with no click/focus interference and everything easy to retune.
+
+**What changed:**
+- **`components/motion/useProximityHover.ts`** (new) — a small, dependency-free reusable hook. It attaches one `pointermove`/`pointerleave` listener to a container element, and on each event schedules at most one `requestAnimationFrame` callback (never more than once per frame, however fast the mouse moves). That callback computes each registered icon's distance from the pointer and writes three CSS custom properties straight onto that icon's DOM node — `--proximity` (0–1), `--push-x`/`--push-y` (px) — via `style.setProperty`. No React state is touched on a per-move basis, so a hovering visitor never triggers a re-render; the actual eased motion happens entirely in CSS (see below), not in JS. Listeners and any pending animation frame are cleaned up on unmount.
+- **`components/home/HeroInteractiveIcons.tsx`** (new, `"use client"`) — renders 9 lucide icons (Heart, MessageCircle, Sparkle ×2, Star, Users2, Waves, HeartHandshake, Circle — one from each category asked for: care, conversation, positive-emotion/sparkle, community, and a calm abstract shape/wave), scattered around the hero's edges with varied size, rotation, and opacity so it doesn't read as a repeated tile, avoiding the central content column the same way `GoldWatermarks` already does on every other gold section. Each icon is `aria-hidden="true"`, sits in a `pointer-events-none` layer (inherited from the existing `ParallaxLayer` wrapper), and is never a tab stop — so it can never block a click, text selection, or keyboard navigation. A `matchMedia` check (`(hover: hover) and (pointer: fine)` and NOT `prefers-reduced-motion: reduce`) gates whether the proximity hook attaches at all; on touch devices, small screens without a fine pointer, or under reduced motion, the icons render in their static resting state and no listener is ever added.
+- **`app/globals.css`**: new `.hero-proximity-icon` rule. It turns the two JS-written variables into the actual visible effect — `opacity`, `transform` (translate + rotate + scale), and a `filter: drop-shadow(...)` glow — each built from `calc()` expressions over per-icon custom properties (so every icon can have its own resting/peak opacity and growth amount), with a single `transition` on `transform`/`opacity`/`filter` doing the actual easing, both approaching and returning to rest. A `prefers-reduced-motion: reduce` block forces the icons fully static (no transition, no transform, no filter) as a belt-and-suspenders backstop, in case JS hasn't hydrated yet.
+- **`components/home/Paths.tsx`**: the hero (`.gold-banner.home-hero`) gained `flex min-h-[100svh] flex-col justify-center`, making it a near-full-screen section per the request, with its existing content vertically centered inside. The existing `pb-[210px]` and the cards' `-mt-[...]` below are untouched — that negative margin only pulls the cards up against wherever the hero's bottom edge actually renders, regardless of the hero's total height, so the seam/overlap work from Phases 72/139/167/170/171 keeps working unchanged. `<GoldWatermarks />` (the plain static version) is swapped for `<HeroInteractiveIcons />` in this one spot only — `GoldWatermarks.tsx` itself is untouched and still renders on Find Support, Our Professionals, and Community exactly as before.
+
+**How the container is found without a client-side hero:** `Paths.tsx` is a server component, so it can't hold a `useRef` on the hero `<div>` itself. `HeroInteractiveIcons` instead renders a small ref'd anchor on itself and, on mount, calls `anchorRef.current.closest(".home-hero")` — a plain DOM lookup — to find that ancestor. This avoids converting `Paths.tsx` into a client component just for this.
+
+**Performance/accessibility checklist (per the request):**
+- Only `transform`, `opacity`, and `filter` are animated — all GPU-compositable, no layout-triggering properties.
+- `will-change: transform, opacity, filter` is scoped to `.hero-proximity-icon` only.
+- Pointer updates are throttled to one per animation frame via `requestAnimationFrame`; no continuous/idle rAF loop runs when the pointer isn't moving.
+- No React state updates fire per mouse-move; all per-frame writes are direct DOM style mutations.
+- Listeners and the pending animation frame are removed on unmount.
+- Disabled outright (falls back to the static resting state) for touch-only devices and under reduced motion, via `matchMedia`.
+- Every icon is `aria-hidden`, non-focusable, and sits in an already-`pointer-events-none` layer — verified nothing here can intercept a click, a text selection, or keyboard/tab order.
+- No layout shift: icons are absolutely positioned by percentage and sized in fixed `h-*`/`w-*` units regardless of JS state.
+
+**How to tune it:**
+- **Proximity radius** — `RADIUS_PX` in `components/home/HeroInteractiveIcons.tsx` (currently `190`, i.e. px from an icon's center before it starts reacting).
+- **Repulsion/movement strength** — `MAX_TRANSLATE_PX` in the same file (currently `16`, the max px an icon is nudged away from the cursor at zero distance).
+- **Max scale** — each icon's own `maxScale` in the `ICONS` array in that file (currently `0.10`–`0.20`, i.e. up to 10–20% larger), or the shared fallback `--icon-max-scale` in `app/globals.css`.
+- **Opacity range** — each icon's own `baseOpacity`/`maxOpacity` in the `ICONS` array (resting vs. closest-approach opacity), or the shared fallback `--icon-base-opacity`/`--icon-max-opacity` in `app/globals.css`.
+- **Glow intensity** — `--icon-glow-size`/`--icon-glow-color` in the `.hero-proximity-icon` rule in `app/globals.css`.
+- **Hero height** — `min-h-[100svh]` on the hero `<div>` in `Paths.tsx`, if a shorter/capped height is preferred to the current "true full screen" behavior.
+
+**Verification:** `npx tsc --noEmit` — back to the established 16-line baseline (two new type errors surfaced mid-way through, both from a React ref-typing mismatch in `useProximityHover.ts`, fixed by duck-typing the ref parameter instead of importing React's own `RefObject` type; re-ran clean afterward). `git status`/`git diff --stat` confirm exactly the expected four files touched (two new: `components/motion/useProximityHover.ts`, `components/home/HeroInteractiveIcons.tsx`; two edited: `app/globals.css`, `components/home/Paths.tsx`). No live browser in this sandbox to confirm the rendered motion/feel directly, or to profile actual frame rate — please check the live hero on desktop (hover near the edges), on a touch device (confirm icons stay static), and with reduced-motion enabled in your OS settings, and flag anything that needs retuning using the knobs above.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx`, `components/home/HeroInteractiveIcons.tsx` (new), `components/motion/useProximityHover.ts` (new).
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 173: interactive proximity-glow icon background for the Home hero"
+git push
+```
+
+Roy — same as every phase: please run those four one at a time, and paste back what appears directly after the `git commit` line, and let me know how the hero feels live — especially whether the full-screen height, the icon set, and the glow/lift intensity all land the way you pictured.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
