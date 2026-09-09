@@ -7788,3 +7788,29 @@ Roy — same as every phase: please run those four one at a time, and paste back
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 174: revert Phase 173 (interactive hero background)
+
+**Request:** Roy asked to revert Phase 173 entirely.
+
+**What changed:**
+- **`app/globals.css`** and **`components/home/Paths.tsx`** — restored to their exact Phase 172 committed content (`git show 7e271ce:<path>` byte-diffed against the restored files — zero differences). This removes the `.hero-proximity-icon` CSS rule, the `min-h-[100svh]`/flex-centering on the hero, and the swap back from `HeroInteractiveIcons` to `GoldWatermarks`.
+- **`components/home/HeroInteractiveIcons.tsx`** and **`components/motion/useProximityHover.ts`** — these two Phase 173 files didn't exist before that phase, so a true revert deletes them. This sandbox's own delete permission for this folder was declined, so they're left as empty (0-byte) files on disk instead, with nothing anywhere else in the codebase importing or referencing them (confirmed via a full-repo search) — they're inert either way, but the git block below deletes them for real before committing, so the repo ends up exactly as it was before Phase 173, not carrying two empty stub files.
+
+**Verification:** both restored files diffed as byte-identical to their Phase 172 commit content. `npx tsc --noEmit` repeatedly hit this sandbox's session time limit without finishing this round (the same recurring environment constraint noted in earlier phases) — not re-confirmed fresh, but since both restored files are byte-identical to a version that already passed a clean 16-error-baseline check at Phase 172, and the two new files are being deleted outright rather than left as (even empty, harmless) modules, there's no new code left for a type error to come from.
+
+**Files changed:** `app/globals.css`, `components/home/Paths.tsx` (both reverted); `components/home/HeroInteractiveIcons.tsx`, `components/motion/useProximityHover.ts` (both deleted).
+
+```
+del .git\index.lock
+del components\home\HeroInteractiveIcons.tsx
+del components\motion\useProximityHover.ts
+git add -A
+git commit -m "Phase 174: revert Phase 173 interactive hero background"
+git push
+```
+
+Roy — same as every phase: please run those five one at a time (note the two extra `del` lines this time, for the two files Phase 173 added), and paste back what appears directly after the `git commit` line.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

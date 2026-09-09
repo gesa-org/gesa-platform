@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Tags, Waves } from "lucide-react";
-import HeroInteractiveIcons from "@/components/home/HeroInteractiveIcons";
+import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
@@ -381,22 +381,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           a light background, which stays legible on gold too (same
           combination the very first gold-banner design used, before Phase
           130's slate-gray retune) — no text-color changes needed here. */}
-      {/* Phase 173 — Roy asked for this hero to become a "near-full-screen"
-          immersive section (`min-h-100svh`, matching the polished-hero
-          request) with an interactive, mouse-reactive icon background,
-          styled after Find Support / Our Professionals / Community's
-          existing decorative watermark treatment. `flex flex-col
-          justify-center` centers the actual content vertically within that
-          taller box; the existing `pb-[210px]` bottom padding and the
-          cards section's `-mt-[...]` below are both untouched by this —
-          that negative margin only pulls the cards up against wherever this
-          box's bottom edge actually renders, regardless of how tall the box
-          is, so the seam/overlap math from Phases 72/139/167/170/171 keeps
-          working unchanged. On very tall viewports this does mean more of
-          the hero is visible before the pathway cards come into view below
-          the fold — that's the intended effect of an immersive full-height
-          hero; flag it if a shorter cap is preferred instead. */}
-      <div className="gold-banner home-hero relative flex min-h-[100svh] flex-col justify-center pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
+      <div className="gold-banner home-hero relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
           {/* Phase 171 — Roy flagged a hard seam where this band's gold
               tone met the flat gray section below it, and asked for "whole
@@ -413,18 +398,10 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
               it the sole "goldish accent," with no edge for a seam to ever
               form on. */}
           <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-clay/30 blur-[110px]" />
-          {/* Phase 173 — replaces the static GoldWatermarks texture used on
-              every other gold section with a richer, cursor-reactive set of
-              icons specific to this hero (see HeroInteractiveIcons.tsx for
-              the full rationale and tuning constants). GoldWatermarks
-              itself is untouched and still used everywhere else. This whole
-              layer stays `pointer-events-none` (inherited from
-              ParallaxLayer's own className above), so the icons never
-              intercept clicks, text selection, or keyboard focus — the
-              interactive component only *listens* for pointer position via
-              its own `.closest(".home-hero")` container reference, it
-              never becomes a click target itself. */}
-          <HeroInteractiveIcons />
+          {/* Phase 67 — same faint line-art watermark texture as About's
+              gold Hero band and the gold PageHero banners (Our Therapists,
+              Support Groups), for consistency across every gold section. */}
+          <GoldWatermarks />
         </ParallaxLayer>
 
         <div className="wrap relative z-10">

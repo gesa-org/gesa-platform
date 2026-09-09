@@ -263,58 +263,6 @@
     }
   }
 
-  /* Phase 173 — interactive proximity-glow background icons for the Home
-     ("About" nav) hero. Rendered by components/home/HeroInteractiveIcons.tsx
-     ("use client"), which computes each icon's distance from the pointer
-     (via components/motion/useProximityHover.ts) and writes three CSS
-     custom properties directly onto that icon's DOM node once per animation
-     frame: `--proximity` (0 = at rest, 1 = pointer right on top of it),
-     `--push-x`/`--push-y` (a small px nudge away from the pointer). No
-     per-frame React state and no JS-side animation loop — this class is
-     where those numbers actually become a visible effect, entirely in CSS,
-     so the easing itself is a normal GPU-composited `transition` that runs
-     the same whether the numbers are climbing (pointer approaching) or
-     falling back to 0 (pointer leaving/left the hero).
-     Every other custom property here is a per-icon tuning knob, set inline
-     by HeroInteractiveIcons.tsx so each icon can have its own resting/peak
-     opacity and growth amount (the "mix of sizes/opacity so it doesn't feel
-     repetitive" requirement) — the defaults below only apply if an icon
-     doesn't set its own. To retune the glow itself (size/color) or the
-     opacity/scale *ranges* globally, edit the values in this rule; to
-     retune the activation radius or how far an icon is pushed, see
-     RADIUS_PX/MAX_TRANSLATE_PX in HeroInteractiveIcons.tsx instead (those
-     are JS-side distance thresholds, not expressible as plain CSS values). */
-  .hero-proximity-icon {
-    --proximity: 0;
-    --push-x: 0px;
-    --push-y: 0px;
-    --icon-rotate: 0deg;
-    --icon-base-opacity: 0.07;
-    --icon-max-opacity: 0.32;
-    --icon-max-scale: 0.15;
-    --icon-glow-size: 12px;
-    --icon-glow-color: rgba(191, 160, 70, 0.55);
-    opacity: calc(var(--icon-base-opacity) + var(--proximity) * (var(--icon-max-opacity) - var(--icon-base-opacity)));
-    transform: translate3d(var(--push-x), var(--push-y), 0) rotate(var(--icon-rotate))
-      scale(calc(1 + var(--proximity) * var(--icon-max-scale)));
-    filter: drop-shadow(0 0 calc(var(--proximity) * var(--icon-glow-size)) var(--icon-glow-color));
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s ease, filter 0.45s ease;
-    will-change: transform, opacity, filter;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    /* Belt-and-suspenders: HeroInteractiveIcons.tsx already skips attaching
-       any pointer listeners under reduced motion (so --proximity never
-       moves off 0 in the first place), but this guarantees the icons are
-       provably static — no transition, no transform, no filter — even if
-       JS hasn't hydrated yet or is unavailable. */
-    .hero-proximity-icon {
-      transition: none;
-      transform: none !important;
-      opacity: var(--icon-base-opacity) !important;
-      filter: none !important;
-    }
-  }
-
   /* Phase 60 — Roy sent a reference CRM dashboard mockup with a full-page
      brushed-gold background behind every card, and asked for the admin
      dashboard to match. Same gold family as `.gold-banner` above
