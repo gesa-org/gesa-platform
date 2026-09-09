@@ -326,7 +326,15 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
     // ivory the hero band already uses) as new Phase 167 work — the sheen
     // sweep on the hero itself is untouched (still the shared white sweep,
     // not the gold-tinted Phase 166 version Roy asked not to bring back).
-    <section aria-labelledby="paths-heading" className="relative overflow-hidden bg-clay-soft">
+    //
+    // Phase 170 — Roy sent a new reference mockup replacing that ivory wash
+    // with a cool neutral gray across this same continuous field (hero band
+    // + this section, no seam between them, same as Phase 167 established).
+    // `bg-clay-soft` is a shared Tailwind utility used by buttons/badges/
+    // admin-nav elsewhere in the app, so swapped for the new page-scoped
+    // `--home-gray` token (app/globals.css) via an arbitrary-value class
+    // instead of retuning that shared utility.
+    <section aria-labelledby="paths-heading" className="relative overflow-hidden bg-[var(--home-gray)]">
       {/* Gold hero band — Phase 47. Phase 70 removed this band's text
           (eyebrow/headline/subtitle/trust badges) and the decorative
           "gallery wall" of the three path artworks entirely, leaving the

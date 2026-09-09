@@ -114,6 +114,21 @@
        of this request. Scoped to its own token instead, same pattern as
        --sand-brown above. */
     --green-sage: #9ba689;
+    /* Phase 170 — Roy sent a reference mockup of the Home page ("About" nav)
+       with the hero band and pathway-cards section recolored to a cool,
+       neutral light gray instead of the ivory/gold family those two areas
+       had used since Phase 163/164/167. Sampled directly from the
+       reference image (RGB 194,195,200 → #C2C3C8) rather than approximating
+       against an existing token — closest existing tokens (--secondary/
+       --muted #B7C3D6, --border #C7D0DE) are both visibly bluer than this.
+       Scoped to this new token instead of retuning something shared, same
+       pattern as --sand-brown/--green-sage above: this page's own
+       `.home-hero` rule and Paths.tsx's pathway-cards section read from it;
+       --clay-soft itself (still used site-wide for buttons/badges/admin-nav
+       chips) is untouched. The dark-navy trust-strip/closing band elsewhere
+       on this page already matches this reference image's footer tone
+       (close to the existing --primary) and needed no change. */
+    --home-gray: #c2c3c8;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
@@ -186,9 +201,14 @@
      page's pathway-card back faces) so the hero reads as part of the same
      ivory family as the rest of the page, rather than inventing a new
      tone. Still scoped to `.home-hero` only — the other three
-     `.gold-banner` pages are unaffected either way. */
+     `.gold-banner` pages are unaffected either way.
+     Phase 170 — Roy sent a new reference mockup replacing that ivory wash
+     with a cool neutral gray (see `--home-gray` above for the exact sampled
+     value). Only the background color changes here — the gold pill
+     badges/frames/icons and the sheen sweep below are untouched, same as
+     every prior palette pass on this page. */
   .gold-banner.home-hero {
-    background: var(--clay-soft);
+    background: var(--home-gray);
   }
   /* Phase 166 — briefly overrode `.gold-banner.home-hero::before`'s sweep
      color to a warm gold (the sweep was reading as invisible against this

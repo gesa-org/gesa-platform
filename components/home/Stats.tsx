@@ -47,6 +47,14 @@ export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
 // text on a now-dark-navy background would be invisible — the gold icon
 // circles (`bg-sand-brown text-primary`) already read fine against a dark
 // band and are untouched.
+// Phase 170 — Roy's new reference mockup shows this same badges row sitting
+// directly on the page's cool-gray field (see Paths.tsx/globals.css
+// `--home-gray`), with no separate navy band around it — only the page's
+// closing CTA band stays dark in that reference. `bg-primary` → the new
+// `--home-gray` token, and label text flips back from `text-primary-fg` to
+// `text-primary` (dark-on-light again, same pairing this row used before
+// Phase 164). Gold icon circles (`bg-sand-brown text-primary`) read fine on
+// either background and are untouched.
 export default async function Stats() {
   const content = await getPageContent("component_home_stats", HOME_STATS_CONTENT_FALLBACK);
   const badges = [
@@ -57,14 +65,14 @@ export default async function Stats() {
   ];
 
   return (
-    <section className="border-y border-border bg-primary py-10">
+    <section className="border-y border-border bg-[var(--home-gray)] py-10">
       <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
         {badges.map((b) => (
           <StaggerItem key={b.label} className="flex items-center gap-3.5">
             <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-sand-brown text-primary shadow-sm">
               <b.icon size={22} />
             </span>
-            <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary-fg">
+            <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary">
               {b.label}
             </span>
           </StaggerItem>

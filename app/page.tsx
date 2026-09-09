@@ -108,12 +108,18 @@ export default async function Home({
     <div className="reveal-page__main flex flex-col">
       <Paths content={resolvedContent} />
       <Stats />
-      {/* Phase 164 — `variant="ivory"` opts this one render of the shared
-          DonateBand into Roy's Home-page palette (ivory background, dark
-          navy text/pills) — every other page that renders <DonateBand />
-          (Find Support, Our Professionals, Community) omits the prop and
-          keeps the original dark-navy band unchanged. */}
-      <DonateBand variant="ivory" />
+      {/* Phase 164 — `variant="ivory"` opted this one render of the shared
+          DonateBand into Roy's then-current Home-page palette (ivory
+          background, dark navy text/pills).
+          Phase 170 — Roy's newer reference mockup shows this closing band
+          back on the plain dark-navy background every other page that
+          renders <DonateBand /> (Find Support, Our Professionals,
+          Community) already uses — so the `variant="ivory"` prop is
+          removed here, falling back to that same default navy look rather
+          than inventing a third variant. Flagging this explicitly since it
+          reverses the Phase 164 ivory choice: if the ivory footer is still
+          wanted, say so and it's a one-line revert. */}
+      <DonateBand />
     </div>
   );
 
