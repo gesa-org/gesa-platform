@@ -309,6 +309,29 @@ export async function getAllSessionBookings(): Promise<SessionBookingWithTherapi
   return (data ?? []) as unknown as SessionBookingWithTherapist[];
 }
 
+// Phase 179 — client-facing counterpart to getAllSessionBookings() above.
+// Backs /account/bookings: a signed-in client's own booking history, scoped
+// to their profile id. The `.eq("client_profile_id", ...)` here is
+// defense-in-depth on top of the session_bookings_client_read RLS policy
+// (same reasoning as the therapist_id filter on app/therapist/page.tsx's
+// own query) — RLS is the real enforcement, this just means the page can
+// never show someone else's rows even if a future RLS change were buggy.
+// Bookings made as a guest before this phase (or before the client ever
+// created an account) are null here and simply won't appear — there is no
+// retroactive backfill beyond the one-time migration-time match already
+// applied to Production.
+export async function getMyBookings(clientProfileId: string): Promise<SessionBookingWithTherapist[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("session_bookings")
+    .select("*, therapist:therapists(id, full_name, contact_email)")
+    .eq("client_profile_id", clientProfileId)
+    .order("session_date", { ascending: false })
+    .order("session_time", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as SessionBookingWithTherapist[];
+}
+
 export type MatchRequestWithTherapist = Tables<"match_requests"> & {
   selected_therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email" | "contact_phone"> | null;
   clinic_location: Pick<Tables<"clinic_locations">, "id" | "name" | "address"> | null;

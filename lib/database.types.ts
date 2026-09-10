@@ -406,6 +406,14 @@ export type SessionBookingRow = {
   search_session_type: string | null;
   search_country: string | null;
   search_city_or_address: string | null;
+  // Phase 179 — links a booking back to the authenticated client account
+  // that made it (or that later signed up under the same email a guest
+  // booking used), so a client can read their own booking history through
+  // RLS instead of being identified only by free-text client_name/
+  // client_email. Server-set only: a BEFORE INSERT trigger overwrites this
+  // from auth.uid() unconditionally, and this app's own insert code never
+  // submits a value for it — never trust a client-submitted value here.
+  client_profile_id: string | null;
 }
 
 // Phase 129 — extends Phase 126's "opened" event log into the full
