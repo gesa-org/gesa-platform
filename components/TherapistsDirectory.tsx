@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Users, Search, ChevronDown, Filter } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
 import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
@@ -42,15 +42,6 @@ function unique(values: string[]) {
 // standard set — unioned with any other real value the data happens to
 // contain (so a future 90-min offering still shows up automatically).
 const STANDARD_DURATIONS = ["30", "45", "60"];
-
-// Phase 152 — how many result cards render before "Load more" is needed.
-// No pagination pattern existed anywhere in this app before this phase;
-// this is a plain client-side reveal (the full filtered list is already in
-// memory — see `therapists` prop — so there's no additional query to make),
-// not true server-side pagination. Good enough for the roster sizes this
-// directory has today, and avoids ever silently hiding results behind a
-// hard cap the way the old intake AI-match flow's `MAX_MATCHES = 3` did.
-const PAGE_SIZE = 12;
 
 // Shared pill styling for the radio-style "Definition" list and the
 // segmented "Duration"/"Gender" button grids — kept as one function so the
@@ -99,14 +90,6 @@ export default function TherapistsDirectory({
   // search (Phase 151). "" means no filter, same convention as every other
   // field here.
   const [sessionFormat, setSessionFormat] = useState<"" | "online" | "in_person">("");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  // Phase 176 — a dedicated, one-shot announcement for screen-reader users
-  // when "Load more" is clicked, separate from the persistent "Showing X of
-  // Y" status line above the grid (which itself already has aria-live and
-  // stays announced correctly on every change). This one reads more clearly
-  // in the moment ("12 more professionals loaded...") than a screen reader
-  // re-announcing the whole persistent line every time it changes.
-  const [loadMoreAnnouncement, setLoadMoreAnnouncement] = useState("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties)), [therapists]);
@@ -128,32 +111,19 @@ export default function TherapistsDirectory({
       (!sessionFormat || (sessionFormat === "online" ? t.offers_online : t.offers_in_person))
   );
 
-  // Phase 152 — reset back to the first page of results whenever any filter
-  // changes, so "Load more" always starts fresh instead of showing a
-  // half-scrolled-in count against a brand new filtered set.
-  useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-    setLoadMoreAnnouncement("");
-  }, [name, role, lang, duration, gender, sessionFormat]);
-
-  const visible = filtered.slice(0, visibleCount);
-
-  // Phase 176 — this is genuinely synchronous, in-memory pagination (the
-  // full filtered list is already in the `therapists` prop — see the
-  // PAGE_SIZE comment above); there's no network request here to fail or
-  // to show a spinner for. What *was* broken wasn't this logic — it was a
-  // site-wide hydration failure (see EXECUTION_PLAN.md Phase 176) that left
-  // every button's click handler on this route completely inert, which is
-  // what actually produced the "nothing happens" symptom. With that fixed,
-  // this handler just advances the reveal window and announces it.
-  function handleLoadMore() {
-    const nextCount = Math.min(visibleCount + PAGE_SIZE, filtered.length);
-    const added = nextCount - visibleCount;
-    setVisibleCount(nextCount);
-    setLoadMoreAnnouncement(
-      `${added} more therapist${added === 1 ? "" : "s"} loaded. Showing ${nextCount} of ${filtered.length}.`
-    );
-  }
+  // Phase 180 — Roy asked for incremental "Load more" pagination to be
+  // removed entirely: it was unreliable, and the persistent "Showing X of Y"
+  // line could drift from the actual on-screen card count. Every therapist
+  // matching the current filters now renders in one pass — `filtered` is
+  // already the full, in-memory matching set (see the `.filter()` above),
+  // so there is no separate "visible window" to track anymore. A visitor
+  // scrolls the full list naturally instead of clicking through pages.
+  const hasActiveFilters = Boolean(name || role || lang || duration || gender || sessionFormat);
+  const countMessage = filtered.length
+    ? hasActiveFilters
+      ? `Showing ${filtered.length} of ${therapists.length} active therapists`
+      : `Showing all ${therapists.length} active therapists`
+    : "No therapists match your current filters.";
 
   return (
     <div className="mt-10 grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
@@ -323,36 +293,16 @@ export default function TherapistsDirectory({
 
       <div ref={resultsRef}>
         <div className="mb-3.5 text-sm text-muted-fg" aria-live="polite">
-          {filtered.length ? `Showing ${visible.length} of ${filtered.length} therapists` : ""}
+          {countMessage}
         </div>
         {filtered.length ? (
-          <>
-            <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
-              {visible.map((t) => (
-                <StaggerItem key={t.id}>
-                  <TherapistCard t={t} pathKey={pathKey} />
-                </StaggerItem>
-              ))}
-            </StaggerGroup>
-            {visibleCount < filtered.length && (
-              <div className="mt-7 flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleLoadMore}
-                  aria-label={`Load ${Math.min(PAGE_SIZE, filtered.length - visibleCount)} more therapists`}
-                  className="rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-primary transition-colors hover:border-primary-600 hover:bg-accent-soft"
-                >
-                  Load more
-                </button>
-              </div>
-            )}
-            {/* Phase 176 — one-shot, visually hidden announcement for the
-                click above; see handleLoadMore's comment for why this is
-                separate from the persistent "Showing X of Y" status line. */}
-            <div className="sr-only" aria-live="polite" role="status">
-              {loadMoreAnnouncement}
-            </div>
-          </>
+          <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
+            {filtered.map((t) => (
+              <StaggerItem key={t.id}>
+                <TherapistCard t={t} pathKey={pathKey} />
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
         ) : (
           <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">
             <EditableText contentId="therapists.directory.noResultsMessage" label="No-results message" value={content.noResultsMessage} as="span" />
