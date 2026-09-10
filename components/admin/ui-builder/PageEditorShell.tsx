@@ -350,7 +350,11 @@ export default function PageEditorShell() {
           </div>
         )}
         {editor.lastPublishedAt && (
-          <p className="text-[12px] text-muted-fg">Published {new Date(editor.lastPublishedAt).toLocaleString()}.</p>
+          // Phase 185 — fixed locale/timeZone; see BookingRequestsTable.tsx's
+          // Phase 185 comment.
+          <p className="text-[12px] text-muted-fg">
+            Published {new Date(editor.lastPublishedAt).toLocaleString("en-US", { timeZone: "UTC" })}.
+          </p>
         )}
 
         <div className="rounded-2xl border border-border bg-card p-4">

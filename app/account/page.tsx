@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { CalendarClock, ShieldCheck } from "lucide-react";
 import { requireUser } from "@/lib/auth/requireUser";
 import AccountForm from "@/components/account/AccountForm";
 import ChangePasswordForm from "@/components/account/ChangePasswordForm";
@@ -41,6 +41,22 @@ export default async function AccountPage() {
           </Link>
         )}
       </div>
+
+      {/* Phase 179 — new; links to /account/bookings, the client-facing
+          view of their own session_bookings rows (client_profile_id-scoped,
+          via session_bookings_client_read RLS). */}
+      <Link
+        href="/account/bookings"
+        className="mb-6 flex items-center justify-between rounded-[var(--radius)] border border-border bg-card p-5 transition-colors hover:bg-secondary"
+      >
+        <div className="flex items-center gap-2.5">
+          <CalendarClock size={18} className="text-primary" />
+          <div>
+            <div className="text-[15px] font-medium">My Bookings</div>
+            <div className="text-[13px] text-muted-fg">View your session booking history</div>
+          </div>
+        </div>
+      </Link>
 
       <AccountForm profile={profile} />
       {/* Phase 175 — new; previously the only way to change a password was

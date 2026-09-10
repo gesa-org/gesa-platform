@@ -445,7 +445,14 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
         <div className="space-y-2.5 text-[14px]">
           <div>
             <span className="font-semibold">Received: </span>
-            {new Date(item.createdAt).toLocaleString()}
+            {/* Phase 185 — this data only ever arrives via a client-side
+                fetch (see this component's own useEffect), well after
+                hydration, so it was never actually at risk of the
+                server/client date-formatting mismatch described in
+                BookingRequestsTable.tsx's Phase 185 comment. Pinned to the
+                same explicit locale/timeZone anyway, purely for consistency
+                with every other admin date display. */}
+            {new Date(item.createdAt).toLocaleString("en-US", { timeZone: "UTC" })}
           </div>
           {(typeof d.name === "string" || typeof d.client_name === "string" || typeof d.full_name === "string") && (
             <div>

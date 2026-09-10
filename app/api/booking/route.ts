@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, isValidEmailFormat, sendEmailSafely } from "@/lib/email/resend";
 import {
   bookingConfirmationEmail,
   bookingTeamNotificationEmail,
   therapistNewMatchEmail,
 } from "@/lib/email/templates";
-
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
 const ENTRY_ROUTE_LABELS: Record<string, string> = {
   crisis: "In crisis right now",
@@ -30,6 +28,9 @@ export async function POST(request: Request) {
   }
   if (!name || !email) {
     return NextResponse.json({ error: "name and email are required" }, { status: 400 });
+  }
+  if (!isValidEmailFormat(email)) {
+    return NextResponse.json({ error: "a valid email is required" }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -72,17 +73,20 @@ export async function POST(request: Request) {
       to: email,
       subject: "You're matched with a GESA therapist",
       html: bookingConfirmationEmail(name, matchedTherapistName),
+      replyTo: getContactInbox(),
     }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `New booking request: ${label}`,
       html: bookingTeamNotificationEmail(label, name, email, matchedTherapistName),
+      replyTo: getReplyTo(email),
     }),
     therapistContactEmail
       ? sendEmailSafely({
           to: therapistContactEmail,
           subject: `New client match: ${name}`,
           html: therapistNewMatchEmail(matchedTherapistName, name, email, label),
+          replyTo: getReplyTo(email),
         })
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
   ]);

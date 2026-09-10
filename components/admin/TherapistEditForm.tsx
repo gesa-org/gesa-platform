@@ -2,11 +2,15 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Upload } from "lucide-react";
+import Link from "next/link";
+import { Upload, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import PhoneNumberInput from "@/components/ui/PhoneNumberInput";
+import TherapistProfileStatusBadge from "@/components/admin/TherapistProfileStatusBadge";
+import TherapistArchiveButton from "@/components/admin/TherapistArchiveButton";
 import type { TherapistAdminRow } from "@/lib/queries";
+import type { TherapistProfileStatus } from "@/lib/database.types";
 
 function isLikelyUrl(value: string): boolean {
   try {
@@ -58,9 +62,18 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
   // for every active therapist at the time of that migration, but this
   // checkbox set is the real, ongoing source of truth going forward.
   const [supportPathways, setSupportPathways] = useState<string[]>(therapist.support_pathways);
-  const [specialties, setSpecialties] = useState(therapist.specialties.join(", "));
-  const [languages, setLanguages] = useState(therapist.languages.join(", "));
-  const [isActive, setIsActive] = useState(therapist.is_active);
+  // Phase 185 — `?? []` guards: a null specialties/languages column used to
+  // throw here and crash this whole edit form instead of just showing an
+  // empty field. See TherapistCard.tsx's Phase 185 comment for the sibling
+  // fix on the public side.
+  const [specialties, setSpecialties] = useState((therapist.specialties ?? []).join(", "));
+  const [languages, setLanguages] = useState((therapist.languages ?? []).join(", "));
+  // Phase 186 — profile_status replaces the old standalone `isActive`
+  // boolean state here; `is_active` itself is still a real column (kept in
+  // sync by the DB trigger) but this form only ever needs the richer status.
+  const [profileStatus, setProfileStatus] = useState<TherapistProfileStatus>(therapist.profile_status);
+  const [publishPending, setPublishPending] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
@@ -206,11 +219,29 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
     setStatus(error ? "error" : "saved");
   }
 
-  async function toggleActive() {
-    const next = !isActive;
-    const supabase = createClient();
-    const { error } = await supabase.from("therapists").update({ is_active: next }).eq("id", therapist.id);
-    if (!error) setIsActive(next);
+  // Phase 186 — routed through /api/admin/therapists/publish (audit-logged,
+  // admin-only) instead of a raw client-side `.update()`, since this is now
+  // the spec's explicit "Publish / Set Active" action, not just a quiet
+  // toggle.
+  async function setProfileStatusTo(next: TherapistProfileStatus) {
+    setPublishPending(true);
+    setPublishError(null);
+    try {
+      const res = await fetch("/api/admin/therapists/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: therapist.id, status: next }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Couldn't update status — try again.");
+      }
+      setProfileStatus(next);
+    } catch (e) {
+      setPublishError(e instanceof Error ? e.message : "Couldn't update status — try again.");
+    } finally {
+      setPublishPending(false);
+    }
   }
 
   return (
@@ -479,14 +510,68 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
       </div>
 
       <div className="mt-6 border-t border-border pt-5">
+        <h3 className="mb-1.5 text-[15px] font-semibold">Profile status</h3>
+        <div className="mb-3 flex items-center gap-2">
+          <TherapistProfileStatusBadge status={profileStatus} />
+          {therapist.volunteer_application_id && (
+            <Link
+              href={`/admin/volunteer-applications#${therapist.volunteer_application_id}`}
+              className="text-[12.5px] font-medium text-primary underline"
+            >
+              Created from approved volunteer application →
+            </Link>
+          )}
+        </div>
+        <p className="mb-3 text-[13px] text-muted-fg">
+          {profileStatus === "active"
+            ? "Live on the public Our Professionals page right now."
+            : profileStatus === "draft"
+              ? "Draft — internal only, never shown publicly until you publish it."
+              : profileStatus === "pending_publication"
+                ? "Marked ready for review — still not public until you publish it."
+                : profileStatus === "inactive"
+                  ? "Deactivated — hidden from the public directory, record kept."
+                  : "Archived — hidden from the public directory, record kept for history."}
+        </p>
+        {publishError && <p className="mb-3 text-[13px] text-destructive">{publishError}</p>}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {profileStatus !== "active" && profileStatus !== "archived" && (
+            <Button onClick={() => setProfileStatusTo("active")} disabled={publishPending}>
+              {publishPending ? <Loader2 size={14} className="animate-spin" /> : null}
+              Publish / Set Active
+            </Button>
+          )}
+          {profileStatus !== "draft" && profileStatus !== "archived" && (
+            <Button variant="outline" onClick={() => setProfileStatusTo("draft")} disabled={publishPending}>
+              Move to Draft
+            </Button>
+          )}
+          {profileStatus === "active" && (
+            <Button variant="outline" onClick={() => setProfileStatusTo("inactive")} disabled={publishPending}>
+              Deactivate professional
+            </Button>
+          )}
+          {profileStatus === "inactive" && (
+            <Button variant="outline" onClick={() => setProfileStatusTo("active")} disabled={publishPending}>
+              Reactivate professional
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-6 border-t border-border pt-5">
         <h3 className="mb-1.5 text-[15px] font-semibold">Danger zone</h3>
         <p className="mb-3 text-[13px] text-muted-fg">
-          Deactivating hides this professional from the public directory and matching, without deleting their record —
-          reversible any time.
+          Deleting archives this professional instead of removing their record outright — they disappear from the
+          CRM listing and the public directory immediately, but bookings, sessions, and their original application
+          (if any) are preserved and this can be undone later.
         </p>
-        <Button variant={isActive ? "outline" : "primary"} onClick={toggleActive}>
-          {isActive ? "Deactivate professional" : "Reactivate professional"}
-        </Button>
+        <TherapistArchiveButton
+          id={therapist.id}
+          fullName={therapist.full_name}
+          hasLinkedAccount={Boolean(linkedEmail)}
+          onArchived={() => setProfileStatus("archived")}
+        />
       </div>
     </div>
   );

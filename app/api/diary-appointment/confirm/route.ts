@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, sendEmailSafely } from "@/lib/email/resend";
 import {
   diaryAppointmentClientConfirmationEmail,
   diaryAppointmentTeamNotificationEmail,
   diaryAppointmentTherapistNotificationEmail,
 } from "@/lib/email/templates";
-
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
 function formatTime(time: string) {
   const [h, m] = time.split(":").map(Number);
@@ -118,6 +116,7 @@ export async function POST(request: Request) {
         event.time_zone,
         referenceNumber
       ),
+      replyTo: getContactInbox(),
     }),
     therapist?.contact_email
       ? sendEmailSafely({
@@ -130,10 +129,11 @@ export async function POST(request: Request) {
             formattedTime,
             event.time_zone
           ),
+          replyTo: getReplyTo(intake.client_email),
         })
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `Diary-link session confirmed: ${therapistName}`,
       html: diaryAppointmentTeamNotificationEmail(
         therapistName,
@@ -143,6 +143,7 @@ export async function POST(request: Request) {
         formattedTime,
         referenceNumber
       ),
+      replyTo: getReplyTo(intake.client_email),
     }),
   ]);
 

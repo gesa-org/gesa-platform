@@ -1,4 +1,4 @@
-import { getAllTherapistApplications } from "@/lib/queries";
+import { getAllTherapistApplications, getTherapistProfilesLinkedToApplications } from "@/lib/queries";
 import VolunteerApplicationsTable from "@/components/admin/VolunteerApplicationsTable";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,15 @@ export const dynamic = "force-dynamic";
 //
 // Phase 150 — table markup moved into VolunteerApplicationsTable.tsx (a
 // Client Component) so the new Delete action can manage local list state.
+//
+// Phase 186 — also fetches every therapists row already linked to an
+// application (usually zero or one per application), so the table can show
+// "Added as a draft professional" / a link to it, without an extra query
+// per row.
 export default async function AdminVolunteerApplicationsPage() {
-  const applications = await getAllTherapistApplications();
-  return <VolunteerApplicationsTable initialApplications={applications} />;
+  const [applications, linkedProfiles] = await Promise.all([
+    getAllTherapistApplications(),
+    getTherapistProfilesLinkedToApplications(),
+  ]);
+  return <VolunteerApplicationsTable initialApplications={applications} linkedProfiles={linkedProfiles} />;
 }

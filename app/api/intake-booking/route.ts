@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, isValidEmailFormat, sendEmailSafely } from "@/lib/email/resend";
 import {
   sessionBookingConfirmationEmail,
   sessionBookingTeamNotificationEmail,
@@ -9,7 +9,6 @@ import {
 } from "@/lib/email/templates";
 import type { ContactChannel } from "@/lib/database.types";
 
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 // Phase 151 — "in_person" added for bookings coming from Browse Therapist's
 // in-person search branch (see the add_in_person_contact_channel migration
 // widening session_bookings' own CHECK constraint to match).
@@ -52,6 +51,9 @@ export async function POST(request: Request) {
       { error: "name, email, therapistId, sessionDate, and sessionTime are required" },
       { status: 400 }
     );
+  }
+  if (!isValidEmailFormat(email)) {
+    return NextResponse.json({ error: "a valid email is required" }, { status: 400 });
   }
   if (!contactChannelRaw || !CHANNEL_VALUES.includes(contactChannelRaw as ContactChannel)) {
     return NextResponse.json({ error: "invalid contactChannel" }, { status: 400 });
@@ -151,17 +153,20 @@ export async function POST(request: Request) {
       to: email,
       subject: "Your GESA session is booked",
       html: sessionBookingConfirmationEmail(name, therapistName, sessionDate, sessionTime, contactChannel),
+      replyTo: getContactInbox(),
     }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `New confirmed booking: ${name} with ${therapistName}`,
       html: sessionBookingTeamNotificationEmail(name, email, therapistName, sessionDate, sessionTime, contactChannel, path),
+      replyTo: getReplyTo(email),
     }),
     therapistContactEmail
       ? sendEmailSafely({
           to: therapistContactEmail,
           subject: `New session booked: ${name}`,
           html: sessionBookingTherapistNotificationEmail(therapistName, name, email, sessionDate, sessionTime, contactChannel),
+          replyTo: getReplyTo(email),
         })
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
   ]);

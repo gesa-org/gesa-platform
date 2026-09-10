@@ -92,10 +92,17 @@ export default function TherapistsDirectory({
   const [sessionFormat, setSessionFormat] = useState<"" | "online" | "in_person">("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties)), [therapists]);
-  const langs = useMemo(() => unique(therapists.flatMap((t) => t.languages)), [therapists]);
+  // Phase 185 — `?? []` guards added throughout this block: a null
+  // specialties/languages/session_lengths column on any one therapist row
+  // used to throw here (crashing the whole directory, not just that row)
+  // instead of just excluding that row from the affected filter/option
+  // list. No active row has a null value today (verified directly against
+  // Production), but this was a real, previously-unguarded crash risk —
+  // see TherapistCard.tsx's own Phase 185 comment for the sibling fix.
+  const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties ?? [])), [therapists]);
+  const langs = useMemo(() => unique(therapists.flatMap((t) => t.languages ?? [])), [therapists]);
   const durations = useMemo(() => {
-    const fromData = therapists.flatMap((t) => t.session_lengths);
+    const fromData = therapists.flatMap((t) => t.session_lengths ?? []);
     return Array.from(new Set([...STANDARD_DURATIONS, ...fromData])).sort(
       (a, b) => Number(a) - Number(b)
     );
@@ -104,9 +111,9 @@ export default function TherapistsDirectory({
   const filtered = therapists.filter(
     (t) =>
       (!name || t.full_name.toLowerCase().includes(name.toLowerCase())) &&
-      (!role || t.specialties.includes(role)) &&
-      (!lang || t.languages.includes(lang)) &&
-      (!duration || t.session_lengths.includes(duration as PublicTherapistRow["session_lengths"][number])) &&
+      (!role || (t.specialties ?? []).includes(role)) &&
+      (!lang || (t.languages ?? []).includes(lang)) &&
+      (!duration || (t.session_lengths ?? []).includes(duration as PublicTherapistRow["session_lengths"][number])) &&
       (!gender || t.gender === gender) &&
       (!sessionFormat || (sessionFormat === "online" ? t.offers_online : t.offers_in_person))
   );

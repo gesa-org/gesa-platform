@@ -10,6 +10,7 @@ import {
 } from "@/lib/queries";
 import SchedulingCalendar from "@/components/admin/SchedulingCalendar";
 import type { CalendarEvent } from "@/lib/adminSchedule";
+import { isValidEmailFormat } from "@/lib/email/resend";
 
 export const dynamic = "force-dynamic";
 
@@ -370,19 +371,31 @@ export default async function AdminOverviewPage() {
   // it; it just showed up as a server log line no one but a developer
   // would ever look at. This is a server-only read (these are never sent
   // to the client bundle — only the boolean results below are rendered),
-  // so it's safe to check directly here. GESA_CONTACT_INBOX has a
-  // hardcoded fallback ("hello@gesa.org") for the same "never let a
-  // missing var break the underlying feature" reason `lib/email/resend.ts`
-  // uses — but that also means an admin could be missing every
-  // notification email indefinitely without any visible signal that the
-  // real inbox was never configured. Flagging both here closes that gap.
+  // so it's safe to check directly here.
+  //
+  // Phase 177 — this used to only check *presence* of GESA_CONTACT_INBOX,
+  // and its own fallback was the old "hello@gesa.org" placeholder — a typo'd
+  // or malformed value would pass this check while still silently sending
+  // notifications nowhere useful. Now validates the actual email *format*
+  // too (via the same isValidEmailFormat lib/email/resend.ts uses to decide
+  // whether to honor the env var at all, so this warning and the real
+  // send-time behavior can never disagree), and the copy no longer mentions
+  // "hello@gesa.org" — the real fallback is a real, monitored inbox now
+  // (see lib/email/resend.ts's FALLBACK_CONTACT_INBOX), so this warning
+  // exists purely so nothing depends on that fallback indefinitely.
   const emailKeyConfigured = Boolean(process.env.RESEND_API_KEY);
-  const emailInboxConfigured = Boolean(process.env.GESA_CONTACT_INBOX);
+  const rawInbox = process.env.GESA_CONTACT_INBOX;
+  const emailInboxConfigured = isValidEmailFormat(rawInbox);
   const emailConfigWarnings = [
     !emailKeyConfigured && "RESEND_API_KEY is not set — every notification/confirmation email is being silently skipped.",
     emailKeyConfigured &&
       !emailInboxConfigured &&
-      "GESA_CONTACT_INBOX is not set — admin notification emails are falling back to a placeholder address (hello@gesa.org), not a real monitored inbox.",
+      !rawInbox &&
+      "GESA_CONTACT_INBOX is not set — admin notification emails are temporarily falling back to a default address instead of your team's real monitored inbox.",
+    emailKeyConfigured &&
+      !emailInboxConfigured &&
+      Boolean(rawInbox) &&
+      "GESA_CONTACT_INBOX is set but isn't a valid email address — admin notification emails are temporarily falling back to a default address until this is fixed.",
   ].filter((w): w is string => Boolean(w));
 
   const requestBars = [

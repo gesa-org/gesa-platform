@@ -2,16 +2,25 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SupportPathway } from "@/lib/database.types";
 
-const PATHWAYS: SupportPathway[] = ["ai", "manual"];
+// Phase 184 — "ai" removed from the accepted pathway list. It used to be
+// called from MatchWizard's own mount effect (and, redundantly, from
+// ChoiceScreen.tsx's "AI Support" click too — one click, two rows), creating
+// a support_requests row with status "started" before the client had
+// answered a single question. That row surfaced as a real admin
+// notification ("New Find Support request — Anonymous") for anyone who
+// merely opened the wizard and left. The AI pathway's row is now created
+// exactly once, by /api/support-match, the first time the client actually
+// submits real preferences — see MatchWizard.tsx and EXECUTION_PLAN.md
+// Phase 184. Restricting this route to "manual" only closes the door on the
+// same premature-row bug being reintroduced through this endpoint later.
+const PATHWAYS: SupportPathway[] = ["manual"];
 
-// Phase 142 — creates the single support_requests row a "Find Support"
-// journey will live in from here on. Called from:
-//   - MatchWizard on mount (pathway "ai"), the instant a client picks "AI
-//     Support" on the choice screen (components/find-support/ChoiceScreen).
-//   - The choice screen itself for "Manual Support" (pathway "manual"),
-//     purely so both pathways show up in one CRM view — the row is created
-//     already in its terminal "redirected_manual" status since that flow
-//     collects nothing else before handing off to Our Professionals.
+// Phase 142 — logs the "manual" (browse-directory) pathway to
+// support_requests purely for CRM visibility, the moment the client picks
+// it on the choice screen (components/find-support/ChoiceScreen.tsx). The
+// row is created already in its terminal "redirected_manual" status since
+// that flow collects nothing else before handing off to Our Professionals —
+// clicking through *is* the complete action for this pathway, not a draft.
 // Always writes through the service-role admin client — this table has no
 // public RLS policy at all (see the create_support_requests migration).
 export async function POST(request: Request) {
@@ -19,7 +28,7 @@ export async function POST(request: Request) {
   const pathwayRaw = body?.pathway as string | undefined;
 
   if (!pathwayRaw || !PATHWAYS.includes(pathwayRaw as SupportPathway)) {
-    return NextResponse.json({ error: "a valid pathway ('ai' or 'manual') is required" }, { status: 400 });
+    return NextResponse.json({ error: "a valid pathway ('manual') is required" }, { status: 400 });
   }
   const pathway = pathwayRaw as SupportPathway;
 
@@ -28,7 +37,7 @@ export async function POST(request: Request) {
     .from("support_requests")
     .insert({
       pathway,
-      status: pathway === "manual" ? "redirected_manual" : "started",
+      status: "redirected_manual",
       source_page: "find-your-therapist",
     })
     .select("id")

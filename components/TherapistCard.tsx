@@ -62,7 +62,13 @@ export default function TherapistCard({
           )}
           <p className="mb-3 line-clamp-2 text-[13.5px] text-muted-fg">{t.short_summary}</p>
           <div className="flex flex-wrap gap-1.5">
-            {t.languages.map((l) => (
+            {/* Phase 185 — defensive guard: `specialties` two lines up
+                already uses `?.[0] ?? ""` for the same reason (a therapist
+                row can theoretically have a null/missing array column, not
+                just an empty one) — this line was the one spot that never
+                got the same guard, so a null `languages` column would throw
+                during render instead of just showing no language chips. */}
+            {(t.languages ?? []).map((l) => (
               <span
                 key={l}
                 className="rounded-full border border-border bg-card px-2.5 py-1 text-[11.5px] font-medium text-muted-fg"

@@ -1,6 +1,17 @@
 // Minimal, inline-styled HTML templates — no build step, safe across email
 // clients. Keep GESA's palette (sage/clay/cream) consistent with the site.
 
+import { GESA_PUBLIC_CONTACT_EMAIL } from "@/lib/contact";
+
+// Phase 177 — every user-facing template below (welcome, contact/donation/
+// volunteer confirmations, booking/session confirmations, group
+// registration, etc.) renders through this one `shell()` wrapper, so adding
+// GESA's real support contact here once puts it in every outgoing
+// confirmation email at the same time, rather than editing each template
+// individually. Uses the same public contact constant the Contact page and
+// Footer read from (lib/contact.ts) — not `getContactInbox()` from
+// lib/email/resend.ts, which is the server-only *admin notification*
+// address and is never meant to be shown to a visitor.
 function shell(bodyHtml: string) {
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;background:#f7f3ea;padding:32px 0;">
@@ -12,6 +23,8 @@ function shell(bodyHtml: string) {
       ${bodyHtml}
       <p style="margin-top:28px;font-size:12.5px;color:#6f6a5c;">
         GESA — Global Emotional Support Alliance. If you weren't expecting this email, you can ignore it.
+        Questions? Reach us any time at
+        <a href="mailto:${GESA_PUBLIC_CONTACT_EMAIL}" style="color:#5c6a4c;">${GESA_PUBLIC_CONTACT_EMAIL}</a>.
       </p>
     </div>
   </div>`;

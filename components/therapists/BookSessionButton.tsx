@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CalendarClock, ExternalLink, RefreshCcw } from "lucide-react";
 import IntakeBookingModal from "@/components/intake/IntakeBookingModal";
 import BookingIntakeModal, { type IntakeSuccessDetails } from "@/components/booking/BookingIntakeModal";
@@ -116,6 +116,14 @@ export default function BookSessionButton({
     referenceNumber: string;
     clientEmail: string;
   } | null>(null);
+  // Phase 184 — synchronous re-entrancy guard for openCalendar(), checked
+  // before React has had a chance to re-render and remove/disable whatever
+  // button called it (setStage("openingCalendar") is itself synchronous,
+  // but two clicks landing in the same tick would both pass that check
+  // before either commits) — without this, a fast double-click on "Try
+  // again" could POST /api/diary-scheduling twice and create two
+  // diary_scheduling_events rows for one handoff.
+  const openingCalendarRef = useRef(false);
 
   const hasDiaryLink = Boolean(therapist.diary_link) && therapist.diary_link_status !== "invalid";
 
@@ -135,10 +143,13 @@ export default function BookSessionButton({
   // never anything else.
   async function openCalendar(forIntakeId: string) {
     if (!therapist.diary_link) return;
+    if (openingCalendarRef.current) return;
+    openingCalendarRef.current = true;
     setIntakeId(forIntakeId);
     setStage("openingCalendar");
     const popup = window.open(therapist.diary_link, "_blank", "noopener,noreferrer");
     if (!popup) {
+      openingCalendarRef.current = false;
       setStage("calendarError");
       return;
     }
@@ -167,6 +178,8 @@ export default function BookSessionButton({
       setStage("awaitingReturn");
     } catch {
       setStage("calendarError");
+    } finally {
+      openingCalendarRef.current = false;
     }
   }
 

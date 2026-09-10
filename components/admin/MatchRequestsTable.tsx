@@ -98,7 +98,9 @@ export default function MatchRequestsTable({
                 return (
                   <tr key={r.id} className="border-t border-border align-top">
                     <td className="whitespace-nowrap px-5 py-3 text-muted-fg">
-                      {new Date(r.created_at).toLocaleDateString()}
+                      {/* Phase 185 — fixed locale/timeZone; see
+                          BookingRequestsTable.tsx's Phase 185 comment. */}
+                      {new Date(r.created_at).toLocaleDateString("en-US", { timeZone: "UTC" })}
                     </td>
                     <td className="px-5 py-3">
                       <div className="font-medium">{r.name}</div>

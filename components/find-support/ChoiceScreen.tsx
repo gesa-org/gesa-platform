@@ -7,9 +7,19 @@ import { Sparkle, Users, X, Loader2 } from "lucide-react";
 // Phase 142 — the "Find Support" entry point. Replaces the old direct-to-
 // therapist-list CTA flow: every "Find Support" link site-wide now lands
 // here first (see lib/navigation.ts), and the client explicitly chooses a
-// pathway instead of being dropped straight into either flow. Both choices
-// are logged to support_requests via /api/support-pathway purely for CRM
-// visibility — see that route's comment.
+// pathway instead of being dropped straight into either flow. The "manual"
+// (browse-directory) choice is logged to support_requests via
+// /api/support-pathway purely for CRM visibility, already in its terminal
+// status at click time since nothing further is collected for that path —
+// see that route's comment.
+//
+// Phase 184 — "AI Support" used to also log its own support_requests row
+// right here (`logPathway("ai")`), in addition to the row MatchWizard.tsx
+// separately created on its own mount — one click produced two orphaned
+// CRM rows, and both existed before the client had entered a single real
+// answer. Removed: the AI pathway's row is now created exactly once, by
+// /api/support-match, the first time the client actually submits real
+// preferences from inside the wizard. See EXECUTION_PLAN.md Phase 184.
 //
 // "Closeable" per the spec: there's nothing to close back to on this page
 // (it's the page's own first section, not a modal), so "close" here means
@@ -50,7 +60,9 @@ export default function ChoiceScreen({
 
   async function chooseAi() {
     setPending("ai");
-    await logPathway("ai");
+    // Phase 184 — no longer logs a support_requests row here (see this
+    // file's top-of-file comment) — MatchWizard's own /api/support-match
+    // call is now the single, real creation point for this pathway.
     onChooseAi();
   }
 

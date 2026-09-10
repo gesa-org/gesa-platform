@@ -68,7 +68,9 @@ export default function InquiryDetailModal({
           <div>
             <h3 className="text-[19px] font-semibold">{inquiry.name || "Unnamed client"}</h3>
             <p className="text-[12.5px] text-muted-fg">
-              Submitted {new Date(inquiry.created_at).toLocaleString()}
+              {/* Phase 185 — fixed locale/timeZone; see
+                  BookingRequestsTable.tsx's Phase 185 comment. */}
+              Submitted {new Date(inquiry.created_at).toLocaleString("en-US", { timeZone: "UTC" })}
             </p>
           </div>
           <button

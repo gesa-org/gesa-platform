@@ -49,7 +49,16 @@ export default function BookingRequestsTable({ initialBookings }: { initialBooki
               {bookings.map((b) => (
                 <tr key={b.id} className="border-t border-border align-top">
                   <td className="whitespace-nowrap px-5 py-3 text-muted-fg">
-                    {new Date(b.created_at).toLocaleDateString()}
+                    {/* Phase 185 — fixed locale/timeZone: this Client
+                        Component's initial render is SSR'd with real data,
+                        then hydrated. A bare .toLocaleDateString() formats
+                        using the server's locale/timezone during that SSR
+                        pass and the visitor's own during hydration — a
+                        guaranteed text mismatch (React error #425) whenever
+                        those differ, which is most of the time. Pinning
+                        both to the same explicit locale/timeZone makes the
+                        two renders identical, every time. */}
+                    {new Date(b.created_at).toLocaleDateString("en-US", { timeZone: "UTC" })}
                   </td>
                   <td className="px-5 py-3">{ENTRY_ROUTE_LABELS[b.entry_route] ?? b.entry_route}</td>
                   <td className="px-5 py-3 font-medium">{b.name}</td>

@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, isValidEmailFormat, sendEmailSafely } from "@/lib/email/resend";
 import { volunteerApplicationNotificationEmail, volunteerApplicationReceivedEmail } from "@/lib/email/templates";
-
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
 // Phase 64 — the modal sends the raw meeting-duration value; this route
 // formats the three fixed presets into a human-readable label for the
@@ -32,8 +30,8 @@ export async function POST(request: Request) {
   const meetingDurationLabel = MEETING_DURATION_LABELS[meetingDuration] ?? meetingDuration;
   const bio = (body?.bio as string | undefined) ?? "";
 
-  if (!email) {
-    return NextResponse.json({ error: "email is required" }, { status: 400 });
+  if (!email || !isValidEmailFormat(email)) {
+    return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
   }
 
   const [toApplicant, toTeam] = await Promise.all([
@@ -41,9 +39,10 @@ export async function POST(request: Request) {
       to: email,
       subject: "We received your volunteer therapist application",
       html: volunteerApplicationReceivedEmail(fullName),
+      replyTo: getContactInbox(),
     }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `New volunteer therapist application: ${fullName || email}`,
       html: volunteerApplicationNotificationEmail({
         fullName,
@@ -55,6 +54,7 @@ export async function POST(request: Request) {
         meetingDurationLabel,
         bio,
       }),
+      replyTo: getReplyTo(email),
     }),
   ]);
 

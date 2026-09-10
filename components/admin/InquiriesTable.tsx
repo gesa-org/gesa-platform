@@ -118,7 +118,9 @@ export default function InquiriesTable({ initialInquiries }: { initialInquiries:
               {filtered.map((i) => (
                 <tr key={i.id} className="border-t border-border align-top">
                   <td className="whitespace-nowrap px-5 py-3 text-muted-fg">
-                    {new Date(i.created_at).toLocaleDateString()}
+                    {/* Phase 185 — fixed locale/timeZone; see
+                        BookingRequestsTable.tsx's Phase 185 comment. */}
+                    {new Date(i.created_at).toLocaleDateString("en-US", { timeZone: "UTC" })}
                   </td>
                   <td className="px-5 py-3 font-medium">{i.name || "—"}</td>
                   <td className="px-5 py-3">

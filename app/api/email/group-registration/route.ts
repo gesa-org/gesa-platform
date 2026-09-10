@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, isValidEmailFormat, sendEmailSafely } from "@/lib/email/resend";
 import { groupRegistrationEmail } from "@/lib/email/templates";
 
 export async function POST(request: Request) {
@@ -9,14 +9,15 @@ export async function POST(request: Request) {
   const groupTitle = (body?.groupTitle as string | undefined) ?? "your group";
   const schedule = (body?.schedule as string | undefined) ?? "";
 
-  if (!email) {
-    return NextResponse.json({ error: "email is required" }, { status: 400 });
+  if (!email || !isValidEmailFormat(email)) {
+    return NextResponse.json({ error: "a valid email is required" }, { status: 400 });
   }
 
   const result = await sendEmailSafely({
     to: email,
     subject: `You're registered for ${groupTitle}`,
     html: groupRegistrationEmail(name, groupTitle, schedule),
+    replyTo: getContactInbox(),
   });
 
   return NextResponse.json(result);

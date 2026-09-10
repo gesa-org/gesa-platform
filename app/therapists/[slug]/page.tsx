@@ -68,7 +68,10 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
           {therapist.short_summary && <p className="mt-2 text-[15.5px] text-muted-fg">{therapist.short_summary}</p>}
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {therapist.specialties.map((s) => (
+            {/* Phase 185 — `?? []`/`?.` guards, same reasoning as
+                TherapistCard.tsx and TherapistsDirectory.tsx's own Phase
+                185 comments. */}
+            {(therapist.specialties ?? []).map((s) => (
               <span key={s} className="rounded-full bg-accent-soft px-3 py-1 text-[12.5px] font-medium text-primary">
                 {s}
               </span>
@@ -78,11 +81,11 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
           <div className="mt-5 grid grid-cols-2 gap-4 text-[13.5px] text-muted-fg sm:grid-cols-2">
             <div className="flex items-center gap-2">
               <Globe2 size={16} className="text-primary" />
-              {therapist.languages.join(", ") || "—"}
+              {(therapist.languages ?? []).join(", ") || "—"}
             </div>
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-primary" />
-              {therapist.session_lengths.map((d) => `${d}m`).join(", ") || "—"}
+              {(therapist.session_lengths ?? []).map((d) => `${d}m`).join(", ") || "—"}
             </div>
             {therapist.years_experience != null && (
               <div className="flex items-center gap-2">

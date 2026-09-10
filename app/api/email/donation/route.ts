@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, isValidEmailFormat, sendEmailSafely } from "@/lib/email/resend";
 import { donationNotificationEmail, donationReceivedEmail } from "@/lib/email/templates";
-
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
 // Phase 98 — best-effort notification pair for the /donate page's gift
 // form, same pattern as /api/email/volunteer-application.
@@ -25,8 +23,8 @@ export async function POST(request: Request) {
   const amountChoice = (body?.amountChoice as string | undefined) ?? null;
   const message = (body?.message as string | undefined) ?? null;
 
-  if (!email) {
-    return NextResponse.json({ error: "email is required" }, { status: 400 });
+  if (!email || !isValidEmailFormat(email)) {
+    return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
   }
 
   const [toDonor, toTeam] = await Promise.all([
@@ -34,11 +32,13 @@ export async function POST(request: Request) {
       to: email,
       subject: "Thank you for your gift to GESA",
       html: donationReceivedEmail(fullName, frequency, amount),
+      replyTo: getContactInbox(),
     }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `Donation paid: ${fullName || email} — €${amount}`,
       html: donationNotificationEmail({ fullName, email, phone, frequency, amount, amountChoice, message }),
+      replyTo: getReplyTo(email),
     }),
   ]);
 

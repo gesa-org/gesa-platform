@@ -6,7 +6,9 @@ import Link from "next/link";
 import { AlertTriangle, CalendarCheck2, CalendarX2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
-import type { DiaryLinkStatus } from "@/lib/database.types";
+import TherapistProfileStatusBadge from "@/components/admin/TherapistProfileStatusBadge";
+import TherapistArchiveButton from "@/components/admin/TherapistArchiveButton";
+import type { DiaryLinkStatus, TherapistProfileStatus } from "@/lib/database.types";
 
 // Phase 65 — Roy said toggling therapists active/deactivated one at a time
 // through "Edit" was tiring once there are a lot of them, and asked for a
@@ -28,6 +30,10 @@ export type TherapistListRow = {
   // therapist with no working scheduling link without opening each one.
   diary_link: string | null;
   diary_link_status: DiaryLinkStatus;
+  // Phase 186
+  profile_status: TherapistProfileStatus;
+  volunteer_application_id: string | null;
+  has_linked_account: boolean;
 };
 
 function DiaryLinkBadge({ diaryLink, status }: { diaryLink: string | null; status: DiaryLinkStatus }) {
@@ -80,7 +86,17 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
     setError(null);
     const ids = Array.from(selectedIds);
     const supabase = createClient();
-    const { error: updateError } = await supabase.from("therapists").update({ is_active: nextActive }).in("id", ids);
+    // Phase 186 — profile_status is now the source of truth (a DB trigger
+    // derives is_active from it on every write), so this has to set both:
+    // sending only is_active would get silently reverted back to whatever
+    // profile_status already said. "Activate selected" is this table's
+    // version of the spec's explicit "Publish / Set Active" action —
+    // checking rows and clicking it is exactly that deliberate admin
+    // decision, including for a still-Draft profile.
+    const { error: updateError } = await supabase
+      .from("therapists")
+      .update({ is_active: nextActive, profile_status: nextActive ? "active" : "inactive" })
+      .in("id", ids);
     setPending(false);
     if (updateError) {
       setError("Couldn't update those professionals — try again.");
@@ -89,8 +105,16 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
     // Optimistic local update, same pattern as TherapistEditForm's single-row
     // toggleActive — no full page refetch needed since the write already
     // succeeded under RLS.
-    setTherapists((prev) => prev.map((t) => (selectedIds.has(t.id) ? { ...t, is_active: nextActive } : t)));
+    setTherapists((prev) =>
+      prev.map((t) =>
+        selectedIds.has(t.id) ? { ...t, is_active: nextActive, profile_status: nextActive ? "active" : "inactive" } : t
+      )
+    );
     setSelectedIds(new Set());
+  }
+
+  function onArchived(id: string) {
+    setTherapists((prev) => prev.map((t) => (t.id === id ? { ...t, profile_status: "archived", is_active: false } : t)));
   }
 
   return (
@@ -136,6 +160,7 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">Languages</th>
               <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Source</th>
               <th className="px-5 py-3">Diary link</th>
               <th className="px-5 py-3"></th>
             </tr>
@@ -160,23 +185,46 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
                   </div>
                 </td>
                 <td className="px-5 py-3 font-medium">{t.full_name}</td>
-                <td className="px-5 py-3 text-muted-fg">{t.languages.join(", ") || "—"}</td>
+                {/* Phase 185 — `?? []` guard, same reasoning as this file's
+                    sibling components — see TherapistCard.tsx's comment. */}
+                <td className="px-5 py-3 text-muted-fg">{(t.languages ?? []).join(", ") || "—"}</td>
                 <td className="px-5 py-3">
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${
-                      t.is_active ? "bg-accent-soft text-primary" : "bg-secondary text-muted-fg"
-                    }`}
-                  >
-                    {t.is_active ? "Active" : "Deactivated"}
-                  </span>
+                  <TherapistProfileStatusBadge status={t.profile_status} />
+                </td>
+                {/* Phase 186 — "Source": whether this row came from an
+                    approved volunteer application or was created directly
+                    by an admin (AddTherapistModal) — the spec's explicit
+                    "no records from unapproved volunteer applications" is
+                    enforced at the DB/trigger level (a therapist can only
+                    ever link to an *approved* application), so this column
+                    is purely informational, not a filter. */}
+                <td className="px-5 py-3">
+                  {t.volunteer_application_id ? (
+                    <Link
+                      href={`/admin/volunteer-applications#${t.volunteer_application_id}`}
+                      className="text-[12.5px] font-medium text-primary underline"
+                    >
+                      From application
+                    </Link>
+                  ) : (
+                    <span className="text-[12.5px] text-muted-fg">Manually created</span>
+                  )}
                 </td>
                 <td className="px-5 py-3">
                   <DiaryLinkBadge diaryLink={t.diary_link} status={t.diary_link_status} />
                 </td>
                 <td className="px-5 py-3 text-right">
-                  <Link href={`/admin/therapists/${t.id}`} className="font-semibold text-primary underline">
-                    Edit
-                  </Link>
+                  <div className="flex items-center justify-end gap-1">
+                    <Link href={`/admin/therapists/${t.id}`} className="font-semibold text-primary underline">
+                      Edit
+                    </Link>
+                    <TherapistArchiveButton
+                      id={t.id}
+                      fullName={t.full_name}
+                      hasLinkedAccount={t.has_linked_account}
+                      onArchived={onArchived}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

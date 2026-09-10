@@ -1,5 +1,12 @@
 "use client";
 
+// Phase 186 — superseded by VolunteerApplicationStatusControl.tsx (colored
+// status badges, a "withdrawn" status, and the approve confirmation modal
+// with its two separate actions the spec requires). No longer imported
+// anywhere — left on disk per this project's no-delete-data convention for
+// already-written files (see e.g. components/match/StepAssessment.tsx's own
+// such comment).
+
 import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck, Heart } from 'lucide-react';
+import { Linkedin, Twitter, Instagram, Facebook, Globe2, BadgeCheck, ShieldCheck, Heart, Mail } from 'lucide-react';
 import Logo from '@/components/Logo';
 import GesaWordmark from '@/components/GesaWordmark';
 import VolunteerApplyButton from '@/components/volunteer/VolunteerApplyButton';
@@ -11,6 +11,7 @@ import { HEADER_CONTENT_FALLBACK } from '@/components/Header';
 import { getFooterExploreItems } from '@/lib/navigation';
 import { SITE_FOOTER_ID } from '@/lib/accessibility/config';
 import EditableText from '@/components/ui-builder/public/EditableText';
+import { GESA_PUBLIC_CONTACT_EMAIL, GESA_PUBLIC_CONTACT_MAILTO } from '@/lib/contact';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
 // editable — only each slot's label text is), same approach as About's
@@ -283,6 +284,18 @@ export default function Footer({
             <span className="text-[13.5px] font-semibold text-[#eef1f6]">
               <EditableText contentId="global.footer.connectWithUsLabel" label="&quot;Connect with Us&quot; label" value={content.connectWithUsLabel} as="span" />
             </span>
+            {/* Phase 177 — GESA's real, monitored contact address, as a
+                clickable mailto: link. Reads from lib/contact.ts's public
+                constant (not the server-only admin-notification inbox in
+                lib/email/resend.ts) since this renders straight into the
+                page for every visitor. */}
+            <a
+              href={GESA_PUBLIC_CONTACT_MAILTO}
+              className="flex h-9 items-center gap-1.5 rounded-lg bg-[#eef1f6]/10 px-3 text-[13px] text-[#c7d0de] transition-colors hover:bg-[#eef1f6]/20 hover:text-[#eef1f6]"
+            >
+              <Mail size={15} aria-hidden="true" />
+              {GESA_PUBLIC_CONTACT_EMAIL}
+            </a>
             <div className="flex items-center gap-2.5">
               <a
                 href={content.socialLinkedinHref}

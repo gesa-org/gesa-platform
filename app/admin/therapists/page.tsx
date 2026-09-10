@@ -39,6 +39,10 @@ export default async function AdminTherapistsPage() {
           is_active: t.is_active,
           diary_link: t.diary_link,
           diary_link_status: t.diary_link_status,
+          // Phase 186
+          profile_status: t.profile_status,
+          volunteer_application_id: t.volunteer_application_id,
+          has_linked_account: Boolean(t.profile_id),
         }))}
       />
     </div>

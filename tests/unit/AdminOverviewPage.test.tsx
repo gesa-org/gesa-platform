@@ -219,11 +219,32 @@ describe("AdminOverviewPage — email delivery config warning", () => {
 
   it("shows no warning at all once both are configured", async () => {
     process.env.RESEND_API_KEY = "re_test_key";
-    process.env.GESA_CONTACT_INBOX = "hello@realaddress.org";
+    process.env.GESA_CONTACT_INBOX = "gesa.org26@gmail.com";
 
     const jsx = await AdminOverviewPage();
     render(jsx);
 
     expect(screen.queryByText("Email delivery isn't fully configured")).not.toBeInTheDocument();
+  });
+
+  // Phase 177 — the inbox check used to only verify GESA_CONTACT_INBOX was
+  // *set*, so a typo'd value (missing "@", a stray space, etc.) would pass
+  // silently while still breaking real delivery. It now also validates the
+  // email *format*, and the copy no longer references the old "hello@gesa.org"
+  // placeholder now that the real fallback is a real, monitored inbox.
+  it("warns when GESA_CONTACT_INBOX is set but not a valid email address", async () => {
+    process.env.RESEND_API_KEY = "re_test_key";
+    process.env.GESA_CONTACT_INBOX = "not-an-email";
+
+    const jsx = await AdminOverviewPage();
+    render(jsx);
+
+    expect(screen.getByText("Email delivery isn't fully configured")).toBeInTheDocument();
+    expect(screen.getByText(/isn't a valid email address/)).toBeInTheDocument();
+    expect(screen.queryByText(/hello@gesa\.org/)).not.toBeInTheDocument();
+    // The malformed value itself is never echoed back into the warning —
+    // this banner is admin-only, but there's still no reason to display a
+    // misconfigured secret-adjacent value verbatim.
+    expect(screen.queryByText(/not-an-email/)).not.toBeInTheDocument();
   });
 });

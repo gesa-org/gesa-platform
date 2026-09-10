@@ -6,6 +6,7 @@ import { getPageContent, CONTACT_CONTENT_FALLBACK } from "@/lib/content";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
+import { GESA_PUBLIC_CONTACT_EMAIL, GESA_PUBLIC_CONTACT_MAILTO } from "@/lib/contact";
 
 export const metadata = {
   title: "Contact — GESA",
@@ -38,6 +39,17 @@ export default async function ContactPage({
         <Suspense fallback={null}>
           <ContactForm />
         </Suspense>
+        {/* Phase 177 — a direct, clickable email option alongside the form,
+            for anyone who'd rather not fill it in. Reads from the same
+            public contact constant the Footer's mailto link uses (see
+            lib/contact.ts), so both always point at the same address. */}
+        <p className="mt-6 text-center text-[14px] text-muted-fg">
+          Prefer email? Reach us directly at{" "}
+          <a href={GESA_PUBLIC_CONTACT_MAILTO} className="font-semibold text-primary underline">
+            {GESA_PUBLIC_CONTACT_EMAIL}
+          </a>
+          .
+        </p>
       </section>
     </>
   );

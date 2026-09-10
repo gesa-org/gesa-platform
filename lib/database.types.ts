@@ -215,7 +215,25 @@ export type TherapistRow = {
   // therapist through the AI/rule-based matcher and capping at 3 results —
   // getTherapistsByPathway() filters on this column directly instead.
   support_pathways: string[];
+  // Phase 186 — a therapist profile's own lifecycle, separate from
+  // `is_active` (kept in sync automatically by the
+  // protect_therapist_sensitive_fields trigger — see that function's own
+  // comment) and separate from any linked application's review status.
+  // Only "active" is ever publicly visible; every existing is_active=true
+  // query/RLS policy keeps working unchanged since is_active still mirrors
+  // this column 1:1.
+  profile_status: TherapistProfileStatus;
+  // Phase 186 — set only by an admin's explicit "Create Professional
+  // Profile" action on an Approved volunteer_applications row; enforced at
+  // the DB level (the same trigger raises an exception if this is ever set
+  // to an application that isn't status "approved"). Null for every
+  // therapist profile that wasn't created from an application (the
+  // overwhelming majority of existing rows).
+  volunteer_application_id: string | null;
 }
+
+// Phase 186 — see TherapistRow.profile_status's own comment.
+export type TherapistProfileStatus = "draft" | "pending_publication" | "active" | "inactive" | "archived";
 
 // Phase 126 — the `therapists_public` view's exact column list (see
 // migration create_public_safe_therapists_view_and_lock_anon_columns).
@@ -530,6 +548,27 @@ export type BookingIntakeFormRow = {
 // `string` rather than this union.
 export type MeetingDurationChoice = "60" | "45" | "30" | "custom";
 
+// Phase 186 — DB-enforced now (a CHECK constraint on therapist_applications.
+// status), added "withdrawn" for an applicant-initiated withdrawal. Was a
+// plain unconstrained string before this phase.
+export type TherapistApplicationStatus = "new" | "reviewing" | "approved" | "rejected" | "withdrawn";
+
+// Phase 186 — pre-existing table (predates this codebase; see
+// lib/adminAuditLog.ts's own comment), reused as this phase's real audit
+// trail for approve/create-profile/publish/archive actions. `admin_id` is
+// free text in the live schema (historically an email string, not a
+// profiles.id FK) — kept as `string` here to match, not tightened, since
+// this phase doesn't touch that column's meaning.
+export type GesaAdminAuditLogRow = {
+  id: string;
+  admin_id: string | null;
+  action: string | null;
+  target_type: string | null;
+  target_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string | null;
+};
+
 export type TherapistApplicationRow = {
   id: string;
   full_name: string;
@@ -540,7 +579,7 @@ export type TherapistApplicationRow = {
   languages: string[];
   meeting_duration: string;
   bio: string;
-  status: string;
+  status: TherapistApplicationStatus;
   notes: string | null;
   created_at: string;
   reviewed_at: string | null;
@@ -684,6 +723,7 @@ export type Database = {
       clients: { Row: ClientRow; Insert: Partial<ClientRow>; Update: Partial<ClientRow>; Relationships: [] };
       crisis_resources: { Row: CrisisResourceRow; Insert: Partial<CrisisResourceRow> & Pick<CrisisResourceRow, "hotline" | "region">; Update: Partial<CrisisResourceRow>; Relationships: [] };
       faqs: { Row: FaqRow; Insert: Partial<FaqRow> & Pick<FaqRow, "question" | "answer">; Update: Partial<FaqRow>; Relationships: [] };
+      gesa_admin_audit_log: { Row: GesaAdminAuditLogRow; Insert: Partial<GesaAdminAuditLogRow>; Update: Partial<GesaAdminAuditLogRow>; Relationships: [] };
       group_registrations: { Row: GroupRegistrationRow; Insert: Partial<GroupRegistrationRow> & Pick<GroupRegistrationRow, "email" | "group_id" | "name">; Update: Partial<GroupRegistrationRow>; Relationships: [] };
       inquiries: { Row: InquiryRow; Insert: Partial<InquiryRow>; Update: Partial<InquiryRow>; Relationships: [] };
       legal_pages: { Row: LegalPageRow; Insert: Partial<LegalPageRow> & Pick<LegalPageRow, "slug" | "title">; Update: Partial<LegalPageRow>; Relationships: [] };

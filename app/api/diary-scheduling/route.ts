@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, sendEmailSafely } from "@/lib/email/resend";
 import { diarySchedulingTeamNotificationEmail, diarySchedulingTherapistNotificationEmail } from "@/lib/email/templates";
-
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
 // Phase 126 — records a client being sent to a therapist's own diary-link
 // scheduling page (see BookSessionButton.tsx), and notifies the therapist +
@@ -111,12 +109,14 @@ export async function POST(request: Request) {
           to: therapistContactEmail,
           subject: "Someone just opened your scheduling link",
           html: diarySchedulingTherapistNotificationEmail(therapistName, clientName),
+          replyTo: getReplyTo(clientEmail),
         })
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `Diary-link scheduling opened: ${therapistName}`,
       html: diarySchedulingTeamNotificationEmail(therapistName, clientName, clientEmail),
+      replyTo: getReplyTo(clientEmail),
     }),
   ]);
 

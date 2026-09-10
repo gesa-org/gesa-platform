@@ -25,6 +25,13 @@ export async function GET() {
     const { data, error } = await adminSupabase
       .from("support_requests")
       .select("id, full_name, email, session_format, status, created_at, selected_therapist:therapists(full_name)")
+      // Phase 184 — excludes "started" rows (a draft row from the moment a
+      // client merely opened the AI Support wizard, before answering
+      // anything — see lib/queries.ts's getAllSupportRequests() for the
+      // full writeup of the bug this closes). Without this, an abandoned
+      // wizard open would ring the bell as "New Find Support request —
+      // Anonymous."
+      .neq("status", "started")
       .order("created_at", { ascending: false })
       .limit(8);
     if (error) return NextResponse.json({ error: "could not load requests" }, { status: 500 });

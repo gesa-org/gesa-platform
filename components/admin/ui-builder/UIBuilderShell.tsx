@@ -87,7 +87,8 @@ export default function UIBuilderShell() {
         )}
         {ui.lastPublishedAt && (
           <p className="text-[12px] text-muted-fg">
-            Last published {new Date(ui.lastPublishedAt).toLocaleString()}. The live site&apos;s cache was flushed —
+            {/* Phase 185 — fixed locale/timeZone; see BookingRequestsTable.tsx's Phase 185 comment. */}
+            Last published {new Date(ui.lastPublishedAt).toLocaleString("en-US", { timeZone: "UTC" })}. The live site&apos;s cache was flushed —
             visitors see this immediately, not on the next few-minute refresh.
           </p>
         )}

@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo, sendEmailSafely } from "@/lib/email/resend";
 import { supportRequestTherapistNotificationEmail, supportRequestTeamNotificationEmail } from "@/lib/email/templates";
-
-const GESA_INBOX = process.env.GESA_CONTACT_INBOX || "hello@gesa.org";
 
 const FORMAT_LABEL: Record<string, string> = {
   online: "Online (video)",
@@ -88,12 +86,14 @@ export async function POST(request: Request) {
           to: therapistContactEmail,
           subject: `New client match: ${clientName}`,
           html: supportRequestTherapistNotificationEmail(therapistName, clientName, treatmentType, formatLabel),
+          replyTo: getReplyTo(clientEmail),
         })
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
     sendEmailSafely({
-      to: GESA_INBOX,
+      to: getContactInbox(),
       subject: `AI Support: therapist selected — ${therapistName}`,
       html: supportRequestTeamNotificationEmail(clientName, clientEmail ?? "no email on file", therapistName),
+      replyTo: getReplyTo(clientEmail),
     }),
   ]);
 

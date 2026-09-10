@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import VolunteerApplicationStatusSelect from "@/components/admin/VolunteerApplicationStatusSelect";
+import VolunteerApplicationStatusControl from "@/components/admin/VolunteerApplicationStatusControl";
 import DeleteRowButton from "@/components/admin/DeleteRowButton";
-import type { getAllTherapistApplications } from "@/lib/queries";
+import type { getAllTherapistApplications, LinkedTherapistProfile } from "@/lib/queries";
+import type { TherapistApplicationStatus } from "@/lib/database.types";
 
 // Phase 64 — maps the raw meeting-duration DB value to a human label for
 // the three fixed presets, same mapping the notification email route uses.
@@ -18,11 +19,38 @@ type Application = Awaited<ReturnType<typeof getAllTherapistApplications>>[numbe
 // Phase 150 — split out of app/admin/volunteer-applications/page.tsx (a
 // Server Component) so the new Delete action can manage local list state;
 // layout unchanged from before this phase.
-export default function VolunteerApplicationsTable({ initialApplications }: { initialApplications: Application[] }) {
+//
+// Phase 186 — added `linkedProfiles` (one lookup query from the parent
+// Server Component, not one per row) so each row's status control can show
+// whether an Approved application already has a resulting professional
+// profile, and link to it. `profileByApplicationId` is local UI state (not
+// re-fetched) so it updates immediately the moment an admin creates a
+// profile from this page, without a full reload.
+export default function VolunteerApplicationsTable({
+  initialApplications,
+  linkedProfiles,
+}: {
+  initialApplications: Application[];
+  linkedProfiles: LinkedTherapistProfile[];
+}) {
   const [applications, setApplications] = useState(initialApplications);
+  const [profileByApplicationId, setProfileByApplicationId] = useState<Record<string, LinkedTherapistProfile>>(
+    () => Object.fromEntries(linkedProfiles.map((p) => [p.volunteer_application_id, p]))
+  );
 
   function onDeleted(id: string) {
     setApplications((rows) => rows.filter((a) => a.id !== id));
+  }
+
+  function onStatusChange(id: string, next: TherapistApplicationStatus) {
+    setApplications((rows) => rows.map((a) => (a.id === id ? { ...a, status: next } : a)));
+  }
+
+  function onProfileCreated(applicationId: string, therapistId: string) {
+    setProfileByApplicationId((prev) => ({
+      ...prev,
+      [applicationId]: { id: therapistId, full_name: "", profile_status: "draft", volunteer_application_id: applicationId },
+    }));
   }
 
   return (
@@ -30,8 +58,9 @@ export default function VolunteerApplicationsTable({ initialApplications }: { in
       <div className="border-b border-border p-5">
         <h2 className="text-lg">Volunteer professional applications ({applications.length})</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
-          Approving here is just a status label for your own tracking — it doesn&apos;t automatically create a
-          listed professional. Add them to Our Professionals yourself once you&apos;re satisfied with an application.
+          Approving an application never lists someone as a professional by itself — that only happens when you
+          choose &quot;Approve and create professional profile,&quot; or use &quot;Create Professional Profile&quot;
+          afterward, and even then the new profile starts as a draft until you explicitly publish it.
         </p>
       </div>
       {applications.length === 0 ? (
@@ -55,9 +84,11 @@ export default function VolunteerApplicationsTable({ initialApplications }: { in
             </thead>
             <tbody>
               {applications.map((a) => (
-                <tr key={a.id} className="border-t border-border align-top">
+                <tr id={a.id} key={a.id} className="scroll-mt-24 border-t border-border align-top">
                   <td className="whitespace-nowrap px-5 py-3 text-muted-fg">
-                    {new Date(a.created_at).toLocaleDateString()}
+                    {/* Phase 185 — fixed locale/timeZone; see
+                        BookingRequestsTable.tsx's Phase 185 comment. */}
+                    {new Date(a.created_at).toLocaleDateString("en-US", { timeZone: "UTC" })}
                   </td>
                   <td className="px-5 py-3 font-medium">{a.full_name}</td>
                   <td className="px-5 py-3">
@@ -68,7 +99,9 @@ export default function VolunteerApplicationsTable({ initialApplications }: { in
                   </td>
                   <td className="max-w-[220px] px-5 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {a.specialties.map((s) => (
+                      {/* Phase 185 — `?? []` guard, same reasoning as
+                          TherapistCard.tsx's Phase 185 comment. */}
+                      {(a.specialties ?? []).map((s) => (
                         <span key={s} className="rounded-full bg-accent-soft px-2 py-0.5 text-[11.5px] font-medium text-primary">
                           {s}
                         </span>
@@ -77,7 +110,7 @@ export default function VolunteerApplicationsTable({ initialApplications }: { in
                   </td>
                   <td className="max-w-[180px] px-5 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {a.languages.map((l) => (
+                      {(a.languages ?? []).map((l) => (
                         <span key={l} className="rounded-full border border-border bg-card px-2 py-0.5 text-[11.5px] font-medium text-muted-fg">
                           {l}
                         </span>
@@ -92,7 +125,14 @@ export default function VolunteerApplicationsTable({ initialApplications }: { in
                   <td className="max-w-[260px] whitespace-pre-line px-5 py-3 text-muted-fg">{a.credentials_proof}</td>
                   <td className="max-w-[260px] whitespace-pre-line px-5 py-3 text-muted-fg">{a.bio}</td>
                   <td className="px-5 py-3">
-                    <VolunteerApplicationStatusSelect id={a.id} status={a.status} />
+                    <VolunteerApplicationStatusControl
+                      id={a.id}
+                      fullName={a.full_name}
+                      status={a.status}
+                      linkedProfile={profileByApplicationId[a.id] ?? null}
+                      onStatusChange={(next) => onStatusChange(a.id, next)}
+                      onProfileCreated={(therapistId) => onProfileCreated(a.id, therapistId)}
+                    />
                   </td>
                   <td className="px-5 py-3">
                     <DeleteRowButton

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Tables, PublicTherapistRow } from "@/lib/database.types";
+import type { Tables, PublicTherapistRow, TherapistProfileStatus } from "@/lib/database.types";
 
 // Server-side read helpers. All of these run under the anon key + RLS —
 // no service role needed since every table here has a public-read policy.
@@ -184,8 +184,12 @@ export async function getRandomMatchedTherapist(): Promise<PublicTherapistRow | 
 // getTherapistByIdAdmin below. No functional change for admins (RLS still
 // lets them read those columns), this is just least-privilege — the list
 // view has no reason to pull two confidential fields for every row.
+// Phase 186 — added profile_status and volunteer_application_id so the
+// admin Our Professionals table/edit form can show and act on a profile's
+// lifecycle status and its source application, without pulling every row's
+// confidential contact fields.
 const THERAPIST_ADMIN_LIST_COLUMNS =
-  "id, full_name, slug, bio, credentials, country, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, photo_url, price_note, profile_id, session_lengths, short_summary, specialties, time_zone, tracks, updated_at, verified_at, verified_by, years_experience";
+  "id, full_name, slug, bio, credentials, country, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, photo_url, price_note, profile_id, session_lengths, short_summary, specialties, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
 
 export async function getAllTherapistsAdmin(): Promise<Omit<Tables<"therapists">, "contact_email" | "contact_phone">[]> {
   const supabase = await createClient();
@@ -368,6 +372,17 @@ export async function getAllSupportRequests(): Promise<SupportRequestWithTherapi
     .select(
       "*, selected_therapist:therapists(id, full_name, contact_email, contact_phone), clinic_location:clinic_locations(id, name, address)"
     )
+    // Phase 184 — excludes "started" rows: a support_requests row used to be
+    // created the instant a client clicked "AI Support," before they'd
+    // answered a single question, so a client who opened the wizard and
+    // immediately left behind a blank "started" row that this CRM listing,
+    // the dashboard's KPI tiles/activity feed/trend chart/calendar, and the
+    // admin notification bell all surfaced as if it were a real submission.
+    // Row creation for that pathway now only happens once the client
+    // actually submits (see /api/support-match), so no *new* "started" rows
+    // can be created going forward — this filter's job from here on is
+    // purely to hide the legacy rows the old bug already left behind.
+    .neq("status", "started")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as SupportRequestWithTherapist[];
@@ -471,6 +486,28 @@ export async function getAllTherapistApplications(): Promise<Tables<"therapist_a
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
+}
+
+export type LinkedTherapistProfile = {
+  id: string;
+  full_name: string;
+  profile_status: TherapistProfileStatus;
+  volunteer_application_id: string;
+};
+
+// Phase 186 — every therapists row that traces back to an approved
+// volunteer application, keyed by application id so
+// VolunteerApplicationsTable can show "Added as a draft professional" /
+// "Published as an active professional" / a link to the profile, per
+// application, without an extra query per row.
+export async function getTherapistProfilesLinkedToApplications(): Promise<LinkedTherapistProfile[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapists")
+    .select("id, full_name, profile_status, volunteer_application_id")
+    .not("volunteer_application_id", "is", null);
+  if (error) throw error;
+  return (data ?? []) as LinkedTherapistProfile[];
 }
 
 // Phase 98 — admin-only read for the new /donate page's gift-intent

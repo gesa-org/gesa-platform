@@ -292,7 +292,7 @@ Powder-Ivory / Deep-Slate base (`--background: #eef1f6`, `--foreground`/`--prima
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Per-environment Supabase project (Dev project id `ggjvpfivyqartvanvhzq`; Production project id `iddeoavrlnvwwfopsacy`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only, never `NEXT_PUBLIC_`-prefixed |
-| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (default `GESA <no-reply@gesa.org>`), `GESA_CONTACT_INBOX` (default `hello@gesa.org`) | Blank key ⇒ all transactional emails silently no-op, never blocking the underlying action |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (default `GESA <no-reply@gesa.org>`), `GESA_CONTACT_INBOX` (Phase 177 — real inbox `gesa.org26@gmail.com`; a missing/invalid value now falls back to that same address, not the old `hello@gesa.org` placeholder) | Blank key ⇒ all transactional emails silently no-op, never blocking the underlying action |
 | `ANTHROPIC_API_KEY` | Powers AI therapist matching; blank ⇒ silent rule-based fallback |
 | `GOOGLE_TRANSLATE_API_KEY` | Powers the EN/HE translation toggle; blank ⇒ language preference and RTL layout still work, but text stays English |
 | `NEXT_PUBLIC_SITE_URL` | Used for absolute links in emails and auth redirect URLs (e.g. the password-reset link) |
