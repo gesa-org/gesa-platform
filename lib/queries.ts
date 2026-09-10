@@ -188,8 +188,21 @@ export async function getRandomMatchedTherapist(): Promise<PublicTherapistRow | 
 // admin Our Professionals table/edit form can show and act on a profile's
 // lifecycle status and its source application, without pulling every row's
 // confidential contact fields.
+// Phase 187 bug fix — this list was missing offers_online, offers_in_person,
+// city, and support_pathways (added back in Phase 151/152) even though
+// TherapistEditForm.tsx has always read all four unconditionally, most
+// critically `therapist.support_pathways.includes(...)` with no `?? []`
+// guard. Because Supabase only returns columns actually named in `select`,
+// every column left off this list comes back as `undefined` (not `null`)
+// on the returned row — so `support_pathways` was `undefined`, and calling
+// `.includes()` on it threw a TypeError during render, which is what
+// crashed the whole /admin/therapists/[id] edit page with the generic
+// "Application error: a client-side exception has occurred" message.
+// Restored here so the row this const backs (both the list and the
+// single-record fetch below) actually matches the `TherapistAdminRow` type
+// it's cast to.
 const THERAPIST_ADMIN_LIST_COLUMNS =
-  "id, full_name, slug, bio, credentials, country, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, photo_url, price_note, profile_id, session_lengths, short_summary, specialties, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
+  "id, full_name, slug, bio, credentials, country, city, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, offers_online, offers_in_person, photo_url, price_note, profile_id, session_lengths, short_summary, specialties, support_pathways, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
 
 export async function getAllTherapistsAdmin(): Promise<Omit<Tables<"therapists">, "contact_email" | "contact_phone">[]> {
   const supabase = await createClient();
@@ -508,6 +521,80 @@ export async function getTherapistProfilesLinkedToApplications(): Promise<Linked
     .not("volunteer_application_id", "is", null);
   if (error) throw error;
   return (data ?? []) as LinkedTherapistProfile[];
+}
+
+// Phase 187 — invitation-only onboarding. `contact_email` is selected
+// directly here (not via the get_therapist_contact RPC that
+// getTherapistById() uses) — that RPC pattern exists only because the
+// `anon` role had this column's SELECT revoked (Phase 126); an authenticated
+// admin session still reads it directly like any other therapists column.
+export type TherapistOnboardingRow = {
+  id: string;
+  full_name: string;
+  contact_email: string | null;
+  profile_status: TherapistProfileStatus;
+  profile_id: string | null;
+};
+
+export async function getAllTherapistsOnboarding(): Promise<TherapistOnboardingRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("therapists")
+    .select("id, full_name, contact_email, profile_status, profile_id")
+    .order("full_name");
+  if (error) throw error;
+  return (data ?? []) as TherapistOnboardingRow[];
+}
+
+// One row per invitation, most-recent first — callers reduce this down to
+// "latest invitation per therapist_profile_id" (TherapistsTable) or keep the
+// full list (an invitation-history view). Kept as a single flat query rather
+// than N+1 per-therapist lookups.
+export async function getInvitationsForTherapists(): Promise<Tables<"invitations">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("invited_role", "therapist")
+    .not("therapist_profile_id", "is", null)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getInvitationHistoryForTherapist(therapistProfileId: string): Promise<Tables<"invitations">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("*")
+    .eq("therapist_profile_id", therapistProfileId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Administrator/Super Admin invitations + the current administrator roster,
+// for the new CRM > Administrators page.
+export async function getAdministratorInvitations(): Promise<Tables<"invitations">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("*")
+    .in("invited_role", ["admin", "super_admin"])
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getAllAdministrators(): Promise<Tables<"profiles">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .in("role", ["admin", "super_admin"])
+    .order("created_at");
+  if (error) throw error;
+  return data ?? [];
 }
 
 // Phase 98 — admin-only read for the new /donate page's gift-intent

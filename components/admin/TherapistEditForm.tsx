@@ -53,15 +53,28 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
   // filter on. offers_online defaults true and offers_in_person defaults
   // false for every existing record, matching the column defaults — an
   // admin only needs to touch these to mark someone as in-person-capable.
-  const [offersOnline, setOffersOnline] = useState(therapist.offers_online);
-  const [offersInPerson, setOffersInPerson] = useState(therapist.offers_in_person);
+  // Bug fix — `?? false` guards added alongside the query-level fix (see
+  // getTherapistByIdAdmin's THERAPIST_ADMIN_LIST_COLUMNS comment): these two
+  // came back `undefined` for every admin who opened "Edit", which made
+  // `checked={undefined}` on the checkboxes below (a React warning, not a
+  // crash on its own) — kept as belt-and-suspenders now that the real cause
+  // is fixed, same reasoning as the pre-existing `?? []` guards just below.
+  const [offersOnline, setOffersOnline] = useState(therapist.offers_online ?? false);
+  const [offersInPerson, setOffersInPerson] = useState(therapist.offers_in_person ?? false);
   const [city, setCity] = useState(therapist.city ?? "");
   // Phase 152 — which /intake?path= pathway(s) (Home page's three cards)
   // this therapist is available for. See the
   // add_support_pathways_to_therapists migration — "general" was backfilled
   // for every active therapist at the time of that migration, but this
   // checkbox set is the real, ongoing source of truth going forward.
-  const [supportPathways, setSupportPathways] = useState<string[]>(therapist.support_pathways);
+  //
+  // Bug fix — `?? []` guard added: this field was coming back `undefined`
+  // from getTherapistByIdAdmin (the select column list was missing it — now
+  // fixed in lib/queries.ts), and this state had no fallback, so
+  // `supportPathways.includes(p.value)` in the checkbox list below threw a
+  // TypeError on every render and crashed the whole edit page. This guard
+  // makes the form resilient even if a future query regresses the same way.
+  const [supportPathways, setSupportPathways] = useState<string[]>(therapist.support_pathways ?? []);
   // Phase 185 — `?? []` guards: a null specialties/languages column used to
   // throw here and crash this whole edit form instead of just showing an
   // empty field. See TherapistCard.tsx's Phase 185 comment for the sibling
