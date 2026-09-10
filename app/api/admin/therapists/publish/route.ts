@@ -27,10 +27,14 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   const id = body?.id as string | undefined;
-  const nextStatus = body?.status as string | undefined;
-  if (!id || !nextStatus || !VALID_STATUSES.includes(nextStatus as (typeof VALID_STATUSES)[number])) {
+  const rawStatus = body?.status as string | undefined;
+  if (!id || !rawStatus || !VALID_STATUSES.includes(rawStatus as (typeof VALID_STATUSES)[number])) {
     return NextResponse.json({ error: "id and a valid status are required." }, { status: 400 });
   }
+  // Narrowed to the literal union (not just `string`) so it satisfies the
+  // generated `TherapistProfileStatus` column type below — the `includes()`
+  // check above already guarantees this at runtime, TS just can't infer it.
+  const nextStatus = rawStatus as (typeof VALID_STATUSES)[number];
 
   const supabase = await createClient();
   const { data, error } = await supabase
