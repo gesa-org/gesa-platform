@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 import PhoneNumberInput from "@/components/ui/PhoneNumberInput";
 import type { ParticipatedBefore, SessionsCount } from "@/lib/database.types";
@@ -361,14 +362,14 @@ export default function BookingIntakeForm({
           />
           <span>
             I confirm that I am over 18 years old and agree to the website&apos;s{" "}
-            <a
-              href="https://planetherapyglobal.org/en/terms-and-conditions-of-website/"
+            <Link
+              href="/terms-and-conditions"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-primary underline"
             >
-              terms and conditions
-            </a>
+              Terms &amp; Conditions
+            </Link>
           </span>
         </label>
         {errors.agreedTerms && (
@@ -390,14 +391,14 @@ export default function BookingIntakeForm({
           />
           <span>
             I have read and understood the{" "}
-            <a
-              href="https://planetherapyglobal.org/en/our-privacy-policy/"
+            <Link
+              href="/privacy-policy"
               target="_blank"
               rel="noreferrer"
               className="font-semibold text-primary underline"
             >
-              privacy policy
-            </a>
+              Privacy Policy
+            </Link>
           </span>
         </label>
         {errors.agreedPrivacy && (
