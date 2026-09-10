@@ -1,8 +1,9 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Fragment, useRef } from "react";
 import { useViewportScale } from "@/components/motion/useViewportScale";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 45 — horizontal scroll-linked statement, spec section 6. Renders
 // a row of short concepts/words (content supplied by the caller — must be
@@ -32,7 +33,7 @@ export default function HorizontalScroll({
   itemClassName?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   const viewportScale = useViewportScale();
   const isMobile = viewportScale <= 0.35;
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });

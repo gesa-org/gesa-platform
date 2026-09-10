@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, type ReactNode } from "react";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 45 — cinematic scroll-linked media effect, spec section 4. Wraps
 // any media element (an <img>, a next/image `fill` wrapper, etc.) and
@@ -25,7 +26,7 @@ export default function ParallaxMedia({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
 
   const y = useTransform(scrollYProgress, [0, 1], [intensity, -intensity]);

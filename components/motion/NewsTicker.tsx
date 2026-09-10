@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
-import { useReducedMotion } from "framer-motion";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 51 — continuous "news line" ticker for Home, replacing the old
 // scroll-linked row (components/motion/HorizontalScroll.tsx, Phase 45)
@@ -35,7 +35,7 @@ export default function NewsTicker({
   className?: string;
   separator?: string;
 }) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   const clean = items.map((s) => s.trim()).filter(Boolean);
   if (clean.length === 0) return null;
 

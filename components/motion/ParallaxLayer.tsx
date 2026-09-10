@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, type ReactNode } from "react";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 46 — background-layer parallax for the decorative glow/blob
 // elements that already sit behind section content (Home's Paths,
@@ -25,7 +26,7 @@ export default function ParallaxLayer({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [-speed, speed]);
 

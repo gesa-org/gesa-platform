@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import {
   MOTION_DISTANCE,
@@ -8,6 +8,7 @@ import {
   MOTION_EASE,
   REVEAL_VIEWPORT,
 } from "@/components/motion/config";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 45 — staggered group entrance, spec section 3 ("Staggered
 // Content") and section 7 ("Card Entrance System"). Two-part API, the
@@ -29,7 +30,7 @@ export function StaggerGroup({
   style?: CSSProperties;
   staggerDelay?: number;
 }) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   return (
     <motion.div
       initial="hidden"
@@ -59,7 +60,7 @@ export function StaggerItem({
   className?: string;
   distance?: number;
 }) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   return (
     <motion.div
       variants={{

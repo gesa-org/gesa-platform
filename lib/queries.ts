@@ -25,7 +25,15 @@ export async function getActiveTherapists(): Promise<PublicTherapistRow[]> {
   const { data, error } = await supabase
     .from("therapists_public")
     .select("*")
-    .order("full_name");
+    // Phase 176 — added `id` as a tie-breaker. `full_name` alone isn't a
+    // stable sort key when two rows share a name (Postgres makes no order
+    // guarantee among ties), which could otherwise let the same set of
+    // therapists come back in a different relative order between the
+    // request that renders the count and a later one that renders more of
+    // the list — `id` is unique, so the combined order is now fully
+    // deterministic regardless of how many rows come back.
+    .order("full_name")
+    .order("id");
   if (error) throw error;
   return data ?? [];
 }

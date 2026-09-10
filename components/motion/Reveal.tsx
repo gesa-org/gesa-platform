@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion, type Transition } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 import type { ReactNode } from "react";
 import {
   MOTION_DISTANCE,
@@ -9,6 +9,7 @@ import {
   MOTION_SCALE_SUBTLE,
   REVEAL_VIEWPORT,
 } from "@/components/motion/config";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 export type RevealType = "fade" | "fade-up" | "fade-scale" | "horizontal" | "horizontal-right" | "image";
 
@@ -77,9 +78,9 @@ export default function Reveal({
   as?: keyof typeof TAG_MAP;
 }) {
   const Component = TAG_MAP[as];
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   const px = typeof distance === "number" ? distance : DISTANCE_BY_SIZE[distance];
-  const variants = buildVariants(type, px, Boolean(reducedMotion));
+  const variants = buildVariants(type, px, reducedMotion);
   const transition: Transition = {
     duration: reducedMotion ? Math.min(duration, MOTION_DURATION.micro) : duration,
     delay: reducedMotion ? 0 : delay,

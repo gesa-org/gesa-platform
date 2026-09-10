@@ -100,6 +100,13 @@ export default function TherapistsDirectory({
   // field here.
   const [sessionFormat, setSessionFormat] = useState<"" | "online" | "in_person">("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Phase 176 — a dedicated, one-shot announcement for screen-reader users
+  // when "Load more" is clicked, separate from the persistent "Showing X of
+  // Y" status line above the grid (which itself already has aria-live and
+  // stays announced correctly on every change). This one reads more clearly
+  // in the moment ("12 more professionals loaded...") than a screen reader
+  // re-announcing the whole persistent line every time it changes.
+  const [loadMoreAnnouncement, setLoadMoreAnnouncement] = useState("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties)), [therapists]);
@@ -126,9 +133,27 @@ export default function TherapistsDirectory({
   // half-scrolled-in count against a brand new filtered set.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
+    setLoadMoreAnnouncement("");
   }, [name, role, lang, duration, gender, sessionFormat]);
 
   const visible = filtered.slice(0, visibleCount);
+
+  // Phase 176 — this is genuinely synchronous, in-memory pagination (the
+  // full filtered list is already in the `therapists` prop — see the
+  // PAGE_SIZE comment above); there's no network request here to fail or
+  // to show a spinner for. What *was* broken wasn't this logic — it was a
+  // site-wide hydration failure (see EXECUTION_PLAN.md Phase 176) that left
+  // every button's click handler on this route completely inert, which is
+  // what actually produced the "nothing happens" symptom. With that fixed,
+  // this handler just advances the reveal window and announces it.
+  function handleLoadMore() {
+    const nextCount = Math.min(visibleCount + PAGE_SIZE, filtered.length);
+    const added = nextCount - visibleCount;
+    setVisibleCount(nextCount);
+    setLoadMoreAnnouncement(
+      `${added} more therapist${added === 1 ? "" : "s"} loaded. Showing ${nextCount} of ${filtered.length}.`
+    );
+  }
 
   return (
     <div className="mt-10 grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
@@ -313,13 +338,20 @@ export default function TherapistsDirectory({
               <div className="mt-7 flex justify-center">
                 <button
                   type="button"
-                  onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                  onClick={handleLoadMore}
+                  aria-label={`Load ${Math.min(PAGE_SIZE, filtered.length - visibleCount)} more therapists`}
                   className="rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold text-primary transition-colors hover:border-primary-600 hover:bg-accent-soft"
                 >
                   Load more
                 </button>
               </div>
             )}
+            {/* Phase 176 — one-shot, visually hidden announcement for the
+                click above; see handleLoadMore's comment for why this is
+                separate from the persistent "Showing X of Y" status line. */}
+            <div className="sr-only" aria-live="polite" role="status">
+              {loadMoreAnnouncement}
+            </div>
           </>
         ) : (
           <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-muted-fg">

@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, type ReactNode } from "react";
+import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 45 — scroll-linked text movement for selected major statements
 // only, spec section 5. The spec is explicit this should be used
@@ -24,7 +25,7 @@ export default function ScrollText({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSafeReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
 
   const y = useTransform(scrollYProgress, [0, 0.35, 0.65, 1], [distance, 0, 0, -distance]);
