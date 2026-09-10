@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import Header, { HEADER_CONTENT_FALLBACK } from "@/components/Header";
 import SiteFooterSlot from "@/components/SiteFooterSlot";
 import CrisisButton, { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
@@ -17,25 +16,45 @@ import type { HeaderContent, FooterContent, CrisisButtonContent } from "@/lib/co
 // So the same "?editorPreview=true + admin session -> overlay the draft"
 // gate every page.tsx applies server-side (see
 // lib/ui-builder/pageContentResolver.ts's resolveEditorPreview) has to run
-// client-side here instead: useSearchParams() works at any component depth,
-// but only inside a <Suspense> boundary (Next's own requirement — without
-// it, a client component reading the search string forces the *entire*
-// route to de-opt to client-only rendering; wrapped in Suspense, only this
-// one subtree does).
+// client-side here instead.
+//
+// Phase 185 — this used to read the query string via next/navigation's
+// useSearchParams(), which per Next's own docs forces the *entire* Client
+// Component subtree up to the nearest Suspense boundary to bail out to
+// client-side-only rendering on any route Next treats as prerendered/
+// static. This component's child tree is `<Header>{children}<Footer>
+// <CrisisButton>` — i.e. this one hook call put literally every page's
+// entire real content inside that bailout boundary, not just the small
+// editor-preview overlay logic it actually needed. That's the textbook
+// shape of Next's own "missing/misplaced Suspense boundary" hydration
+// footgun, and matches this site's long-standing, site-wide React
+// hydration errors (#418/#423/#425, sometimes cascading into an
+// unrecoverable #329 "Unknown root exit status" crash) tracked as an open
+// issue before this phase.
+//
+// Fixed by dropping useSearchParams() entirely: `?editorPreview=true` is
+// only ever read once, client-side, inside the effect below (via
+// `window.location.search`, a plain browser global, not a React hook) —
+// there's no reactivity lost in practice, since this component lives in
+// the root layout and Next never remounts a shared layout on a same-layout
+// navigation anyway (the exact constraint the original comment above
+// already called out). Removing the hook removes the Suspense requirement
+// entirely, so there's no fallback/real-content split left to mismatch:
+// this component now renders the exact same tree on the server and on the
+// client's first paint for every normal visitor, full stop.
 //
 // The published Header/Footer/CrisisButton content is still fetched
 // server-side in app/layout.tsx (unchanged, zero risk to every normal
 // request) and passed in as `headerContent`/`footerContent`/
-// `crisisButtonContent` — this component's Suspense fallback renders that
-// exact published content, so a normal visitor (and the very first paint of
-// an admin's own preview, before the client fetch below resolves) sees
-// nothing different from before this phase. Only once mounted client-side,
-// with `?editorPreview=true` in the URL, does this fetch the *same*
-// admin-gated `/api/admin/ui-builder/page-content/draft?pageKey=global`
-// route every other page's inspector already uses (no new API route) and
-// overlay the result — a 401/403 (not signed in, or signed in as a
-// non-admin) simply leaves the published content in place, matching every
-// other page's own server-side admin gate exactly.
+// `crisisButtonContent` — a normal visitor (and the very first paint of an
+// admin's own preview, before the client fetch below resolves) sees nothing
+// different from before this phase. Only once mounted client-side, with
+// `?editorPreview=true` in the URL, does this fetch the *same* admin-gated
+// `/api/admin/ui-builder/page-content/draft?pageKey=global` route every
+// other page's inspector already uses (no new API route) and overlay the
+// result — a 401/403 (not signed in, or signed in as a non-admin) simply
+// leaves the published content in place, matching every other page's own
+// server-side admin gate exactly.
 function buildOverlay(fields: Record<string, string>): {
   header: Partial<HeaderContent>;
   footer: Partial<FooterContent>;
@@ -67,20 +86,7 @@ type GateProps = {
   children: ReactNode;
 };
 
-function StaticGlobalContent({ headerContent, footerContent, crisisButtonContent, children }: GateProps) {
-  return (
-    <>
-      <Header content={headerContent} />
-      {children}
-      <SiteFooterSlot footerContent={footerContent} headerContent={headerContent} />
-      <CrisisButton content={crisisButtonContent} />
-    </>
-  );
-}
-
-function GlobalContentInner({ headerContent, footerContent, crisisButtonContent, children }: GateProps) {
-  const searchParams = useSearchParams();
-  const wantsPreview = searchParams.get("editorPreview") === "true";
+export default function GlobalContentGate({ headerContent, footerContent, crisisButtonContent, children }: GateProps) {
   const [isEditorPreview, setIsEditorPreview] = useState(false);
   const [overlay, setOverlay] = useState<{
     header: Partial<HeaderContent>;
@@ -89,6 +95,13 @@ function GlobalContentInner({ headerContent, footerContent, crisisButtonContent,
   } | null>(null);
 
   useEffect(() => {
+    // Phase 185 — read directly off the browser's own URL instead of
+    // next/navigation's useSearchParams(), specifically so this component
+    // needs no Suspense boundary at all (see the top-of-file comment). Only
+    // ever runs once, on mount — see that same comment for why a shared
+    // root layout not remounting on navigation makes that the correct
+    // behavior here, not a regression.
+    const wantsPreview = new URLSearchParams(window.location.search).get("editorPreview") === "true";
     if (!wantsPreview) return;
     let cancelled = false;
     fetch("/api/admin/ui-builder/page-content/draft?pageKey=global", { credentials: "same-origin" })
@@ -105,7 +118,7 @@ function GlobalContentInner({ headerContent, footerContent, crisisButtonContent,
     return () => {
       cancelled = true;
     };
-  }, [wantsPreview]);
+  }, []);
 
   const mergedHeader = overlay ? { ...headerContent, ...overlay.header } : headerContent;
   const mergedFooter = overlay ? { ...footerContent, ...overlay.footer } : footerContent;
@@ -121,14 +134,6 @@ function GlobalContentInner({ headerContent, footerContent, crisisButtonContent,
   );
 
   return isEditorPreview ? <EditorPreviewBridge>{tree}</EditorPreviewBridge> : tree;
-}
-
-export default function GlobalContentGate(props: GateProps) {
-  return (
-    <Suspense fallback={<StaticGlobalContent {...props} />}>
-      <GlobalContentInner {...props} />
-    </Suspense>
-  );
 }
 
 export { HEADER_CONTENT_FALLBACK, FOOTER_CONTENT_FALLBACK, CRISIS_BUTTON_CONTENT_FALLBACK };
