@@ -7814,3 +7814,52 @@ Roy — same as every phase: please run those five one at a time (note the two e
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 175: password visibility toggles + a repaired, role-safe password-recovery flow
+
+**Request:** add a show/hide toggle to every password field across Sign In, Sign Up, and Reset Password; make Forgot Password fully functional without ever disclosing whether an email belongs to a client, therapist, or admin; add a Confirm Password field and stronger password policy; use friendly, non-leaky error messages throughout; and (where the existing architecture already supports it) invalidate other sessions after a reset.
+
+**Audit first:** the forgot-password/reset-password flow (`app/forgot-password/page.tsx`, `app/reset-password/page.tsx`) already existed end-to-end since Phase 78, using Supabase's own `resetPasswordForEmail`/`updateUser` — genuinely not a gap, just something this phase had to extend without breaking. There is no separate admin sign-in page — `/login` is shared by every role, and role-gating happens after login via server guards (`lib/auth/requireAdmin.ts` etc.), which this phase doesn't touch. No password field anywhere had a show/hide toggle, no shared `Input`/`PasswordInput` component existed, Sign Up had no Confirm Password field, and there was no password-strength policy beyond `minLength={8}`.
+
+**New files:**
+- **`components/ui/PasswordInput.tsx`** — the shared show/hide field used everywhere below. Starts masked, toggles via a real `<button type="button">` (never submits the form), accessible name switches between "Show password"/"Hide password" with `aria-pressed`, 44px touch target, each instance has its own `useState` so multiple fields on one form toggle independently, and the toggle never touches the input's own value.
+- **`components/ui/PasswordRequirements.tsx`** — live checklist under a new-password field, reads the same rules as the policy module below.
+- **`lib/auth/passwordPolicy.ts`** — 12+ characters, upper/lower/number/symbol, plus a small hardcoded commonly-compromised-password backstop (not a network-based breach check — this form makes no network calls for it).
+- **`lib/auth/authErrors.ts`** — maps raw Supabase Auth error strings to the calm, generic copy the spec asks for (rate-limit, network, invalid/expired-link, mismatched-password cases), so nothing backend-specific ever reaches the screen; every branch falls back to a safe generic message rather than showing `error.message` verbatim.
+- **`components/account/ChangePasswordForm.tsx`** — new "Change Password" section for Account Settings (there was no such feature before at all, not just missing a toggle).
+
+**Changed files:**
+- **`app/login/page.tsx`** — password field now uses `PasswordInput` (no strength policy here — this checks an existing password, doesn't choose a new one).
+- **`app/signup/page.tsx`** — password field uses `PasswordInput` with the live requirements checklist; added the previously-missing **Confirm Password** field; both are validated (match, then strength) before `supabase.auth.signUp` is ever called.
+- **`app/forgot-password/page.tsx`** — unchanged behavior (it was already correct: neutral "if an account exists…" copy regardless of whether the email is registered, redirect to `/reset-password`), except the failure path now shows a friendly mapped message instead of Supabase's raw error string.
+- **`app/reset-password/page.tsx`** — both fields use `PasswordInput` + the requirements checklist; added the 12-char/upper/lower/number/symbol policy; the confirmation copy now reads "Your password has been reset. Please sign in with your new password." (matching the spec's suggested wording); an expired/invalid/reused link now shows "This reset link is no longer valid. Request a new password reset link." with an actual link to `/forgot-password`, instead of Supabase's raw error string on a dead-end form; and on success, calls `supabase.auth.signOut({ scope: "others" })` to revoke every other active session for that account, using the current recovery session's own token (no service-role/admin API needed, works for every role, matters most for admin accounts per the spec).
+- **`app/account/page.tsx`** — renders the new `ChangePasswordForm` below the existing account-details form.
+
+**Role safety (spec section 3):** nothing here was touched to make this true — it was already true. `/login` never branches by role, `resetPasswordForEmail` always returns the same response regardless of whether the email is registered or which role it belongs to (Supabase's own behavior, unit-tested), and post-reset the user always lands on the same `/login` page every role already shares; role-based routing/permissions (`requireAdmin`/`requireTherapist`/`requireUser`) are downstream of login and untouched by any of this.
+
+**Explicitly out of reach from this sandbox — needs your action:**
+- **Password-reset email template/copy** — this repo has no `supabase/config.toml` or `supabase/templates/` folder, so Supabase's recovery email is managed entirely in the Supabase Dashboard (Authentication → Email Templates → "Reset Password"), not in code. Suggested subject/body, ready to paste in:
+  - Subject: `Reset your GESA password`
+  - Body: "You requested a password reset for your GESA account. Use the secure link below to choose a new password. This link will expire soon. If you did not request this, you can safely ignore this email." (plus Supabase's own `{{ .ConfirmationURL }}` button/link merge tag.)
+- **Token expiration window** — also a Supabase Dashboard setting (Authentication → Providers/Settings, the recovery-link/OTP expiry), not something this code controls. Spec asks for 30–60 minutes; please set that in the dashboard if it isn't already.
+- **Rate limiting** — no custom rate-limiting code was added; this relies entirely on Supabase Auth's own built-in limits on `resetPasswordForEmail`/`updateUser`, same as before this phase. Building custom throttling would need a new backend surface (e.g. an API route + a store to count attempts) that didn't exist and felt out of scope for a "targeted improvement" — flag if you want that built out as its own phase.
+- **`NEXT_PUBLIC_SITE_URL` / Supabase redirect allow-list** — `app/forgot-password/page.tsx` already builds the reset link from `NEXT_PUBLIC_SITE_URL` (see `ENV_VARS.md`), but please confirm that variable is actually set to `https://gesa-platform.vercel.app` in Vercel's Production scope, and that the exact same URL is added to Supabase's Dashboard → Authentication → URL Configuration → Redirect URLs allow-list — Supabase silently rejects a `redirectTo` that isn't on that list.
+- **Security-event logging** — no logging infrastructure exists in this repo to hook into (confirmed via search); not added.
+
+**Tests:** updated `tests/unit/ForgotPasswordPage.test.tsx` and `tests/unit/ResetPasswordPage.test.tsx` (old fixtures used a password that no longer meets the new policy, and asserted the old raw-error-message behavior this phase deliberately changed) and added three new files: `tests/unit/PasswordInput.test.tsx`, `tests/unit/SignupPage.test.tsx` (no signup test existed before), and `tests/unit/passwordPolicy.test.ts`.
+
+**Verification — please read carefully:** this sandbox's shell stopped working partway through this phase (a virtual-filesystem mount error, five consecutive failures) and never recovered, so **`npx tsc --noEmit` and `npx jest` could not be run this round** — every change above was instead checked by hand, file by file, re-reading each one in full after editing. This is a bigger, riskier phase than usual to ship unverified — please run both commands yourself before deploying, and treat this phase as needing your own review more than most.
+
+**Files changed:** `app/login/page.tsx`, `app/signup/page.tsx`, `app/forgot-password/page.tsx`, `app/reset-password/page.tsx`, `app/account/page.tsx`, `tests/unit/ForgotPasswordPage.test.tsx`, `tests/unit/ResetPasswordPage.test.tsx`. **New:** `components/ui/PasswordInput.tsx`, `components/ui/PasswordRequirements.tsx`, `lib/auth/passwordPolicy.ts`, `lib/auth/authErrors.ts`, `components/account/ChangePasswordForm.tsx`, `tests/unit/PasswordInput.test.tsx`, `tests/unit/SignupPage.test.tsx`, `tests/unit/passwordPolicy.test.ts`.
+
+```
+del .git\index.lock
+git add -A
+git commit -m "Phase 175: password visibility toggles + hardened password-recovery flow"
+git push
+```
+
+Roy — please run `npx tsc --noEmit` and `npx jest` locally before these four, since this round shipped without either check completing here. Then run the four one at a time and paste back what appears directly after the `git commit` line.
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

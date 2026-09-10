@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import Logo from "@/components/Logo";
 import GesaWordmark from "@/components/GesaWordmark";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyForgotPasswordError } from "@/lib/auth/authErrors";
 
 // Phase 78 — the login page had no way for a user who forgot their password
 // to get back into their account; this page (linked from a new "Forgot
@@ -66,7 +67,11 @@ export default function ForgotPasswordPage() {
             });
             setPending(false);
             if (resetError) {
-              setError(resetError.message);
+              // Phase 175 — was `resetError.message` (Supabase's raw string)
+              // — mapped through friendlyForgotPasswordError so nothing
+              // provider-specific (rate-limit internals, etc.) reaches the
+              // screen; see lib/auth/authErrors.ts.
+              setError(friendlyForgotPasswordError(resetError));
               return;
             }
             setDone(true);
@@ -85,7 +90,7 @@ export default function ForgotPasswordPage() {
             />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" block>
+          <Button type="submit" disabled={pending} block>
             {pending ? "Sending…" : "Send reset link"}
           </Button>
         </form>

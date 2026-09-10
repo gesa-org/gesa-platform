@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { requireUser } from "@/lib/auth/requireUser";
 import AccountForm from "@/components/account/AccountForm";
+import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,9 @@ export default async function AccountPage() {
       </div>
 
       <AccountForm profile={profile} />
+      {/* Phase 175 — new; previously the only way to change a password was
+          the forgot-password email flow. */}
+      <ChangePasswordForm />
     </section>
   );
 }

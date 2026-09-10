@@ -3,15 +3,23 @@
 import { useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
+import PasswordInput from "@/components/ui/PasswordInput";
+import PasswordRequirements from "@/components/ui/PasswordRequirements";
 import Logo from "@/components/Logo";
 import GesaWordmark from "@/components/GesaWordmark";
 import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
 import { createClient } from "@/lib/supabase/client";
+import { evaluatePassword } from "@/lib/auth/passwordPolicy";
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  // Phase 175 — tracked in state purely to drive the live PasswordRequirements
+  // checklist below the field as the visitor types; the actual submitted
+  // value still comes from FormData on submit, same as every other field on
+  // this form (this state isn't what gets sent to Supabase).
+  const [password, setPassword] = useState("");
 
   if (done) {
     return (
@@ -42,15 +50,35 @@ export default function SignupPage() {
           className="flex flex-col gap-3.5"
           onSubmit={async (e) => {
             e.preventDefault();
-            setPending(true);
             setError(null);
             const data = new FormData(e.currentTarget);
             const email = String(data.get("email") ?? "");
             const fullName = String(data.get("full_name") ?? "");
+            const passwordValue = String(data.get("password") ?? "");
+            const confirmPassword = String(data.get("confirm_password") ?? "");
+            // Phase 175 — Roy's spec: "Confirm Password field... validate
+            // that the password and confirmation match before account
+            // creation." Checked client-side before ever calling Supabase,
+            // same order-of-operations as the existing reset-password page.
+            if (passwordValue !== confirmPassword) {
+              setError("Passwords do not match.");
+              return;
+            }
+            // Phase 175 — password-strength policy (lib/auth/passwordPolicy.ts):
+            // 12+ characters, upper/lower/number/symbol, and a small
+            // commonly-compromised-password backstop. Supabase's own default
+            // policy is just a length minimum, so this is the actual
+            // effective policy for new accounts.
+            const { passed } = evaluatePassword(passwordValue);
+            if (!passed) {
+              setError("Choose a stronger password that meets the requirements below.");
+              return;
+            }
+            setPending(true);
             const supabase = createClient();
             const { error: signUpError } = await supabase.auth.signUp({
               email,
-              password: String(data.get("password") ?? ""),
+              password: passwordValue,
               options: {
                 data: { full_name: fullName, role: "client" },
               },
@@ -85,18 +113,22 @@ export default function SignupPage() {
               className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
             />
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold">Password</label>
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={8}
-              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-            />
-          </div>
+          <PasswordInput
+            id="signup-password"
+            name="password"
+            label="Password"
+            required
+            minLength={12}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            hint={<PasswordRequirements password={password} />}
+          />
+          {/* Phase 175 — new field per Roy's spec; previously this form had
+              no confirmation field at all. Independent show/hide toggle
+              from the one above (each PasswordInput owns its own state). */}
+          <PasswordInput id="signup-confirm-password" name="confirm_password" label="Confirm password" required minLength={12} />
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" block>
+          <Button type="submit" disabled={pending} block>
             {pending ? "Creating account…" : "Create account"}
           </Button>
         </form>

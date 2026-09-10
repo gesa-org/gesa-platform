@@ -30,14 +30,21 @@ describe("ForgotPasswordPage", () => {
     expect(await screen.findByText("Check your email")).toBeInTheDocument();
   });
 
-  it("shows a real error message when the request itself fails (e.g. rate limiting, network)", async () => {
+  it("shows a friendly, generic error message when the request itself fails (e.g. rate limiting, network) rather than the raw provider message", async () => {
+    // Phase 175 — this used to assert the raw Supabase error string
+    // ("Too many requests") was shown verbatim. Roy's spec explicitly asks
+    // for backend details to never reach the screen — friendlyForgotPasswordError
+    // (lib/auth/authErrors.ts) now maps this to a generic, safe message
+    // instead, so this test asserts the mapped copy and that the raw
+    // provider string is nowhere on screen.
     mockResetPasswordForEmail.mockResolvedValueOnce({ error: { message: "Too many requests" } });
     render(<ForgotPasswordPage />);
 
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "user@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
 
-    expect(await screen.findByText("Too many requests")).toBeInTheDocument();
+    expect(await screen.findByText("Too many reset requests. Please wait a few minutes and try again.")).toBeInTheDocument();
+    expect(screen.queryByText("Too many requests")).not.toBeInTheDocument();
     expect(screen.queryByText("Check your email")).not.toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import PasswordInput from "@/components/ui/PasswordInput";
 import Logo from "@/components/Logo";
 import GesaWordmark from "@/components/GesaWordmark";
 import { createClient } from "@/lib/supabase/client";
@@ -57,8 +58,16 @@ export default function LoginPage() {
             />
           </div>
           <div>
+            {/* Phase 175 — PasswordInput renders its own <label>, but this
+                field also needs the "Forgot password?" link sharing the
+                same row as that label, so the row is built here instead of
+                passing `label` through — same visible label text and
+                htmlFor/id pairing as before ("Password" / "login-password"),
+                just split across two elements. */}
             <div className="mb-1.5 flex items-center justify-between">
-              <label className="block text-sm font-semibold">Password</label>
+              <label htmlFor="login-password" className="block text-sm font-semibold">
+                Password
+              </label>
               {/* Phase 78 — Roy sent a screenshot of this exact login card
                   flagging that there was no way for a user who forgot their
                   password to actually get back in — the only options were
@@ -68,15 +77,18 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <input
-              name="password"
-              type="password"
-              required
-              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-            />
+            {/* Phase 175 — added the shared show/hide toggle. `label` is
+                omitted since the visible "Password" label above is already
+                htmlFor="login-password" — PasswordInput skips rendering its
+                own <label> whenever `label` isn't passed, so this field
+                still has exactly one label, not two. No strength policy
+                here on purpose (see lib/auth/passwordPolicy.ts) — this
+                field is checking an existing password, not choosing a new
+                one. */}
+            <PasswordInput id="login-password" name="password" required />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" block>
+          <Button type="submit" disabled={pending} block>
             {pending ? "Signing in…" : "Sign in"}
           </Button>
         </form>
