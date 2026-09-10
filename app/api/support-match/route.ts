@@ -21,12 +21,23 @@ import type { GenderPreference, SessionFormat } from "@/lib/database.types";
 // Contact details are now collected later, on the Matches step itself, and
 // saved by /api/support-request/select-therapist instead — the only point
 // in the new flow where they actually exist.
+//
+// Phase 184 — this is now also where the support_requests row for the AI
+// pathway is *created* (see the `supportRequestId` branch below), not just
+// updated. Previously, MatchWizard.tsx created this row the instant a
+// client clicked "AI Support," before any real answer existed — a client
+// who opened the wizard and immediately left still left behind a
+// `status: "started"` CRM row and a matching admin notification. That row
+// is created here instead, the first time this route runs, which only ever
+// happens once the client has actually filled in Preferences/Format/
+// Feelings and clicked Submit. See EXECUTION_PLAN.md Phase 184 for the full
+// writeup of the bug this replaces.
 const GENDER_VALUES: GenderPreference[] = ["woman", "man", "nonbinary", "no_preference"];
 const FORMAT_VALUES: SessionFormat[] = ["online", "call", "in_person"];
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  const supportRequestId = body?.supportRequestId as string | undefined;
+  const providedSupportRequestId = body?.supportRequestId as string | undefined;
   const answers = body?.answers as Record<string, unknown> | undefined;
 
   if (!answers) {
@@ -58,27 +69,42 @@ export async function POST(request: Request) {
 
   const adminSupabase = createAdminClient();
 
+  // Phase 184 — this is the real "submit" moment for the AI Support pathway:
+  // if the client doesn't already have a support_requests row (the normal
+  // case — MatchWizard no longer creates one on mount), create it now, with
+  // the actual answers they just submitted. If they somehow already have an
+  // id (e.g. they went back and resubmitted within the same wizard session),
+  // reuse that row via UPDATE instead of inserting a second one.
+  const preferenceFields = {
+    status: "preferences_submitted" as const,
+    treatment_type: treatmentType,
+    gender_preference: genderPreference,
+    preferred_language: preferredLanguage,
+    session_format: sessionFormat,
+    clinic_location_id: sessionFormat === "in_person" ? clinicLocationId : null,
+    feelings_text: feelingsText,
+    crisis_disclaimer_shown_at: new Date().toISOString(),
+  };
+
+  let supportRequestId = providedSupportRequestId ?? null;
+
   if (supportRequestId) {
-    await adminSupabase
+    await adminSupabase.from("support_requests").update(preferenceFields).eq("id", supportRequestId);
+  } else {
+    const { data: created, error: insertError } = await adminSupabase
       .from("support_requests")
-      .update({
-        status: "preferences_submitted",
-        treatment_type: treatmentType,
-        gender_preference: genderPreference,
-        preferred_language: preferredLanguage,
-        session_format: sessionFormat,
-        clinic_location_id: sessionFormat === "in_person" ? clinicLocationId : null,
-        feelings_text: feelingsText,
-        crisis_disclaimer_shown_at: new Date().toISOString(),
-      })
-      .eq("id", supportRequestId);
+      .insert({ ...preferenceFields, pathway: "ai", source_page: "find-your-therapist" })
+      .select("id")
+      .single();
+    if (insertError || !created) {
+      return NextResponse.json({ error: "could not save your preferences" }, { status: 500 });
+    }
+    supportRequestId = created.id;
   }
 
   if (!baseTherapists || baseTherapists.length === 0) {
-    if (supportRequestId) {
-      await adminSupabase.from("support_requests").update({ status: "no_match" }).eq("id", supportRequestId);
-    }
-    return NextResponse.json({ matches: [] });
+    await adminSupabase.from("support_requests").update({ status: "no_match" }).eq("id", supportRequestId);
+    return NextResponse.json({ matches: [], supportRequestId });
   }
 
   // Same reasoning as /api/match: has_whatsapp is a derived boolean from a
@@ -107,17 +133,15 @@ export async function POST(request: Request) {
     })
     .filter((m): m is { therapist: (typeof therapists)[number]; reasoning: string } => m !== null);
 
-  if (supportRequestId) {
-    await adminSupabase
-      .from("support_requests")
-      .update({
-        status: matches.length > 0 ? "matched" : "no_match",
-        matched_therapist_ids: matches.map((m) => m.therapist.id),
-        ai_reasoning: Object.fromEntries(matches.map((m) => [m.therapist.id, m.reasoning])),
-        gender_preference_honored: genderPreferenceHonored,
-      })
-      .eq("id", supportRequestId);
-  }
+  await adminSupabase
+    .from("support_requests")
+    .update({
+      status: matches.length > 0 ? "matched" : "no_match",
+      matched_therapist_ids: matches.map((m) => m.therapist.id),
+      ai_reasoning: Object.fromEntries(matches.map((m) => [m.therapist.id, m.reasoning])),
+      gender_preference_honored: genderPreferenceHonored,
+    })
+    .eq("id", supportRequestId);
 
-  return NextResponse.json({ matches, genderPreferenceHonored });
+  return NextResponse.json({ matches, genderPreferenceHonored, supportRequestId });
 }

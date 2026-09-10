@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import StepPreferences from "@/components/match/StepPreferences";
 import StepFormatLocation from "@/components/match/StepFormatLocation";
 import StepFeelings from "@/components/match/StepFeelings";
@@ -17,14 +17,26 @@ import type { Tables } from "@/lib/database.types";
 // compact section on the Matches step itself rather than their own step.
 const STEP_LABELS = ["Preferences", "Format & Location", "Feelings", "Matches"];
 
-// Phase 142 — this wizard creates its own support_requests row (pathway
-// "ai") the moment it mounts, i.e. the moment a client picks "AI Support" on
-// the choice screen — see /api/support-pathway. Later steps update that
-// same row (via /api/support-match at the "AI Support Match" submit, and
+// Phase 142 — this wizard's journey lives in a single support_requests row,
+// updated (not re-created) at each real step: created by /api/support-match
+// at the "AI Support Match" submit, then updated again by
 // /api/support-request/select-therapist once contact details are filled in
-// and a match card's booking button is first opened) rather than creating
-// separate records, so the whole journey is one CRM row from start to
-// finish.
+// and a match card's booking button is first opened.
+//
+// Phase 184 — this row used to be created the instant a client picked "AI
+// Support" on the choice screen (a `useEffect` on mount, POSTing to
+// /api/support-pathway) — before any real answer existed. A client who
+// opened this wizard and immediately closed the tab still left behind a
+// `status: "started"` CRM row with a blank name/email, which the admin
+// notification bell and dashboard both surfaced as a real "New Find Support
+// request." Worse, ChoiceScreen.tsx *also* logged its own separate
+// support_requests row for the same click (its returned id was discarded,
+// never reused here), so one "AI Support" click produced two orphaned rows.
+// Both are removed: `supportRequestId` now starts `null` and is only ever
+// set from the real response of /api/support-match, once the client has
+// actually filled in Preferences/Format/Feelings and clicked Submit — the
+// first point a genuine, complete answer set exists. See
+// EXECUTION_PLAN.md Phase 184 for the full writeup.
 export default function MatchWizard({ clinicLocations }: { clinicLocations: Tables<"clinic_locations">[] }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<WizardAnswers>(EMPTY_ANSWERS);
@@ -35,33 +47,18 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
   const [submittingMatch, setSubmittingMatch] = useState(false);
   const selectedTherapistIds = useRef(new Set<string>());
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/support-pathway", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pathway: "ai" }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled && data?.id) setSupportRequestId(data.id as string);
-      })
-      .catch(() => {
-        // Non-fatal — the wizard still works end-to-end for the client even
-        // if this particular row never got created; it just won't show up
-        // in the CRM. Later writes (support-match, select-therapist) simply
-        // no-op without a supportRequestId.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   function update<K extends keyof WizardAnswers>(key: K, value: WizardAnswers[K]) {
     setAnswers((a) => ({ ...a, [key]: value }));
   }
 
   async function submitForMatches() {
+    // Phase 184 — synchronous re-entrancy guard, checked before the button's
+    // own `disabled={submitting}` has had a chance to re-render: two rapid
+    // clicks in the same tick would otherwise both pass the disabled check
+    // and both call this function, each creating its own support_requests
+    // row (the API route can't tell them apart — from its side, two calls
+    // with no supportRequestId look like two separate submissions).
+    if (submittingMatch) return;
     setSubmittingMatch(true);
     setMatchError(false);
     setMatches(null);
@@ -73,6 +70,12 @@ export default function MatchWizard({ clinicLocations }: { clinicLocations: Tabl
       });
       if (!res.ok) throw new Error("match request failed");
       const data = await res.json();
+      // Phase 184 — this response is the first place a real support_requests
+      // id ever exists (the route creates the row on this exact call, now
+      // that nothing creates it earlier) — captured here, not assumed to
+      // already be set, so a retried/resubmitted request reuses the same
+      // row instead of the route creating a second one.
+      if (data?.supportRequestId) setSupportRequestId(data.supportRequestId as string);
       setMatches(data.matches ?? []);
       setGenderPreferenceHonored(data.genderPreferenceHonored ?? true);
       setStep(3);
