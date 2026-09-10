@@ -33,7 +33,11 @@ export default function VolunteerApplicationStatusSelect({ id, status }: { id: s
       const supabase = createClient();
       const { error } = await supabase
         .from("therapist_applications")
-        .update({ status: next, reviewed_at: new Date().toISOString() })
+        // `next` is always one of STATUSES at runtime (it's only ever set
+        // from this <select>'s own options below), but TS sees the raw
+        // `onChange(next: string)` param — narrow it here so it satisfies
+        // the generated `TherapistApplicationStatus` column type.
+        .update({ status: next as (typeof STATUSES)[number], reviewed_at: new Date().toISOString() })
         .eq("id", id);
       if (error) {
         setError("Couldn't save — try again.");
