@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   const fullName = (body?.fullName as string | undefined)?.trim() ?? "";
   const email = (body?.email as string | undefined)?.trim().toLowerCase() ?? "";
-  const role = (body?.role as string | undefined) ?? "client";
+  const requestedRole = (body?.role as string | undefined) ?? "client";
 
   if (!fullName) {
     return NextResponse.json({ error: "Full name is required." }, { status: 400 });
@@ -70,9 +70,17 @@ export async function POST(request: Request) {
   if (!email || !email.includes("@")) {
     return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
   }
-  if (!VALID_ROLES.includes(role as AppRole)) {
+  if (!VALID_ROLES.includes(requestedRole as AppRole)) {
     return NextResponse.json({ error: "Invalid role." }, { status: 400 });
   }
+  // Narrowed to the real AppRole union only after the VALID_ROLES.includes()
+  // check above — `Array.prototype.includes()` doesn't narrow its argument's
+  // type on its own, so `requestedRole` was still plain `string` right up to
+  // this line. That's what the build caught: `profiles.role` is typed
+  // `AppRole`, and passing a bare `string` into `.update({ role })` below
+  // doesn't type-check, even though the runtime value is always safe once
+  // it's passed the check above.
+  const role = requestedRole as AppRole;
 
   // SUPABASE_SERVICE_ROLE_KEY was previously unset in every environment
   // (documented in EXECUTION_PLAN.md/ENV_VARS.md as "not yet used by any
