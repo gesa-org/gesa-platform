@@ -8,6 +8,12 @@ import type { Tables } from "@/lib/database.types";
 // other role, even though some read-only RLS policies elsewhere in the app
 // bundle admin + reviewer together for unrelated features.
 //
+// Phase 187 — "super_admin" is a strict superset of "admin" for every CRM
+// access check (see lib/database.types.ts's AppRole comment), so it's
+// allowed through here too. Super-Admin-only actions (inviting another
+// Super Admin, deactivating one) use requireSuperAdmin() instead — see that
+// file.
+//
 // This is defense-in-depth on top of Postgres RLS, not a replacement for it:
 // every query an admin page makes still runs under that user's own session
 // and is independently enforced by the *_admin_read / *_admin_update
@@ -19,7 +25,7 @@ export async function requireAdmin(): Promise<Tables<"profiles">> {
   if (!profile) {
     redirect("/login?next=/admin");
   }
-  if (profile.role !== "admin") {
+  if (profile.role !== "admin" && profile.role !== "super_admin") {
     redirect("/");
   }
 

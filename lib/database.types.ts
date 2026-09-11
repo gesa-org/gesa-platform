@@ -1,6 +1,12 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type AppRole = "admin" | "reviewer" | "therapist" | "client" | "finance";
+// Phase 187 — added "super_admin" (Postgres: `alter type app_role add value`).
+// A strict superset of "admin" for authorization purposes everywhere
+// `role === "admin"` is checked for CRM access; reserved beyond that for a
+// small number of Super-Admin-only actions (inviting another Super Admin,
+// deactivating one) — see lib/auth/requireAdmin.ts and
+// lib/auth/requireSuperAdmin.ts.
+export type AppRole = "admin" | "reviewer" | "therapist" | "client" | "finance" | "super_admin";
 export type DocumentStatus = "pending" | "approved" | "rejected" | "expired";
 export type DocumentType = "certificate" | "license" | "insurance" | "agreement";
 export type GenderType = "woman" | "man" | "nonbinary" | "no_preference";
@@ -569,6 +575,37 @@ export type GesaAdminAuditLogRow = {
   created_at: string | null;
 };
 
+// Phase 187 — invitation-only onboarding. See lib/invitations.ts for token
+// generation/hashing/validation and EXECUTION_PLAN.md's Phase 187 entry for
+// the full data model rationale. `token_hash` is a sha256 hex digest — the
+// raw token is never persisted anywhere.
+export type InvitationStatus = "draft" | "sent" | "opened" | "accepted" | "expired" | "revoked" | "failed";
+export type InvitedRole = "therapist" | "admin" | "super_admin";
+
+export type InvitationRow = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  invited_role: InvitedRole;
+  therapist_profile_id: string | null;
+  volunteer_application_id: string | null;
+  invited_by_user_id: string | null;
+  token_hash: string;
+  token_expires_at: string;
+  status: InvitationStatus;
+  sent_at: string | null;
+  opened_at: string | null;
+  accepted_at: string | null;
+  accepted_profile_id: string | null;
+  revoked_at: string | null;
+  revoked_by_user_id: string | null;
+  last_resent_at: string | null;
+  resend_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type TherapistApplicationRow = {
   id: string;
   full_name: string;
@@ -724,6 +761,7 @@ export type Database = {
       crisis_resources: { Row: CrisisResourceRow; Insert: Partial<CrisisResourceRow> & Pick<CrisisResourceRow, "hotline" | "region">; Update: Partial<CrisisResourceRow>; Relationships: [] };
       faqs: { Row: FaqRow; Insert: Partial<FaqRow> & Pick<FaqRow, "question" | "answer">; Update: Partial<FaqRow>; Relationships: [] };
       gesa_admin_audit_log: { Row: GesaAdminAuditLogRow; Insert: Partial<GesaAdminAuditLogRow>; Update: Partial<GesaAdminAuditLogRow>; Relationships: [] };
+      invitations: { Row: InvitationRow; Insert: Partial<InvitationRow>; Update: Partial<InvitationRow>; Relationships: [] };
       group_registrations: { Row: GroupRegistrationRow; Insert: Partial<GroupRegistrationRow> & Pick<GroupRegistrationRow, "email" | "group_id" | "name">; Update: Partial<GroupRegistrationRow>; Relationships: [] };
       inquiries: { Row: InquiryRow; Insert: Partial<InquiryRow>; Update: Partial<InquiryRow>; Relationships: [] };
       legal_pages: { Row: LegalPageRow; Insert: Partial<LegalPageRow> & Pick<LegalPageRow, "slug" | "title">; Update: Partial<LegalPageRow>; Relationships: [] };

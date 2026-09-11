@@ -23,6 +23,7 @@ function renderControl(overrides: Partial<Parameters<typeof VolunteerApplication
   const props = {
     id: "app-1",
     fullName: "Jamie Rivera",
+    email: "jamie@example.com",
     status: "new" as const,
     linkedProfile: null,
     onStatusChange: jest.fn(),

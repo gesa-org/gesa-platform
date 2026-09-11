@@ -4,7 +4,14 @@ import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { AppRole } from "@/lib/database.types";
 
-const ROLES: AppRole[] = ["admin", "reviewer", "therapist", "client", "finance"];
+// Phase 187 — "admin", "super_admin", and "therapist" removed from this
+// direct dropdown. Those three roles now require going through the
+// invitation flow (Administrators page / Our Professionals "Send
+// invitation") instead of an instant role flip here — see
+// app/api/admin/users/route.ts's own comment for the same reasoning applied
+// to account creation.
+const EDITABLE_ROLES: AppRole[] = ["reviewer", "client", "finance"];
+const PROTECTED_ROLES = new Set<AppRole>(["admin", "super_admin", "therapist"]);
 
 // Same pattern as BookingStatusSelect: the write goes through the browser
 // client under the admin's own session, enforced by the
@@ -24,9 +31,28 @@ export default function RoleSelect({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  // Phase 187 — a row whose CURRENT role is admin/super_admin/therapist is
+  // shown as a plain read-only label, not a dropdown that would otherwise
+  // have to either omit the option it's currently set to (an invalid <select
+  // value>) or let it be picked again as if it were a normal, instantly-
+  // reversible toggle. Changing *out of* one of these roles still isn't
+  // possible from here on purpose — see the Administrators page for
+  // Administrator/Super Admin, and Our Professionals' account-status actions
+  // for Professional.
+  if (PROTECTED_ROLES.has(role)) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-[13px] font-medium text-muted-fg"
+        title="Managed from the Administrators page or Our Professionals, not here."
+      >
+        {role === "super_admin" ? "Super Admin" : role === "admin" ? "Admin" : "Professional"}
+      </span>
+    );
+  }
+
   function onChange(next: AppRole) {
-    if (isSelf && next !== "admin") {
-      setError("You can't remove your own admin access here.");
+    if (isSelf) {
+      setError("You can't change your own role here.");
       return;
     }
     setValue(next);
@@ -50,7 +76,7 @@ export default function RoleSelect({
         title={isSelf ? "You can't change your own role" : undefined}
         className="rounded-full border border-border bg-card px-3 py-1.5 text-[13px] font-medium text-primary focus:outline-none disabled:opacity-60"
       >
-        {ROLES.map((r) => (
+        {EDITABLE_ROLES.map((r) => (
           <option key={r} value={r}>
             {r}
           </option>

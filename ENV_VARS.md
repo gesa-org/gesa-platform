@@ -15,14 +15,14 @@ non-`uat` branch automatically).
 |---|---|---|
 | 🌐 `NEXT_PUBLIC_SUPABASE_URL` | `https://ggjvpfivyqartvanvhzq.supabase.co` | Dev Supabase project (`gesa-dev`) |
 | 🌐 `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `sb_publishable_pwqblE4IsgIS51akreuPwA_vdrHnYza` | Publishable key. Legacy anon JWT also works if a library needs it: see note below |
-| 🔒 `SUPABASE_SERVICE_ROLE_KEY` | *(get from Supabase Dashboard → gesa-dev → Project Settings → API)* | Not fetchable by me — grab it yourself |
+| 🔒 `SUPABASE_SERVICE_ROLE_KEY` | *(get from Supabase Dashboard → gesa-dev → Project Settings → API)* | Not fetchable by me — grab it yourself. Required for: "Add user" (`/admin/users`), therapist archive/deactivate (Phase 186), and — as of Phase 187 — every invitation-acceptance account creation and administrator deactivation. Without it, those specific actions fail with a clear "missing SUPABASE_SERVICE_ROLE_KEY" error rather than a silent/opaque one. |
 | 🔒 `RESEND_API_KEY` | *(your Resend dev/test API key)* | Leave blank to keep emails no-op'd (current behavior) |
 | 🔒 `ANTHROPIC_API_KEY` | *(your Anthropic API key)* | Powers the "Find Your Therapist" AI-matching wizard (Phase 9). Get one from console.anthropic.com. Leave blank and matching silently falls back to a simpler rule-based scorer — the feature still works, just without AI reasoning. |
 | 🔒 `GOOGLE_TRANSLATE_API_KEY` | *(your Google Cloud Translation API key)* | Powers site-wide language translation (Phase 10). Get one from console.cloud.google.com — enable the "Cloud Translation API" on a project, then create an API key. Leave blank and the language picker still saves a preference but no longer translates the page. |
 | 🔒 `RESEND_FROM_EMAIL` | `GESA <no-reply@gesa.org>` | Needs a domain verified in Resend before real sends work |
 | 🔒 `GESA_CONTACT_INBOX` | `gesa.org26@gmail.com` | Where every admin/team notification lands (contact form, Find Support requests, bookings, volunteer applications, donations, group registrations). See Phase 177 in EXECUTION_PLAN.md — if this is missing or not a valid email, the app now falls back to this same address as a temporary default and shows a warning on the CRM Dashboard; it no longer falls back to the old "hello@gesa.org" placeholder. |
 | 🌐 `NEXT_PUBLIC_GESA_CONTACT_EMAIL` | `gesa.org26@gmail.com` | Optional. The address shown *publicly* (Contact page, footer). Defaults to the same value as `GESA_CONTACT_INBOX` (see `lib/contact.ts`) if left unset — only set this if the public-facing address should ever differ from where notifications actually land. |
-| 🌐 `NEXT_PUBLIC_SITE_URL` | `https://<your-preview-domain>.vercel.app` | Vercel sets a per-deploy URL automatically; leave blank to let the app fall back, or use `VERCEL_URL` |
+| 🌐 `NEXT_PUBLIC_SITE_URL` | `https://<your-preview-domain>.vercel.app` | Vercel sets a per-deploy URL automatically; leave blank to let the app fall back, or use `VERCEL_URL`. Phase 187 — also used to build the link inside every invitation email; if unset, falls back to the request's own `Origin`/`Host` header, then a hardcoded production URL — see `lib/invitations.ts`'s `baseUrlFromRequest()`. |
 | 🌐 `NEXT_PUBLIC_APP_ENV` | `development` | |
 
 ## UAT (branch `uat`)
@@ -54,7 +54,7 @@ Vercel scope: **Production**.
 | 🔒 `RESEND_FROM_EMAIL` | `GESA <no-reply@gesa.org>` | |
 | 🔒 `GESA_CONTACT_INBOX` | `gesa.org26@gmail.com` | Same as Dev — see the note in the Dev table above. This is the one Roy needs live in Production for the CRM Dashboard's "Email delivery isn't fully configured" warning to clear. |
 | 🌐 `NEXT_PUBLIC_GESA_CONTACT_EMAIL` | `gesa.org26@gmail.com` | Optional, same as Dev. |
-| 🌐 `NEXT_PUBLIC_SITE_URL` | `https://gesa.org` (or whatever domain you point at this Vercel project) | |
+| 🌐 `NEXT_PUBLIC_SITE_URL` | `https://gesa.org` (or whatever domain you point at this Vercel project) | Phase 187 — must be set correctly in Production so invitation emails link to the real production domain, not a fallback. |
 | 🌐 `NEXT_PUBLIC_APP_ENV` | `production` | |
 
 **Before going live on `main`:** the Production Supabase project currently has

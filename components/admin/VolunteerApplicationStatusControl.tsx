@@ -35,6 +35,7 @@ const STATUS_LABELS: Record<TherapistApplicationStatus, string> = {
 export default function VolunteerApplicationStatusControl({
   id,
   fullName,
+  email,
   status,
   linkedProfile,
   onStatusChange,
@@ -42,6 +43,7 @@ export default function VolunteerApplicationStatusControl({
 }: {
   id: string;
   fullName: string;
+  email: string;
   status: TherapistApplicationStatus;
   // Phase 186 — set once this application has a linked therapists row
   // (from VolunteerApplicationsTable's own lookup) — null until then.
@@ -54,6 +56,7 @@ export default function VolunteerApplicationStatusControl({
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [creatingProfile, setCreatingProfile] = useState(false);
+  const [invitePending, setInvitePending] = useState(false);
 
   function commitStatus(next: TherapistApplicationStatus) {
     setError(null);
@@ -91,7 +94,16 @@ export default function VolunteerApplicationStatusControl({
     commitStatus("approved");
   }
 
-  async function approveAndCreateProfile() {
+  // Phase 187 — shared by both "Approve and create professional profile"
+  // and "...and send invitation": the create-profile call is identical
+  // either way, only what happens after differs. `sendInvite` controls
+  // whether this also calls the invitations API with the application's own
+  // email before navigating to the new draft's editor — per the spec,
+  // "Send the invitation only after the profile and email are validated,"
+  // which is exactly what create-profile's own validation (approved status,
+  // no existing link) plus the invitations route's email-format check
+  // together guarantee.
+  async function approveAndCreateProfile(sendInvite: boolean) {
     setCreatingProfile(true);
     setError(null);
     try {
@@ -105,6 +117,30 @@ export default function VolunteerApplicationStatusControl({
       onStatusChange("approved");
       onProfileCreated(data.therapistId as string);
       setConfirmOpen(false);
+
+      if (sendInvite) {
+        setInvitePending(true);
+        const inviteRes = await fetch("/api/admin/invitations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            invitedRole: "therapist",
+            therapistProfileId: data.therapistId,
+            volunteerApplicationId: id,
+            firstName: fullName.split(/\s+/)[0] ?? null,
+          }),
+        });
+        const inviteData = await inviteRes.json().catch(() => null);
+        setInvitePending(false);
+        if (!inviteRes.ok) {
+          // The profile was still created — don't lose that on an
+          // invitation-send failure. Surface it and let the admin retry
+          // from Our Professionals' own "Send invitation" action instead.
+          setError(`Profile created, but the invitation couldn't be sent: ${inviteData?.error ?? "unknown error"}. You can send it from Our Professionals.`);
+        }
+      }
+
       // Straight to the full editor — spec: "Require the administrator to
       // review and edit all public-facing details before saving," and this
       // is the same "create minimal record, then edit everything else on
@@ -163,7 +199,7 @@ export default function VolunteerApplicationStatusControl({
           size="sm"
           variant="outline"
           className="mt-1.5"
-          onClick={approveAndCreateProfile}
+          onClick={() => approveAndCreateProfile(false)}
           disabled={creatingProfile}
         >
           {creatingProfile ? <Loader2 size={13} className="animate-spin" /> : null}
@@ -182,13 +218,18 @@ export default function VolunteerApplicationStatusControl({
           <Button type="button" variant="outline" onClick={approveOnly} disabled={creatingProfile}>
             Approve application only
           </Button>
-          <Button type="button" onClick={approveAndCreateProfile} disabled={creatingProfile}>
+          <Button type="button" variant="outline" onClick={() => approveAndCreateProfile(false)} disabled={creatingProfile}>
             {creatingProfile ? <Loader2 size={15} className="animate-spin" /> : null}
             {creatingProfile ? "Creating…" : "Approve and create professional profile"}
           </Button>
+          <Button type="button" onClick={() => approveAndCreateProfile(true)} disabled={creatingProfile || invitePending}>
+            {creatingProfile || invitePending ? <Loader2 size={15} className="animate-spin" /> : null}
+            {creatingProfile ? "Creating…" : invitePending ? "Sending invitation…" : "Approve, create profile, and send invitation"}
+          </Button>
           <p className="text-[11.5px] text-muted-fg">
             &quot;Approve application only&quot; leaves this applicant out of Our Professionals and the public
-            directory — you can still create their profile later from here.
+            directory — you can still create their profile (and invite them) later from here. The profile always
+            starts as a draft either way; sending an invitation lets them sign in, it never publishes them publicly.
           </p>
         </div>
       </Modal>

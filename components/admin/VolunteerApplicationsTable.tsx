@@ -128,6 +128,7 @@ export default function VolunteerApplicationsTable({
                     <VolunteerApplicationStatusControl
                       id={a.id}
                       fullName={a.full_name}
+                      email={a.email}
                       status={a.status}
                       linkedProfile={profileByApplicationId[a.id] ?? null}
                       onStatusChange={(next) => onStatusChange(a.id, next)}

@@ -39,6 +39,11 @@ const NAV = [
   // app/admin/** is a hardcoded English literal.
   { href: "/admin/therapists", label: "Our Professionals" },
   { href: "/admin/users", label: "Users" },
+  // Phase 187 — separate from "Users" above: invitation-only onboarding for
+  // Administrator/Super Admin accounts specifically (invite, resend, revoke,
+  // deactivate). "Users" keeps handling direct-create for Client/Reviewer/
+  // Finance only as of this phase — see RoleSelect.tsx's own comment.
+  { href: "/admin/administrators", label: "Administrators" },
   { href: "/admin/content", label: "Content Manager (Editing Details)" },
   // Phase 132 — the new visual design-token builder (colors, typography,
   // live preview, draft/publish). Deliberately a separate nav item from

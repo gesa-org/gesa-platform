@@ -8,7 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import TherapistProfileStatusBadge from "@/components/admin/TherapistProfileStatusBadge";
 import TherapistArchiveButton from "@/components/admin/TherapistArchiveButton";
-import type { DiaryLinkStatus, TherapistProfileStatus } from "@/lib/database.types";
+import TherapistInviteActions from "@/components/admin/TherapistInviteActions";
+import type { DiaryLinkStatus, TherapistProfileStatus, Tables } from "@/lib/database.types";
 
 // Phase 65 — Roy said toggling therapists active/deactivated one at a time
 // through "Edit" was tiring once there are a lot of them, and asked for a
@@ -34,6 +35,9 @@ export type TherapistListRow = {
   profile_status: TherapistProfileStatus;
   volunteer_application_id: string | null;
   has_linked_account: boolean;
+  // Phase 187
+  contact_email: string | null;
+  invitationHistory: Tables<"invitations">[];
 };
 
 function DiaryLinkBadge({ diaryLink, status }: { diaryLink: string | null; status: DiaryLinkStatus }) {
@@ -160,6 +164,7 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">Languages</th>
               <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Account</th>
               <th className="px-5 py-3">Source</th>
               <th className="px-5 py-3">Diary link</th>
               <th className="px-5 py-3"></th>
@@ -190,6 +195,16 @@ export default function TherapistsTable({ therapists: initialTherapists }: { the
                 <td className="px-5 py-3 text-muted-fg">{(t.languages ?? []).join(", ") || "—"}</td>
                 <td className="px-5 py-3">
                   <TherapistProfileStatusBadge status={t.profile_status} />
+                </td>
+                <td className="px-5 py-3">
+                  <TherapistInviteActions
+                    therapistId={t.id}
+                    fullName={t.full_name}
+                    contactEmail={t.contact_email ?? null}
+                    hasAccount={t.has_linked_account}
+                    latestInvitation={(t.invitationHistory ?? [])[0] ?? null}
+                    history={t.invitationHistory ?? []}
+                  />
                 </td>
                 {/* Phase 186 — "Source": whether this row came from an
                     approved volunteer application or was created directly

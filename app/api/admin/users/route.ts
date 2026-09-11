@@ -40,7 +40,15 @@ function generateTempPassword(): string {
   return `${base.slice(0, 14)}-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-const VALID_ROLES: AppRole[] = ["admin", "reviewer", "therapist", "client", "finance"];
+// Phase 187 — "admin", "super_admin", and "therapist" removed from this
+// route's allowed roles. Per this phase's spec, those three roles may only
+// ever be granted by accepting an invitation (see
+// app/api/admin/invitations/**/route.ts and app/api/invitations/accept) —
+// this direct-create path stays available for the lower-sensitivity
+// internal roles it was always meant for (a plain client account, or an
+// internal reviewer/finance seat) where instant creation with a relayed
+// temp password is still an acceptable, lower-stakes flow.
+const VALID_ROLES: AppRole[] = ["reviewer", "client", "finance"];
 
 export async function POST(request: Request) {
   const me = await getCurrentProfile();
@@ -86,7 +94,7 @@ export async function POST(request: Request) {
     email,
     password: tempPassword,
     email_confirm: true,
-    user_metadata: { full_name: fullName, role },
+    user_metadata: { full_name: fullName },
   });
 
   if (error) {
@@ -97,6 +105,20 @@ export async function POST(request: Request) {
       ? "A user with that email already exists."
       : error.message || "Could not create the user.";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  // Phase 187 — handle_new_user() no longer reads a "role" key out of
+  // user_metadata (that path was removed in Phase 178 as a self-escalation
+  // fix — anyone hitting Supabase's own signUp() directly could otherwise
+  // pass whatever role they wanted). It always inserts the new profiles row
+  // as role 'client'. This route previously passed `role` in the metadata
+  // above expecting the trigger to apply it — it silently never did, so
+  // every user created here landed as 'client' regardless of the admin's
+  // selection. Fixed by explicitly setting it here via the service-role
+  // client (bypasses the profiles self-escalation-guard trigger by design,
+  // same as the invitation-acceptance route).
+  if (data.user && role !== "client") {
+    await admin.from("profiles").update({ role }).eq("id", data.user.id);
   }
 
   return NextResponse.json({ userId: data.user?.id, tempPassword });

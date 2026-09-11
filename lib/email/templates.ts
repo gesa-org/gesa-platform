@@ -75,6 +75,60 @@ export function welcomeEmail(fullName: string) {
   `);
 }
 
+// Phase 187 — invitation-only onboarding. Deliberately minimal: no
+// passwords, no profile/role-management detail beyond the plain role name,
+// nothing that would be sensitive if this email were ever forwarded — the
+// single-use-link notice below exists precisely because it might be. Button
+// styling matches this app's primary CTA color (--primary / #5c6a4c) rather
+// than a raw inline hex so it reads as "the same brand" as every other GESA
+// email, not a separate system.
+function invitationCta(acceptUrl: string, expiresAtLabel: string) {
+  return `
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${acceptUrl}" style="display:inline-block;background:#5c6a4c;color:#fffdf8;text-decoration:none;
+        font-weight:700;font-size:15px;padding:13px 28px;border-radius:999px;">Create your account</a>
+    </div>
+    <p style="color:#6f6a5c;font-size:12.5px;line-height:1.6;">
+      This invitation expires <strong>${expiresAtLabel}</strong> and can only be used once — please don't forward
+      this email. If the button above doesn't work, copy and paste this link into your browser:<br/>
+      <span style="word-break:break-all;">${acceptUrl}</span>
+    </p>
+    <p style="color:#6f6a5c;font-size:12.5px;line-height:1.6;">
+      Didn't expect this invitation? You can safely ignore this email — no account will be created unless the link
+      above is used.
+    </p>`;
+}
+
+export function therapistInvitationEmail(params: { firstName: string | null; acceptUrl: string; expiresAtLabel: string }) {
+  const { firstName, acceptUrl, expiresAtLabel } = params;
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">You're invited to join GESA as a Professional${firstName ? `, ${firstName}` : ""}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      An administrator at GESA has invited you to create a Professional account. Once you accept, you'll be able to
+      sign in to your own therapist portal, review your public profile, and manage your availability.
+    </p>
+    ${invitationCta(acceptUrl, expiresAtLabel)}
+  `);
+}
+
+export function administratorInvitationEmail(params: {
+  firstName: string | null;
+  acceptUrl: string;
+  expiresAtLabel: string;
+  roleLabel: "Administrator" | "Super Admin";
+}) {
+  const { firstName, acceptUrl, expiresAtLabel, roleLabel } = params;
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">You're invited to join the GESA Admin Team${firstName ? `, ${firstName}` : ""}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      You've been invited to join GESA's internal team with <strong>${roleLabel}</strong> access to the CRM
+      dashboard. This grants access to therapist, client, and operational data — please accept this invitation only
+      if you were expecting it.
+    </p>
+    ${invitationCta(acceptUrl, expiresAtLabel)}
+  `);
+}
+
 export function contactReceivedEmail(name: string, subject: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Thanks for reaching out, ${name}</h1>

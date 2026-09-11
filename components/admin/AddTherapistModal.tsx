@@ -28,17 +28,38 @@ function slugify(name: string): string {
 // `is_active: false` so a bare new record never appears in the public
 // directory before someone's actually filled in a bio/photo, then routes
 // straight into the existing TherapistEditForm for everything else.
+//
+// Phase 187 — added an optional email field and, once the profile saves, the
+// spec's required prompt: "Professional profile created. Would you like to
+// send an account invitation now?" with three choices. This is the "new
+// therapist member added" path from the invitation spec (distinct from the
+// bulk flow for the pre-existing 34, and from the volunteer-application
+// approve-and-invite flow) — same underlying /api/admin/invitations route,
+// just triggered from here instead.
 export default function AddTherapistModal() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [created, setCreated] = useState<{ id: string; email: string } | null>(null);
+  const [invitePending, setInvitePending] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   function close() {
     setOpen(false);
     setFullName("");
+    setEmail("");
     setError(null);
+    setCreated(null);
+    setInviteError(null);
+    router.refresh();
+  }
+
+  function goToProfile() {
+    if (!created) return;
+    router.push(`/admin/therapists/${created.id}`);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -47,23 +68,20 @@ export default function AddTherapistModal() {
     setError(null);
     const supabase = createClient();
     const baseSlug = slugify(fullName);
+    const trimmedEmail = email.trim();
 
-    // Up to 5 attempts with a numeric suffix if the slug is already taken —
-    // the same small retry-on-conflict shape used elsewhere in this
-    // codebase (the conflict-free session-booking flow) rather than a
-    // separate "check if it exists first" query that could itself race.
     let lastError: string | null = null;
     for (let attempt = 0; attempt < 5; attempt++) {
       const slug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt + 1}`;
       const { data, error } = await supabase
         .from("therapists")
-        .insert({ full_name: fullName.trim(), slug, is_active: false })
+        .insert({ full_name: fullName.trim(), slug, is_active: false, contact_email: trimmedEmail || null })
         .select("id")
         .single();
 
       if (!error && data) {
         setPending(false);
-        router.push(`/admin/therapists/${data.id}`);
+        setCreated({ id: data.id, email: trimmedEmail });
         return;
       }
       if (error?.code === "23505") {
@@ -78,6 +96,31 @@ export default function AddTherapistModal() {
     setError(lastError);
   }
 
+  async function sendInviteNow() {
+    if (!created) return;
+    setInvitePending(true);
+    setInviteError(null);
+    try {
+      const res = await fetch("/api/admin/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: created.email,
+          invitedRole: "therapist",
+          therapistProfileId: created.id,
+          firstName: fullName.trim().split(/\s+/)[0] ?? null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not send the invitation.");
+      goToProfile();
+    } catch (e) {
+      setInviteError(e instanceof Error ? e.message : "Could not send the invitation.");
+    } finally {
+      setInvitePending(false);
+    }
+  }
+
   return (
     <>
       {/* Phase 125 — "Add therapist" -> "Add Professional" (button, modal
@@ -90,34 +133,77 @@ export default function AddTherapistModal() {
       </Button>
 
       <Modal open={open} onClose={close}>
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        {created ? (
           <div>
-            <h3 className="text-lg font-semibold">Add Professional</h3>
-            <p className="mt-1 text-[13px] text-muted-fg">
-              Creates a new, inactive professional record and takes you straight to the full profile editor — photo,
-              bio, credentials, specialties, and activating them for the public directory all happen there.
+            <h3 className="text-lg font-semibold">Professional profile created</h3>
+            <p className="mt-1.5 text-[13.5px] text-muted-fg">
+              Would you like to send an account invitation now? They&apos;ll be able to sign in once they accept it —
+              this doesn&apos;t publish their profile publicly.
             </p>
+            {!created.email && (
+              <p className="mt-3 text-[12.5px] text-destructive">
+                No email was entered, so an invitation can&apos;t be sent yet — add one from the profile editor first.
+              </p>
+            )}
+            {inviteError && <p className="mt-3 text-[13px] text-destructive">{inviteError}</p>}
+            <div className="mt-5 flex flex-col gap-2.5 border-t border-border pt-4">
+              <Button type="button" onClick={sendInviteNow} disabled={invitePending || !created.email}>
+                {invitePending ? "Sending…" : "Send invitation now"}
+              </Button>
+              <Button type="button" variant="outline" onClick={goToProfile} disabled={invitePending}>
+                Save without inviting
+              </Button>
+              <button type="button" onClick={close} disabled={invitePending} className="text-[13px] font-medium text-muted-fg hover:text-foreground">
+                Cancel
+              </button>
+            </div>
           </div>
+        ) : (
+          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+            <div>
+              <h3 className="text-lg font-semibold">Add Professional</h3>
+              <p className="mt-1 text-[13px] text-muted-fg">
+                Creates a new, inactive professional record and takes you straight to the full profile editor — photo,
+                bio, credentials, specialties, and activating them for the public directory all happen there.
+              </p>
+            </div>
 
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold">Full name</label>
-            <input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              autoFocus
-              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-            />
-          </div>
+            <div>
+              <label htmlFor="add-therapist-name" className="mb-1.5 block text-sm font-semibold">
+                Full name
+              </label>
+              <input
+                id="add-therapist-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                autoFocus
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+              />
+            </div>
 
-          {error && <p className="text-[13px] text-destructive">{error}</p>}
+            <div>
+              <label htmlFor="add-therapist-email" className="mb-1.5 block text-sm font-semibold">
+                Email <span className="font-normal text-muted-fg">(optional — needed to send an account invitation)</span>
+              </label>
+              <input
+                id="add-therapist-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+              />
+            </div>
 
-          <div className="flex items-center gap-3 border-t border-border pt-4">
-            <Button type="submit" disabled={pending || !fullName.trim()}>
-              {pending ? "Creating…" : "Create & edit profile"}
-            </Button>
-          </div>
-        </form>
+            {error && <p className="text-[13px] text-destructive">{error}</p>}
+
+            <div className="flex items-center gap-3 border-t border-border pt-4">
+              <Button type="submit" disabled={pending || !fullName.trim()}>
+                {pending ? "Creating…" : "Create & edit profile"}
+              </Button>
+            </div>
+          </form>
+        )}
       </Modal>
     </>
   );

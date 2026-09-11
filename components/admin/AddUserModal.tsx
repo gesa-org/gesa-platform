@@ -7,12 +7,14 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import type { AppRole } from "@/lib/database.types";
 
+// Phase 187 — Professional and Admin removed from this list. Those roles
+// now require an invitation (Our Professionals' "Send invitation" / the
+// Administrators page) rather than instant creation with a temp password —
+// see app/api/admin/users/route.ts's own comment for why.
 const ROLE_OPTIONS: { value: AppRole; label: string }[] = [
   { value: "client", label: "Client" },
-  { value: "therapist", label: "Professional" }, // internal role value unchanged (Phase 125), only the admin-facing label renamed
   { value: "reviewer", label: "Reviewer" },
   { value: "finance", label: "Finance" },
-  { value: "admin", label: "Admin" },
 ];
 
 // Phase 82 — "Add user" on /admin/users. Creating a user is structurally a
