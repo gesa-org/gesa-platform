@@ -8,6 +8,7 @@ import { volunteerApplicationNotificationEmail, volunteerApplicationReceivedEmai
 // "Specify time" free text, e.g. "2 hours") isn't in this map, so it falls
 // through to the `?? meetingDuration` below and is shown exactly as typed.
 const MEETING_DURATION_LABELS: Record<string, string> = {
+  "90": "90 min",
   "60": "60 min",
   "45": "45 min",
   "30": "30 min",
@@ -29,6 +30,14 @@ export async function POST(request: Request) {
   const meetingDuration = (body?.meetingDuration as string | undefined) ?? "";
   const meetingDurationLabel = MEETING_DURATION_LABELS[meetingDuration] ?? meetingDuration;
   const bio = (body?.bio as string | undefined) ?? "";
+  // Phase 189 — new fields from the rebuilt application form. All optional
+  // here (best-effort notification, same as every field above) so a missing
+  // one never blocks the email the way it would block the actual DB insert.
+  const gender = (body?.gender as string | undefined) ?? null;
+  const country = (body?.country as string | undefined) ?? null;
+  const primaryExpertise = (body?.primaryExpertise as string | undefined) ?? null;
+  const calendarLink = (body?.calendarLink as string | undefined) ?? null;
+  const photoUrl = (body?.photoUrl as string | undefined) ?? null;
 
   if (!email || !isValidEmailFormat(email)) {
     return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
@@ -48,10 +57,15 @@ export async function POST(request: Request) {
         fullName,
         email,
         phone,
+        gender,
+        country,
         credentialsProof,
+        primaryExpertise,
         specialties,
         languages,
         meetingDurationLabel,
+        calendarLink,
+        photoUrl,
         bio,
       }),
       replyTo: getReplyTo(email),

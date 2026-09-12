@@ -552,7 +552,13 @@ export type BookingIntakeFormRow = {
 // column value can be a preset ("60"/"45"/"30") or arbitrary custom text,
 // which is why `TherapistApplicationRow.meeting_duration` stays a plain
 // `string` rather than this union.
-export type MeetingDurationChoice = "60" | "45" | "30" | "custom";
+// Phase 189 — Roy's rebuilt application form replaced the old 60/45/30 +
+// free-text "Specify time" picker with a plain fixed 30/45/60/90-minute
+// dropdown, so this is now a genuinely closed set — `meeting_duration`
+// itself stays a plain `string` column (no migration needed, same values
+// just written by a different UI), but the picker's own choice type no
+// longer needs to allow arbitrary custom text.
+export type MeetingDurationChoice = "30" | "45" | "60" | "90";
 
 // Phase 186 — DB-enforced now (a CHECK constraint on therapist_applications.
 // status), added "withdrawn" for an applicant-initiated withdrawal. Was a
@@ -606,6 +612,15 @@ export type InvitationRow = {
   updated_at: string;
 };
 
+// Phase 189 — "Join Us as a Volunteer/Caregiver" rebuilt application form.
+// full_name/email/phone/credentials_proof/specialties/languages/
+// meeting_duration/bio/status/notes/created_at/reviewed_at/reviewed_by all
+// predate this phase and are unchanged; everything from `gender` down is
+// new (see the phase189_expand_therapist_applications_form migration).
+// `phone` is now the form's required, validated "Mobile Number" field, but
+// stays nullable here rather than being tightened to `string` — pre-Phase
+// 189 rows can still have a null phone, and this type describes the table,
+// not just this phase's own form.
 export type TherapistApplicationRow = {
   id: string;
   full_name: string;
@@ -621,6 +636,14 @@ export type TherapistApplicationRow = {
   created_at: string;
   reviewed_at: string | null;
   reviewed_by: string | null;
+  gender: string | null;
+  country: string | null;
+  has_certification: boolean | null;
+  primary_expertise: string | null;
+  calendar_link: string | null;
+  photo_url: string | null;
+  consent_affidavit: boolean;
+  consent_privacy_terms: boolean;
 }
 
 // Phase 98 — donation "gift intent" capture from the new /donate page's
@@ -771,7 +794,10 @@ export type Database = {
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };
       therapist_applications: {
         Row: TherapistApplicationRow;
-        Insert: Partial<TherapistApplicationRow> & Pick<TherapistApplicationRow, "full_name" | "email" | "credentials_proof" | "bio" | "meeting_duration">;
+        // Phase 189 — gender/country/photo_url added to the required-on-insert
+        // set: the rebuilt form always sends them (all three are required
+        // fields there), same reasoning as the pre-existing required keys.
+        Insert: Partial<TherapistApplicationRow> & Pick<TherapistApplicationRow, "full_name" | "email" | "credentials_proof" | "bio" | "meeting_duration" | "gender" | "country" | "photo_url">;
         Update: Partial<TherapistApplicationRow>;
         Relationships: [
           {

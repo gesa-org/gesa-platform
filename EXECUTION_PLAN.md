@@ -8458,4 +8458,41 @@ git push
 ```
 
 ---
+
+## Phase 189: rebuild "Join us as a volunteer/caregiver" application form
+
+**Request:** Roy's full spec (reproduced in the conversation, not here) asked for a rebuilt, five-section "Join Us as a Volunteer/Caregiver" application form — Personal Information, Professional Credentials, Availability & Scheduling, Profile Content, Legal Consent — replacing the simpler Phase 63-65 modal. New requirements: gender/country fields, a certification yes/no question, split "Primary" vs "Additional" areas of expertise, a fixed 30/45/60/90-minute duration dropdown (no free text), an optional personal calendar link, a word-counted bio (80-250 words), a required profile photo (≥500×500px, ≤256KB), and two required legal consents (Affidavit; Privacy Policy & Terms & Conditions), with "Apply Now" disabled until everything validates.
+
+**Clarified with Roy before building:** reuse the existing 10-item specialty list for both the Primary and Additional expertise fields (not a new/bigger list); follow the written spec exactly for duration (fixed 30/45/60/90 dropdown, dropping the old free-text "Specify time" option); profile photo is required, strictly enforcing ≥500×500px; the Affidavit has no real document yet, so a placeholder `/affidavit` page (editable via CRM > Content > Legal Pages, same as Privacy Policy/Terms) was created rather than blocking on a document that doesn't exist.
+
+**Database changes (Production `iddeoavrlnvwwfopsacy`, applied directly via Supabase MCP):**
+- `therapist_applications` gained 8 new nullable columns: `gender`, `country`, `has_certification` (boolean), `primary_expertise`, `calendar_link`, `photo_url`, plus two `not null default false` booleans `consent_affidavit`/`consent_privacy_terms`. Every pre-Phase-189 column (`full_name`, `email`, `phone`, `credentials_proof`, `specialties`, `languages`, `meeting_duration`, `bio`, `status`, `notes`, timestamps) is unchanged and still reused as-is — `meeting_duration` keeps storing plain text, just now always "30"/"45"/"60"/"90" instead of also allowing free text.
+- New public storage bucket `volunteer-application-photos` (256KB server-side limit, image/jpeg|png|webp only), with a public INSERT policy (this form runs with no signed-in user, same reasoning as the pre-existing `therapist_applications_public_insert` RLS policy) and a public SELECT policy so the uploaded photo actually displays back.
+- Seeded a new `legal_pages` row at slug `affidavit` with clearly-marked placeholder body text — real content can be dropped in any time from CRM > Content > Legal Pages, no code change needed.
+
+**Code changes:**
+- `lib/database.types.ts` — `TherapistApplicationRow` gained the 8 new fields; `MeetingDurationChoice` narrowed from `"60"|"45"|"30"|"custom"` to `"30"|"45"|"60"|"90"`; the table's `Insert` type now also requires `gender`/`country`/`photo_url` (the form always sends them).
+- `lib/legal-pages.ts` — added the `affidavit` entry.
+- `components/volunteer/VolunteerApplicationModal.tsx` — full rebuild: five `<fieldset>` sections, a single `validationError` memo that's the one source of truth for both the disabled "Apply Now" button and the inline error text, a live bio word counter, client-side photo validation (type/size/dimensions via an offscreen `Image()` load) before upload, and the two required consent checkboxes linking to `/affidavit`, `/privacy-policy`, and `/terms-and-conditions`.
+- `app/api/email/volunteer-application/route.ts` + `lib/email/templates.ts` — notification email now also shows gender/country/primary expertise/calendar link/photo, and the duration label map gained "90".
+- `components/admin/VolunteerApplicationsTable.tsx` — duration label map gained "90" (no other admin UI changes — Roy asked for the CRM-side view/dashboard of these new fields to stay a future phase; the data is captured and ready for it).
+- `app/api/admin/volunteer-applications/create-profile/route.ts` — carries `country`/`photo_url` over onto the draft therapist profile it creates, since both map directly onto existing `therapists` columns.
+- `lib/translations/he.ts` — added Hebrew entries for the two changed English strings (new heading, "Apply Now") so Hebrew mode doesn't regress to showing English for just those two.
+- `tests/unit/VolunteerApplicationModal.test.tsx` — rewritten for the new form: still asserts the Phase 186 safety property (submission only ever touches `therapist_applications`, never `therapists`/`profiles`), plus new coverage for the disabled-until-valid button, the bio word counter, required photo upload, and primary-auto-included-in-additional-expertise behavior.
+
+**Not built this phase (explicitly deferred, per Roy):** an admin-side view for reviewing the new fields (gender, country, primary expertise, calendar link, uploaded photo) beyond what already exists — the data model is ready for it, but the CRM UI itself is left for a future phase.
+
+**Quick test scenario for Roy, once deployed:** open the volunteer application modal, confirm "Apply Now" stays disabled through each section as you fill it in, upload a photo under 500×500px and confirm it's rejected with a clear message, write a 20-word bio and confirm the counter flags it as too short, then complete a full valid application and confirm it lands in CRM > Volunteer Applications with the new fields visible via `select("*")` (e.g. in Supabase directly, until a future phase surfaces them in the CRM UI).
+
+**Verification:** re-read every changed/new file in full after editing; cross-checked the new `therapist_applications` columns and the `volunteer-application-photos` bucket/policies directly against Production via SQL. `npx tsc --noEmit`/`npx jest` still need Roy to run, per the standing bash-sandbox limitation.
+
+**Git block for Roy:**
+
+```
+git add lib/database.types.ts lib/legal-pages.ts lib/translations/he.ts lib/email/templates.ts app/api/email/volunteer-application/route.ts components/volunteer/VolunteerApplicationModal.tsx components/admin/VolunteerApplicationsTable.tsx app/api/admin/volunteer-applications/create-profile/route.ts tests/unit/VolunteerApplicationModal.test.tsx EXECUTION_PLAN.md
+git commit -m "Phase 189: rebuild volunteer/caregiver application form (5 sections, required photo, word-counted bio, legal consent)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

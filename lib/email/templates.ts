@@ -165,14 +165,24 @@ export function volunteerApplicationReceivedEmail(fullName: string) {
 // Phase 64 — `meetingDurationLabel` is passed in already-formatted (e.g.
 // "60 min", "Anytime") rather than the raw "60"/"anytime" DB value, so this
 // template doesn't need its own copy of the label mapping the modal owns.
+// Phase 189 — gender/country/primaryExpertise/calendarLink/photoUrl are new
+// (see components/volunteer/VolunteerApplicationModal.tsx's rebuild); all
+// optional here since this is a best-effort notification email, not the
+// actual application record (the therapist_applications row is already
+// saved by the time this is called either way).
 export function volunteerApplicationNotificationEmail(app: {
   fullName: string;
   email: string;
   phone: string | null;
+  gender?: string | null;
+  country?: string | null;
   credentialsProof: string;
+  primaryExpertise?: string | null;
   specialties: string[];
   languages: string[];
   meetingDurationLabel: string;
+  calendarLink?: string | null;
+  photoUrl?: string | null;
   bio: string;
 }) {
   return shell(`
@@ -180,11 +190,16 @@ export function volunteerApplicationNotificationEmail(app: {
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Name:</strong> ${app.fullName}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Email:</strong> ${app.email}</p>
     ${app.phone ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Phone:</strong> ${app.phone}</p>` : ""}
-    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Specialties:</strong> ${app.specialties.join(", ")}</p>
+    ${app.gender ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Gender:</strong> ${app.gender}</p>` : ""}
+    ${app.country ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Country:</strong> ${app.country}</p>` : ""}
+    ${app.primaryExpertise ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Primary expertise:</strong> ${app.primaryExpertise}</p>` : ""}
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Additional expertise:</strong> ${app.specialties.join(", ")}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Languages:</strong> ${app.languages.join(", ")}</p>
-    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Meeting duration:</strong> ${app.meetingDurationLabel}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Session duration:</strong> ${app.meetingDurationLabel}</p>
+    ${app.calendarLink ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Calendar link:</strong> <a href="${app.calendarLink}">${app.calendarLink}</a></p>` : ""}
+    ${app.photoUrl ? `<p style="color:#33352d;line-height:1.6;margin:8px 0;"><img src="${app.photoUrl}" alt="" width="96" height="96" style="border-radius:50%;object-fit:cover;" /></p>` : ""}
     <p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Proof of license / credentials:</strong></p>
-    <p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${app.credentialsProof}</p>
+    <p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${app.credentialsProof || "(no certification claimed)"}</p>
     <p style="color:#33352d;line-height:1.6;margin:12px 0 4px;"><strong>Bio:</strong></p>
     <p style="color:#33352d;line-height:1.6;white-space:pre-line;background:#efe8d9;border-radius:10px;padding:12px;">${app.bio}</p>
     <p style="color:#33352d;line-height:1.6;margin-top:14px;">Review in the CRM at /admin/volunteer-applications.</p>

@@ -113,6 +113,12 @@ export async function POST(request: Request) {
         contact_phone: application.phone || null,
         specialties: application.specialties ?? [],
         languages: application.languages ?? [],
+        // Phase 189 — carry over the two new application fields that map
+        // directly onto existing therapists columns; admin still reviews
+        // and can change either before publishing (this is a draft, per the
+        // spec's "review and edit all public-facing details before saving").
+        country: application.country || null,
+        photo_url: application.photo_url || null,
         profile_status: "draft",
         is_active: false,
         volunteer_application_id: applicationId,

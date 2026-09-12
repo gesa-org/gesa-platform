@@ -9,6 +9,7 @@ import type { TherapistApplicationStatus } from "@/lib/database.types";
 // Phase 64 — maps the raw meeting-duration DB value to a human label for
 // the three fixed presets, same mapping the notification email route uses.
 const MEETING_DURATION_LABELS: Record<string, string> = {
+  "90": "90 min",
   "60": "60 min",
   "45": "45 min",
   "30": "30 min",

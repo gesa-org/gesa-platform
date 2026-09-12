@@ -291,10 +291,15 @@ export const HE_DICTIONARY: Record<string, string> = {
   // --- Volunteer application modal (components/volunteer/VolunteerApplicationModal.tsx) ---
   // "Become a volunteer therapist" already has an entry above (About
   // sections) with the identical English source string and Hebrew value —
-  // reused there, not duplicated here.
+  // reused there, not duplicated here. That entry is still used by the CTA
+  // button (VolunteerPrimaryCta); Phase 189 changed the modal's own heading
+  // and submit-button fallback text to different strings, so those get
+  // their own entries below rather than being folded into that older one.
+  "Join us as a volunteer or caregiver": "הצטרפו אלינו כמתנדבים או כמטפלים",
   "Tell us about yourself — our team reviews every application before you're listed on the site.":
     "ספרו לנו על עצמכם — הצוות שלנו בודק כל בקשה לפני שהיא מפורסמת באתר.",
   "Submit application": "שליחת הבקשה",
+  "Apply Now": "הגישו בקשה",
   "Submitting…": "שולח…",
   "Full name": "שם מלא",
   Phone: "טלפון",
