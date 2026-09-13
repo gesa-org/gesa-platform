@@ -55,6 +55,13 @@ export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
 // `text-primary` (dark-on-light again, same pairing this row used before
 // Phase 164). Gold icon circles (`bg-sand-brown text-primary`) read fine on
 // either background and are untouched.
+// Phase 190 — Roy asked to bring this row's background back to sage green.
+// `bg-[var(--home-gray)]` → `bg-green-sage`, reusing the same `--green-sage`
+// token (#9BA689) this row already used before Phase 163/164/170 moved it
+// around — the token was left untouched in globals.css the whole time for
+// exactly this. `text-primary` label color and the gold icon circles
+// (`bg-sand-brown text-primary`) already read fine against this sage tone
+// (they did before Phase 163 too) and are unchanged.
 export default async function Stats() {
   const content = await getPageContent("component_home_stats", HOME_STATS_CONTENT_FALLBACK);
   const badges = [
@@ -65,7 +72,7 @@ export default async function Stats() {
   ];
 
   return (
-    <section className="border-y border-border bg-[var(--home-gray)] py-10">
+    <section className="border-y border-border bg-green-sage py-10">
       <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
         {badges.map((b) => (
           <StaggerItem key={b.label} className="flex items-center gap-3.5">

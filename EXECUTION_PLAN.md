@@ -8495,4 +8495,24 @@ git push
 ```
 
 ---
+
+## Phase 190: Home page trust-badges row — background back to sage green
+
+**Request:** Roy sent a screenshot of the "Verified Profiles / Multilingual Support / Clear Session Fees / Global Community" badges row and asked for its background to be sage green.
+
+**Context:** this row's background has moved several times before (see `components/home/Stats.tsx`'s own comment history) — sage green (`--green-sage`, #9BA689) originally, then ivory/gold (`bg-clay-soft`, Phase 163), then deep navy (`bg-primary`, Phase 164), then a cool gray (`bg-[var(--home-gray)]`, Phase 170). The `--green-sage` token itself was deliberately left untouched in `app/globals.css` through all of that specifically so it could be reused if sage was wanted again — it was.
+
+**Fix:** `components/home/Stats.tsx` — `bg-[var(--home-gray)]` → `bg-green-sage`. Label text (`text-primary`) and the gold icon circles (`bg-sand-brown text-primary`) are unchanged — both already read fine against this sage tone from when the row used it before.
+
+**Verification:** `tests/unit/Stats.test.tsx` already asserted `bg-green-sage` on this section (a leftover from before Phase 163 that never got updated when the background changed away from sage) — that test was actually failing before this change and passes again now, which is a good independent confirmation this is the right class. No other page uses this component or the `--green-sage` token, so nothing else is affected. `npx tsc --noEmit`/`npx jest` still need Roy to run.
+
+**Git block for Roy:**
+
+```
+git add components/home/Stats.tsx EXECUTION_PLAN.md
+git commit -m "Phase 190: Home page trust-badges row background back to sage green"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
