@@ -72,13 +72,28 @@ export default function EditorPreviewBridge({ children }: { children: ReactNode 
         // already sanitized through the toolbar's allowlist in
         // RichTextEditor's onUpdate, the same sanitizer the save/publish
         // API routes re-run server-side.
+        //
+        // Phase 202 — a third case: EditableImage.tsx renders a real <img>
+        // for `type: "image"` fields, so a live draft update there means
+        // setting `.src`, not text content. ImageFieldInspector sends the
+        // freshly-uploaded file's public Storage URL as `data.value`, same
+        // as any other field's staged draft value.
         const el = document.querySelector<HTMLElement>(`[data-gesa-content-id="${CSS.escape(data.contentId)}"]`);
         if (el) {
-          if (el.dataset.gesaHtml === "true") {
+          if (el instanceof HTMLImageElement) {
+            el.src = data.value;
+          } else if (el.dataset.gesaHtml === "true") {
             el.innerHTML = data.value;
           } else {
             el.textContent = data.value;
           }
+        } else {
+          // Phase 202 — no element is directly selectable by an altText
+          // field's own contentId (see EditableImage.tsx's comment); find
+          // the <img> that names this contentId as its *paired* alt field
+          // instead, and update `.alt` there.
+          const imgEl = document.querySelector<HTMLImageElement>(`[data-gesa-alt-content-id="${CSS.escape(data.contentId)}"]`);
+          if (imgEl) imgEl.alt = data.value;
         }
       } else if (data.type === "GESA_EDITOR_SCROLL_TO_ELEMENT") {
         const el = document.querySelector(`[data-gesa-content-id="${CSS.escape(data.contentId)}"]`);

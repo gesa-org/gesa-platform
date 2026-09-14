@@ -25,12 +25,18 @@ export async function POST(request: Request) {
   if (!file || !(file instanceof File)) {
     return NextResponse.json({ error: "a file is required" }, { status: 400 });
   }
-  if (!file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "only image files are supported" }, { status: 400 });
+  // Phase 202 — tightened from a generic `startsWith("image/")` check to an
+  // explicit allowlist, and the cap raised from 8MB to 10MB, matching
+  // ImageFieldInspector.tsx's own client-side ACCEPTED_TYPES/MAX_BYTES so the
+  // client-side validation message an admin sees is never contradicted by a
+  // stricter server check.
+  const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  if (!ACCEPTED_TYPES.includes(file.type)) {
+    return NextResponse.json({ error: "only JPG, PNG, or WebP images are supported" }, { status: 400 });
   }
-  const MAX_BYTES = 8 * 1024 * 1024;
+  const MAX_BYTES = 10 * 1024 * 1024;
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "image must be under 8MB" }, { status: 400 });
+    return NextResponse.json({ error: "image must be under 10MB" }, { status: 400 });
   }
 
   const admin = createAdminClient();

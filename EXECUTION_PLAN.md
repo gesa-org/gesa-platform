@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-14 (Phase 200 added; Phase 199 in progress)
+Last updated: 2026-09-14 (Phase 202 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8857,6 +8857,60 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 201: Media Library (Content Manager + UI Builder rebuild, installment 1)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 202: Donate page — editable impact section images (UI Builder)
+
+Follow-up request, interleaved with the 201/202/204/205 rollout: make the Donate page's 3 "why your support matters" photos (Therapy/Education/Wellbeing) editable directly inside UI Builder's visual Page Editor, with full draft/publish/discard semantics — distinct from Phase 201's Media Library, which is immediate-effect (no draft gating).
+
+**Precedence vs. Phase 201:** for these 3 specific slots, the new `content.photo1Image`/`photo1ImageAlt` (and photo2/photo3) fields on the Donate page's `site_content`/`crm_ui_drafts` record now supersede the Phase 201 `media_asset_usages` override — `DonatePage.tsx` no longer calls `getMediaAssetsForPage`. The Media Library tab itself is untouched and still available for other sections not yet migrated to this pattern.
+
+**What shipped:**
+
+1. **`lib/ui-builder/pageRegistry.ts`** — added `pairedAltContentId?: string` to `EditableFieldDef`; registered 6 new fields under a new "Why your support matters (photos)" group: `donate.whySupport.photo{1,2,3}Image` (`type: "image"`) each paired via `pairedAltContentId` with `donate.whySupport.photo{1,2,3}ImageAlt` (`type: "altText"`, `maxLength: 200`). No changes needed to the generic draft/publish API routes, `usePageEditorState.ts`, or `pageContentResolver.ts` — both `"image"`/`"altText"` field types already existed in `ContentFieldType` (unused until now) and resolve to plain-string sanitization.
+
+2. **`lib/content.ts`** — `DonatePageContent` gains `photo1Image`/`photo1ImageAlt`/`photo2Image`/`photo2ImageAlt`/`photo3Image`/`photo3ImageAlt`.
+
+3. **`components/ui-builder/public/EditableImage.tsx`** (new) — image counterpart to `EditableText.tsx`: renders a plain `<img>` for normal visitors, adds click-to-select + outline affordances only inside the admin preview iframe. Uses `fallbackSrc`/`fallbackAlt` string props (not a callback) for the "swap to default on 404" behavior, since a Server Component can't pass functions to a Client Component.
+
+4. **`components/ui-builder/public/EditorPreviewBridge.tsx`** — extended the `GESA_EDITOR_UPDATE_PREVIEW` handler to set `.src` when the target element is an `<img>`, and to resolve an alt-only contentId to its paired image element's `.alt` via a new `data-gesa-alt-content-id` attribute.
+
+5. **`components/donate/DonatePage.tsx`** — the 3 photo cards now render via `EditableImage`, sourced from `content.photo{1,2,3}Image`/`Alt`; `DONATE_PAGE_FALLBACK` keeps the same literal default image paths as before (`community-support-circle.jpg`, etc.) so behavior for an un-migrated record is unchanged; on-error fallback logic preserved via `fallbackSrc`/`fallbackAlt`.
+
+6. **`components/admin/ui-builder/ImageFieldInspector.tsx`** (new) — the Inspector panel for any `type: "image"` field: preview, Upload/Replace (client-side validates JPG/PNG/WebP + 10MB before calling `/api/admin/media/upload` with `pathPrefix: "ui-builder"`), Remove with confirm, alt-text input (flags "required before publishing" when empty and an image is set, disabled with an explanatory note if the field has no paired alt field), and a recommended-image-size note. Wired into `components/admin/ui-builder/PageEditorShell.tsx`'s Inspector: a new `selectedField.type === "image"` branch renders this panel instead of the plain-text/rich-text branches; `layerableFields` filters `altText`-type fields out of the visible Layers list (they're edited via their paired image field, not their own Layer entry); `publishWithValidation()` blocks Publish and surfaces an error via `publishBlockedReason` if any image field with a paired alt field is missing alt text.
+
+7. **`app/api/admin/media/upload/route.ts`** — tightened to match `ImageFieldInspector.tsx`'s own client-side checks: explicit `["image/jpeg","image/jpg","image/png","image/webp"]` allowlist (was a generic `startsWith("image/")`), and the size cap raised from 8MB to 10MB (was Phase 201's original Media-Library-only limit).
+
+**Data/schema changes:** none at the database level — these 3 image slots live in the existing `site_content`/`crm_ui_drafts` jsonb content, exactly like every other Donate page field, not in `media_assets`/`media_asset_usages`.
+
+**Storage/permission changes:** none — uploads still go through the same Phase 201 `/api/admin/media/upload` route, same `site-content-images` bucket, same admin/super_admin service-role check. Uploading from this panel does still create a `media_assets` row (for audit/history), it's just never linked via `media_asset_usages` for these 3 slots.
+
+**Testing steps:**
+- Draft: open `/admin/ui-builder` > Donate, Edit mode On, select "Photo 1 image — Therapy" from Layers (or click the photo in the preview) > Upload a new JPG/PNG/WebP under 10MB > confirm it appears immediately in the admin preview and the public `/donate` page (in a separate, non-preview tab) still shows the old image.
+- Alt text gate: clear the alt text field for an image that has one set > click Publish > confirm it's blocked with an inline error naming the missing field > fill in alt text > Publish succeeds.
+- Discard: upload/replace an image, don't publish, click Discard > confirm the admin preview reverts to the last-published image.
+- Publish: after Publish, confirm the public `/donate` page now shows the new image + alt text, and `lastPublishedAt` updates.
+- Remove: click Remove > confirm > confirm the field goes blank in the draft preview and (after Publish) the public page falls back to its built-in default image, not a broken image icon.
+- Responsive: check all 3 breakpoints per the acceptance criteria — no layout shift introduced by the swap from a plain `<img>`/media-override to `EditableImage`.
+
+**Assumptions / follow-ups:**
+- No automatic image compression or responsive `srcset` variants — plain `<img>`, matching `Hero.tsx`'s existing precedent site-wide.
+- No orphaned-storage cleanup on replace/remove — the old file is left in Storage, consistent with `ImageUploadField.tsx`'s existing behavior elsewhere in the codebase. A future cleanup pass could reconcile `media_assets` rows against what's actually still referenced.
+- Known pre-existing issues surfaced in Phase 201 (RLS disabled on 3 unrelated tables; the literal `= 'admin'` role-check gap in some older RLS policies/routes) are unchanged by this phase — not touched, not newly introduced.
+
+Files touched: `lib/ui-builder/pageRegistry.ts`, `lib/content.ts`, `components/ui-builder/public/EditableImage.tsx` (new), `components/ui-builder/public/EditorPreviewBridge.tsx`, `components/donate/DonatePage.tsx`, `components/admin/ui-builder/ImageFieldInspector.tsx` (new), `components/admin/ui-builder/PageEditorShell.tsx`, `app/api/admin/media/upload/route.ts`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 202: Donate page - editable impact section images (UI Builder)"
 git push
 ```
 

@@ -7,7 +7,7 @@ import DonateForm from "@/components/donate/DonateForm";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
-import { getMediaAssetsForPage, type MediaAssetWithUrl } from "@/lib/media";
+import EditableImage from "@/components/ui-builder/public/EditableImage";
 
 // Phase 98 — Roy sent a reference image for a full donate page (hero,
 // giving box, "what your gift helps make possible" icon row, a dark
@@ -29,7 +29,16 @@ import { getMediaAssetsForPage, type MediaAssetWithUrl } from "@/lib/media";
 // Testimonials section, both slotted around the existing giving box. The
 // existing impact-icon row, movement band, trust badges, and crisis line
 // already cover the doc's "impact" and "closing CTA" beats, so they're
-// unchanged. This file is the static shell around it, styled
+// unchanged.
+//
+// Phase 201 briefly wired these 3 photos to a standalone "Media Library"
+// tab in Content Manager (immediate-effect assign, no draft/publish gating).
+// Phase 202 replaced that for these specific slots with real UI Builder
+// fields (type "image"/"altText" in pageRegistry.ts) so an admin can
+// upload/preview/publish/discard them exactly like every text field on this
+// page — see EditableImage.tsx and EXECUTION_PLAN.md Phase 202 for the full
+// mechanism and why. The general-purpose Media Library tab still exists for
+// other, not-yet-migrated use cases. This file is the static shell around it, styled
 // entirely from the site's own existing tokens (--primary/--espresso/
 // --accent-soft/--card/--border) rather than inventing new colors, matching
 // the reference's black-pill-on-white look via the same --primary token the
@@ -67,6 +76,22 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
   photo2Caption: "Sharing knowledge and tools that can create lasting change.",
   photo3Category: "Wellbeing",
   photo3Caption: "Helping people and communities build healthier, more connected futures.",
+  // Phase 202 — the actual photo files. These are the exact 3 real
+  // photographs Roy provided (a community support circle, a one-on-one
+  // bench conversation, an AVP Toolkit training session) — same literal
+  // defaults Phase 200/201 already shipped, now living as real UI Builder
+  // fields (type "image"/"altText") instead of a hardcoded array, so an
+  // admin can upload/replace them from Admin > UI Builder > Page Content >
+  // Donate. Per requirement #7 ("preserve backward compatibility by using
+  // the current static images as defaults for existing records"), these
+  // exact values are what every existing published `page_donate` row will
+  // resolve to until an admin explicitly replaces one via the Inspector.
+  photo1Image: "/images/donate/community-support-circle.jpg",
+  photo1ImageAlt: "A GESA-supported community gathered in an outdoor support circle, seated together under trees",
+  photo2Image: "/images/donate/one-on-one-conversation.jpg",
+  photo2ImageAlt: "Two women in conversation on a bench, one taking notes during a one-on-one support session",
+  photo3Image: "/images/donate/avp-toolkit-training.jpg",
+  photo3ImageAlt: "A facilitator leading an AVP Toolkit training session for a full room of participants",
   // Phase 200 — these two quotes are the reference doc's own worked
   // examples, not real GESA testimonials. Roy's doc is explicit that only
   // real, permissioned testimonials should go live — treat these as
@@ -92,44 +117,16 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
 const IMPACT_ICONS = [Users, Globe, ShieldCheck];
 const TRUST_ICONS = [ShieldCheck, Lock, Globe, Users];
 
-// Phase 200 — the 3 real, authentic photographs Roy provided for this page
-// (not stock photography): a community support circle, a one-on-one
-// conversation on a bench, and an AVP Toolkit training session.
-//
-// Phase 201 — these are now the *fallback* only. The real, current image
-// for each slot is looked up at request time from the new Media Library
-// (lib/media.ts, keyed "page_donate" / "whySupport.photo1|2|3") so Roy can
-// upload/replace these photos himself from Content Manager > Media Library
-// without a code change — this array only renders if nothing has been
-// uploaded there yet, same "never render blank" fallback contract every
-// other CMS-backed field on this site already follows.
-const WHY_SUPPORT_PHOTOS = [
-  {
-    src: "/images/donate/community-support-circle.jpg",
-    alt: "A GESA-supported community gathered in an outdoor support circle, seated together under trees",
-  },
-  {
-    src: "/images/donate/one-on-one-conversation.jpg",
-    alt: "Two women in conversation on a bench, one taking notes during a one-on-one support session",
-  },
-  {
-    src: "/images/donate/avp-toolkit-training.jpg",
-    alt: "A facilitator leading an AVP Toolkit training session for a full room of participants",
-  },
+// Phase 202 — last-resort fallback if a published/draft image URL 404s or
+// otherwise fails to load client-side (requirement: "include safe fallback
+// images/behavior if an image URL is missing or fails to load"). Deliberately
+// the same real photo Phase 200/201 shipped for each slot, not a generic
+// placeholder — see EditableImage's onImgError usage below.
+const PHOTO_ONERROR_FALLBACK = [
+  { src: "/images/donate/community-support-circle.jpg", alt: "Community support" },
+  { src: "/images/donate/one-on-one-conversation.jpg", alt: "One-on-one support conversation" },
+  { src: "/images/donate/avp-toolkit-training.jpg", alt: "AVP Toolkit training session" },
 ] as const;
-
-// Phase 201 — small helper so the three whySupportPhotos entries above stay
-// readable: returns {src, alt} from the Media Library if that section key
-// has an assigned asset, or {} (spreads to nothing, leaving the hardcoded
-// fallback in place) if not.
-function mediaOverride(
-  mediaBySlot: Map<string, MediaAssetWithUrl>,
-  sectionKey: string
-): { src: string; alt: string } | Record<string, never> {
-  const asset = mediaBySlot.get(sectionKey);
-  if (!asset) return {};
-  return { src: asset.publicUrl, alt: asset.alt_text || asset.file_name };
-}
 
 // Phase 135 — hero band's text is now the visual editor's canvas-selectable
 // reference implementation for this page; the impact/movement/trust/crisis
@@ -143,10 +140,7 @@ export default async function DonatePage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 } = {}) {
-  const [contentRaw, mediaBySlot] = await Promise.all([
-    getPageContent("page_donate", DONATE_PAGE_FALLBACK),
-    getMediaAssetsForPage("page_donate"),
-  ]);
+  const contentRaw = await getPageContent("page_donate", DONATE_PAGE_FALLBACK);
   const { resolved, isEditorPreview } = await resolveEditorPreview("donate", contentRaw as unknown as Record<string, unknown>, searchParams);
   const content = resolved as unknown as typeof contentRaw;
   const crisisLinkIsExternal = content.crisisLinkHref.startsWith("http");
@@ -159,15 +153,45 @@ export default async function DonatePage({
 
   const trustBadges = [content.trustBadge1Label, content.trustBadge2Label, content.trustBadge3Label, content.trustBadge4Label];
 
-  // Phase 201 — Media Library asset wins over the hardcoded fallback when
-  // one has been assigned to that slot (see WHY_SUPPORT_PHOTOS's own
-  // comment above). "src"/"alt" only change if a real upload exists;
-  // category/caption text is unaffected either way — those are still plain
-  // site_content fields, not part of the Media Library.
+  // Phase 202 — src/alt now come straight from the resolved page content
+  // (draft-aware in editor preview, published on the live site — same
+  // `resolveEditorPreview` layering every text field on this page already
+  // gets), not a separate Media Library lookup. See this file's top-of-file
+  // Phase 202 comment for why that superseded Phase 201's approach here.
   const whySupportPhotos = [
-    { ...WHY_SUPPORT_PHOTOS[0], ...mediaOverride(mediaBySlot, "whySupport.photo1"), category: content.photo1Category, caption: content.photo1Caption, categoryContentId: "donate.whySupport.photo1Category", captionContentId: "donate.whySupport.photo1Caption" },
-    { ...WHY_SUPPORT_PHOTOS[1], ...mediaOverride(mediaBySlot, "whySupport.photo2"), category: content.photo2Category, caption: content.photo2Caption, categoryContentId: "donate.whySupport.photo2Category", captionContentId: "donate.whySupport.photo2Caption" },
-    { ...WHY_SUPPORT_PHOTOS[2], ...mediaOverride(mediaBySlot, "whySupport.photo3"), category: content.photo3Category, caption: content.photo3Caption, categoryContentId: "donate.whySupport.photo3Category", captionContentId: "donate.whySupport.photo3Caption" },
+    {
+      src: content.photo1Image,
+      alt: content.photo1ImageAlt,
+      fallback: PHOTO_ONERROR_FALLBACK[0],
+      category: content.photo1Category,
+      caption: content.photo1Caption,
+      imageContentId: "donate.whySupport.photo1Image",
+      altContentId: "donate.whySupport.photo1ImageAlt",
+      categoryContentId: "donate.whySupport.photo1Category",
+      captionContentId: "donate.whySupport.photo1Caption",
+    },
+    {
+      src: content.photo2Image,
+      alt: content.photo2ImageAlt,
+      fallback: PHOTO_ONERROR_FALLBACK[1],
+      category: content.photo2Category,
+      caption: content.photo2Caption,
+      imageContentId: "donate.whySupport.photo2Image",
+      altContentId: "donate.whySupport.photo2ImageAlt",
+      categoryContentId: "donate.whySupport.photo2Category",
+      captionContentId: "donate.whySupport.photo2Caption",
+    },
+    {
+      src: content.photo3Image,
+      alt: content.photo3ImageAlt,
+      fallback: PHOTO_ONERROR_FALLBACK[2],
+      category: content.photo3Category,
+      caption: content.photo3Caption,
+      imageContentId: "donate.whySupport.photo3Image",
+      altContentId: "donate.whySupport.photo3ImageAlt",
+      categoryContentId: "donate.whySupport.photo3Category",
+      captionContentId: "donate.whySupport.photo3Caption",
+    },
   ];
 
   const testimonials = [
@@ -220,10 +244,21 @@ export default async function DonatePage({
           </Reveal>
           <StaggerGroup className="grid gap-6 sm:grid-cols-3">
             {whySupportPhotos.map((photo) => (
-              <StaggerItem key={photo.src} className="overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft">
+              <StaggerItem key={photo.imageContentId} className="overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft">
+                {/* Phase 202 — fixed aspect-ratio container (unchanged from
+                    Phase 200) means swapping the image never shifts layout,
+                    regardless of the uploaded photo's own dimensions. */}
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-accent-soft">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                  <EditableImage
+                    contentId={photo.imageContentId}
+                    altContentId={photo.altContentId}
+                    label={`Photo image (${photo.category || "untitled"})`}
+                    src={photo.src}
+                    alt={photo.alt}
+                    fallbackSrc={photo.fallback.src}
+                    fallbackAlt={photo.fallback.alt}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="p-5">
                   <h3 className="mb-1.5 text-[13px] font-bold uppercase tracking-wide text-primary">

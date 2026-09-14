@@ -17,6 +17,7 @@ import dynamic from "next/dynamic";
 import Button from "@/components/ui/Button";
 import { usePageEditorState } from "@/lib/ui-builder/usePageEditorState";
 import { PAGE_DEFINITIONS, getEditableFields, getFieldByContentId, getPageKeyForContentId, getRichTextMode, type PageGroup } from "@/lib/ui-builder/pageRegistry";
+import ImageFieldInspector from "@/components/admin/ui-builder/ImageFieldInspector";
 
 // Phase 134 — lazy-loaded, admin-only. Tiptap (~40kb) only ever downloads
 // when an admin actually selects a richText field, not just for opening the
@@ -72,6 +73,10 @@ export default function PageEditorShell() {
   const [viewport, setViewport] = useState<keyof typeof VIEWPORTS>("desktop");
   const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
   const [iframeReady, setIframeReady] = useState(false);
+  // Phase 202 — client-side-only publish gate message (see
+  // findMissingAltField/publishWithValidation below); separate from
+  // `editor.error`, which only ever reflects a real network/save failure.
+  const [publishBlockedReason, setPublishBlockedReason] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const pageDef = PAGE_DEFINITIONS.find((p) => p.pageKey === selectedPageKey);
@@ -90,14 +95,20 @@ export default function PageEditorShell() {
   }, [filteredPages]);
 
   const fields = getEditableFields(selectedPageKey);
+  // Phase 202 — `type: "altText"` fields (e.g. a photo's alt text) are
+  // registered so they round-trip through draft/publish like any other
+  // field, but are never their own clickable Layers-panel entry or canvas
+  // element — they're edited inline inside their paired image field's own
+  // ImageFieldInspector panel (see pageRegistry.ts's `pairedAltContentId`).
+  const layerableFields = useMemo(() => fields.filter((f) => f.type !== "altText"), [fields]);
   const layersByGroup = useMemo(() => {
     const groups = new Map<string, typeof fields>();
-    for (const f of fields) {
+    for (const f of layerableFields) {
       if (!groups.has(f.group)) groups.set(f.group, []);
       groups.get(f.group)!.push(f);
     }
     return groups;
-  }, [fields]);
+  }, [layerableFields]);
 
   // Phase 140 — a global lookup, not scoped to `selectedPageKey`: Header/
   // Footer/CrisisButton ("global" fields) render on every page's own
@@ -187,10 +198,49 @@ export default function PageEditorShell() {
     setIframeReady(false);
   }
 
+  // Phase 202 — generalized from `updateSelectedField` (which always wrote
+  // to whatever's currently selected) so ImageFieldInspector can also write
+  // to a *second*, non-selected field — the paired alt-text field, which by
+  // design has no Layers entry/selection of its own (see the `altText`
+  // filter above).
+  function updateField(contentId: string, value: string) {
+    editor.setField(contentId, value);
+    postToIframe({ type: "GESA_EDITOR_UPDATE_PREVIEW", contentId, value });
+    setPublishBlockedReason(null);
+  }
+
   function updateSelectedField(value: string) {
     if (!selectedContentId) return;
-    editor.setField(selectedContentId, value);
-    postToIframe({ type: "GESA_EDITOR_UPDATE_PREVIEW", contentId: selectedContentId, value });
+    updateField(selectedContentId, value);
+  }
+
+  // Phase 202 — "Alt text field, required before publishing": a lightweight
+  // client-side gate in front of the existing generic `editor.publish()`
+  // rather than a change to the publish API route, which has no per-field
+  // custom-validation concept and validates every page's fields the same
+  // generic way (sanitize + maxLength only). Checks every `image` field
+  // *currently registered for the selected page* — an image with no alt
+  // text is fine (nothing to describe), but a set image with empty alt text
+  // blocks Publish until it's filled in.
+  function findMissingAltField(): string | null {
+    for (const f of fields) {
+      if (f.type !== "image" || !f.pairedAltContentId) continue;
+      const imageVal = editor.fields[f.contentId] ?? "";
+      const altVal = editor.fields[f.pairedAltContentId] ?? "";
+      if (imageVal.trim() && !altVal.trim()) return f.contentId;
+    }
+    return null;
+  }
+
+  async function publishWithValidation() {
+    const missing = findMissingAltField();
+    if (missing) {
+      selectContentId(missing);
+      setPublishBlockedReason("Add alt text to the highlighted image before publishing.");
+      return;
+    }
+    setPublishBlockedReason(null);
+    await editor.publish();
   }
 
   return (
@@ -336,17 +386,17 @@ export default function PageEditorShell() {
             <RotateCcw size={14} /> Discard
           </Button>
           <div className="flex-1" />
-          <Button type="button" size="sm" onClick={editor.publish} disabled={editor.publishing || editor.loading || !pageDef?.supportsVisualEditor}>
+          <Button type="button" size="sm" onClick={publishWithValidation} disabled={editor.publishing || editor.loading || !pageDef?.supportsVisualEditor}>
             <UploadCloud size={14} /> {editor.publishing ? "Publishing…" : "Publish"}
           </Button>
         </div>
         <p aria-live="polite" className="text-[12px] text-muted-fg">
           {editor.saving ? "Saving draft…" : editor.loading ? "Loading…" : "Draft up to date"}
         </p>
-        {editor.error && (
+        {(editor.error || publishBlockedReason) && (
           <div className="flex items-start gap-2 rounded-xl bg-destructive/10 px-3.5 py-3 text-[13px] text-destructive" role="alert">
             <AlertTriangle size={15} className="mt-0.5 flex-none" />
-            <span>{editor.error}</span>
+            <span>{editor.error || publishBlockedReason}</span>
           </div>
         )}
         {editor.lastPublishedAt && (
@@ -373,6 +423,25 @@ export default function PageEditorShell() {
               </p>
               <h3 className="mb-3 text-[15px] font-semibold">{selectedField.label}</h3>
               {(() => {
+                if (selectedField.type === "image") {
+                  return (
+                    <ImageFieldInspector
+                      imageValue={editor.fields[selectedField.contentId] ?? ""}
+                      altValue={
+                        selectedField.pairedAltContentId
+                          ? editor.fields[selectedField.pairedAltContentId] ?? ""
+                          : ""
+                      }
+                      hasAltField={Boolean(selectedField.pairedAltContentId)}
+                      onImageChange={(url) => updateField(selectedField.contentId, url)}
+                      onAltChange={(alt) => {
+                        if (selectedField.pairedAltContentId) {
+                          updateField(selectedField.pairedAltContentId, alt);
+                        }
+                      }}
+                    />
+                  );
+                }
                 const richTextMode = getRichTextMode(selectedField);
                 if (richTextMode === "none") {
                   return (

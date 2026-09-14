@@ -259,6 +259,13 @@ export type EditableFieldDef = {
    * (layout.tsx, which renders Header/Footer, has no access to the
    * `?editorPreview=true` query string the way a page.tsx does). */
   contentScope: "page" | "global";
+  /** Phase 202 — only set on `type: "image"` fields. Points at that image's
+   * paired `type: "altText"` field's own contentId, so the Inspector's
+   * image-upload panel can read/write both from one selected Layer without
+   * the alt-text field needing its own separate, clickable Layers entry
+   * (PageEditorShell filters `type: "altText"` out of the Layers list for
+   * exactly this reason — it's edited inline within the image panel). */
+  pairedAltContentId?: string;
 };
 
 export type RichTextMode = "block" | "inline" | "none";
@@ -500,6 +507,22 @@ const DONATE_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "donate.whySupport.photo2Caption", path: "photo2Caption", label: "Photo 2 caption", type: "plainText", group: "Why your support matters (photos)", maxLength: 140, contentScope: "page" },
   { contentId: "donate.whySupport.photo3Category", path: "photo3Category", label: "Photo 3 category label", type: "plainText", group: "Why your support matters (photos)", maxLength: 30, contentScope: "page" },
   { contentId: "donate.whySupport.photo3Caption", path: "photo3Caption", label: "Photo 3 caption", type: "plainText", group: "Why your support matters (photos)", maxLength: 140, contentScope: "page" },
+  // Phase 202 — the actual photo files, now click-to-select/upload/publish
+  // fields in the visual Page Editor (previously hardcoded asset paths with
+  // no admin UI at all — see DonatePage.tsx's Phase 200/201/202 comments for
+  // the full history). Each image field carries a `pairedAltContentId`
+  // pointing at its own altText field, so PageEditorShell's ImageFieldInspector
+  // can edit both from the one "Photo N image" Layer — the altText fields
+  // are registered (so they still round-trip through applyDraftPatch/
+  // publishPageSources/extractFieldValues automatically) but intentionally
+  // excluded from the Layers list itself, since they're never a standalone
+  // clickable canvas element.
+  { contentId: "donate.whySupport.photo1Image", path: "photo1Image", label: "Photo 1 image — Therapy", type: "image", group: "Why your support matters (photos)", contentScope: "page", pairedAltContentId: "donate.whySupport.photo1ImageAlt" },
+  { contentId: "donate.whySupport.photo1ImageAlt", path: "photo1ImageAlt", label: "Photo 1 alt text", type: "altText", group: "Why your support matters (photos)", maxLength: 200, contentScope: "page" },
+  { contentId: "donate.whySupport.photo2Image", path: "photo2Image", label: "Photo 2 image — Education", type: "image", group: "Why your support matters (photos)", contentScope: "page", pairedAltContentId: "donate.whySupport.photo2ImageAlt" },
+  { contentId: "donate.whySupport.photo2ImageAlt", path: "photo2ImageAlt", label: "Photo 2 alt text", type: "altText", group: "Why your support matters (photos)", maxLength: 200, contentScope: "page" },
+  { contentId: "donate.whySupport.photo3Image", path: "photo3Image", label: "Photo 3 image — Wellbeing", type: "image", group: "Why your support matters (photos)", contentScope: "page", pairedAltContentId: "donate.whySupport.photo3ImageAlt" },
+  { contentId: "donate.whySupport.photo3ImageAlt", path: "photo3ImageAlt", label: "Photo 3 alt text", type: "altText", group: "Why your support matters (photos)", maxLength: 200, contentScope: "page" },
   // Phase 200 — Testimonials. Roy's reference doc flags this as one of the
   // most important sections but its own example quotes are explicitly
   // placeholders ("Important: only use real testimonials and obtain

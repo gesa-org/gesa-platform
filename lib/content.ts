@@ -413,6 +413,17 @@ export type DonatePageContent = {
   photo2Caption: string;
   photo3Category: string;
   photo3Caption: string;
+  // Phase 202 — the 3 "why your support matters" photos are now real
+  // UI Builder fields (type "image"/"altText" in pageRegistry.ts), draft/
+  // publish-gated exactly like every text field on this page. Supersedes
+  // Phase 201's Media Library "assign to section" mechanism for these 3
+  // specific slots — see DonatePage.tsx's own Phase 202 comment for why.
+  photo1Image: string;
+  photo1ImageAlt: string;
+  photo2Image: string;
+  photo2ImageAlt: string;
+  photo3Image: string;
+  photo3ImageAlt: string;
   testimonialsHeading: string;
   testimonial1Quote: string;
   testimonial1Author: string;
