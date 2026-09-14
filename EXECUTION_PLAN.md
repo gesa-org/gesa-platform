@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 204 added)
+Last updated: 2026-09-15 (Phase 205 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9000,6 +9000,53 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 204: Error pages (404 + crash boundaries)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 205: Content Manager IA rebuild
+
+Auditing this phase surfaced two things worth flagging before touching anything: (1) `CONTENT_GUIDE.md` — referenced everywhere in this file and in inline code comments since Phase 81 as the CMS's authoritative conventions/scope doc — no longer exists anywhere in the repo (deleted or never committed; its absence isn't fixed by this phase, just noted); (2) "IA rebuild" as a one-line roadmap label could have meant several different things (tab grouping, URL deep-linking, rewriting the missing guide, or all three). Roy chose the narrowest, safest option: reorganize the existing ~18 Content Manager tabs into labeled groups. No deep-linking, no `CONTENT_GUIDE.md` rewrite this phase — both remain open for later if wanted.
+
+**What shipped:**
+
+`components/admin/content/ContentManagerApp.tsx` — pure UI reorganization, zero data-model changes. The single flat `flex flex-wrap` row of 18 same-weight tab pills (order = build history, not any real hierarchy — "Header" sat next to "About" sat next to "Community" with no visual distinction between global chrome, page copy, and data managers) is now four labeled groups, each its own row:
+
+- **Pages** — About, Find Support, Our Professionals, Community, Blog (disabled), Contact, Intake, FAQ, Not Found Page (9 tabs — includes every `SIMPLE_PAGE_ENTRIES`-driven generic tab, same dynamic behavior as before: a future simple page added to that registry still shows up here automatically, no code change needed in this file).
+- **Global Elements** — Header, Footer, Crisis Button (chrome that appears on every page regardless of route).
+- **Forms & Popups** — Donate Page, Donate Band, Volunteer Modal (a flow/modal a visitor actively fills out or is funneled through).
+- **Data & Media** — Legal Pages, Media Library, Trusted Partners (a managed list/table rather than a single page's copy).
+
+Every tab's underlying `contentKey`, editor component, and props are byte-for-byte unchanged — only the picker UI (`useTabGroups()`, a small grouping helper) and its rendering (one small uppercase group-heading label + a pill row per group, replacing the single row) changed. The `useState<string>` tab-selection mechanism, and every `{tab === "X" && <Editor/>}` render branch below it, are untouched. Verified the full 18-tab set is preserved with no additions/omissions by counting both the old flat array and the new grouped arrays.
+
+**Known, documented judgment call:** FAQ's *questions* list is arguably a "Data & Media"-shaped thing (a managed list, like Legal Pages/Media Library/Trusted Partners), but its tab already bundles the page banner with the question list in one block — splitting that into two tabs across two groups would be a real content-model change, not a display reorg, so it stays a single "Pages" entry. Documented inline in the new grouping comment so a future phase can revisit deliberately rather than by accident.
+
+**Data/schema changes:** none.
+
+**Storage/permission changes:** none.
+
+**Testing steps:**
+- Open Content Manager → confirm four labeled groups render (Pages, Global Elements, Forms & Popups, Data & Media), each a row of pill buttons, in place of the old single row.
+- Click through several tabs across different groups (e.g. Header, Donate Band, Legal Pages, Not Found Page) → confirm each still loads its correct editor exactly as before — this phase touched no editor logic, only the picker around it.
+- Confirm the default tab on page load is still "Header" (unchanged from before).
+- Regression: `npx jest` — no existing test references `ContentManagerApp.tsx`'s tab structure, so this should be a clean pass with no changes needed elsewhere.
+
+**Assumptions/follow-ups:**
+- `CONTENT_GUIDE.md`'s absence is still unresolved — flagged here again since this phase's own audit re-surfaced it. Worth a dedicated pass to recreate it (current conventions, scope boundaries, known gaps) since `EXECUTION_PLAN.md` and multiple component comments still point to it as if it exists.
+- No deep-linking/URL state added — refreshing the Content Manager page still resets to the "Header" tab, same limitation as before this phase.
+- The "Our Professionals" naming collision (a Content Manager "Pages" tab vs. a separate top-level admin nav item for the actual therapist CRM records) is unchanged — noted during this phase's audit but out of scope for a pure tab-grouping pass.
+
+Files touched: `components/admin/content/ContentManagerApp.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 205: Content Manager IA rebuild (grouped tabs)"
 git push
 ```
 

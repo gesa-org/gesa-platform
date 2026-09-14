@@ -99,27 +99,49 @@ const COMPOSITE_SIMPLE_KEYS = new Set(["page_therapists", "page_support_groups",
 // lib/navigation.ts and next.config.mjs's redirect). Still the same two
 // site_content keys/editors underneath, just relabeled to match what an
 // admin actually sees in the live nav and browser tab now.
-const FIXED_TABS = [
-  "Header",
+const PAGE_FIXED_TABS = [
   "About", // page_home — the header nav labels "/" as "About" (Phase 88)
   "Find Support", // page_about_hero / page_about_sections — now renders at /find-your-therapist (Phase 145)
   "Our Professionals", // page_therapists
   "Community", // page_support_groups
 ] as const;
 
-const FIXED_TABS_END = [
-  "Intake",
-  "FAQ",
-  "Legal Pages",
-  "Footer",
-  "Donate Page",
-  "Donate Band",
-  "Crisis Button",
-  "Volunteer Modal",
-  "Media Library",
-  "Trusted Partners",
-  "Not Found Page",
-] as const;
+const PAGE_FIXED_TABS_END = ["Intake", "FAQ", "Not Found Page"] as const;
+
+const GLOBAL_ELEMENT_TABS = ["Header", "Footer", "Crisis Button"] as const;
+
+const FORMS_AND_POPUPS_TABS = ["Donate Page", "Donate Band", "Volunteer Modal"] as const;
+
+const DATA_AND_MEDIA_TABS = ["Legal Pages", "Media Library", "Trusted Partners"] as const;
+
+// Phase 205 — Content Manager IA rebuild. With ~20 tabs accumulated over
+// 204 phases, a single flat `flex flex-wrap` row of same-weight pills (no
+// grouping, no search, order = build history rather than any real
+// hierarchy) had become the exact "an admin can't predict where a page
+// lives without scanning the whole row" problem this phase exists to fix.
+// Pure UI reorganization — every tab's underlying contentKey/editor/props
+// is completely unchanged, so this carries none of the data-model risk a
+// real schema/content change would. Four groups, chosen to match how an
+// admin actually thinks about "what am I editing" rather than when it was
+// built: **Pages** (anything rendering as its own routed page — including
+// every SIMPLE_PAGE_ENTRIES-driven generic tab, same as before), **Global
+// Elements** (chrome that appears on every page regardless of route),
+// **Forms & Popups** (a flow/modal a visitor actively fills out or is
+// funneled through), **Data & Media** (a managed list/table rather than a
+// single page's copy — FAQ's *questions* would fit here too, but its own
+// tab already bundles the banner with the question list, so it stays a
+// single "Pages" entry rather than being split across two groups).
+function useTabGroups(genericEntries: { key: string; label: string }[]) {
+  return [
+    {
+      heading: "Pages",
+      tabs: [...PAGE_FIXED_TABS, ...genericEntries.map((e) => e.label), ...PAGE_FIXED_TABS_END],
+    },
+    { heading: "Global Elements", tabs: [...GLOBAL_ELEMENT_TABS] },
+    { heading: "Forms & Popups", tabs: [...FORMS_AND_POPUPS_TABS] },
+    { heading: "Data & Media", tabs: [...DATA_AND_MEDIA_TABS] },
+  ];
+}
 
 // The Content Manager's tab shell — a client component so switching tabs is
 // instant (no navigation/refetch), matching the "Admin UI" layer from the
@@ -128,23 +150,30 @@ const FIXED_TABS_END = [
 // those already lived in before this feature).
 export default function ContentManagerApp(props: Props) {
   const genericEntries = props.simplePageEntries.filter((e) => !COMPOSITE_SIMPLE_KEYS.has(e.key));
-  const TABS = [...FIXED_TABS, ...genericEntries.map((e) => e.label), ...FIXED_TABS_END];
-  const [tab, setTab] = useState<string>(TABS[0]);
+  const tabGroups = useTabGroups(genericEntries);
+  const [tab, setTab] = useState<string>("Header");
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap gap-2 border-b border-border pb-4">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`rounded-full px-4 py-1.5 text-[13.5px] font-medium transition-colors ${
-              tab === t ? "bg-primary text-white" : "bg-secondary text-muted-fg hover:text-primary"
-            }`}
-          >
-            {t}
-          </button>
+      <div className="mb-5 flex flex-col gap-3 border-b border-border pb-4">
+        {tabGroups.map((group) => (
+          <div key={group.heading} className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 w-[110px] flex-none text-[11.5px] font-semibold uppercase tracking-wide text-muted-fg">
+              {group.heading}
+            </span>
+            {group.tabs.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={`rounded-full px-4 py-1.5 text-[13.5px] font-medium transition-colors ${
+                  tab === t ? "bg-primary text-white" : "bg-secondary text-muted-fg hover:text-primary"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
 
