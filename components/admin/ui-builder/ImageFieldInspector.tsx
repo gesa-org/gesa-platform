@@ -103,7 +103,7 @@ export default function ImageFieldInspector({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageValue} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="text-[12px] text-muted-fg">No image set — the page's built-in default renders instead</span>
+          <span className="text-[12px] text-muted-fg">No image set — the page&apos;s built-in default renders instead</span>
         )}
       </div>
 
