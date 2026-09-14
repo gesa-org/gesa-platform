@@ -1,8 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
-import ParallaxLayer from "@/components/motion/ParallaxLayer";
-import GoldWatermarks from "@/components/ui/GoldWatermarks";
+import GoldHeroGlow from "@/components/ui/GoldHeroGlow";
 
 interface PageHeroProps {
   icon?: LucideIcon;
@@ -80,14 +79,7 @@ export default function PageHero({
 }: PageHeroProps) {
   return (
     <section className={`hero relative overflow-hidden ${gold ? "gold-banner" : ""} ${className}`}>
-      <ParallaxLayer speed={30} className="pointer-events-none absolute inset-0 z-0">
-        <div
-          className={`absolute right-0 top-0 h-[500px] w-[500px] -translate-y-1/4 translate-x-1/3 rounded-full blur-[100px] ${
-            gold ? "bg-white/25" : "bg-accent-soft opacity-60"
-          }`}
-        />
-        {gold && <GoldWatermarks />}
-      </ParallaxLayer>
+      <GoldHeroGlow gold={gold} />
       <StaggerGroup
         className={`relative z-10 text-center ${narrow ? "narrow" : "wrap"}`}
         style={maxWidth ? { maxWidth } : undefined}

@@ -8521,4 +8521,38 @@ git push
 Attempted twice (a plain version, then a redo with a darker offset "depth" panel and denser textures after Roy asked for a closer copy of his reference) and reverted both times at Roy's request, before either was ever committed. `components/home/Paths.tsx` and `tests/unit/Paths.test.tsx` are back to their original, pre-Phase-191 state (wood-frame/mat front face, "War"/"Terror"/"Disaster" labels). `components/home/PathCardTexture.tsx` (added for this attempt) is unused; it wasn't deleted since file deletion isn't available in this environment — safe to `git rm` it, or leave it, since nothing imports it and it has no effect on the build either way.
 
 ---
+
+## Phase 192: About hero now uses the exact same animated background as /therapists
+
+Roy asked for the About page's hero to reuse — not approximate — the moving background behind the Our Specialists (`/therapists`) hero, down to the same component, classes, keyframes, blur/opacity/position, and responsive/reduced-motion rules.
+
+**What the /therapists effect actually is:** the "moving/sliding" part is the `.gold-banner::before` sheen sweep in `app/globals.css` (`@keyframes gold-sheen`, 7s ease-in-out loop, already disabled under `prefers-reduced-motion: reduce`). `/therapists` gets this for free because its hero renders through the shared `PageHero` component with `gold` set, and `PageHero`'s wrapping `<section>` carries the `.gold-banner` class. Behind that sheen, `PageHero` also renders a static decorative layer: a `ParallaxLayer speed={30}` wrapping a `500×500px`, `blur-[100px]`, `bg-white/25` blob (top-right, `-translate-y-1/4 translate-x-1/3`) plus the shared `<GoldWatermarks />` line-art texture, all inside a `pointer-events-none absolute inset-0 z-0` layer.
+
+**What About's hero (`components/Hero.tsx`, rendered live via `/find-your-therapist`) had instead:** it already had the `.gold-banner` class and so already had the identical sheen animation and reduced-motion handling — but its own decorative layer was a bespoke, differently-sized copy (an `800×800px` blob at a different opacity, plus an extra second glow blob PageHero doesn't have), built before `PageHero`'s version existed.
+
+**Fix — extract, don't duplicate:**
+- Added `components/ui/GoldHeroGlow.tsx`: the exact decorative-layer markup pulled out of `PageHero.tsx` verbatim (same `ParallaxLayer speed={30}`, same blob size/blur/opacity/position, same conditional `<GoldWatermarks />`), taking a `gold` boolean prop.
+- `components/ui/PageHero.tsx` now renders `<GoldHeroGlow gold={gold} />` in place of its old inline block — output is byte-for-byte identical, so `/therapists`, Support Groups, FAQ, and Contact are all unaffected (confirmed against `tests/unit/PageHero.test.tsx`, which still passes unchanged).
+- `components/Hero.tsx` now renders `<GoldHeroGlow gold />` in place of its old bespoke 800px-blob layer, and its outer `<section>` gained `overflow-hidden` directly (previously that clipping lived on the inner decorative `<div>`, which is now gone) so nothing changes about how the sheen and blob are clipped to the hero bounds.
+- Net effect: About's hero and `/therapists`' hero now share one component for the entire decorative background, so any future tweak to one automatically applies to both instead of drifting apart again.
+
+**Scope check against Roy's requirements:**
+- Reduced motion: unchanged — still governed entirely by the existing `.gold-banner::before` `prefers-reduced-motion: reduce` rule in `globals.css`, which now applies identically to both pages since both use the same class and the same static blob layer underneath.
+- Readability/contrast: unchanged — no text, overlay, or color values were touched; only the decorative blob's own size/position moved to match `/therapists` exactly.
+- Responsive/no horizontal overflow: the blob is still inside a `pointer-events-none absolute inset-0` layer clipped by the hero's own `overflow-hidden`, same as before and same as `/therapists` — going from an 800px blob to the shared 500px one only tightens the clipped area, it doesn't loosen it.
+- No new libraries or JS animation loops introduced — this remains the existing CSS-only `.gold-banner` sheen plus a `ParallaxLayer` (already used sitewide for scroll drift), nothing new.
+
+Files touched: `components/ui/GoldHeroGlow.tsx` (new), `components/ui/PageHero.tsx`, `components/Hero.tsx`. No test files needed updates — `tests/unit/PageHero.test.tsx` covers the shared component's `gold`-gated watermark behavior and passes unchanged; there is no existing `Hero.test.tsx` to update.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 192: unify About hero background effect with /therapists via shared GoldHeroGlow"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

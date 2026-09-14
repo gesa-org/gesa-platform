@@ -1,11 +1,10 @@
 import Link from 'next/link';
 import { ArrowRight, HeartHandshake, ShieldCheck, Users, Sparkle } from 'lucide-react';
 import { buildHighlightedHtml } from '@/components/ui/HighlightedText';
-import GoldWatermarks from '@/components/ui/GoldWatermarks';
+import GoldHeroGlow from '@/components/ui/GoldHeroGlow';
 import Reveal from '@/components/motion/Reveal';
 import ScrollText from '@/components/motion/ScrollText';
 import ParallaxMedia from '@/components/motion/ParallaxMedia';
-import ParallaxLayer from '@/components/motion/ParallaxLayer';
 import { StaggerGroup, StaggerItem } from '@/components/motion/StaggerReveal';
 import type { HeroContent } from '@/lib/content';
 import EditableText from '@/components/ui-builder/public/EditableText';
@@ -140,40 +139,16 @@ export default function Hero({
   therapists?: PublicTherapistRow[];
 }) {
   return (
-    <section className="gold-banner relative border-b border-border pt-16 pb-20">
-      {/* Decorative Background — kept as its own absolutely-positioned,
-          overflow-hidden layer (rather than putting overflow-hidden on the
-          section itself) purely so this glow/doodle texture stays clipped
-          to the hero bounds. Phase 50 removed the old media panel that used
-          to bleed past the section's top edge, but this layer's own
-          structure didn't need to change either way. */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        {/* Phase 46 — wrapped in ParallaxLayer for the same background-layer
-            drift added to Home's glow blob; the existing translate-x/y
-            utility classes on the blob itself are untouched, since the
-            parallax transform is applied one level up on the wrapper
-            rather than fighting with those Tailwind transforms directly. */}
-        <ParallaxLayer speed={35} className="absolute inset-0">
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-accent-soft rounded-full blur-[100px] opacity-60 translate-x-1/3 -translate-y-1/4"></div>
-
-          {/* Faint line-art doodles for texture, matching the reference
-              mockup. Phase 67 — extracted into a shared component (now 5
-              icon types/7 instances, up from 2 types/4 instances) so this
-              same texture also appears on Home, Our Therapists, and
-              Support Groups' gold sections, not just here. */}
-          <GoldWatermarks />
-
-          {/* Soft multi-color glow behind the headline. Phase 130 — the
-              center stop was var(--clay) (gold), which clashed once the
-              section behind it switched to the slate-grey `.gold-banner`
-              background; swapped to a plain white highlight so the glow
-              still reads as "soft light behind the headline" against the
-              new background instead of a stray gold patch. --accent (sage
-              green) was untouched — it never read as part of the gold
-              treatment. */}
-          <div className="absolute left-[10%] top-[24%] h-[260px] w-[420px] rounded-full bg-[radial-gradient(circle,white_0%,var(--accent)_45%,transparent_75%)] opacity-25 blur-[70px]" />
-        </ParallaxLayer>
-      </div>
+    <section className="gold-banner relative overflow-hidden border-b border-border pt-16 pb-20">
+      {/* Decorative Background — Phase 192: replaced this hero's own
+          bespoke glow/doodle layer with the exact same shared
+          GoldHeroGlow used by PageHero.tsx (Our Therapists, Support
+          Groups, etc.), per Roy's request that the About hero reuse the
+          identical component/classes/keyframes/blur/opacity/position
+          rather than an approximation. This hero's own `overflow-hidden`
+          (on the outer <section>, added below) now does the clipping
+          that used to live on this wrapper div. */}
+      <GoldHeroGlow gold />
 
       <div className="max-w-[1160px] mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.12fr] gap-12 items-center">
