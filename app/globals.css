@@ -46,6 +46,16 @@
     --primary: #2b3140; /* Deep Slate */
     --primary-600: #1d212b; /* darker slate — primary hover/active */
     --primary-fg: #eef1f6; /* Powder Ivory text on primary */
+    /* Phase 199 (mobile pass follow-up) — Roy asked specifically for the
+       header's Donate button to move to a dark navy blue (reference image
+       supplied), not for --primary itself to change — --primary drives
+       every other primary CTA site-wide (Book buttons, form submits, etc.),
+       so retuning it would have rippled far past just Donate. A dedicated
+       token instead, used only by the header/mobile-drawer Donate CTA
+       (see Header.tsx, MobileNavDrawer.tsx). Best-effort match to the
+       supplied image — nudge this one value if it's not exact. */
+    --donate-navy: #1c2b45;
+    --donate-navy-600: #12192b; /* hover/active */
     --secondary: #b7c3d6; /* the extracted wall color — pills, ghost buttons, section bands */
     --accent: #9ba283; /* Sage/Olive Green (picture-mat color) — icons, thin hover borders */
     --accent-soft: #eaf0e4; /* pale sage wash for badge/pill/glow backgrounds */

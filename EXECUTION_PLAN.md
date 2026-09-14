@@ -8755,6 +8755,8 @@ To make room for the hamburger without crowding 320-375px screens further: `Head
 
 Files touched: `components/Header.tsx`, `components/MobileNavDrawer.tsx` (new), `components/AuthStatus.tsx`, `components/LanguageSelector.tsx`, `components/admin/NotificationBell.tsx`, `components/volunteer/VolunteerPrimaryCta.tsx`, `components/volunteer/VolunteerApplyButton.tsx`, `components/TherapistsDirectory.tsx`, `tailwind.config.ts`.
 
+**Follow-up:** Roy asked for the header's Donate button specifically to move to a dark navy blue (reference image supplied), separately from the mobile pass above. Added a dedicated `--donate-navy`/`--donate-navy-600` token pair in `app/globals.css` (best-effort match to the supplied image) rather than retuning `--primary` itself, since `--primary` drives every other primary CTA site-wide (Book buttons, form submits, etc.) and Roy's ask was scoped to this one button. Applied to both places the header Donate CTA renders: `Header.tsx` (desktop) and `MobileNavDrawer.tsx` (mobile). If the shade isn't an exact match to the reference, it's a one-line hex tweak in `globals.css` — nothing else needs to change.
+
 **Still to come in this phase (not yet started):** forms platform-wide (contact, donation, intake, booking, account, therapist onboarding), auth pages, Community/donation/professional-onboarding flows, footer + legal pages, CRM/admin dashboard tables and data screens, loading/error states, and a full cross-width (320/360/375/390/412/430px) QA pass with a final deliverables report. Each will land as its own reviewable installment under this same Phase 199 heading.
 
 ```

@@ -121,7 +121,7 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
               Manager still just gets a normal link. */}
           <VolunteerPrimaryCta
             href={content.donateHref}
-            className="hidden sm:inline-flex items-center gap-2 bg-primary text-primary-fg hover:bg-primary-600 px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft"
+            className="hidden sm:inline-flex items-center gap-2 bg-[var(--donate-navy)] text-primary-fg hover:bg-[var(--donate-navy-600)] px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft"
           >
             <Heart size={16} />{" "}
             <EditableText contentId="global.header.donateLabel" label="Donate button label" value={content.donateLabel} as="span" />

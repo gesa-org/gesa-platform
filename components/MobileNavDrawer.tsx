@@ -137,7 +137,7 @@ export default function MobileNavDrawer({ content }: { content: HeaderContent })
               <VolunteerPrimaryCta
                 href={content.donateHref}
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-[16px] font-semibold text-primary-fg shadow-soft transition-all hover:bg-primary-600"
+                className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--donate-navy)] px-6 py-3.5 text-[16px] font-semibold text-primary-fg shadow-soft transition-all hover:bg-[var(--donate-navy-600)]"
               >
                 <Heart size={17} />
                 <EditableText
