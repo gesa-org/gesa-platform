@@ -8612,4 +8612,42 @@ git push
 ```
 
 ---
+
+## Phase 195: "JOIN THE MOVEMENT" modal — searchable multi-select combobox for Additional Expertise + Therapy Languages
+
+Roy asked for the two required multi-select fields in the volunteer application modal — Additional Areas of Expertise and Possible Therapy Languages — to stop being long, unstructured checkbox grids and become searchable, chip-based comboboxes, grouped under a new "Professional Details" heading right after Primary Area of Expertise, with full keyboard/ARIA support and an "Other" text reveal on each.
+
+**New component — `components/ui/MultiSelectCombobox.tsx`.** A generic, reusable searchable multi-select: a chip row + search input styled as one combobox control (`role="combobox"`, `aria-expanded`, `aria-controls`), a `role="listbox"` dropdown (`role="option"`, `aria-selected`, a checkmark for selected rows), removable chips (`aria-label="Remove {value}"`), and an optional "Other" row that reveals a short text field when picked. Keyboard support: `ArrowUp`/`ArrowDown` move a keyboard-only highlight; `Enter` toggles the highlighted option and calls `e.preventDefault()` so it never also submits the surrounding form; `Escape` closes the dropdown; `Backspace` on an empty search box removes the last chip. `Space` is deliberately **not** always a select-key — it only toggles the highlighted option when a keyboard highlight is already active (i.e., right after an arrow key), so typing a multi-word option like "Life Coach" or "Filipino (Tagalog)" still works normally in the search box. This is the one deliberate deviation from Roy's literal "Enter/Space to select" wording, made so free-text search stays usable — documented in the component's own header comment.
+
+**`components/volunteer/VolunteerApplicationModal.tsx` changes:**
+- Replaced the old 10-item `SPECIALTY_OPTIONS` quick-pick list with Roy's full 30-option list (renamed `EXPERTISE_OPTIONS`), reused for both Primary Area of Expertise (still a plain `<select>`) and the new Additional Areas of Expertise combobox. Reusing one list for both (not just for Additional Expertise) was necessary, not optional: Primary's value is auto-added into Additional Expertise, and the old list spelled one option "Mindful Self Compassion" where Roy's new list spells it "Mindful Self-Compassion" — left on two different lists, that auto-add would have silently produced a value that didn't match anything in the new list.
+- Replaced the old 10-item `LANGUAGE_OPTIONS` with Roy's full 23-option list.
+- Added a new "Professional Details" `<fieldset>` immediately after Primary Area of Expertise, containing both comboboxes with their required helper text ("Select all relevant areas, including your primary area of expertise." / "Select every language in which you can confidently provide therapy.") and asterisks. The old "Languages Offered" checkbox grid (previously living in Availability & Scheduling) was removed from there — it's this same field, just relocated per Roy's placement request.
+- `togglePrimary` (auto-adding Primary's value into Additional Expertise) is unchanged in behavior, just now feeds the combobox instead of a checkbox grid.
+- Validation: kept the existing "must include Primary Area of Expertise" rule, added `otherExpertise`/`otherLanguage` required-when-"Other"-is-selected checks, and updated the two required literal messages to Roy's exact wording: "Please select at least one area of expertise." (already matched) and "Please select at least one therapy language." (previously "Please select at least one language you offer.").
+- **Session persistence:** `VolunteerApplyButton.tsx` fully unmounts this modal on close (`{open && <VolunteerApplicationModal />}`), so this component's own `useState` is normally lost if it's closed by accident. Added a small `sessionStorage`-backed draft (key `gesa-volunteer-application-draft-v1`) that persists only these two fields' values and "Other" text, hydrated on mount and cleared once the application actually submits — matches Roy's "preserve all selected values if the modal is closed accidentally and reopened during the same session" requirement without persisting the rest of the form (photo, bio, etc.), which wasn't asked for and raises its own questions about stale drafts across different applicants on a shared device.
+
+**Field keys and how they're actually stored — the deliverable Roy asked for explicitly:**
+- Logical submission keys: `additional_expertise[]`, `other_expertise`, `therapy_languages[]`, `other_therapy_language`.
+- These do **not** map to two new database columns. `therapist_applications.specialties` and `.languages` (both pre-existing `string[]` columns) already just get iterated/joined as plain strings everywhere they're read — `VolunteerApplicationsTable.tsx`'s admin view renders each array entry as its own badge, `lib/email/templates.ts`'s notification email does `app.specialties.join(", ")`/`app.languages.join(", ")`, and `create-profile/route.ts` copies both arrays through verbatim when an approved applicant becomes a real therapist row. None of the three needed to change.
+- So rather than add a migration for two rarely-used optional text fields, the submit handler in `VolunteerApplicationModal.tsx` replaces the bare `"Other"`/`"Other language"` placeholder value with a self-describing `"Other: <what they typed>"` string, in the same array, right before both the Supabase insert and the notification-email POST. The admin table, the email, and any future CRM read of `specialties`/`languages` see one more readable string in the array — nothing about their code needed to know a new field exists.
+- Confirmed via grep: no other file assumes a fixed/enum-bound set of specialty or language values — `TherapistsDirectory.tsx`'s public filter derives its own options dynamically from whatever's actually on each therapist row, so an approved applicant's custom "Other: …" value becomes its own filterable tag automatically, with no separate list to update.
+
+**Known gap, left alone deliberately:** `lib/translations/he.ts` has a Hebrew dictionary section for this modal, but it's already stale against the current (Phase 189+) English strings — it still has entries for "Specialties," "Submit application," "Proof of license / verification," none of which exist in the component anymore, predating this phase's changes. Rebuilding that dictionary against the modal's current strings is a real, separate piece of work; adding a few new keys for just this phase's new strings wouldn't fix the existing gap and wasn't part of what Roy asked for here, so it's flagged rather than silently expanded.
+
+**Tests — `tests/unit/VolunteerApplicationModal.test.tsx`:** updated the shared `fillRequiredFields()` helper (and every test using it) to drive the new comboboxes — type a search term, click the matching `role="option"` row — instead of clicking checkboxes that no longer exist. Added: a keyboard-selection test (arrow key + Enter picks an option), an "Other" reveal test for both fields, and a test that drives the two new required-field messages by bypassing the (correctly) disabled Apply Now button with a raw form `submit` event — mirroring the "Enter key in a text field" fallback path the component's own `validationError` comment already described, which is the only way either message can actually surface given the button stays disabled until the form is valid.
+
+Files touched: `components/ui/MultiSelectCombobox.tsx` (new), `components/volunteer/VolunteerApplicationModal.tsx`, `tests/unit/VolunteerApplicationModal.test.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 195: searchable multi-select combobox for Additional Expertise + Therapy Languages"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

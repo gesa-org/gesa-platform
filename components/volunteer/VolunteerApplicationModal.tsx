@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HeartHandshake, Upload, X, Loader2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import PhoneNumberInput from "@/components/ui/PhoneNumberInput";
+import MultiSelectCombobox from "@/components/ui/MultiSelectCombobox";
 import { createClient } from "@/lib/supabase/client";
 import { useSiteContent } from "@/lib/content-client";
 import { GESA_PUBLIC_CONTACT_EMAIL } from "@/lib/contact";
@@ -33,36 +34,141 @@ export const VOLUNTEER_MODAL_CONTENT_FALLBACK: VolunteerApplicationModalContent 
     "We've received your application. Our team reviews every application by hand and will follow up at {email} once we have.",
 };
 
-// Phase 63 — curated quick-picks for specialties/languages; kept as the
-// single master list for both the new "Primary Area of Expertise" (single
-// select) and "Additional Areas of Expertise" (checkbox grid) fields per
-// Roy's explicit instruction to reuse this list rather than introduce a
-// second one.
-const SPECIALTY_OPTIONS = [
+// Phase 63 — curated quick-picks for specialties/languages; single master
+// list reused for both the "Primary Area of Expertise" (single select) and
+// "Additional Areas of Expertise" (multi-select combobox) fields per Roy's
+// explicit instruction to reuse one list rather than introduce a second.
+// Phase 195 — replaced the original 10-item quick-pick subset with Roy's
+// full 30-option "maintain these options" list for the Additional Areas of
+// Expertise combobox, and reused it for Primary Area of Expertise too
+// (rather than leaving Primary on the old short list) so every value a
+// therapist can pick as their primary is guaranteed to exist, verbatim, in
+// the Additional Expertise list it gets auto-added to — a mismatch here
+// (the old list spelled one option "Mindful Self Compassion", Roy's new
+// list spells it "Mindful Self-Compassion") would have made the auto-add
+// silently produce an option that didn't match anything in the new list.
+const EXPERTISE_OPTIONS = [
+  "Art Therapy",
+  "Breathing Exercises",
   "CBT",
-  "Trauma Support",
-  "Emotional Support for Couples",
-  "Psychiatry",
-  "Group Sessions",
-  "Coach (Life Coach)",
-  "Guided Meditation",
-  "Social Work",
   "Children and Adolescents",
-  "Mindful Self Compassion",
+  "Coach (Life Coach)",
+  "Counseling",
+  "EMDR",
+  "Emotional Support",
+  "Emotional Support for Couples",
+  "Family Support",
+  "Group Sessions",
+  "Guided Meditation",
+  "Helping The Helper",
+  "Herbal Medicine",
+  "Homeopathy",
+  "Medical Hypnosis",
+  "Mindful Self-Compassion",
+  "NLP",
+  "Pilates",
+  "Psychiatry",
+  "Psychoanalysis / Psychoanalyst",
+  "Psychology",
+  "Psychotherapy",
+  "Reiki",
+  "Social Work",
+  "Supervision",
+  "Support for Pregnant Women and Infants",
+  "ThetaHealing",
+  "Trauma Support",
+  "Tree of Life Medicine",
+  "Yoga",
 ];
 
+// Phase 195 — Roy's full 23-option "maintain these options" list for
+// Possible Therapy Languages, replacing the old 10-item quick-pick subset.
 const LANGUAGE_OPTIONS = [
-  "English",
-  "Hebrew",
-  "Spanish",
-  "French",
   "Arabic",
-  "Russian",
-  "Portuguese",
+  "Bulgarian",
+  "Czech",
+  "Danish",
+  "Dutch",
+  "English",
+  "Filipino (Tagalog)",
+  "French",
   "German",
-  "Amharic",
-  "Ukrainian",
+  "Greek",
+  "Hebrew",
+  "Hindi",
+  "Hungarian",
+  "Italian",
+  "Latvian",
+  "Nigerian",
+  "Norwegian",
+  "Portuguese",
+  "Romanian",
+  "Russian",
+  "Slovak",
+  "Spanish",
+  "Swedish",
 ];
+
+// Phase 195 — labels for the "Other" rows in each combobox. Kept as named
+// constants (not inline strings) since the submit handler and the
+// sessionStorage draft-restore logic below both need to recognize these
+// exact values too.
+const OTHER_EXPERTISE_LABEL = "Other";
+const OTHER_LANGUAGE_LABEL = "Other language";
+
+// Phase 195 — sessionStorage key for "preserve selections if the modal is
+// closed accidentally and reopened in the same session." VolunteerApplyButton
+// fully unmounts this modal on close (`{open && <VolunteerApplicationModal />}`),
+// so any of this component's own useState is normally lost; this persists
+// only the two new required multi-select fields (values + their "Other" text)
+// Roy asked to be preserved, not the whole form — sessionStorage (not
+// localStorage) matches "during the same session" exactly, and is cleared
+// once the application actually submits so a later, fresh application
+// doesn't silently inherit stale picks.
+const DRAFT_STORAGE_KEY = "gesa-volunteer-application-draft-v1";
+
+type MultiSelectDraft = {
+  additionalExpertise: string[];
+  otherExpertise: string;
+  languages: string[];
+  otherLanguage: string;
+};
+
+function readDraft(): MultiSelectDraft | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return {
+      additionalExpertise: Array.isArray(parsed.additionalExpertise) ? parsed.additionalExpertise : [],
+      otherExpertise: typeof parsed.otherExpertise === "string" ? parsed.otherExpertise : "",
+      languages: Array.isArray(parsed.languages) ? parsed.languages : [],
+      otherLanguage: typeof parsed.otherLanguage === "string" ? parsed.otherLanguage : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeDraft(draft: MultiSelectDraft) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+  } catch {
+    // Best-effort only — private browsing etc. can throw; losing the draft
+    // cache is not worth failing the form over.
+  }
+}
+
+function clearDraft() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
 
 const GENDER_OPTIONS = ["Male", "Female", "Prefer not to say"];
 
@@ -132,10 +238,40 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
   const [hasCertification, setHasCertification] = useState<"yes" | "no" | "">("");
   const [credentialsProof, setCredentialsProof] = useState("");
   const [primaryExpertise, setPrimaryExpertise] = useState("");
+
+  // Professional Details — Phase 195's two required multi-select combobox
+  // fields (moved to sit immediately after Primary Area of Expertise, per
+  // Roy's spec; Languages used to live down in Availability & Scheduling as
+  // a checkbox grid). `additional_expertise[]`/`therapy_languages[]` and
+  // `other_expertise`/`other_therapy_language` are these fields' logical
+  // submission keys — see the Phase 195 EXECUTION_PLAN.md entry for exactly
+  // how they map onto the existing `specialties`/`languages` DB columns.
   const [additionalExpertise, setAdditionalExpertise] = useState<string[]>([]);
+  const [otherExpertise, setOtherExpertise] = useState("");
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [otherLanguage, setOtherLanguage] = useState("");
+
+  // Phase 195 — hydrate any draft saved from an accidentally-closed modal
+  // earlier in this browser session (see readDraft/writeDraft/clearDraft
+  // above). Runs once on mount only.
+  useEffect(() => {
+    const draft = readDraft();
+    if (!draft) return;
+    if (draft.additionalExpertise.length) setAdditionalExpertise(draft.additionalExpertise);
+    if (draft.otherExpertise) setOtherExpertise(draft.otherExpertise);
+    if (draft.languages.length) setLanguages(draft.languages);
+    if (draft.otherLanguage) setOtherLanguage(draft.otherLanguage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Phase 195 — persist on every change so closing the modal (which fully
+  // unmounts it — see VolunteerApplyButton.tsx) doesn't lose these two
+  // fields' selections within the same session.
+  useEffect(() => {
+    writeDraft({ additionalExpertise, otherExpertise, languages, otherLanguage });
+  }, [additionalExpertise, otherExpertise, languages, otherLanguage]);
 
   // Section 3 — Availability & Scheduling
-  const [languages, setLanguages] = useState<string[]>([]);
   const [meetingDuration, setMeetingDuration] = useState<MeetingDurationChoice | "">("");
   const [calendarLink, setCalendarLink] = useState("");
 
@@ -162,18 +298,12 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
 
   function togglePrimary(value: string) {
     setPrimaryExpertise(value);
-    // Spec: "the primary selection should also be checked" in Additional
-    // Areas of Expertise — auto-included rather than making the applicant
-    // check it twice; they can still add more on top of it.
+    // Spec: preselect/auto-add the Primary Area of Expertise value into
+    // Additional Areas of Expertise, since the form asks for it there again
+    // — auto-included rather than making the applicant pick it twice; they
+    // can still add more on top of it (or, per Phase 195, remove it again,
+    // which re-triggers the validation rule below asking them to re-add it).
     setAdditionalExpertise((prev) => (prev.includes(value) ? prev : [...prev, value]));
-  }
-
-  function toggleAdditional(value: string) {
-    setAdditionalExpertise((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
-  }
-
-  function toggleLanguage(value: string) {
-    setLanguages((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   }
 
   async function onPhotoSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -235,8 +365,12 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
     if (!primaryExpertise) return "Please select your primary area of expertise.";
     if (additionalExpertise.length === 0) return "Please select at least one area of expertise.";
     if (!additionalExpertise.includes(primaryExpertise))
-      return "Your primary area of expertise should also be checked in Additional Areas of Expertise.";
-    if (languages.length === 0) return "Please select at least one language you offer.";
+      return "Your primary area of expertise should also be included in Additional Areas of Expertise.";
+    if (additionalExpertise.includes(OTHER_EXPERTISE_LABEL) && !otherExpertise.trim())
+      return "Please specify your other area of expertise.";
+    if (languages.length === 0) return "Please select at least one therapy language.";
+    if (languages.includes(OTHER_LANGUAGE_LABEL) && !otherLanguage.trim())
+      return "Please specify the other language.";
     if (!meetingDuration) return "Please select a session/engagement duration.";
     if (bioWordCount === 0) return "Please write a short bio.";
     if (bioTooShort) return `Your bio needs at least ${BIO_MIN_WORDS} words (currently ${bioWordCount}).`;
@@ -256,7 +390,9 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
     credentialsProof,
     primaryExpertise,
     additionalExpertise,
+    otherExpertise,
     languages,
+    otherLanguage,
     meetingDuration,
     bioWordCount,
     bioTooShort,
@@ -278,6 +414,22 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
     setPending(true);
     setError(null);
 
+    // Phase 195 — the `specialties`/`languages` DB columns and the email
+    // template both already just store/join whatever strings this array
+    // contains (see lib/email/templates.ts, VolunteerApplicationsTable.tsx —
+    // neither needed to change). So rather than add new DB columns for the
+    // "Other" free-text fields, the bare "Other"/"Other language" placeholder
+    // is replaced with a self-describing "Other: <what they typed>" entry
+    // right here, before either submission — the admin view and email both
+    // read it as plain, readable text, and there's no separate DB migration
+    // for two optional text fields.
+    const finalExpertise = additionalExpertise.map((option) =>
+      option === OTHER_EXPERTISE_LABEL && otherExpertise.trim() ? `Other: ${otherExpertise.trim()}` : option
+    );
+    const finalLanguages = languages.map((option) =>
+      option === OTHER_LANGUAGE_LABEL && otherLanguage.trim() ? `Other: ${otherLanguage.trim()}` : option
+    );
+
     const supabase = createClient();
     const { error: insertError } = await supabase.from("therapist_applications").insert({
       full_name: fullName.trim(),
@@ -288,8 +440,8 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
       has_certification: hasCertification === "yes",
       credentials_proof: hasCertification === "yes" ? credentialsProof.trim() : "",
       primary_expertise: primaryExpertise,
-      specialties: additionalExpertise,
-      languages,
+      specialties: finalExpertise,
+      languages: finalLanguages,
       meeting_duration: meetingDuration,
       calendar_link: calendarLink.trim() || null,
       bio: bio.trim(),
@@ -304,6 +456,7 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
       return;
     }
     setSubmitted(true);
+    clearDraft();
     // Best-effort — the application is already saved even if either email fails.
     fetch("/api/email/volunteer-application", {
       method: "POST",
@@ -316,8 +469,8 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
         country,
         credentialsProof: hasCertification === "yes" ? credentialsProof : "",
         primaryExpertise,
-        specialties: additionalExpertise,
-        languages,
+        specialties: finalExpertise,
+        languages: finalLanguages,
         meetingDuration,
         calendarLink: calendarLink.trim() || null,
         photoUrl,
@@ -481,35 +634,68 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
               <option value="" disabled>
                 Select…
               </option>
-              {SPECIALTY_OPTIONS.map((option) => (
+              {EXPERTISE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
             </select>
           </div>
+        </fieldset>
 
-          <fieldset>
-            <legend className="mb-1.5 block text-sm font-semibold">
-              Additional Areas of Expertise <span className="text-destructive">*</span>
-            </legend>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 md:grid-cols-4">
-              {SPECIALTY_OPTIONS.map((option) => (
-                <label key={option} className="flex items-start gap-1.5 text-[13.5px]">
-                  <input
-                    type="checkbox"
-                    checked={additionalExpertise.includes(option)}
-                    onChange={() => toggleAdditional(option)}
-                    className={`${checkboxClass} mt-0.5`}
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-            <p className="mt-1.5 text-[12px] text-muted-fg">
-              Pick at least one — your Primary Area of Expertise above is automatically checked here too.
-            </p>
-          </fieldset>
+        {/* Professional Details — Phase 195. Placed immediately after
+            Primary Area of Expertise per Roy's spec: both required
+            multi-select fields get their own short heading here instead of
+            being buried as long checkbox grids further down the form (the
+            old "Languages Offered" checkbox grid used to live in Section 3,
+            Availability & Scheduling — moved up to sit beside Additional
+            Areas of Expertise instead, since both are the same kind of
+            field and Roy asked for them grouped together right after
+            Primary Area of Expertise). */}
+        <fieldset className="flex flex-col gap-4 border-t border-border pt-5">
+          <legend className="mb-1 text-[13px] font-bold uppercase tracking-wide text-muted-fg">
+            Professional Details
+          </legend>
+
+          <MultiSelectCombobox
+            id="volunteer-additional-expertise"
+            label="Additional Areas of Expertise"
+            required
+            helperText="Select all relevant areas, including your primary area of expertise."
+            placeholder="Search areas of expertise…"
+            options={EXPERTISE_OPTIONS}
+            value={additionalExpertise}
+            onChange={setAdditionalExpertise}
+            otherOptionLabel={OTHER_EXPERTISE_LABEL}
+            otherFieldLabel="Please specify other expertise."
+            otherFieldPlaceholder="e.g. Equine-assisted therapy"
+            otherValue={otherExpertise}
+            onOtherValueChange={setOtherExpertise}
+            error={touchedSubmit ? (validationError?.toLowerCase().includes("expertise") ? validationError : null) : null}
+          />
+
+          <MultiSelectCombobox
+            id="volunteer-therapy-languages"
+            label="Possible Therapy Languages"
+            required
+            helperText="Select every language in which you can confidently provide therapy."
+            placeholder="Search languages…"
+            options={LANGUAGE_OPTIONS}
+            value={languages}
+            onChange={setLanguages}
+            otherOptionLabel={OTHER_LANGUAGE_LABEL}
+            otherFieldLabel="Please specify language."
+            otherFieldPlaceholder="e.g. Amharic"
+            otherValue={otherLanguage}
+            onOtherValueChange={setOtherLanguage}
+            error={
+              touchedSubmit
+                ? validationError?.toLowerCase().includes("language")
+                  ? validationError
+                  : null
+                : null
+            }
+          />
         </fieldset>
 
         {/* Section 3 — Availability & Scheduling */}
@@ -517,24 +703,6 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
           <legend className="mb-1 text-[13px] font-bold uppercase tracking-wide text-muted-fg">
             Availability &amp; Scheduling
           </legend>
-          <fieldset>
-            <legend className="mb-1.5 block text-sm font-semibold">
-              Languages Offered <span className="text-destructive">*</span>
-            </legend>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 md:grid-cols-4">
-              {LANGUAGE_OPTIONS.map((option) => (
-                <label key={option} className="flex items-center gap-1.5 text-[13.5px]">
-                  <input
-                    type="checkbox"
-                    checked={languages.includes(option)}
-                    onChange={() => toggleLanguage(option)}
-                    className={checkboxClass}
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </fieldset>
 
           <div>
             <FieldLabel htmlFor="volunteer-duration">Session/engagement duration</FieldLabel>
