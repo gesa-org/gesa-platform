@@ -1,9 +1,25 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { MediaAssetRow } from "@/lib/database.types";
+
+type EditableMediaFields = Pick<
+  MediaAssetRow,
+  "alt_text" | "caption" | "credit" | "is_decorative" | "focal_point_x" | "focal_point_y"
+>;
 
 // Phase 201 — edit an asset's metadata (alt text, caption, credit,
 // decorative flag, focal point). Never touches storage or usages.
+//
+// Build failure fix (Roy's Vercel log, 2026-09-14): the original version of
+// this handler built `updates` as a `Record<string, unknown>` and passed it
+// straight to `.update(...)`. Supabase's generated `.update()` typing
+// rejects any object with a plain string index signature (it wants a
+// `Partial<MediaAssetRow>` with exact, known keys) — a real type-level
+// safeguard against accidentally writing an unknown/typo'd column, not a
+// bug in the generated types. Fixed by building a properly-typed
+// `Partial<EditableMediaFields>` field-by-field instead of a generic loop
+// over an array of key strings.
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   const profile = await getCurrentProfile();
   if (!profile || (profile.role !== "admin" && profile.role !== "super_admin")) {
@@ -13,10 +29,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "invalid request body" }, { status: 400 });
 
-  const updates: Record<string, unknown> = {};
-  for (const key of ["alt_text", "caption", "credit", "is_decorative", "focal_point_x", "focal_point_y"]) {
-    if (key in body) updates[key] = body[key];
-  }
+  const updates: Partial<EditableMediaFields> = {};
+  if ("alt_text" in body) updates.alt_text = body.alt_text;
+  if ("caption" in body) updates.caption = body.caption;
+  if ("credit" in body) updates.credit = body.credit;
+  if ("is_decorative" in body) updates.is_decorative = body.is_decorative;
+  if ("focal_point_x" in body) updates.focal_point_x = body.focal_point_x;
+  if ("focal_point_y" in body) updates.focal_point_y = body.focal_point_y;
+
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "no editable fields provided" }, { status: 400 });
   }
