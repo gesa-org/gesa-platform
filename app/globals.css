@@ -252,9 +252,22 @@
      tinted gold, see that file) is a more reliable "goldish accent" for
      this page: a blur-based radial glow fades to nothing well inside its
      own box on its own, with no edge to ever land on. The moving sheen is
-     untouched on every other `.gold-banner` page. */
+     untouched on every other `.gold-banner` page.
+     Phase 193 — Roy asked for this page to match Find Support/Our
+     Professionals/Community again: all three have the moving sheen, Home
+     was the one page without it, and he wants the site consistent. Restored
+     the sweep rather than leaving it off — inherits the exact same gradient,
+     `gold-sheen` animation, and position as every other `.gold-banner` page
+     (background is no longer overridden here at all). Phase 171's actual
+     problem — this hero's box being unusually tall, so the overlay's own
+     hard-clipped edge could land visibly at the hero/cards boundary — is
+     solved with a mask-image fade instead of disabling the sweep outright:
+     the overlay now fades to fully transparent well before that boundary,
+     so there's no edge left for the animation to ever expose, no matter
+     where it lands mid-sweep. */
   .gold-banner.home-hero::before {
-    background: none;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 78%);
+    mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 78%);
   }
   @media (prefers-reduced-motion: reduce) {
     .gold-banner::before {

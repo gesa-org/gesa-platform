@@ -8555,4 +8555,28 @@ git push
 ```
 
 ---
+
+## Phase 193: restored the moving sheen on Home's hero for site-wide consistency
+
+After Phase 192 shipped, Roy flagged that "About" (the page the header's nav labels "About," at `/`, rendered by `components/home/Paths.tsx` — not `/find-your-therapist`, which the nav calls "About Us" and which Phase 192 touched) still has no moving background, while Find Support, Our Professionals, and Community all do. That's correct: Home's hero uses `.gold-banner.home-hero`, and Phase 171 deliberately set `.gold-banner.home-hero::before { background: none; }` to disable the shared sheen animation there, after Roy had flagged a hard visual seam it caused.
+
+**What Phase 171 actually found:** the sheen (`.gold-banner::before`, animated via `@keyframes gold-sheen`) is a large `inset: -20%` overlay sized to the whole hero box. Home's hero box is unusually tall (`pb-[210px]`, the biggest padding of any `.gold-banner` page), so the overlay's own `overflow: hidden`-clipped edge could land visibly right at the hero/cards-section boundary mid-sweep — an abrupt gold-to-gray line. Phase 171's fix was to turn the sheen off entirely for this one page.
+
+**This phase's fix — restore the effect, solve the actual seam problem instead of avoiding it:** `.gold-banner.home-hero::before` no longer sets `background: none`. It now inherits the exact same gradient, `gold-sheen` animation, and position as every other `.gold-banner` page (Find Support, Our Professionals, Community) — genuinely the same effect, not a look-alike. To stop the seam from Phase 171 without disabling the animation, added a `mask-image`/`-webkit-mask-image` fade (`black 0% → black 55% → transparent 78%`, top to bottom) to this one rule, scoped to `.home-hero` only. The sweep now fades to fully transparent well before it reaches the bottom of this taller hero box, so there's no hard edge left for the animation to ever expose, at any point in its 7s loop — the other three pages' shorter hero boxes never had this problem and are untouched.
+
+Reduced motion is unaffected: the existing `@media (prefers-reduced-motion: reduce) { .gold-banner::before { animation: none; opacity: 0; } }` rule targets every `.gold-banner::before` element, `.home-hero` included, so it still disables the sweep and shows a static background for users who have that preference set.
+
+File touched: `app/globals.css` only (one rule). No component/markup changes, no test files reference this class, so there's nothing else to update.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 193: restore Home hero sheen animation for site-wide consistency, fix seam with mask-image fade"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
