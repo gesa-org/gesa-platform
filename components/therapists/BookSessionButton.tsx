@@ -6,9 +6,21 @@ import IntakeBookingModal from "@/components/intake/IntakeBookingModal";
 import BookingIntakeModal, { type IntakeSuccessDetails } from "@/components/booking/BookingIntakeModal";
 import SlotSelectionModal from "@/components/booking/SlotSelectionModal";
 import ScheduleReviewModal, { type ReviewDetails } from "@/components/booking/ScheduleReviewModal";
+import PaymentModal from "@/components/booking/PaymentModal";
 import BookingSuccessModal from "@/components/booking/BookingSuccessModal";
 import Button from "@/components/ui/Button";
 import type { PublicTherapistRow, SessionFormat } from "@/lib/database.types";
+
+// Phase 196 — same "HH:MM" -> "h:MM AM/PM" formatting already used by
+// ScheduleReviewModal/SlotSelectionModal, needed here too for PaymentModal's
+// payment-summary row (kept as a small local copy rather than exporting one
+// of those modals' internals, since neither treats this as public API).
+function formatDisplayTime(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
+}
 
 // "Book a Session" from the Our Therapists directory. Reuses the same
 // conflict-free scheduling flow built for the homepage's "Reach out now"
@@ -37,6 +49,7 @@ type Stage =
   | "calendarError"
   | "selectingSlot"
   | "reviewing"
+  | "payment"
   | "success";
 
 type SlotSelection = {
@@ -55,6 +68,7 @@ export default function BookSessionButton({
   supportRequestId,
   ctaLabel,
   bookingMetadata,
+  serviceType,
 }: {
   therapist: PublicTherapistRow;
   // Phase 142 — fired once, the moment a client first opens either booking
@@ -93,6 +107,14 @@ export default function BookSessionButton({
     country: string;
     cityOrAddress: string | null;
   };
+  // Phase 196 — set only when this button is rendered from the Community
+  // page's Charity Services / Professional Services search results (see
+  // components/support-groups/CommunityServiceModal.tsx). Threaded into the
+  // diary-link intake step and, for "professional," gates the final
+  // "Confirm schedule" step behind a real PayPal payment (see the new
+  // "payment" stage below). Undefined for every other caller — the
+  // original Our Professionals/Find Support flows are unaffected.
+  serviceType?: "charity" | "professional";
 }) {
   const [open, setOpen] = useState(false); // native flow modal
   const [stage, setStage] = useState<Stage>("idle");
@@ -193,7 +215,13 @@ export default function BookSessionButton({
     setStage("reviewing");
   }
 
-  async function onConfirm() {
+  // Phase 196 — the actual write to /api/diary-appointment/confirm, now
+  // shared by two callers: the plain "Confirm schedule" path (charity/no
+  // serviceType — unchanged) and PaymentModal's onPaid (professional, only
+  // ever reached after a real PayPal capture already succeeded server-side —
+  // see /api/diary-appointment/confirm's own payment_status "paid" check,
+  // which is the actual enforcement point, not this client code).
+  async function finalizeBooking() {
     if (!eventId) return;
     setConfirmPending(true);
     setConfirmError(null);
@@ -206,6 +234,7 @@ export default function BookSessionButton({
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         setConfirmError(data?.error || "Something went wrong — please try again.");
+        setStage("reviewing");
         return;
       }
       setSuccessData({
@@ -220,9 +249,21 @@ export default function BookSessionButton({
       setStage("success");
     } catch {
       setConfirmError("Something went wrong — please try again.");
+      setStage("reviewing");
     } finally {
       setConfirmPending(false);
     }
+  }
+
+  // ScheduleReviewModal's "Confirm schedule" button calls this. Professional
+  // Services bookings go to the payment step instead of confirming directly
+  // — finalizeBooking() only runs afterward, via PaymentModal's onPaid.
+  async function onConfirm() {
+    if (serviceType === "professional") {
+      setStage("payment");
+      return;
+    }
+    await finalizeBooking();
   }
 
   async function onCancelBooking() {
@@ -271,6 +312,7 @@ export default function BookSessionButton({
           <BookingIntakeModal
             therapistId={therapist.id}
             therapistName={therapist.full_name}
+            serviceType={serviceType}
             onClose={resetAll}
             onSuccess={onIntakeSuccess}
           />
@@ -330,6 +372,25 @@ export default function BookSessionButton({
               if (intakeId) openCalendar(intakeId);
             }}
             onCancel={onCancelBooking}
+          />
+        )}
+
+        {stage === "payment" && slot && reviewDetails && eventId && (
+          <PaymentModal
+            eventId={eventId}
+            summary={{
+              therapistName: therapist.full_name,
+              date: new Date(`${slot.selectedDate}T00:00:00`).toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+              time: formatDisplayTime(slot.selectedStartTime),
+              durationMinutes: slot.durationMinutes,
+            }}
+            onClose={() => setStage("reviewing")}
+            onPaid={finalizeBooking}
           />
         )}
 

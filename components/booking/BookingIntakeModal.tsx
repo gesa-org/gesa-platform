@@ -24,11 +24,14 @@ export type IntakeSuccessDetails = {
 export default function BookingIntakeModal({
   therapistId,
   therapistName,
+  serviceType,
   onClose,
   onSuccess,
 }: {
   therapistId: string;
   therapistName: string;
+  // Phase 196 — see BookingIntakeForm's own comment on this prop.
+  serviceType?: "charity" | "professional";
   onClose: () => void;
   onSuccess: (intakeId: string, details: IntakeSuccessDetails) => void;
 }) {
@@ -77,9 +80,26 @@ export default function BookingIntakeModal({
         <p className="mb-5 text-[14px] text-muted-fg">
           Please provide your details before selecting a date and time with this professional.
         </p>
+        {/* Phase 196 — the two required intro messages from the Community
+            page spec, shown only for the flow that triggered them. Neither
+            replaces the line above — both stack as extra, service-specific
+            context ahead of the same shared form. */}
+        {serviceType === "charity" && (
+          <p className="mb-5 rounded-xl bg-accent-soft px-3.5 py-3 text-[13.5px] text-primary-600">
+            Charity Services provide up to 6 free sessions with a GESA professional. If you wish to continue after
+            the sixth session, payment arrangements must be discussed directly with your therapist.
+          </p>
+        )}
+        {serviceType === "professional" && (
+          <p className="mb-5 rounded-xl bg-accent-soft px-3.5 py-3 text-[13.5px] text-primary-600">
+            Professional Services are paid sessions. Complete your details, select your appointment, and proceed to
+            secure payment to confirm your booking.
+          </p>
+        )}
         <BookingIntakeForm
           therapistId={therapistId}
           therapistName={therapistName}
+          serviceType={serviceType}
           onCancel={onClose}
           onSuccess={onSuccess}
         />

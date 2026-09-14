@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-08-13 (Phase 6)
+Last updated: 2026-09-14 (Phase 196)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8646,6 +8646,61 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 195: searchable multi-select combobox for Additional Expertise + Therapy Languages"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 196: Community page — "Charity Services" / "Professional Services" booking flows
+
+Roy's spec relabeled the Community page's two hero CTAs — "EXPLORE YOUR OPTIONS" → "CHARITY SERVICES", "JOIN THE MOVEMENT" → "PROFESSIONAL SERVICES" — and asked each to open a real client-facing booking flow rather than their old destinations (a plain `#pathways` anchor, and the volunteer/therapist recruitment modal, respectively — neither was a client booking flow at all). Charity Services: up to 6 free sessions per client, no online payment. Professional Services: paid sessions, gated behind a real payment before the booking confirms.
+
+**Data model — which of three pre-existing booking flows this builds on.** This codebase has three separate booking data models (`session_bookings`, the diary-link `diary_scheduling_events`/`booking_intake_forms` chain, and a from-scratch native flow in `IntakeBookingModal.tsx`). Roy's spec named the flow literally — "the same booking modal design… currently used in the 'Before you book your session' modal" — which is `BookingIntakeModal.tsx`'s exact `<h2>`, so this phase extends that chain (`BookingIntakeModal` → `BookingIntakeForm` → `/api/booking-intake` → diary-link handoff → `SlotSelectionModal` → `ScheduleReviewModal` → `/api/diary-appointment/confirm`), not the other two.
+
+**Scoping decision (flagged for Roy, not something he was explicitly asked and said yes to):** Charity/Professional Services search results are scoped to diary-link therapists only (`CommunityServiceModal.tsx` filters `therapists.filter(t => t.diary_link && t.diary_link_status !== "invalid")`). A therapist with no diary link uses the unrelated native `IntakeBookingModal` flow, which has none of the fields (participation history, sessions count) this spec's shared intake form requires — forcing those bookings through a mismatched form risked breaking "must not break the existing therapist booking flow outside these two new entry points," so they're simply excluded from these two entry points' results instead.
+
+**Database changes (applied directly to Production via Supabase MCP, migrations `phase196_community_charity_professional_services` and `phase196_expose_session_price_on_public_view`):**
+- `therapists`: + `session_price_amount numeric(10,2)`, `session_price_currency text default 'USD'`. No admin UI field yet for this, per Roy's explicit "Skip for now" — set directly via SQL until a future phase builds one.
+- `booking_intake_forms`: + `service_type text check (in 'charity'/'professional')`.
+- `diary_scheduling_events`: + `service_type`, `payment_status` (`not_required`/`pending`/`paid`/`failed`/`refunded`, default `not_required`), `payment_provider`, `payment_reference`, `price_amount`, `price_currency`. Its `status` check constraint widened to add `payment_pending` between `pending_confirmation` and `confirmed`.
+- `therapists_public` view recreated (`create or replace view`, base SQL taken from `pg_get_viewdef` first) to also expose `session_price_amount`/`session_price_currency` — both public-safe (a price, not contact info).
+- `lib/database.types.ts` hand-edited to match (this file is hand-maintained, not literally auto-generated, per its own established convention) — new `ServiceType`/`PaymentStatus` exported types, `DiarySchedulingStatus` widened, and the new columns added to `TherapistRow`, `PublicTherapistRow`, `DiarySchedulingEventRow`, `BookingIntakeFormRow`.
+
+**Payment — PayPal (Roy's choice; Mollie stays donations-only).** New `lib/payments/paypal.ts` (Orders v2 REST: `createPayPalOrder`, `capturePayPalOrder`, `isPayPalConfigured`), env-var only (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV`, `NEXT_PUBLIC_PAYPAL_CLIENT_ID` — see `ENV_VARS.md`), no secret ever reaches the browser. Two new routes: `app/api/payments/paypal/create-order/route.ts` (looks up the therapist's `session_price_amount`/`session_price_currency`; if null, blocks checkout with Roy's exact required message, "This professional has not yet configured a session price. Please choose another professional or contact GESA support."; otherwise creates the PayPal order and flips the event to `status: "payment_pending", payment_status: "pending"`) and `app/api/payments/paypal/capture-order/route.ts` (captures, verifies the reference id matches the event, sets `payment_status: "paid"`/`"failed"`, idempotent if already paid). New `components/booking/PaymentModal.tsx` loads the PayPal Smart Payment Buttons SDK and shows the required payment summary (therapist, date/time, duration, amount) before calling `onPaid()`.
+
+**The actual payment gate — server-side, not client-side.** `app/api/diary-appointment/confirm/route.ts` now refuses to move any `service_type === "professional"` event to `confirmed` unless `payment_status === "paid"` already, regardless of what the client sends — this is the real enforcement point. Client-side, `components/therapists/BookSessionButton.tsx` gained a new `"payment"` stage: its `onConfirm` routes to that stage (rendering `PaymentModal`) when `serviceType === "professional"`, or calls the existing confirm flow (`finalizeBooking`, split out of the old single `onConfirm`) directly otherwise — Charity Services bookings are entirely unaffected.
+
+**Charity Services' 6-free-session cap** — enforced in `app/api/booking-intake/route.ts`, before the intake is even saved: counts confirmed `diary_scheduling_events` rows tagged `service_type = 'charity'` for the same `client_email` (no login required for this flow, so email is the identifier — same one the confirmation emails already key off), and returns Roy's exact required message ("You have reached the maximum of 6 free Charity Services sessions. Please discuss continued support and payment options directly with your therapist.") with a 403 once the client is at 6.
+
+**`service_type` propagation — "don't trust the client twice."** The client submits `service_type` once, into `booking_intake_forms` (`/api/booking-intake`). `/api/diary-scheduling` then reads it back server-side from that same saved row (via `intake_submission_id`), rather than accepting it fresh from the request body a second time, before copying it onto the new `diary_scheduling_events` row.
+
+**Frontend wiring:**
+- `components/support-groups/CommunityIntro.tsx`: `CommunityHeroExtras` now renders two plain buttons ("Charity Services"/"Professional Services", same visual styling as the old CTAs) opening the new `CommunityServiceModal` instead of the old `#pathways` anchor / volunteer-application modal. `content.heroPrimaryLabel/heroPrimaryHref/heroSecondaryLabel/heroSecondaryHref` are deliberately left in the content model, unused — same "don't delete data just because a section stopped rendering it" precedent as this file's own Phase 108 comment.
+- New `components/support-groups/CommunityServiceModal.tsx`: thin wrapper reusing `BrowseTherapistModal` wholesale (per Roy's "reuse existing components… instead of duplicating booking-modal code"), filtered to diary-link therapists, passing `serviceType` + the two exact required intro messages through as `heading`/`subheading`.
+- `components/find-support/BrowseTherapistModal.tsx`: added optional `serviceType`/`heading`/`subheading` props, threaded down to each result's `BookSessionButton`.
+- `app/support-groups/page.tsx`: fetches `getActiveTherapists()` and passes the roster down to `CommunityHeroExtras`.
+- `components/booking/BookingIntakeModal.tsx` / `BookingIntakeForm.tsx`: accept `serviceType`, render Roy's exact intro banner text for each, and include `service_type` in the submission payload.
+
+**Admin review page — `/admin/service-bookings` (new nav item "Charity/Professional Bookings" in `app/admin/layout.tsx`), a real gap found this phase: no admin bookings review page existed at all before now.** Deliberately a separate route from the pre-existing `/admin/sessions` ("Session bookings" — the older, unrelated `session_bookings` table), rather than merged into it, so neither page's meaning or existing links change underneath anyone. New `lib/queries.ts` function `getAllDiarySchedulingEvents()` (service-role admin client, same reasoning as the existing `getAllSupportRequests()` — this data has no admin-read RLS policy of its own) joins in the therapist and the linked `booking_intake_forms` row. New `components/admin/ServiceBookingsTable.tsx` filters by Charity vs Professional, payment status, booking status, therapist, and date range (client-side `useState`/`useMemo`, the same pattern every other admin list in this codebase uses — no shared filter component exists yet). Deliberately **read-only**: nothing in Roy's spec asked for editing/deleting these rows from the CRM, and the real status transitions are already driven server-side by the booking/payment flow itself — a manual override control here would be new, unrequested scope with real risk (e.g., marking a "professional" booking "confirmed" without payment actually clearing).
+
+**Tests — new `tests/unit/BookSessionButton.test.tsx`:** covers the new routing this phase added — a Charity Services booking confirms directly (no payment step, `/api/diary-appointment/confirm` called immediately after "Confirm schedule"); a Professional Services booking is held at a payment stage and `/api/diary-appointment/confirm` is never called until payment succeeds; cancelling from the review screen still notifies `/api/diary-appointment/cancel` and resets to the start, for both service types. Every child modal in the flow (BookingIntakeModal, SlotSelectionModal, ScheduleReviewModal, PaymentModal, BookingSuccessModal) is stubbed to a single button invoking its real callback prop, so the test targets `BookSessionButton`'s own stage-orchestration logic rather than re-testing each modal's own UI.
+
+Also fixed two **pre-existing** test fixtures that would otherwise now fail `tsc --noEmit`, since `session_price_amount`/`session_price_currency` became required fields on `PublicTherapistRow` this phase: `tests/unit/TherapistsDirectory.test.tsx` and `tests/unit/browseTherapistSearch.test.ts`, both of which build a full `PublicTherapistRow` object literal.
+
+**Known gap, left alone deliberately (same "flag, don't silently expand" precedent as Phase 195's Hebrew dictionary note):** `lib/translations/he.ts` has one stale entry keyed to the old label text (`"jOIN THE MOVEMENT"`); the old primary label ("EXPLORE YOUR OPTIONS") was never in that dictionary either, so neither hero button was actually translated before this phase. The new "Charity Services"/"Professional Services" labels are likewise not Hebrew-translated yet — no regression, but a real gap if/when this page's Hebrew support gets a real pass.
+
+**Still open / explicitly out of scope this phase:** a structured admin UI field for setting `session_price_amount` (Roy's "Skip for now" — set via SQL until requested); this scoping decision on diary-link-only eligibility hasn't been explicitly re-confirmed with Roy.
+
+Files touched: `lib/database.types.ts`, `lib/queries.ts`, `lib/payments/paypal.ts` (new), `app/api/payments/paypal/create-order/route.ts` (new), `app/api/payments/paypal/capture-order/route.ts` (new), `app/api/booking-intake/route.ts`, `app/api/diary-scheduling/route.ts`, `app/api/diary-appointment/confirm/route.ts`, `components/booking/PaymentModal.tsx` (new), `components/booking/BookingIntakeForm.tsx`, `components/booking/BookingIntakeModal.tsx`, `components/therapists/BookSessionButton.tsx`, `components/find-support/BrowseTherapistModal.tsx`, `components/support-groups/CommunityIntro.tsx`, `components/support-groups/CommunityServiceModal.tsx` (new), `app/support-groups/page.tsx`, `app/admin/layout.tsx`, `app/admin/service-bookings/page.tsx` (new), `components/admin/ServiceBookingsTable.tsx` (new), `ENV_VARS.md`, `tests/unit/BookSessionButton.test.tsx` (new), `tests/unit/TherapistsDirectory.test.tsx`, `tests/unit/browseTherapistSearch.test.ts`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 196: Community page Charity Services / Professional Services booking + payment flows"
 git push
 ```
 

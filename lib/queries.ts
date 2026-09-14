@@ -349,6 +349,45 @@ export async function getMyBookings(clientProfileId: string): Promise<SessionBoo
   return (data ?? []) as unknown as SessionBookingWithTherapist[];
 }
 
+export type DiarySchedulingEventWithDetails = Tables<"diary_scheduling_events"> & {
+  therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email"> | null;
+  intake_form: Pick<
+    Tables<"booking_intake_forms">,
+    "client_name" | "client_email" | "client_phone" | "client_city" | "sessions_count"
+  > | null;
+};
+
+// Phase 196 — admin review surface for the two new Charity/Professional
+// Services entry points on the Community page (CommunityServiceModal ->
+// BrowseTherapistModal -> BookSessionButton -> BookingIntakeModal chain).
+// Every booking made through that chain lands in diary_scheduling_events
+// (not session_bookings — that's the older, unrelated native-flow table),
+// tagged with the new service_type/payment_status/price columns. Joins in
+// the matching booking_intake_forms row (via intake_submission_id) purely
+// for extra client-contact display fields the event row itself doesn't
+// carry (diary_scheduling_events already has its own client_name/
+// client_email/client_phone, but not city or sessions_count).
+//
+// Uses the service-role admin client, same reasoning as
+// getAllSupportRequests() above: diary_scheduling_events and
+// booking_intake_forms are both written by unauthenticated clients via
+// admin-client-only API routes (see /api/diary-scheduling,
+// /api/booking-intake) and have no admin-read RLS policy of their own, so a
+// signed-in admin's cookie-based client would be denied. Safe here because
+// this is only ever called from app/admin/service-bookings/page.tsx, which
+// sits behind requireAdmin() in app/admin/layout.tsx.
+export async function getAllDiarySchedulingEvents(): Promise<DiarySchedulingEventWithDetails[]> {
+  const adminSupabase = createAdminClient();
+  const { data, error } = await adminSupabase
+    .from("diary_scheduling_events")
+    .select(
+      "*, therapist:therapists(id, full_name, contact_email), intake_form:booking_intake_forms!diary_scheduling_events_intake_submission_id_fkey(client_name, client_email, client_phone, client_city, sessions_count)"
+    )
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as DiarySchedulingEventWithDetails[];
+}
+
 export type MatchRequestWithTherapist = Tables<"match_requests"> & {
   selected_therapist: Pick<Tables<"therapists">, "id" | "full_name" | "contact_email" | "contact_phone"> | null;
   clinic_location: Pick<Tables<"clinic_locations">, "id" | "name" | "address"> | null;

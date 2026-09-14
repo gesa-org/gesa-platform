@@ -4,7 +4,7 @@ import SupportGroupsInteractive, { SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK } f
 import CommunityIntro, { CommunityHeroExtras, COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityIntro";
 import Testimonials from "@/components/home/Testimonials";
 import DonateBand from "@/components/home/DonateBand";
-import { getSupportGroups, getTestimonials } from "@/lib/queries";
+import { getActiveTherapists, getSupportGroups, getTestimonials } from "@/lib/queries";
 import { getPageContent, SUPPORT_GROUPS_CONTENT_FALLBACK } from "@/lib/content";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
@@ -49,12 +49,15 @@ export default async function SupportGroupsPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const [groups, contentRaw, directoryContentRaw, communityIntroRaw, testimonials] = await Promise.all([
+  const [groups, contentRaw, directoryContentRaw, communityIntroRaw, testimonials, therapists] = await Promise.all([
     getSupportGroups(),
     getPageContent("page_support_groups", SUPPORT_GROUPS_CONTENT_FALLBACK),
     getPageContent("component_support_groups_directory", SUPPORT_GROUPS_DIRECTORY_CONTENT_FALLBACK),
     getPageContent("component_community_intro", COMMUNITY_INTRO_FALLBACK),
     getTestimonials(),
+    // Phase 196 — needed so the Charity Services / Professional Services
+    // CTAs (CommunityHeroExtras) can open a real therapist search.
+    getActiveTherapists(),
   ]);
 
   const { resolved, isEditorPreview } = await resolveEditorPreview(
@@ -75,7 +78,7 @@ export default async function SupportGroupsPage({
         title={<EditableText contentId="supportGroups.hero.heading" label="Hero heading" value={content.title} as="span" />}
         description={<EditableText contentId="supportGroups.hero.description" label="Hero description" value={content.description} as="span" />}
       >
-        <CommunityHeroExtras content={communityIntro} />
+        <CommunityHeroExtras content={communityIntro} therapists={therapists} />
       </PageHero>
       <CommunityIntro content={communityIntro} />
       <section id="support-groups-list" className="section wrap pt-0">

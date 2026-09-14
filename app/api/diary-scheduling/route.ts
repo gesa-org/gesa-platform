@@ -50,6 +50,22 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
+
+  // Phase 196 — service_type isn't trusted from the request body a second
+  // time; it's read back from the intake row /api/booking-intake already
+  // saved it on, so this event can only ever be tagged "charity"/
+  // "professional" if that's genuinely how the client started this booking.
+  let serviceType: "charity" | "professional" | null = null;
+  if (intakeSubmissionId) {
+    const adminForIntake = createAdminClient();
+    const { data: intakeRow } = await adminForIntake
+      .from("booking_intake_forms")
+      .select("service_type")
+      .eq("id", intakeSubmissionId)
+      .maybeSingle();
+    serviceType = intakeRow?.service_type ?? null;
+  }
+
   const { data: inserted, error: insertError } = await supabase
     .from("diary_scheduling_events")
     .insert({
@@ -64,6 +80,7 @@ export async function POST(request: Request) {
       search_session_type: searchSessionType,
       search_country: searchCountry,
       search_city_or_address: searchCityOrAddress,
+      service_type: serviceType,
     })
     .select("id")
     .maybeSingle();

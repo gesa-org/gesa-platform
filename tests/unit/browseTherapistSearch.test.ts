@@ -38,6 +38,12 @@ function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistR
     // add_support_pathways_to_therapists migration); default added here for
     // the same reason as offers_online/offers_in_person/city above.
     support_pathways: overrides.support_pathways ?? [],
+    // Phase 196 — new required fields (session_price_amount/currency,
+    // added to therapists_public alongside the Community page's
+    // Professional Services payment flow); default added here for the same
+    // reason as offers_online/offers_in_person/city/support_pathways above.
+    session_price_amount: overrides.session_price_amount ?? null,
+    session_price_currency: overrides.session_price_currency ?? "USD",
   };
 }
 

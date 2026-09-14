@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   const { data: event, error: fetchError } = await adminSupabase
     .from("diary_scheduling_events")
     .select(
-      "id, therapist_id, status, selected_date, selected_start_time, selected_end_time, duration_minutes, time_zone, appointment_type, diary_link, intake_submission_id"
+      "id, therapist_id, status, selected_date, selected_start_time, selected_end_time, duration_minutes, time_zone, appointment_type, diary_link, intake_submission_id, service_type, payment_status"
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -63,6 +63,17 @@ export async function POST(request: Request) {
   }
   if (!event.intake_submission_id) {
     return NextResponse.json({ error: "Missing intake details — please start the booking again." }, { status: 400 });
+  }
+  // Phase 196 — the one real payment gate: a Professional Services booking
+  // can only ever be confirmed once its own PayPal capture has actually
+  // succeeded (see /api/payments/paypal/capture-order). Charity Services
+  // and every pre-Phase-196 booking (service_type null) skip this entirely,
+  // same as before.
+  if (event.service_type === "professional" && event.payment_status !== "paid") {
+    return NextResponse.json(
+      { error: "Payment hasn't been completed yet — please finish checkout before confirming." },
+      { status: 402 }
+    );
   }
 
   const { data: intake, error: intakeError } = await adminSupabase
@@ -92,7 +103,7 @@ export async function POST(request: Request) {
       client_phone: intake.client_phone,
     })
     .eq("id", eventId)
-    .in("status", ["calendar_opened", "slot_selected", "pending_confirmation", "failed"])
+    .in("status", ["calendar_opened", "slot_selected", "pending_confirmation", "payment_pending", "failed"])
     .select("id")
     .maybeSingle();
 

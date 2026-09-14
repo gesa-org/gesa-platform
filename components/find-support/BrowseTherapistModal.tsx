@@ -51,11 +51,14 @@ function ResultCard({
   sessionType,
   country,
   cityOrAddress,
+  serviceType,
 }: {
   result: BrowseSearchResult;
   sessionType: BrowseSessionType;
   country: string;
   cityOrAddress: string;
+  // Phase 196 — see BrowseTherapistModal's own prop comment below.
+  serviceType?: "charity" | "professional";
 }) {
   const t = result.therapist;
   const initials = t.full_name
@@ -130,6 +133,7 @@ function ResultCard({
             country,
             cityOrAddress: sessionType === "in_person" ? cityOrAddress || null : cityOrAddress || null,
           }}
+          serviceType={serviceType}
         />
         <Link
           href={`/therapists/${t.slug}`}
@@ -146,10 +150,25 @@ export default function BrowseTherapistModal({
   open,
   onClose,
   therapists,
+  serviceType,
+  heading,
+  subheading,
 }: {
   open: boolean;
   onClose: () => void;
   therapists: PublicTherapistRow[];
+  // Phase 196 — set only when this search is opened from the Community
+  // page's Charity Services / Professional Services CTAs (see
+  // components/support-groups/CommunityServiceModal.tsx). Threaded straight
+  // through to BookSessionButton for every result, which handles the actual
+  // charity-limit/payment behavior — this modal itself doesn't need to know
+  // any more than "which flavor of booking should the result cards start."
+  serviceType?: "charity" | "professional";
+  // Phase 196 — optional copy override so the same search UI can read
+  // "Find a professional for Charity Services" instead of the generic
+  // "Find a therapist" when opened from one of the two new entry points.
+  heading?: string;
+  subheading?: string;
 }) {
   const [step, setStep] = useState<"search" | "results">("search");
   const [sessionType, setSessionType] = useState<BrowseSessionType | null>(null);
@@ -318,8 +337,10 @@ export default function BrowseTherapistModal({
         <div className="max-h-[80vh] overflow-y-auto pt-2">
           {step === "search" && (
             <div className="mx-auto max-w-[680px]">
-              <h2 className="mb-1.5 text-[22px]">Find a therapist</h2>
-              <p className="mb-6 text-muted-fg">Choose how and where you would like to receive support.</p>
+              <h2 className="mb-1.5 text-[22px]">{heading ?? "Find a therapist"}</h2>
+              <p className="mb-6 text-muted-fg">
+                {subheading ?? "Choose how and where you would like to receive support."}
+              </p>
 
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
@@ -480,6 +501,7 @@ export default function BrowseTherapistModal({
                       sessionType={sessionType as BrowseSessionType}
                       country={country}
                       cityOrAddress={cityOrAddress}
+                      serviceType={serviceType}
                     />
                   ))}
                 </div>

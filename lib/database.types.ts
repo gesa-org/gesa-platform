@@ -236,6 +236,16 @@ export type TherapistRow = {
   // therapist profile that wasn't created from an application (the
   // overwhelming majority of existing rows).
   volunteer_application_id: string | null;
+  // Phase 196 — structured session price for Professional Services
+  // checkout (Community page). `price_note` above is a free-text field
+  // ("Sliding scale", "Contact for rates", etc.) and stays exactly as it
+  // was; this is a real numeric amount the payment screen can total up.
+  // Null means the professional hasn't configured a price yet, which the
+  // checkout flow must treat as "block checkout," not "free" or "$0."
+  // There's no admin UI to set this yet — set directly via SQL until one is
+  // built (see EXECUTION_PLAN.md's Phase 196 entry).
+  session_price_amount: number | null;
+  session_price_currency: string;
 }
 
 // Phase 186 — see TherapistRow.profile_status's own comment.
@@ -281,6 +291,11 @@ export type PublicTherapistRow = Pick<
   | "city"
   // Phase 152 — see this column's own comment on TherapistRow above.
   | "support_pathways"
+  // Phase 196 — Professional Services needs to show/total the price before
+  // checkout, so (unlike contact_email/contact_phone) this is meant to be
+  // public, same as price_note already was.
+  | "session_price_amount"
+  | "session_price_currency"
 > & {
   // Derived boolean, not the phone number itself — lets the UI offer/hide
   // the WhatsApp contact channel without ever sending a confidential
@@ -451,14 +466,26 @@ export type SessionBookingRow = {
 // connected to this app via API/OAuth. `slot_source` makes that explicit
 // wherever this data is read, so nothing downstream can present a
 // self-reported slot as system-verified by accident.
+// Phase 196 — added "payment_pending": a Professional Services booking sits
+// here from the moment its PayPal order is created until capture succeeds
+// (-> confirmed) or the client cancels/payment fails (-> cancelled/failed).
+// Every prior value's meaning is unchanged.
 export type DiarySchedulingStatus =
   | "calendar_opened"
   | "slot_selected"
   | "pending_confirmation"
+  | "payment_pending"
   | "confirmed"
   | "cancelled"
   | "failed";
 export type SlotSource = "client_reported";
+
+// Phase 196 — tags a diary-link booking as one of the Community page's two
+// new entry points. Null for every booking made through any other existing
+// path (directory, ai-support, browse_therapist without a service context,
+// etc.) — this is purely additive.
+export type ServiceType = "charity" | "professional";
+export type PaymentStatus = "not_required" | "pending" | "paid" | "failed" | "refunded";
 
 export type DiarySchedulingEventRow = {
   id: string;
@@ -492,6 +519,13 @@ export type DiarySchedulingEventRow = {
   search_session_type: string | null;
   search_country: string | null;
   search_city_or_address: string | null;
+  // Phase 196 — see this file's own ServiceType/PaymentStatus comment above.
+  service_type: ServiceType | null;
+  payment_status: PaymentStatus;
+  payment_provider: string | null;
+  payment_reference: string | null;
+  price_amount: number | null;
+  price_currency: string | null;
 };
 
 export type ParticipatedBefore = "yes" | "no";
@@ -535,6 +569,10 @@ export type BookingIntakeFormRow = {
   status: BookingIntakeStatus;
   idempotency_key: string;
   created_at: string;
+  // Phase 196 — see DiarySchedulingEventRow's own ServiceType comment.
+  // Carried on the intake row too so /api/booking-intake's charity-limit
+  // check and the confirm route both have it without an extra join.
+  service_type: ServiceType | null;
 };
 
 // Phase 63 — a real, structured intake for the "become a volunteer

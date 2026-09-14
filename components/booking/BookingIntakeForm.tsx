@@ -60,11 +60,17 @@ function idempotencyKeyFor(therapistId: string): string {
 export default function BookingIntakeForm({
   therapistId,
   therapistName,
+  serviceType,
   onCancel,
   onSuccess,
 }: {
   therapistId: string;
   therapistName: string;
+  // Phase 196 — set only when this intake started from the Community page's
+  // Charity Services / Professional Services CTAs. Undefined for every
+  // other caller (the existing "Before you book your session" flow off a
+  // therapist's own card/profile), which behaves exactly as it did before.
+  serviceType?: "charity" | "professional";
   onCancel: () => void;
   onSuccess: (intakeId: string, details: { clientName: string; clientEmail: string; clientPhone: string; clientCity: string }) => void;
 }) {
@@ -164,6 +170,7 @@ export default function BookingIntakeForm({
       agreedTerms,
       agreedPrivacy,
       idempotencyKey,
+      serviceType,
     });
   }
 

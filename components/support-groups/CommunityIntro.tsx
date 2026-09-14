@@ -1,10 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
-import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
+import CommunityServiceModal from "@/components/support-groups/CommunityServiceModal";
 import type { CommunityIntroContent } from "@/lib/content";
+import type { PublicTherapistRow } from "@/lib/database.types";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
 // Phase 107 — Roy sent a wireframe of a new hero-buttons row, a "Why GESA
@@ -67,24 +71,58 @@ export const COMMUNITY_INTRO_FALLBACK: CommunityIntroContent = {
 // white to stay legible on a deep-navy gold-banner background; reverted
 // alongside the rest of that phase once Roy said the new color didn't work
 // on the live site.
-export function CommunityHeroExtras({ content }: { content: CommunityIntroContent }) {
+//
+// Phase 196 — Roy asked for these two hero buttons repurposed entirely: from
+// "Explore Your Options" (a plain #pathways anchor link) and "Join The
+// Movement" (opened the volunteer/therapist application modal — recruiting,
+// not client booking) to "Charity Services" and "Professional Services",
+// each opening a client-facing booking search (CommunityServiceModal). The
+// underlying `content.heroPrimaryLabel/heroPrimaryHref/heroSecondaryLabel/
+// heroSecondaryHref` Content Manager fields are left in the data model
+// untouched (same "don't delete data just because a section stopped
+// rendering it" precedent as this file's own Phase 108 comment below) but
+// are no longer read here — the new labels and behavior are fixed, per
+// Roy's exact spec, not admin-editable text/links anymore.
+export function CommunityHeroExtras({
+  content,
+  therapists,
+}: {
+  content: CommunityIntroContent;
+  // Phase 196 — the active roster, needed so the two new CTAs can open a
+  // real therapist search (see CommunityServiceModal). Defaults to [] so
+  // this component doesn't become required-prop-breaking for any other
+  // caller, though PageHero's own children slot on the Community page is
+  // the only place this renders today.
+  therapists?: PublicTherapistRow[];
+}) {
+  const [openService, setOpenService] = useState<"charity" | "professional" | null>(null);
   return (
     <>
       <StaggerItem>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href={content.heroPrimaryHref}
+          <button
+            type="button"
+            onClick={() => setOpenService("charity")}
             className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-600"
           >
-            {content.heroPrimaryLabel}
-          </Link>
-          <VolunteerPrimaryCta
-            href={content.heroSecondaryHref}
+            Charity Services
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpenService("professional")}
             className="inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-primary bg-transparent px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-primary transition-all hover:-translate-y-px hover:bg-white/40"
           >
-            {content.heroSecondaryLabel}
-          </VolunteerPrimaryCta>
+            Professional Services
+          </button>
         </div>
+        {openService && (
+          <CommunityServiceModal
+            open
+            onClose={() => setOpenService(null)}
+            therapists={therapists ?? []}
+            serviceType={openService}
+          />
+        )}
       </StaggerItem>
       <StaggerItem>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[13px] font-medium text-primary/80">

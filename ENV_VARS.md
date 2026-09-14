@@ -24,6 +24,10 @@ non-`uat` branch automatically).
 | 🌐 `NEXT_PUBLIC_GESA_CONTACT_EMAIL` | `gesa.org26@gmail.com` | Optional. The address shown *publicly* (Contact page, footer). Defaults to the same value as `GESA_CONTACT_INBOX` (see `lib/contact.ts`) if left unset — only set this if the public-facing address should ever differ from where notifications actually land. |
 | 🌐 `NEXT_PUBLIC_SITE_URL` | `https://<your-preview-domain>.vercel.app` | Vercel sets a per-deploy URL automatically; leave blank to let the app fall back, or use `VERCEL_URL`. Phase 187 — also used to build the link inside every invitation email; if unset, falls back to the request's own `Origin`/`Host` header, then a hardcoded production URL — see `lib/invitations.ts`'s `baseUrlFromRequest()`. |
 | 🌐 `NEXT_PUBLIC_APP_ENV` | `development` | |
+| 🔒 `PAYPAL_CLIENT_ID` | *(your PayPal Sandbox app's Client ID)* | Phase 196 — powers the Professional Services payment step (Community page → Professional Services → BookSessionButton's payment stage). Get a Sandbox app from developer.paypal.com → Apps & Credentials → Sandbox. Leave blank and `isPayPalConfigured()` (`lib/payments/paypal.ts`) returns false — the create-order API route then fails cleanly rather than attempting a request with empty credentials. |
+| 🔒 `PAYPAL_CLIENT_SECRET` | *(your PayPal Sandbox app's Secret)* | Paired with `PAYPAL_CLIENT_ID` above. Server-only — never sent to the browser. |
+| 🔒 `PAYPAL_ENV` | `sandbox` | Selects the PayPal API base URL (`lib/payments/paypal.ts`) — `sandbox` or `live`. Leave as `sandbox` until real payments should go through. |
+| 🌐 `NEXT_PUBLIC_PAYPAL_CLIENT_ID` | *(same value as `PAYPAL_CLIENT_ID` above)* | The Smart Payment Buttons JS SDK (loaded client-side in `components/booking/PaymentModal.tsx`) needs the Client ID in the browser — this is safe to expose; it's an app identifier, not a secret. Only the Client Secret above must stay server-only. |
 
 ## UAT (branch `uat`)
 
@@ -56,6 +60,10 @@ Vercel scope: **Production**.
 | 🌐 `NEXT_PUBLIC_GESA_CONTACT_EMAIL` | `gesa.org26@gmail.com` | Optional, same as Dev. |
 | 🌐 `NEXT_PUBLIC_SITE_URL` | `https://gesa.org` (or whatever domain you point at this Vercel project) | Phase 187 — must be set correctly in Production so invitation emails link to the real production domain, not a fallback. |
 | 🌐 `NEXT_PUBLIC_APP_ENV` | `production` | |
+| 🔒 `PAYPAL_CLIENT_ID` | *(your PayPal Live app's Client ID)* | Phase 196 — same as Dev, but a **Live** app (developer.paypal.com → Apps & Credentials → Live), not Sandbox. Real money moves through this once set. |
+| 🔒 `PAYPAL_CLIENT_SECRET` | *(your PayPal Live app's Secret)* | Paired with `PAYPAL_CLIENT_ID` above. Server-only. |
+| 🔒 `PAYPAL_ENV` | `live` | Must be `live` in Production — leaving this as `sandbox` here would silently route real client payments at a test endpoint. |
+| 🌐 `NEXT_PUBLIC_PAYPAL_CLIENT_ID` | *(same value as `PAYPAL_CLIENT_ID` above)* | Same reasoning as Dev — safe to expose client-side. |
 
 **Before going live on `main`:** the Production Supabase project currently has
 the `handle_new_user()` trigger, RLS policies, and content tables from Phase

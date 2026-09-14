@@ -4,6 +4,11 @@ import AdminNav from "@/components/admin/AdminNav";
 const NAV = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/sessions", label: "Session bookings" },
+  // Phase 196 — the Community page's Charity Services / Professional
+  // Services bookings (diary_scheduling_events, tagged by service_type),
+  // a separate data model and route from "Session bookings" above (see
+  // app/admin/service-bookings/page.tsx's own comment).
+  { href: "/admin/service-bookings", label: "Charity/Professional Bookings" },
   // Phase 142 — the "Find Support" flow rebuild replaced match_requests
   // with the unified support_requests table (see EXECUTION_PLAN.md Phase
   // 142). New requests land in "Find Support requests" below.

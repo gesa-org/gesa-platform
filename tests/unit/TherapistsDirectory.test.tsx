@@ -50,6 +50,10 @@ function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistR
     support_pathways: [],
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
+    // Phase 196 — new required fields, same reasoning as
+    // browseTherapistSearch.test.ts's makeTherapist().
+    session_price_amount: null,
+    session_price_currency: "USD",
     ...overrides,
   };
 }
