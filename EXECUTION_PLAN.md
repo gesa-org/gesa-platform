@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 203 added)
+Last updated: 2026-09-15 (Phase 204 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8957,6 +8957,49 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 203: Trusted Partners + FAQ categories"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 204: Error pages (404 + crash boundaries)
+
+**Scope narrowed from the roadmap's original "forms/system messages" label.** Auditing that scope surfaced two things worth flagging to Roy before touching anything: (1) `CONTENT_GUIDE.md` already documents a *deliberate* policy that form field labels/placeholders and validation errors "stay in code" — the original label would have reversed a considered decision, not fixed an oversight; (2) the full scope also touched ~25 hardcoded transactional email templates (`lib/email/templates.ts`, real Resend emails sent to real people) and required building two pages (404/error) that didn't exist at all yet before they could even be made editable. Given that, and given real production traffic/payments on this site, Roy chose the narrowest, safest slice: build the two missing error pages, skip form-field copy and email templates entirely (both remain open, undecided scope for a future phase if he wants them).
+
+**What shipped:**
+
+1. **`app/not-found.tsx`** (new) — previously nonexistent; any unmatched route (mistyped URL, stale bookmark, dead link) fell through to Next.js's own unstyled default 404, with no Header/Footer and no GESA branding. Renders inside the root layout like any other page (gets the real Header/Footer/CrisisButton for free), using the same `PageHero` component every other secondary page uses. **Fully Content Manager-editable** via a new bespoke `NotFoundPageContent` type (`lib/content.ts`) + `site_content` key `page_not_found` + new "Not Found Page" admin tab (`components/admin/content/NotFoundEditor.tsx`, a plain `FlatFieldsEditor` instance — no new mechanism). The "back home" link's destination is hardcoded to `/`; only its label is editable, same "label editable, destination fixed" shape as `DonateThankYouContent.backLinkLabel`.
+
+2. **`app/error.tsx`** (new) — Next.js's segment-level error boundary; wraps every page below the root layout, so Header/Footer/CrisisButton still render around it (only the page's own content threw, not the layout). Same `error`/`reset` prop pattern and `console.error` logging as the existing admin-only precedent (`app/admin/therapists/[id]/error.tsx`).
+
+3. **`app/global-error.tsx`** (new) — Next.js's root-layout-level error boundary; only fires if `app/layout.tsx` itself throws (e.g. one of its `Promise.all` data fetches rejects) — a case `app/error.tsx` cannot catch, since that file renders *inside* the layout that just failed. Must render its own `<html>`/`<body>` per Next's own requirement, since it replaces the entire document.
+
+**Deliberate scope decision — `error.tsx`/`global-error.tsx` are NOT Content Manager-editable**, unlike `not-found.tsx`. Next.js requires both to be Client Components receiving only `{error, reset}` as props — no server-fetched content path in. The only way to make their copy admin-editable would be a client-side fetch on mount, which adds a second thing that can fail to the one page whose entire job is being the safety net for something that already failed (and `global-error.tsx` specifically can't assume `globals.css`/design tokens even loaded, hence its plain inline styles with zero imports from the rest of the component tree). Flagging this plainly since Roy's approved option described "their copy made Content-Manager-editable" for both pages — that held fully for the 404 page, not for the two crash boundaries, for the technical reasons above.
+
+**Data/schema changes:** none — `page_not_found` is a plain `site_content` row, using the table that already exists.
+
+**Storage/permission changes:** none.
+
+**Testing steps:**
+- 404: visit any nonexistent route (e.g. `/this-does-not-exist`) → confirm the branded page renders with Header/Footer, not Next's default. Edit its copy at Content Manager → Not Found Page → confirm the change appears on that route.
+- Segment error: temporarily throw inside any page component (e.g. `app/contact/page.tsx`) → confirm `app/error.tsx`'s branded fallback renders with Header/Footer still present, "Try again" reset button works, revert the temporary throw afterward.
+- Root layout error: temporarily throw inside `app/layout.tsx` (e.g. force one of its `Promise.all` calls to reject) → confirm `app/global-error.tsx`'s plain fallback renders (no Header/Footer, since the whole document was replaced), revert afterward.
+- Regression: `npx jest` — no existing test references any of these three new files, so this should be a clean pass.
+
+**Assumptions/follow-ups:**
+- Form field copy/validation errors and email template content remain out of scope, per Roy's decision this phase — both are still viable future phases if he wants them, with the same "reverses a documented CONTENT_GUIDE.md policy" / "touches real transactional email" caveats flagged above.
+- `global-error.tsx`'s "Back to Home" is a plain `<a href="/">`, not Next's `<Link>` — deliberate, since this file must not depend on anything from the app's normal React tree that might itself be part of what broke.
+
+Files touched: `lib/content.ts`, `app/not-found.tsx` (new), `app/error.tsx` (new), `app/global-error.tsx` (new), `components/admin/content/NotFoundEditor.tsx` (new), `components/admin/content/ContentManagerApp.tsx`, `app/admin/content/page.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 204: Error pages (404 + crash boundaries)"
 git push
 ```
 

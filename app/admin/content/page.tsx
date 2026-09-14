@@ -13,6 +13,7 @@ import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import { VOLUNTEER_MODAL_CONTENT_FALLBACK } from "@/components/volunteer/VolunteerApplicationModal";
 import { DONATE_THANK_YOU_CONTENT_FALLBACK } from "@/app/donate/thank-you/thankYouContent";
 import { COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityIntro";
+import { NOT_FOUND_CONTENT_FALLBACK } from "@/lib/content";
 import { getAllMediaAssetsForAdmin } from "@/lib/media";
 import {
   SIMPLE_PAGE_ENTRIES,
@@ -33,6 +34,7 @@ import {
   type VolunteerApplicationModalContent,
   type DonateThankYouContent,
   type CommunityIntroContent,
+  type NotFoundPageContent,
 } from "@/lib/content";
 import ContentManagerApp from "@/components/admin/content/ContentManagerApp";
 
@@ -58,6 +60,7 @@ const KEYS = [
   "component_volunteer_modal",
   "page_donate_thank_you",
   "component_community_intro",
+  "page_not_found",
   ...SIMPLE_PAGE_ENTRIES.map((e) => e.key),
 ];
 
@@ -136,6 +139,7 @@ export default async function AdminContentPage() {
         legalPages={legalPages}
         mediaAssets={mediaAssets}
         partners={partners}
+        notFound={merge<NotFoundPageContent>(map.get("page_not_found"), NOT_FOUND_CONTENT_FALLBACK)}
       />
     </div>
   );

@@ -478,6 +478,30 @@ export type DonateThankYouContent = {
   backLinkLabel: string;
 };
 
+// Phase 204 — app/not-found.tsx. Before this phase, an unmatched route (a
+// mistyped URL, a stale bookmark, a dead link) fell through to Next.js's
+// own unstyled default 404 — no Header/Footer, no GESA branding, and no
+// admin-editable copy at all. This is a small, bespoke type (not
+// SimplePageContent) since it needs a CTA label the shared banner shape
+// doesn't have; the "back home" link's destination itself is hardcoded to
+// "/" in app/not-found.tsx, same "label editable, destination fixed"
+// precedent as DonateThankYouContent.backLinkLabel above.
+export type NotFoundPageContent = {
+  published: boolean;
+  eyebrow: string;
+  heading: string;
+  body: string;
+  ctaLabel: string;
+};
+
+export const NOT_FOUND_CONTENT_FALLBACK: NotFoundPageContent = {
+  published: true,
+  eyebrow: "Page not found",
+  heading: "We couldn't find that page.",
+  body: "The page you're looking for may have moved or no longer exists. Let's get you back on track.",
+  ctaLabel: "Back to Home",
+};
+
 // Powers components/support-groups/CommunityIntro.tsx — the new hero
 // buttons/tagline row, "Why GESA exists" mission blurb, three-card pathway
 // navigator, and closing band Roy asked to add to the Support Groups page

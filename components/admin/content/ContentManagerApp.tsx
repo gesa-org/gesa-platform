@@ -21,6 +21,7 @@ import FaqManager from "@/components/admin/content/FaqManager";
 import LegalPagesManager from "@/components/admin/content/LegalPagesManager";
 import MediaLibrary from "@/components/admin/content/MediaLibrary";
 import PartnersManager from "@/components/admin/content/PartnersManager";
+import NotFoundEditor from "@/components/admin/content/NotFoundEditor";
 import type { MediaAssetRow, MediaAssetUsageRow } from "@/lib/database.types";
 import type {
   HomeContent,
@@ -39,6 +40,7 @@ import type {
   DonateThankYouContent,
   CommunityIntroContent,
   SimplePageContent,
+  NotFoundPageContent,
 } from "@/lib/content";
 import type { Tables } from "@/lib/database.types";
 
@@ -70,6 +72,7 @@ type Props = {
   legalPages: Tables<"legal_pages">[];
   mediaAssets: Array<MediaAssetRow & { publicUrl: string; usages: MediaAssetUsageRow[] }>;
   partners: Tables<"partners">[];
+  notFound: NotFoundPageContent;
 };
 
 // Tabs that need more than a plain banner — each gets its own bespoke block
@@ -115,6 +118,7 @@ const FIXED_TABS_END = [
   "Volunteer Modal",
   "Media Library",
   "Trusted Partners",
+  "Not Found Page",
 ] as const;
 
 // The Content Manager's tab shell — a client component so switching tabs is
@@ -266,6 +270,8 @@ export default function ContentManagerApp(props: Props) {
       {tab === "Media Library" && <MediaLibrary initialAssets={props.mediaAssets} />}
 
       {tab === "Trusted Partners" && <PartnersManager initialPartners={props.partners} />}
+
+      {tab === "Not Found Page" && <NotFoundEditor initial={props.notFound} />}
     </div>
   );
 }
