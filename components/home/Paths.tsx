@@ -592,22 +592,35 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             own background color filling the space, a faint
                             themed background texture (PathCardTexture —
                             waves/tree/orbit per card), and the same
-                            centered GesaMark. The inset shadow pair fakes
-                            the reference's beveled/embossed edge (a light
-                            highlight top-left, a darker shadow bottom-
-                            right), and the outer shadow keeps the "lifted
-                            off the wall" depth the old wood frame's own
-                            directional shadow gave it. */}
-                        <div
-                          className={`relative w-full flex-1 min-h-0 overflow-hidden rounded-[16px] ${frontStyle.bg}`}
-                          style={{
-                            boxShadow:
-                              "inset 3px 3px 6px rgba(255,255,255,0.35), inset -5px -5px 12px rgba(0,0,0,0.28), 8px 12px 20px -8px rgba(20,20,20,0.45)",
-                          }}
-                        >
-                          <PathCardTexture index={i} className={`absolute inset-0 h-full w-full ${frontStyle.textureClass}`} />
-                          <div className="absolute inset-0 flex items-center justify-center p-4">
-                            <GesaMark colors={frontStyle.mark} className="h-[54%] w-[54%]" />
+                            centered GesaMark.
+                            Roy asked for this copied "exactly" — the honest
+                            limit is that the reference is a raster AI
+                            render with no vector/source file to extract, so
+                            this is a close hand-built approximation, not a
+                            pixel trace. Two things added on the redo to get
+                            closer: (1) a darker offset "depth" panel behind
+                            the face (a duplicate of the same color, darkened
+                            via `filter: brightness`, nudged down-right),
+                            approximating the reference's visible canvas-box
+                            side/edge; (2) an inset-shadow pair on the face
+                            itself for the embossed/beveled surface look. */}
+                        <div className="relative w-full flex-1 min-h-0">
+                          <div
+                            className={`absolute inset-0 translate-x-[5px] translate-y-[6px] rounded-[14px] ${frontStyle.bg}`}
+                            style={{ filter: "brightness(0.72)" }}
+                            aria-hidden="true"
+                          />
+                          <div
+                            className={`absolute inset-0 overflow-hidden rounded-[14px] ${frontStyle.bg}`}
+                            style={{
+                              boxShadow:
+                                "inset 3px 3px 6px rgba(255,255,255,0.35), inset -5px -5px 12px rgba(0,0,0,0.25), 6px 10px 18px -8px rgba(20,20,20,0.4)",
+                            }}
+                          >
+                            <PathCardTexture index={i} className={`absolute inset-0 h-full w-full ${frontStyle.textureClass}`} />
+                            <div className="absolute inset-0 flex items-center justify-center p-4">
+                              <GesaMark colors={frontStyle.mark} className="h-[54%] w-[54%]" />
+                            </div>
                           </div>
                         </div>
                         {/* Caption — new Phase 154 line below the frame,
