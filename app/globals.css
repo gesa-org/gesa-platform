@@ -258,17 +258,23 @@
      was the one page without it, and he wants the site consistent. Restored
      the sweep rather than leaving it off — inherits the exact same gradient,
      `gold-sheen` animation, and position as every other `.gold-banner` page
-     (background is no longer overridden here at all). Phase 171's actual
-     problem — this hero's box being unusually tall, so the overlay's own
-     hard-clipped edge could land visibly at the hero/cards boundary — is
-     solved with a mask-image fade instead of disabling the sweep outright:
-     the overlay now fades to fully transparent well before that boundary,
-     so there's no edge left for the animation to ever expose, no matter
-     where it lands mid-sweep. */
-  .gold-banner.home-hero::before {
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 78%);
-    mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 78%);
-  }
+     (background is no longer overridden here at all). Worked around Phase
+     171's problem at the time with a mask-image fade, rather than fixing the
+     actual mismatch.
+     Phase 194 — the real problem wasn't the sweep's size, it was that
+     `.gold-banner.home-hero` was applied to the *hero sub-div*
+     (`components/home/Paths.tsx`'s `pt-16 pb-[210px]` block) while the
+     page's actual continuous slate-blue/gray field extends through the
+     card-grid area below it too — so the sweep's own box was always
+     shorter than the color field it sat on, and any fade/mask was papering
+     over that mismatch rather than fixing it. `.gold-banner.home-hero` is
+     now applied to the *outer* `<section>` in Paths.tsx instead — the one
+     that actually owns the full slate-blue area top to bottom — so this
+     rule no longer needs a mask at all: the sweep's `inset:-20%` box now
+     matches the real color boundary, the same way it already does on every
+     other `.gold-banner` page. Removed the Phase 193 mask-image entirely;
+     this selector now carries no overrides of its own beyond the base
+     `.gold-banner.home-hero` background rule above. */
   @media (prefers-reduced-motion: reduce) {
     .gold-banner::before {
       animation: none;

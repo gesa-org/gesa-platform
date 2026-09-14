@@ -8579,4 +8579,37 @@ git push
 ```
 
 ---
+
+## Phase 194: Home hero animation now covers the full slate-blue section, not just the top hero band
+
+After Phase 193 shipped, Roy flagged that the animation was still only visible in the upper portion of the page's soft slate-blue background — the hero band — while the same slate-blue/gray color (`--home-gray`) actually continues underneath, through the whole three-card grid area, before the page transitions to a different section/color. He asked for the animated layer to extend and stay visible across that entire slate-blue area, ending exactly where the color changes, not redesign the effect itself.
+
+**Root cause:** in `components/home/Paths.tsx`, `.gold-banner.home-hero` (the class that owns both the background color and the animated `::before` sheen) and the `ParallaxLayer` decorative blob/watermark block were both applied to the *inner hero sub-div* (`pt-16 pb-[210px]`), not the outer `<section>`. That inner div is only as tall as the headline/subtitle/badges need — a fraction of the full slate-blue field, which the outer `<section>` actually owns (it carried its own separate `bg-[var(--home-gray)]` utility class so the color looked continuous even though the animation didn't extend that far). Phase 193's mask-image fade was tuned to that same too-short box, which is why the sweep still stopped early.
+
+**Fix:** moved the ownership up a level instead of resizing anything within the old box:
+- The outer `<section>` now carries `gold-banner home-hero relative overflow-hidden` directly (replacing its old plain `bg-[var(--home-gray)]` utility — redundant now, since `.gold-banner.home-hero`'s own CSS rule already sets that same background).
+- The decorative `ParallaxLayer` (the blurred blob + `<GoldWatermarks />`) moved from being a child of the inner hero div to being a direct child of this outer `<section>`, with `pointer-events-none absolute inset-0 z-0 h-full w-full` — so it always spans the section's actual rendered height, hero text and card grid alike, including on mobile where the same stacked content makes the section taller.
+- The inner hero div lost the `gold-banner`/`home-hero` classes and its own decorative layer — it's now just a plain padded wrapper for the hero text, which (along with the card-grid wrapper below it) was already `relative z-10`, so both stayed correctly stacked above the new full-section decorative layer with no change needed there.
+- In `app/globals.css`, removed the Phase 193 `mask-image` workaround on `.gold-banner.home-hero::before` entirely — with the sheen's box now matching the real color boundary (instead of ending partway through it), there's no mismatch left to mask around. The sweep, its gradient, its 7s `gold-sheen` animation, the blob's size/blur/opacity, and `GoldWatermarks`'s icons/positions/opacity are all byte-for-byte unchanged — only which element sizes the layer changed.
+
+**Requirements check:**
+- Starts at the top of the slate-blue section, runs behind all its content, stops exactly where the section ends — yes, since the decorative layer is now `inset: 0` on the section that *is* that exact color boundary, not a shorter box inside it.
+- No horizontal overflow — the blob is still centered/clipped the same way, `GoldWatermarks`'s icons are still percentage-positioned within the same `overflow-hidden` boundary; nothing about width changed.
+- No layout shift, no contrast change — no text, spacing, or component structure changed, only which wrapper owns the background/decorative layer.
+- Responsive/mobile — `absolute inset-0` on the outer section means the layer always matches that section's real content height at any viewport width, including a taller mobile stack.
+- `prefers-reduced-motion` — unchanged; the existing `.gold-banner::before` reduced-motion rule and `ParallaxLayer`'s own static fallback both still apply, now just to a taller box.
+
+Files touched: `components/home/Paths.tsx`, `app/globals.css`. No test files reference these classes (confirmed via grep against `tests/unit/Paths.test.tsx`), so nothing else needed updating.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 194: extend Home hero animated background to cover the full slate-blue section"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

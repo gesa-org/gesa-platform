@@ -334,7 +334,42 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
     // admin-nav elsewhere in the app, so swapped for the new page-scoped
     // `--home-gray` token (app/globals.css) via an arbitrary-value class
     // instead of retuning that shared utility.
-    <section aria-labelledby="paths-heading" className="relative overflow-hidden bg-[var(--home-gray)]">
+    // Phase 194 — Roy flagged that the animated parallax/sheen background
+    // only covered the upper hero sub-div (`pt-16 pb-[210px]`), while this
+    // whole <section> — hero band AND the card-grid area below it — shares
+    // one continuous slate-blue/gray field (`--home-gray`, same color used
+    // on both, no seam between them per Phase 167/170). So the decorative
+    // layer needed to live on this outer, full-height wrapper, not the
+    // shorter hero div nested inside it. Moved `.gold-banner.home-hero`
+    // (background + the `::before` sheen animation) up to this <section>
+    // itself, and moved the ParallaxLayer decorative blob/watermarks block
+    // (previously inside the hero div below) to be this section's own direct
+    // child, sized `absolute inset-0` so it always matches this section's
+    // real rendered height — including on mobile, where the same content
+    // stacks taller. No shapes, colors, motion, or opacity changed; only
+    // which element owns/sizes the layer did.
+    <section aria-labelledby="paths-heading" className="gold-banner home-hero relative overflow-hidden">
+      {/* Phase 194 — decorative sheen/blob/watermark layer, now sized to
+          this entire section (see comment above) rather than only the hero
+          sub-div. `pointer-events-none` keeps it fully non-interactive;
+          `z-0` keeps every piece of real content (hero text below, and the
+          card grid further down, both already `relative z-10`) stacked
+          above it. */}
+      <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0 h-full w-full">
+        {/* Phase 171 — Roy flagged a hard seam where this band's gold
+            tone met the flat gray section below it — caused by the sheen
+            overlay being sized to only the hero sub-div while the real
+            slate-blue field continued below it. Phase 194 fixes the actual
+            cause (this layer now spans the full slate-blue section, so
+            there's no shorter box for the overlay to be clipped against
+            mid-sweep) rather than the Phase 171/193 workarounds. */}
+        <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-clay/30 blur-[110px]" />
+        {/* Phase 67 — same faint line-art watermark texture as About's
+            gold Hero band and the gold PageHero banners (Our Therapists,
+            Support Groups), for consistency across every gold section. */}
+        <GoldWatermarks />
+      </ParallaxLayer>
+
       {/* Gold hero band — Phase 47. Phase 70 removed this band's text
           (eyebrow/headline/subtitle/trust badges) and the decorative
           "gallery wall" of the three path artworks entirely, leaving the
@@ -381,29 +416,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           a light background, which stays legible on gold too (same
           combination the very first gold-banner design used, before Phase
           130's slate-gray retune) — no text-color changes needed here. */}
-      <div className="gold-banner home-hero relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
-        <ParallaxLayer speed={50} className="pointer-events-none absolute inset-0 z-0">
-          {/* Phase 171 — Roy flagged a hard seam where this band's gold
-              tone met the flat gray section below it, and asked for "whole
-              ash gray with goldish accent" instead. The seam itself was the
-              animated sheen sweep in `.gold-banner.home-hero::before`
-              (app/globals.css) — a large `inset:-20%` overlay spanning
-              nearly the entire tall hero box, hard-clipped by
-              `overflow: hidden` right at the boundary this section shares
-              with Paths' cards area. That sheen is now disabled for this
-              page (see globals.css). This blob — small (420x560) and
-              heavily blurred (110px) near the very top of a much taller
-              hero — already faded to fully transparent well before
-              reaching that boundary, so retinting it gold (was white) makes
-              it the sole "goldish accent," with no edge for a seam to ever
-              form on. */}
-          <div className="absolute left-1/2 top-0 h-[420px] w-[560px] -translate-x-1/2 rounded-full bg-clay/30 blur-[110px]" />
-          {/* Phase 67 — same faint line-art watermark texture as About's
-              gold Hero band and the gold PageHero banners (Our Therapists,
-              Support Groups), for consistency across every gold section. */}
-          <GoldWatermarks />
-        </ParallaxLayer>
-
+      <div className="relative pt-16 pb-[210px] md:pt-20 md:pb-[210px]">
         <div className="wrap relative z-10">
           <Reveal type="fade-up" as="div" className="mx-auto max-w-[52rem] text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-espresso">
