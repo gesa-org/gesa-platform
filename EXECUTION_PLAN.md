@@ -8516,27 +8516,9 @@ git push
 
 ---
 
-## Phase 191: Home page path cards — new front-face design + relabel (redone)
+## Phase 191: Home page path cards — new front-face design + relabel (built twice, reverted twice)
 
-**Request:** Roy sent the same reference mockup again after asking for the first attempt to be reverted, this time with an explicit instruction: "Copy the design exactly in the picture I provide, don't create new one." Same three path cards (the flip cards above "In crisis right now" / "Veterans, reservists & families" / "Seeking support"): front face restyled from a wood-frame-and-cream-mat treatment to a solid, chunky embossed color block with a themed background texture (flowing lines / branching tree / orbit-and-stars), badges relabeled "Resilience"/"Veterans"/"Suport" (a typo for "Support" in the reference).
-
-**Honest limit, stated to Roy directly:** the reference is a raster, AI-rendered mockup with no vector/source file — there is no way to literally "copy" it pixel-for-pixel in code; the closest a hand-written CSS/SVG implementation can get is a faithful hand-built approximation, matching color, composition, and the specific texture per card. This redo pushes that approximation further than the first attempt (see below) but is not, and cannot be, a pixel-exact trace. Flagged this plainly rather than claiming an exactness that isn't achievable.
-
-**What's different from the reverted first attempt, specifically to close the gap:**
-- `components/home/PathCardTexture.tsx` — the veterans card's tree pattern gained a second tier of forking branches (a fuller canopy, closer to the reference's dense branch coverage instead of a single sparse trunk); the resilience card's wave lines went from 5 to 8 rows (fuller coverage); the support card gained a fourth orbit ring and more scattered star dots.
-- `components/home/Paths.tsx` — added a second, darkened, offset color panel behind each card's front face (same background color, `filter: brightness(0.72)`, nudged down-right by a few pixels) to approximate the reference's visible canvas-box depth/edge, which the first attempt's flat single-panel version didn't have.
-
-**Unchanged from the first attempt (still matches the reference):** each card's own background color and GesaMark recolor, the caption line below each frame, the flip mechanics, the gold badge pill.
-
-**Verification:** re-read the full changed section in `Paths.tsx` and the new texture patterns after editing. `tests/unit/Paths.test.tsx` re-updated the same way as the first attempt (current front-face labels, texture SVGs present, no leftover wood-frame inline style). `npx tsc --noEmit`/`npx jest` still need Roy to run.
-
-**Git block for Roy:**
-
-```
-git add components/home/PathCardTexture.tsx components/home/Paths.tsx tests/unit/Paths.test.tsx EXECUTION_PLAN.md
-git commit -m "Phase 191: Home page path cards — embossed front-face design + Resilience/Veterans/Support relabel"
-git push
-```
+Attempted twice (a plain version, then a redo with a darker offset "depth" panel and denser textures after Roy asked for a closer copy of his reference) and reverted both times at Roy's request, before either was ever committed. `components/home/Paths.tsx` and `tests/unit/Paths.test.tsx` are back to their original, pre-Phase-191 state (wood-frame/mat front face, "War"/"Terror"/"Disaster" labels). `components/home/PathCardTexture.tsx` (added for this attempt) is unused; it wasn't deleted since file deletion isn't available in this environment — safe to `git rm` it, or leave it, since nothing imports it and it has no effect on the build either way.
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

@@ -72,17 +72,12 @@ describe("Paths (Home)", () => {
   // Phase 100 — Roy sent a new reference recoloring an abstract mark per
   // card instead of a painting, with new badge labels matching each card's
   // own category ("Crisis"/"Veterans"/"Support") rather than art-piece
-  // names.
-  // Phase 191 — Roy's newest reference relabels the front badges again,
-  // to "Resilience"/"Veterans"/"Support" (card 1's label specifically
-  // changed from Phase 154's "War" to this phase's "Resilience"; card 2
-  // and 3 were already "Veterans"/"Support" going back to Phase 100).
-  // This confirms the current labels render alongside the still-unchanged
-  // back-face titles from the previous test.
+  // names. This confirms the new labels render alongside the
+  // still-unchanged back-face titles from the previous test.
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Resilience")).toBeInTheDocument();
+    expect(screen.getByText("Crisis")).toBeInTheDocument();
     expect(screen.getByText("Veterans")).toBeInTheDocument();
     expect(screen.getByText("Support")).toBeInTheDocument();
 
@@ -90,18 +85,5 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("In crisis right now")).toBeInTheDocument();
     expect(screen.getByText("Veterans, reservists & families")).toBeInTheDocument();
     expect(screen.getByText("Seeking support")).toBeInTheDocument();
-  });
-
-  // Phase 191 — regression coverage for the new solid-color embossed card
-  // background (replacing the old wood-frame + mat layers): each front
-  // face should render its own PathCardTexture pattern behind the GesaMark,
-  // and the old wood-grain/mat markup should be gone.
-  it("renders the new embossed texture pattern on each front face, with no leftover wood-frame markup", () => {
-    render(<Paths />);
-
-    const textureSvgs = document.querySelectorAll('.gold-card-hover svg[viewBox="0 0 200 200"]');
-    expect(textureSvgs.length).toBe(3);
-
-    expect(document.querySelector('[style*="repeating-linear-gradient"]')).toBeNull();
   });
 });
