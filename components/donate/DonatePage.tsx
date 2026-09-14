@@ -1,4 +1,4 @@
-import { Users, Globe, ShieldCheck, Lock, Heart, Quote } from "lucide-react";
+import { Users, Globe, ShieldCheck, Quote } from "lucide-react";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
@@ -115,7 +115,6 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
 };
 
 const IMPACT_ICONS = [Users, Globe, ShieldCheck];
-const TRUST_ICONS = [ShieldCheck, Lock, Globe, Users];
 
 // Phase 202 — last-resort fallback if a published/draft image URL 404s or
 // otherwise fails to load client-side (requirement: "include safe fallback
@@ -143,15 +142,12 @@ export default async function DonatePage({
   const contentRaw = await getPageContent("page_donate", DONATE_PAGE_FALLBACK);
   const { resolved, isEditorPreview } = await resolveEditorPreview("donate", contentRaw as unknown as Record<string, unknown>, searchParams);
   const content = resolved as unknown as typeof contentRaw;
-  const crisisLinkIsExternal = content.crisisLinkHref.startsWith("http");
-
   const impactItems = [
     { title: content.impact1Title, description: content.impact1Description, contentId: "donate.impact.card1Description" },
     { title: content.impact2Title, description: content.impact2Description, contentId: "donate.impact.card2Description" },
     { title: content.impact3Title, description: content.impact3Description, contentId: "donate.impact.card3Description" },
   ];
 
-  const trustBadges = [content.trustBadge1Label, content.trustBadge2Label, content.trustBadge3Label, content.trustBadge4Label];
 
   // Phase 202 — src/alt now come straight from the resolved page content
   // (draft-aware in editor preview, published on the live site — same
@@ -355,39 +351,6 @@ export default async function DonatePage({
         </div>
       </section>
 
-      {/* Trust badges row. */}
-      <section className="border-b border-border bg-sage-soft py-10">
-        <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
-          {trustBadges.map((label, i) => {
-            const Icon = TRUST_ICONS[i] ?? TRUST_ICONS[TRUST_ICONS.length - 1];
-            return (
-              <StaggerItem key={label} className="flex items-center gap-3.5">
-                <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-card text-primary shadow-sm">
-                  <Icon size={22} />
-                </span>
-                <span className="max-w-[130px] text-left text-[13px] font-semibold uppercase leading-snug tracking-wide text-primary">
-                  {label}
-                </span>
-              </StaggerItem>
-            );
-          })}
-        </StaggerGroup>
-      </section>
-
-      {/* Closing crisis-resources line — same real, functioning external
-          link pattern as DonateBand's own crisis line. */}
-      <p className="flex items-center justify-center gap-1.5 px-6 py-6 text-center text-[14px] text-muted-fg">
-        <Heart size={15} className="flex-none" />
-        {content.crisisText}{" "}
-        <a
-          href={content.crisisLinkHref}
-          target={crisisLinkIsExternal ? "_blank" : undefined}
-          rel={crisisLinkIsExternal ? "noreferrer" : undefined}
-          className="underline underline-offset-2 hover:text-primary"
-        >
-          {content.crisisLinkLabel}
-        </a>
-      </p>
     </div>
   );
 
