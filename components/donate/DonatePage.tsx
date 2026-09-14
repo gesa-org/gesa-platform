@@ -1,4 +1,4 @@
-import { Users, Globe, ShieldCheck, Lock, Heart } from "lucide-react";
+import { Users, Globe, ShieldCheck, Lock, Heart, Quote } from "lucide-react";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
@@ -14,7 +14,21 @@ import EditableText from "@/components/ui-builder/public/EditableText";
 // and asked for the header's "JOIN GESA" button to become "DONATE" and open
 // this page, with every function in the reference actually working and
 // captured by the CRM — see DonateForm.tsx for the interactive giving box
-// and gift-intent capture. This file is the static shell around it, styled
+// and gift-intent capture.
+//
+// Phase 200 — Roy sent a separate reference doc ("Website ideas
+// 14_9_26.pdf", Page 5 — "Donation - ideas") laying out a photo-led
+// PHOTO -> STORY -> HUMAN VOICE -> IMPACT -> DONATION -> THANK YOU flow for
+// this page, along with 3 real photographs to use in it. His follow-up
+// message explicitly narrowed the ask to that Page 5 section using those
+// photos, and said nothing about replacing the working Mollie flow with the
+// doc's own generic Stripe/PayPal boilerplate — so DonateForm.tsx is
+// untouched here. Added: a "Why your support matters" 3-photo section
+// (Therapy/Education/Wellbeing, captions straight from the doc) and a
+// Testimonials section, both slotted around the existing giving box. The
+// existing impact-icon row, movement band, trust badges, and crisis line
+// already cover the doc's "impact" and "closing CTA" beats, so they're
+// unchanged. This file is the static shell around it, styled
 // entirely from the site's own existing tokens (--primary/--espresso/
 // --accent-soft/--card/--border) rather than inventing new colors, matching
 // the reference's black-pill-on-white look via the same --primary token the
@@ -43,6 +57,24 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
   impact2Description: "Bringing people and professionals together across language and distance.",
   impact3Title: "Continuity",
   impact3Description: "Supporting the coordination and delivery of gifted support programmes.",
+  // Phase 200 — captions are taken directly from Roy's own reference doc
+  // ("Website ideas 14_9_26.pdf", Page 5, section 2), not invented here.
+  whySupportHeading: "Why your support matters",
+  photo1Category: "Therapy",
+  photo1Caption: "Creating access to support and therapeutic care.",
+  photo2Category: "Education",
+  photo2Caption: "Sharing knowledge and tools that can create lasting change.",
+  photo3Category: "Wellbeing",
+  photo3Caption: "Helping people and communities build healthier, more connected futures.",
+  // Phase 200 — these two quotes are the reference doc's own worked
+  // examples, not real GESA testimonials. Roy's doc is explicit that only
+  // real, permissioned testimonials should go live — treat these as
+  // placeholders to replace via the Content Manager before publishing.
+  testimonialsHeading: "In their own words",
+  testimonial1Quote: "The support gave me hope when I didn't know where to turn. I felt heard, understood and not alone.",
+  testimonial1Author: "Programme participant",
+  testimonial2Quote: "What makes GESA different is the way it connects therapy with education and community.",
+  testimonial2Author: "Name / Role",
   movementHeading: "One choice can carry support across the world.",
   movementSubtitle: "Your contribution becomes part of a global movement built by people who choose to give, participate and create meaningful change.",
   movementCtaLabel: "Be part of the movement",
@@ -58,6 +90,28 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
 
 const IMPACT_ICONS = [Users, Globe, ShieldCheck];
 const TRUST_ICONS = [ShieldCheck, Lock, Globe, Users];
+
+// Phase 200 — the 3 real, authentic photographs Roy provided for this page
+// (not stock photography): a community support circle, a one-on-one
+// conversation on a bench, and an AVP Toolkit training session. Hardcoded
+// here rather than made CMS-editable, same convention Hero.tsx already uses
+// for its own backgroundImage field — swapping the actual photo files is a
+// code change, only the headings/captions around them are admin-editable
+// (see DONATE_EDITABLE_FIELDS in pageRegistry.ts).
+const WHY_SUPPORT_PHOTOS = [
+  {
+    src: "/images/donate/community-support-circle.jpg",
+    alt: "A GESA-supported community gathered in an outdoor support circle, seated together under trees",
+  },
+  {
+    src: "/images/donate/one-on-one-conversation.jpg",
+    alt: "Two women in conversation on a bench, one taking notes during a one-on-one support session",
+  },
+  {
+    src: "/images/donate/avp-toolkit-training.jpg",
+    alt: "A facilitator leading an AVP Toolkit training session for a full room of participants",
+  },
+] as const;
 
 // Phase 135 — hero band's text is now the visual editor's canvas-selectable
 // reference implementation for this page; the impact/movement/trust/crisis
@@ -83,6 +137,17 @@ export default async function DonatePage({
   ];
 
   const trustBadges = [content.trustBadge1Label, content.trustBadge2Label, content.trustBadge3Label, content.trustBadge4Label];
+
+  const whySupportPhotos = [
+    { ...WHY_SUPPORT_PHOTOS[0], category: content.photo1Category, caption: content.photo1Caption, categoryContentId: "donate.whySupport.photo1Category", captionContentId: "donate.whySupport.photo1Caption" },
+    { ...WHY_SUPPORT_PHOTOS[1], category: content.photo2Category, caption: content.photo2Caption, categoryContentId: "donate.whySupport.photo2Category", captionContentId: "donate.whySupport.photo2Caption" },
+    { ...WHY_SUPPORT_PHOTOS[2], category: content.photo3Category, caption: content.photo3Caption, categoryContentId: "donate.whySupport.photo3Category", captionContentId: "donate.whySupport.photo3Caption" },
+  ];
+
+  const testimonials = [
+    { quote: content.testimonial1Quote, author: content.testimonial1Author, quoteId: "donate.testimonials.quote1", authorId: "donate.testimonials.author1" },
+    { quote: content.testimonial2Quote, author: content.testimonial2Author, quoteId: "donate.testimonials.quote2", authorId: "donate.testimonials.author2" },
+  ];
 
   const page = (
     <div>
@@ -114,12 +179,76 @@ export default async function DonatePage({
         </div>
       </section>
 
-      {/* Giving box — the interactive part, see DonateForm.tsx. */}
+      {/* "Why your support matters" — Phase 200: 3 real photographs (not
+          stock images) with a short category label and caption each, per
+          Roy's reference doc ("Website ideas 14_9_26.pdf", Page 5, section
+          2 — "Use 3 strong photographs rather than lots of text"). Sits
+          between the hero and the giving box, same position the reference
+          doc's own page order puts it in. */}
+      <section className="section border-t border-border bg-background">
+        <div className="wrap">
+          <Reveal type="fade-up">
+            <h2 className="mb-9 text-center font-serif text-[26px] font-semibold text-foreground">
+              <EditableText contentId="donate.whySupport.heading" label="Why your support matters heading" value={content.whySupportHeading} as="span" />
+            </h2>
+          </Reveal>
+          <StaggerGroup className="grid gap-6 sm:grid-cols-3">
+            {whySupportPhotos.map((photo) => (
+              <StaggerItem key={photo.src} className="overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-accent-soft">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" />
+                </div>
+                <div className="p-5">
+                  <h3 className="mb-1.5 text-[13px] font-bold uppercase tracking-wide text-primary">
+                    <EditableText contentId={photo.categoryContentId} label="Photo category label" value={photo.category} as="span" />
+                  </h3>
+                  <p className="text-[14px] leading-relaxed text-muted-fg">
+                    <EditableText contentId={photo.captionContentId} label="Photo caption" value={photo.caption} as="span" />
+                  </p>
+                </div>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+        </div>
+      </section>
+
+      {/* Giving box — the interactive part, see DonateForm.tsx. Kept
+          exactly as-is (Mollie, not Stripe) per Roy's own clarification —
+          only the sections around it changed for Phase 200. */}
       <section className="pb-16">
         <div className="wrap">
           <Reveal type="fade-up">
             <DonateForm content={content} />
           </Reveal>
+        </div>
+      </section>
+
+      {/* Testimonials — Phase 200. Roy's reference doc flags this as one of
+          the most important sections on the page. The two quotes shipped in
+          DONATE_PAGE_FALLBACK are the doc's own worked examples, not real
+          GESA testimonials yet — see that file's Phase 200 comment and
+          EXECUTION_PLAN.md before treating this section as publish-ready. */}
+      <section className="section border-t border-border bg-sage-soft/40">
+        <div className="wrap max-w-[820px]">
+          <Reveal type="fade-up">
+            <h2 className="mb-9 text-center font-serif text-[26px] font-semibold text-foreground">
+              <EditableText contentId="donate.testimonials.heading" label="Testimonials heading" value={content.testimonialsHeading} as="span" />
+            </h2>
+          </Reveal>
+          <StaggerGroup className="grid gap-6 sm:grid-cols-2">
+            {testimonials.map((t) => (
+              <StaggerItem key={t.quoteId} className="rounded-[var(--radius)] border border-border bg-card p-7 shadow-soft">
+                <Quote className="mb-3 text-primary/40" size={22} />
+                <p className="mb-4 text-[15px] italic leading-relaxed text-foreground">
+                  “<EditableText contentId={t.quoteId} label="Testimonial quote" value={t.quote} as="span" />”
+                </p>
+                <p className="text-[13px] font-semibold uppercase tracking-wide text-muted-fg">
+                  — <EditableText contentId={t.authorId} label="Testimonial attribution" value={t.author} as="span" />
+                </p>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
         </div>
       </section>
 

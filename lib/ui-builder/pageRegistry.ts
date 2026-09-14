@@ -489,6 +489,28 @@ const DONATE_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "donate.impact.card2Description", path: "impact2Description", label: "Impact card 2 description", type: "plainText", group: "Impact section", maxLength: 200, contentScope: "page" },
   { contentId: "donate.impact.card3Title", path: "impact3Title", label: "Impact card 3 title", type: "plainText", group: "Impact section", maxLength: 60, contentScope: "page" },
   { contentId: "donate.impact.card3Description", path: "impact3Description", label: "Impact card 3 description", type: "plainText", group: "Impact section", maxLength: 200, contentScope: "page" },
+  // Phase 200 — "Why your support matters" 3-photo section. The photos
+  // themselves are hardcoded assets in DonatePage.tsx (same convention as
+  // Hero.tsx's backgroundImage — not admin-swappable through this generic
+  // text editor), only the heading/category labels/captions are editable.
+  { contentId: "donate.whySupport.heading", path: "whySupportHeading", label: "\"Why your support matters\" heading", type: "heading", group: "Why your support matters (photos)", maxLength: 100, contentScope: "page" },
+  { contentId: "donate.whySupport.photo1Category", path: "photo1Category", label: "Photo 1 category label", type: "plainText", group: "Why your support matters (photos)", maxLength: 30, contentScope: "page" },
+  { contentId: "donate.whySupport.photo1Caption", path: "photo1Caption", label: "Photo 1 caption", type: "plainText", group: "Why your support matters (photos)", maxLength: 140, contentScope: "page" },
+  { contentId: "donate.whySupport.photo2Category", path: "photo2Category", label: "Photo 2 category label", type: "plainText", group: "Why your support matters (photos)", maxLength: 30, contentScope: "page" },
+  { contentId: "donate.whySupport.photo2Caption", path: "photo2Caption", label: "Photo 2 caption", type: "plainText", group: "Why your support matters (photos)", maxLength: 140, contentScope: "page" },
+  { contentId: "donate.whySupport.photo3Category", path: "photo3Category", label: "Photo 3 category label", type: "plainText", group: "Why your support matters (photos)", maxLength: 30, contentScope: "page" },
+  { contentId: "donate.whySupport.photo3Caption", path: "photo3Caption", label: "Photo 3 caption", type: "plainText", group: "Why your support matters (photos)", maxLength: 140, contentScope: "page" },
+  // Phase 200 — Testimonials. Roy's reference doc flags this as one of the
+  // most important sections but its own example quotes are explicitly
+  // placeholders ("Important: only use real testimonials and obtain
+  // permission to publish names/photos") — DONATE_PAGE_FALLBACK ships with
+  // those exact placeholder quotes so the section isn't empty, but they
+  // must be swapped for real, permissioned ones before this is final.
+  { contentId: "donate.testimonials.heading", path: "testimonialsHeading", label: "Testimonials heading", type: "heading", group: "Testimonials", maxLength: 100, contentScope: "page" },
+  { contentId: "donate.testimonials.quote1", path: "testimonial1Quote", label: "Testimonial 1 quote", type: "plainText", group: "Testimonials", maxLength: 240, contentScope: "page" },
+  { contentId: "donate.testimonials.author1", path: "testimonial1Author", label: "Testimonial 1 attribution", type: "plainText", group: "Testimonials", maxLength: 60, contentScope: "page" },
+  { contentId: "donate.testimonials.quote2", path: "testimonial2Quote", label: "Testimonial 2 quote", type: "plainText", group: "Testimonials", maxLength: 240, contentScope: "page" },
+  { contentId: "donate.testimonials.author2", path: "testimonial2Author", label: "Testimonial 2 attribution", type: "plainText", group: "Testimonials", maxLength: 60, contentScope: "page" },
   { contentId: "donate.movement.heading", path: "movementHeading", label: "Movement band heading", type: "heading", group: "Movement band", maxLength: 140, contentScope: "page" },
   { contentId: "donate.movement.subtitle", path: "movementSubtitle", label: "Movement band subtitle", type: "plainText", group: "Movement band", maxLength: 240, contentScope: "page" },
   { contentId: "donate.movement.ctaLabel", path: "movementCtaLabel", label: "Movement CTA label", type: "ctaLabel", group: "Movement band", maxLength: 40, contentScope: "page" },

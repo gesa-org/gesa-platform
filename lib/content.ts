@@ -397,6 +397,27 @@ export type DonatePageContent = {
   impact2Description: string;
   impact3Title: string;
   impact3Description: string;
+  // Phase 200 — Roy sent a reference doc ("Website ideas 14_9_26.pdf",
+  // Page 5 — "Donation - ideas") asking for a real "Why your support
+  // matters" photo section using 3 authentic photographs he provided
+  // (a community support circle, a one-on-one bench conversation, and an
+  // AVP Toolkit training session), plus a testimonials section — rather
+  // than replacing the existing, working Mollie giving box (kept exactly
+  // as-is per his own clarification message). See DonatePage.tsx for where
+  // these render and EXECUTION_PLAN.md Phase 200 for the full note,
+  // including which fields below are still placeholder copy.
+  whySupportHeading: string;
+  photo1Category: string;
+  photo1Caption: string;
+  photo2Category: string;
+  photo2Caption: string;
+  photo3Category: string;
+  photo3Caption: string;
+  testimonialsHeading: string;
+  testimonial1Quote: string;
+  testimonial1Author: string;
+  testimonial2Quote: string;
+  testimonial2Author: string;
   movementHeading: string;
   movementSubtitle: string;
   movementCtaLabel: string;

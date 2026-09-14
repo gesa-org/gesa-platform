@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-14 (Phase 199, in progress)
+Last updated: 2026-09-14 (Phase 200 added; Phase 199 in progress)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8761,6 +8761,12 @@ Files touched: `components/Header.tsx`, `components/MobileNavDrawer.tsx` (new), 
 
 Files touched: `components/find-support/ChoiceScreen.tsx`, `components/find-support/FindSupportModal.tsx`, `tests/unit/ChoiceScreen.test.tsx`.
 
+**Follow-up 3 — technical specification updated to v2.0.** Roy provided the original "GESA Platform Technical Specification" (VentVest, August 2026, v1.0 — coverage through roughly Phase 88) and asked for it to be brought current so QA can start testing against an accurate document. Read every phase entry from 88 through 199 in full and cross-checked ambiguous claims against the live code (most importantly: verified that `app/therapist/` now exists and is a real, working self-service dashboard, directly contradicting v1.0's explicit claim that no therapist portal existed). Produced `GESA_Platform_Technical_Specification_v2.md` — a full rewrite/extension of every original section plus two new ones written specifically for QA: §13 "Known Issues, Regressions & Work That Was Reverted" (fixed vulnerabilities/crashes worth regression-testing, disclosed open gaps that are not bugs, and four reverted Home-card redesigns QA should not expect to find live) and §14 "Mobile Responsiveness Status" (what Phase 199's mobile pass has and hasn't covered yet). Functional requirements extended from FR-32 to FR-78.
+
+Delivered as Markdown rather than PDF/DOCX — this session's sandboxed shell has been unreachable all session (the same Windows-update mount issue noted throughout this document), and PDF/DOCX generation requires running code there. Roy can open the Markdown directly or ask for a PDF/DOCX conversion once the shell is available again.
+
+**Follow-up 4 — technical specification bumped to v3.0 with professional formatting scaffolding.** Roy re-uploaded the original v1.0 PDF and asked for the spec to be brought current, in the original's professional format, with the VentVest logo. Content-wise this was already done in Follow-up 3 (`GESA_Platform_Technical_Specification_v2.md`, current through Phase 199) — no new phase-history research was needed. What was actually missing was the professional page shell: a Document Control/Version History table and the VentVest-logo'd running header, both of which already exist in a *different*, previously-unknown-to-this-thread file, `GESA_Platform_Technical_Specification_Professional.pdf` (v1.7) — a parallel effort that polished v1.0's formatting (logo, version table, a QA & Testing Reference section) without ever picking up the Phase 88–199 content updates. Added a Document Control — Version History section (continuing v1.7's log through a new v2.0/v3.0 entry) plus an explicit handoff note to the top of the markdown, spelling out that the fastest path to a finished PDF is dropping this content into v1.7's existing page shell. **Did not attempt PDF/DOCX generation** — the build shell is still unreachable (same Windows-update mount issue, reconfirmed twice this turn), and PDF rendering requires it (LaTeX/pandoc, or the docx-skill's soffice conversion). The content itself is fully QA-actionable today as Markdown; only the visual polish (logo image embedded, typeset PDF) is blocked.
+
 **Still to come in this phase (not yet started):** forms platform-wide (contact, donation, intake, booking, account, therapist onboarding), auth pages, Community/donation/professional-onboarding flows, footer + legal pages, CRM/admin dashboard tables and data screens, loading/error states, and a full cross-width (320/360/375/390/412/430px) QA pass with a final deliverables report. Each will land as its own reviewable installment under this same Phase 199 heading.
 
 ```
@@ -8770,6 +8776,50 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 199 (1/n): mobile nav drawer + therapist directory filter sheet"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 200: Donate page — "Why your support matters" photo section + Testimonials
+
+Roy sent a separate reference doc ("Website ideas 14_9_26.pdf") with a generic Stripe/PayPal/Apple Pay/Google Pay donation-page spec, then 3 real photographs and a follow-up message narrowing the ask: *"Page 5 Donation section only, read the documents find the donation ideas page 5 and use the images i provide as the photo images attach on the section with photography."* Page 5 of the PDF ("Donation - ideas") lays out a photo-led PHOTO → STORY → HUMAN VOICE → IMPACT → DONATION → THANK YOU flow for `/donate`, distinct from the doc's own earlier, generic technical spec — which conflicts with the site's existing, working Mollie integration (Phase 99) and was correctly superseded by the narrowing message. **DonateForm.tsx (Mollie) is untouched.**
+
+**What shipped:**
+
+1. **"Why your support matters" — 3-photo section**, new, sitting between the hero and the giving box (`components/donate/DonatePage.tsx`). Uses the 3 real photographs Roy provided — a community support circle, a one-on-one bench conversation, and an AVP Toolkit training session — mapped 1:1 onto the PDF's own Therapy/Education/Wellbeing categories and captions (copied verbatim from the PDF, not invented). Category label + caption are CMS-editable (`donate.whySupport.*` in `pageRegistry.ts`); the photo files themselves are hardcoded asset paths (`/images/donate/community-support-circle.jpg`, `/images/donate/one-on-one-conversation.jpg`, `/images/donate/avp-toolkit-training.jpg`), same convention `Hero.tsx` already uses for its own background image — swapping the actual picture is a code change, not an admin one.
+
+2. **Testimonials section**, new, sitting right after the giving box. The PDF calls this one of the most important sections but its own example quotes are explicitly flagged as placeholders ("only use real testimonials and obtain permission to publish names/photos") — those exact placeholder quotes ship in `DONATE_PAGE_FALLBACK` so the section isn't empty, editable via `donate.testimonials.*`.
+
+3. **`lib/content.ts`** — `DonatePageContent` extended with `whySupportHeading`, `photo1-3Category/Caption`, `testimonialsHeading`, `testimonial1-2Quote/Author`. `getPageContent`'s existing shallow-merge-over-fallback means the live `page_donate` Production row (saved before this phase) doesn't need a migration — it'll just pick up these new fields' fallback values until an admin edits them.
+
+4. **Left unchanged, since they already cover the PDF's remaining beats:** the existing three-icon "what your gift helps make possible" row (≈ PDF's "impact" section), the dark movement band (≈ PDF's closing CTA), the trust-badge row, and the crisis line.
+
+**Not done — needs Roy before this is fully publish-ready:**
+- **Testimonial quotes are the PDF's own worked examples, not real GESA testimonials.** Swap via Content Manager once real, permissioned quotes/attributions are available.
+- **No founder/team message section built.** The PDF's section 6 (a personal note from the founder, with their photo) needs Roy's actual photo and quote — nothing was fabricated in its place.
+- **PDF's section 4 ("See the impact" 5–7 photo horizontal strip) not built** — only 3 real photos exist so far, not the 5–7 the PDF calls for; revisit once more photos are available, or repurpose the existing 3 there instead of a dedicated impact strip.
+- **Image files still need to land in the repo.** The sandboxed shell has been unreachable all session (same Windows-update mount issue noted throughout this document), so the 3 source photos couldn't be copied from the chat upload folder into `public/images/donate/` here. Roy needs to run the copy step below himself before this deploys, or the `<img>` tags will 404.
+
+**Copy the 3 photos into place (run in PowerShell, adjust the source folder name/session ID if it differs):**
+```
+cd "path\to\your\project"
+mkdir "public\images\donate" -Force
+Copy-Item "$env:APPDATA\Claude\local-agent-mode-sessions\10f6d56b-8668-40d1-90dd-59b1f2b99e0c\8d6d5241-283e-4866-9c54-181252c9aecb\local_538ec091-e804-4ae5-b05c-d8abb5afc127\uploads\Screenshot 2026-09-14 201213.png" "public\images\donate\community-support-circle.jpg"
+Copy-Item "$env:APPDATA\Claude\local-agent-mode-sessions\10f6d56b-8668-40d1-90dd-59b1f2b99e0c\8d6d5241-283e-4866-9c54-181252c9aecb\local_538ec091-e804-4ae5-b05c-d8abb5afc127\uploads\Screenshot 2026-09-14 201221.png" "public\images\donate\one-on-one-conversation.jpg"
+Copy-Item "$env:APPDATA\Claude\local-agent-mode-sessions\10f6d56b-8668-40d1-90dd-59b1f2b99e0c\8d6d5241-283e-4866-9c54-181252c9aecb\local_538ec091-e804-4ae5-b05c-d8abb5afc127\uploads\Screenshot 2026-09-14 201230.png" "public\images\donate\avp-toolkit-training.jpg"
+```
+
+Files touched: `components/donate/DonatePage.tsx`, `lib/content.ts`, `lib/ui-builder/pageRegistry.ts`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 200: Donate page - Why your support matters photo section + testimonials"
 git push
 ```
 
