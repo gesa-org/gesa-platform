@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Sparkle, Users, X, Loader2 } from "lucide-react";
+import { Sparkle, Users, Loader2 } from "lucide-react";
 
 // Phase 142 — the "Find Support" entry point. Replaces the old direct-to-
 // therapist-list CTA flow: every "Find Support" link site-wide now lands
@@ -21,23 +20,31 @@ import { Sparkle, Users, X, Loader2 } from "lucide-react";
 // /api/support-match, the first time the client actually submits real
 // preferences from inside the wizard. See EXECUTION_PLAN.md Phase 184.
 //
-// "Closeable" per the spec: there's nothing to close back to on this page
-// (it's the page's own first section, not a modal), so "close" here means
-// dismissing the choice and going straight to Our Professionals — the same
-// destination Manual Support goes to — which is the least-friction way to
-// let someone skip the question entirely.
+// Phase 199 (mobile/a11y pass) — this component only ever renders inside
+// FindSupportModal now (via FindSupportFlow/HeroFindSupportCta — see Phase
+// 146's note above); the standalone, non-modal page context this header "X"
+// was originally written for (see the removed comment this replaces) no
+// longer exists. With ChoiceScreen always inside the modal, its own "X" sat
+// a few pixels below the modal's real close button — two visually identical
+// close-looking icons in the same dialog, which read as a duplicate/broken
+// close control (and a duplicate "Close" stop for screen-reader/keyboard
+// users) even though they technically did different things (dismiss vs.
+// skip-to-directory). Removed rather than merely hidden, per Roy's request:
+// the modal's own single close button (FindSupportModal.tsx) plus the two
+// pathway cards below are the only ways to leave/proceed from this screen
+// now — visitors who want the plain directory without AI matching still
+// have the "Browse therapist" card for that.
 export default function ChoiceScreen({
   onChooseAi,
   onChooseBrowse,
 }: {
   onChooseAi: () => void;
-  // Phase 151 — fired when the "Browse therapist" card itself is clicked
-  // (not the header's "X"), opening the new guided Browse Therapist search
-  // modal instead of redirecting straight to /therapists. See
-  // HeroFindSupportCta.tsx, which owns the modal-swap this triggers.
+  // Phase 151 — fired when the "Browse therapist" card itself is clicked,
+  // opening the new guided Browse Therapist search modal instead of
+  // redirecting straight to /therapists. See HeroFindSupportCta.tsx, which
+  // owns the modal-swap this triggers.
   onChooseBrowse: () => void;
 }) {
-  const router = useRouter();
   const [pending, setPending] = useState<"ai" | "manual" | "browse" | null>(null);
 
   async function logPathway(pathway: "ai" | "manual") {
@@ -52,12 +59,6 @@ export default function ChoiceScreen({
     }
   }
 
-  async function chooseManual() {
-    setPending("manual");
-    await logPathway("manual");
-    router.push("/therapists?source=manual-support");
-  }
-
   async function chooseAi() {
     setPending("ai");
     // Phase 184 — no longer logs a support_requests row here (see this
@@ -70,11 +71,10 @@ export default function ChoiceScreen({
   // /therapists; it opens the new guided search instead (see
   // BrowseTherapistModal). Still logged as the "manual" pathway for CRM
   // purposes — it's the same fundamental "I'll pick my own therapist rather
-  // than being AI-matched" choice `chooseManual` always represented, just
-  // with a guided search step in front of it now instead of landing
-  // directly on the full, unfiltered directory. The header's "X" (still
-  // `chooseManual`, unchanged) keeps its own separate, simpler "skip
-  // straight to the full directory" behavior.
+  // than being AI-matched" choice the removed header "X" used to represent
+  // too (see this component's top-of-file Phase 199 note), just with a
+  // guided search step in front of it now instead of landing directly on
+  // the full, unfiltered directory.
   async function chooseBrowse() {
     setPending("browse");
     await logPathway("manual");
@@ -84,17 +84,7 @@ export default function ChoiceScreen({
 
   return (
     <div className="mx-auto max-w-[680px]">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-[22px]">How would you like to find support?</h2>
-        <button
-          type="button"
-          onClick={chooseManual}
-          aria-label="Skip and browse our professionals directly"
-          className="rounded-full p-1.5 text-muted-fg hover:bg-secondary"
-        >
-          <X size={18} />
-        </button>
-      </div>
+      <h2 className="mb-6 text-[22px]">How would you like to find support?</h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <button
@@ -126,8 +116,7 @@ export default function ChoiceScreen({
               below is unchanged).
               Phase 151 — this card now opens the guided Browse Therapist
               search modal (`chooseBrowse`) instead of redirecting straight
-              to /therapists (`chooseManual`, still used by the header's "X"
-              only — see this component's own comment above). */}
+              to /therapists. */}
           <span className="text-[17px] font-semibold">Browse therapist</span>
           <span className="text-[13.5px] text-muted-fg">
             Browse our professionals and choose the person you feel is right for you.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import FindSupportFlow from "@/components/find-support/FindSupportFlow";
 import type { Tables } from "@/lib/database.types";
@@ -29,17 +29,59 @@ export default function FindSupportModal({
   // file's own comment.
   onChooseBrowse: () => void;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Phase 199 (mobile/a11y pass) — this modal previously only had Escape-
+  // to-close, click-outside-to-close, and a body-scroll lock: no focus trap
+  // and no return-focus-on-close, even though a real modal needs both (a
+  // Tab press could previously move focus to page content sitting behind
+  // the overlay, and closing never gave focus back to whatever opened it —
+  // the hero CTA button). Added here using the same pattern already used by
+  // components/MobileNavDrawer.tsx, so the two dialog components in this
+  // codebase behave identically for keyboard/screen-reader users.
   useEffect(() => {
     if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
+    const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
+    function focusableEls() {
+      return panelRef.current
+        ? Array.from(
+            panelRef.current.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          )
+        : [];
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const focusable = focusableEls();
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    closeButtonRef.current?.focus();
+
     return () => {
-      document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
     };
   }, [open, onClose]);
 
@@ -62,23 +104,28 @@ export default function FindSupportModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Find support"
+      aria-label="AI Matching Support"
     >
       <div
+        ref={panelRef}
         className="relative w-full max-w-[720px] rounded-2xl bg-card p-6 shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* This is the modal's own close affordance (dismiss, no side
-            effects) — distinct from ChoiceScreen's own "X", which
-            deliberately means "skip the AI/Manual question and go straight
-            to Our Professionals" (see that component's comment). Having
-            both is intentional: one closes the dialog, the other is a
-            content-level shortcut. */}
+        {/* Phase 199 (mobile/a11y pass) — this is now the modal's only
+            close control. ChoiceScreen used to render its own second "X"
+            a few pixels below this one (see ChoiceScreen.tsx's Phase 199
+            note) — removed there, not just visually hidden, so exactly one
+            close-looking element exists in the DOM. Explicit focus-visible
+            ring added (the site's `<button>`s generally rely on the
+            browser default outline, which several browsers suppress on
+            rounded/icon-only buttons) so keyboard users get a clear,
+            visible focus state here specifically. */}
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
-          aria-label="Close"
-          className="absolute right-4 top-4 z-10 rounded-full p-1.5 text-muted-fg hover:bg-secondary"
+          aria-label="Close AI Matching Support"
+          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         >
           <X size={18} />
         </button>

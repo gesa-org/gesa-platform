@@ -42,14 +42,15 @@ describe("ChoiceScreen — pathway logging", () => {
     expect(onChooseBrowse).toHaveBeenCalledTimes(1);
   });
 
-  it('clicking the header "X" logs the manual pathway', async () => {
+  // Phase 199 (mobile/a11y pass) — ChoiceScreen's own header "X" (a "skip
+  // straight to the directory" shortcut) was removed: it always rendered
+  // inside FindSupportModal, directly below that modal's own close button,
+  // reading as a duplicate/confusing second close control. The modal's
+  // single close button (see FindSupportModal.test.tsx) plus the "Browse
+  // therapist" card above are the only ways to leave/proceed from this
+  // screen now.
+  it("renders exactly one close-looking control (no header 'X')", () => {
     render(<ChoiceScreen onChooseAi={jest.fn()} onChooseBrowse={jest.fn()} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Skip and browse our professionals directly/i }));
-
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
-    const [url, requestInit] = (global.fetch as jest.Mock).mock.calls[0];
-    expect(url).toBe("/api/support-pathway");
-    expect(JSON.parse(requestInit.body)).toEqual({ pathway: "manual" });
+    expect(screen.queryByRole("button", { name: /skip and browse/i })).not.toBeInTheDocument();
   });
 });
