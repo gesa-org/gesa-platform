@@ -69,20 +69,12 @@ describe("Paths (Home)", () => {
   // Phase 97 first restyled the front face as framed artwork + gold badge
   // dome, explicitly keeping the flip effect and the back face's own
   // title/description/CTA content untouched.
-  // Phase 100 — Roy sent a new reference recoloring an abstract mark per
-  // card instead of a painting, with new badge labels matching each card's
-  // own category rather than art-piece names.
-  // Phase 198 — labels updated again to "Resilience"/"Veterans"/"Suport" per
-  // Roy's latest reference image — "Suport" is a deliberate typo Roy asked
-  // to match literally ("match the exact spelling from the image asset").
-  // This confirms the new labels render alongside the still-unchanged
-  // back-face titles from the previous test.
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Resilience")).toBeInTheDocument();
+    expect(screen.getByText("Crisis")).toBeInTheDocument();
     expect(screen.getByText("Veterans")).toBeInTheDocument();
-    expect(screen.getByText("Suport")).toBeInTheDocument();
+    expect(screen.getByText("Support")).toBeInTheDocument();
 
     // Back face content from the earlier test is still present, unchanged.
     expect(screen.getByText("In crisis right now")).toBeInTheDocument();

@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Waves } from "lucide-react";
+import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Tags, Waves } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
-import PathCardTexture from "@/components/home/PathCardTexture";
 import type { HomeContent } from "@/lib/content";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
@@ -74,17 +73,9 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // their existing Veterans/Support titles and copy untouched — only the
   // front badge label changed, same "front label is independent of the back
   // face's own heading" precedent Phase 97 already established.
-  // Phase 198 — Roy's reference image reads "RESILIENCE"/"VETERANS"/"SUPORT"
-  // (the third one a typo for "Support," which he explicitly asked to match
-  // literally: "Note: match the exact spelling from the image asset"). Since
-  // the pill's own span already has an `uppercase` class, the underlying
-  // string's casing doesn't matter for display — stored in sentence case
-  // like the other content fields for consistency. `card3FrontLabel` is
-  // deliberately the misspelling; flagged back to Roy in this phase's
-  // summary in case the source image's typo wasn't intentional.
-  card1FrontLabel: "Resilience",
-  card2FrontLabel: "Veterans",
-  card3FrontLabel: "Suport",
+  card1FrontLabel: "War",
+  card2FrontLabel: "Terror",
+  card3FrontLabel: "Disaster",
   // Phase 154 — new short caption line under each card's frame, per Roy's
   // reference. Cards 1 and 2 share identical wording on purpose (both are
   // "gifted professional support" pathways); card 3 reads differently
@@ -202,11 +193,7 @@ const PATH_BADGE_ICONS = [LifeBuoy, Award, Sparkles];
 // dog-tag shapes — closer to actual military dog tags than footprints
 // were), and waves stays for "Support" (matches the reference's tilde/wave
 // glyph and that card's own artwork).
-// Phase 198 — Roy's written spec calls card 2's icon an "eye/shield line
-// icon" (a departure from the dog-tag reading this same icon slot got in
-// Phase 100) — `ShieldCheck` is already imported for the hero trust-badge
-// row above, reused here rather than adding a new icon import.
-const PATH_FRONT_BADGE_ICONS = [Sprout, ShieldCheck, Waves];
+const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 
 // Phase 97 — each card's mat/frame color loosely followed Roy's first
 // reference (cream, sage, and a cool slate-blue mat around a painting).
@@ -241,43 +228,30 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, ShieldCheck, Waves];
 // thing for a color with no existing token. The mark's ring colors
 // (sage/tan/terracotta) were already a close match to the reference and
 // were left untouched — only the card's background changed.
-// Phase 198 — Roy sent a fourth reference (this time with a full written
-// spec, including literal hex values) asking for these three cards rebuilt
-// as thick, blocky, physically-embossed panels rather than the wood-frame/
-// mat design above — a fully different treatment from every phase's comment
-// in this block, so the historical color reasoning above no longer applies.
-// Hexes below are exactly what Roy specified: `bg` is each card's stated
-// "Card Color/Theme," and `mark` maps his named colors per card onto
-// GesaMark's four regions (outer/middle/inner ring, dot) — card 1 ("pastel
-// green, coral/orange, grey"): outer=green, middle=grey (a genuine change
-// from this card's old tan middle ring), inner/dot=coral-orange; card 2
-// ("warm cream/brown tones"): already close to the previous palette, left
-// as-is; card 3 ("pastel purple, mint green, and white"): outer=purple,
-// middle=mint (both unchanged from Phase 162), inner recolored from teal to
-// a soft near-white per this new spec, dot kept as the existing soft peach
-// (not one of the three colors Roy named, but not contradicted either —
-// removing it would leave the mark's smallest region flat white-on-white
-// with no definition). `texture` (Phase 197's addition, still applicable
-// here) is the tone the debossed engraving pattern renders in — see the
-// front-face markup below for how it's actually layered into an emboss.
-const PATH_FRONT_STYLES: { bg: string; frame: string; texture: string; mark: GesaMarkColors }[] = [
+const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] = [
   {
-    bg: "bg-[#D3E0EA]",
+    bg: "bg-[#aed0e9]",
     frame: "border-clay",
-    texture: "text-black/12",
-    mark: { outerRing: "#9db99f", middleRing: "#c9c9c2", innerRing: "#c1694f", dot: "#c1694f" },
+    mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
-    bg: "bg-[#9BA190]",
+    bg: "bg-accent",
     frame: "border-clay",
-    texture: "text-black/12",
     mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
-    bg: "bg-[#2B4C6F]",
+    // Phase 162 — Roy sent a new reference photo of this same card asking
+    // for the mark's colors updated again, replacing Phase 158's navy/red/
+    // gold with a softer purple/teal/peach palette — matched by eye from
+    // that photo: outer crescent a dusty lavender-purple, middle and inner
+    // crescents a continuous mint-to-teal band (mint on the outer wave,
+    // a slightly deeper teal on the inner one, so the "C" shape reads with
+    // its own subtle shading rather than one flat tone), dot a soft peach.
+    // `bg`/`frame` (the blue-gray canvas + gold wood frame) were untouched
+    // in the reference and are untouched here too.
+    bg: "bg-[#5f7a91]",
     frame: "border-clay",
-    texture: "text-white/14",
-    mark: { outerRing: "#a99bc9", middleRing: "#8ad4c2", innerRing: "#f0ede4", dot: "#f2b385" },
+    mark: { outerRing: "#a99bc9", middleRing: "#8ad4c2", innerRing: "#4a9d92", dot: "#f2b385" },
   },
 ];
 
@@ -506,25 +480,6 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
           tablet (sm), 48px on desktop (md+) — within Roy's requested
           40-64px desktop range, scaled down for smaller screens. */}
       <div className="wrap relative z-10 -mt-[186px] sm:-mt-[178px] md:-mt-[162px] pb-16">
-        {/* Phase 198 — Roy's spec asked for "a clean, neutral concrete/
-            stucco textured background style behind the cards to make the
-            3D elevation pop." Scoped to just this card row (a subtle mottled
-            layer, not a busy pattern) rather than replacing the section's
-            own established background — the slate-gray/gold-band field this
-            card row already floats over (`--home-gray`) took several past
-            phases (167/170/193/194) to get its color and animated sheen
-            right, and swapping in a literal stucco texture site-wide would
-            undo that tuning for a request that's really about this row's
-            immediate backdrop, not the whole page. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 15% 25%, #000 0, transparent 2%), radial-gradient(circle at 70% 15%, #000 0, transparent 1.5%), radial-gradient(circle at 40% 60%, #000 0, transparent 2%), radial-gradient(circle at 85% 70%, #000 0, transparent 1.5%), radial-gradient(circle at 25% 85%, #000 0, transparent 2%), radial-gradient(circle at 60% 40%, #000 0, transparent 1.5%)",
-            backgroundSize: "180px 180px",
-          }}
-        />
         <StaggerGroup className="mx-auto grid max-w-[860px] gap-5 md:grid-cols-3">
           {cards.map((p, i) => (
             /* Phase 72 — Roy asked for the paintings to display in full by
@@ -611,84 +566,51 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          caption don't use, keeping the whole card the same
                          fixed h-[300px] with no overflow. */
                       <div className="absolute inset-0 flex flex-col items-center gap-3 [backface-visibility:hidden]">
-                        {/* Phase 198 — Roy's spec: "warm metallic/gold
-                            gradient background (#E6D5B8 to #C8B088), rounded-
-                            full border, dark brown text." Replaced the old
-                            three-stop clay/amber gradient and text-espresso
-                            (a dark slate-navy, not brown) with these exact
-                            values — text-espresso genuinely wasn't brown, so
-                            an explicit dark-brown inline color was needed to
-                            match "dark brown text" literally. */}
-                        <div
-                          className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md"
-                          style={{ background: "linear-gradient(135deg, #E6D5B8 0%, #C8B088 100%)" }}
-                        >
-                          <FrontIcon size={14} className="text-[#4a2f1c]" aria-hidden="true" />
+                        {/* Gold label pill — now sits above the frame with a
+                            visible gap, per the revised reference. Icon +
+                            label are separate from the back face's badge/
+                            title (PATH_BADGE_ICONS / p.title) since they show
+                            at different flip states. */}
+                        <div className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
+                          <FrontIcon size={14} className="text-espresso" aria-hidden="true" />
                           <EditableText
                             contentId={`home.${cardKey}.label`}
                             label="Card badge label"
                             value={p.frontLabel}
                             as="span"
-                            className="text-[11px] font-semibold uppercase tracking-wide text-[#4a2f1c]"
+                            className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
                           />
                         </div>
-                        {/* Phase 198 — Roy sent a full written spec (literal
-                            hex values, an exact box-shadow value, and named
-                            techniques — "mix-blend-mode," "mask-image,"
-                            "inner shadows") replacing the wood-frame/cream-
-                            mat/canvas-box design above (Phase 97/100/124)
-                            entirely with a thick, blocky, molded-clay panel:
-                            "beveled edges," "multi-layered box-shadows to
-                            simulate physical thickness," a "deep soft
-                            ambient shadow... slightly offset to the bottom,"
-                            and "a sharp inner border highlight." Built as one
-                            layered box-shadow: a crisp inset highlight along
-                            the top (light hits the raised top bevel edge)
-                            and a crisp inset shadow along the bottom/right
-                            (the same edges recede into shadow), plus two
-                            soft outer shadows — a tight one for contact
-                            grounding and Roy's own literal
-                            `0 25px 50px -12px rgba(0,0,0,0.25)` for the big,
-                            diffused "sitting on a surface" shadow. Square-ish
-                            corners (`rounded-lg`, not `-2xl`) read as more
-                            "blocky" than this card's previous rounding. */}
+                        {/* Wood frame — layered gradients approximate grain
+                            instead of one flat tone, sharp corners (no
+                            border-radius) to match the reference exactly,
+                            and an offset directional shadow so it reads as
+                            hanging on a wall rather than sitting flush. */}
                         <div
-                          className={`relative w-full flex-1 min-h-0 overflow-hidden rounded-lg ${frontStyle.bg}`}
+                          className="relative w-full flex-1 min-h-0"
                           style={{
-                            boxShadow: [
-                              "inset 0 2px 0 0 rgba(255,255,255,0.45)",
-                              "inset 0 -3px 0 0 rgba(0,0,0,0.28)",
-                              "inset 3px 0 0 0 rgba(255,255,255,0.18)",
-                              "inset -3px 0 0 0 rgba(0,0,0,0.22)",
-                              "0 10px 15px -6px rgba(0,0,0,0.18)",
-                              "0 25px 50px -12px rgba(0,0,0,0.25)",
-                            ].join(", "),
+                            background:
+                              "repeating-linear-gradient(95deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 7px), linear-gradient(120deg, #e0c193 0%, #cea877 50%, #c39a6c 100%)",
+                            boxShadow: "10px 14px 22px -8px rgba(35,25,15,0.4)",
                           }}
                         >
-                          {/* Phase 198 — the "debossed/engraved" pattern per
-                              Roy's spec: two copies of the same texture SVG,
-                              one offset up-left and lightened (the
-                              highlighted edge of a pressed-in groove) and one
-                              offset down-right and darkened (the groove's own
-                              shadow), both set to `mix-blend-mode` per his
-                              instruction (`soft-light`/`multiply`) rather
-                              than plain opacity — the offset pair is what
-                              actually sells "pressed into the material"
-                              instead of just "a faint pattern printed on
-                              top." */}
-                          <PathCardTexture
-                            index={i}
-                            className="pointer-events-none absolute -inset-px h-[calc(100%+1px)] w-[calc(100%+1px)] translate-x-[-0.5px] translate-y-[-0.5px] text-white mix-blend-soft-light opacity-60"
-                          />
-                          <PathCardTexture
-                            index={i}
-                            className={`pointer-events-none absolute inset-0 h-full w-full translate-x-px translate-y-px mix-blend-multiply opacity-70 ${frontStyle.texture}`}
-                          />
-                          <div className="relative flex h-full w-full items-center justify-center p-4">
-                            <GesaMark
-                              colors={frontStyle.mark}
-                              className="h-[58%] w-[58%] drop-shadow-[0_5px_8px_rgba(0,0,0,0.25)]"
-                            />
+                          {/* Mat — Phase 124 (round 3): Roy flagged the live
+                              cards as not matching the reference photo. Pixel-
+                              sampled the reference directly: the wood frame is
+                              ~4% of the frame's own width/height thick and the
+                              cream mat a further ~9% — both far thicker than
+                              this had (a flat 10px each, which read as barely
+                              a hairline on an actual card-sized box). Switched
+                              both to percentage-based sizing so the border
+                              stays proportional at any card size, and lightened
+                              the wood gradient to match the reference's fairly
+                              uniform honey-oak tone (sampled ~#d2b494) instead
+                              of trending into a dark espresso-brown corner. */}
+                          <div className="absolute inset-[6%] flex items-center justify-center bg-[#f4efe3] p-[9%]">
+                            {/* Canvas */}
+                            <div className={`flex h-full w-full items-center justify-center overflow-hidden ${frontStyle.bg} p-4`}>
+                              <GesaMark colors={frontStyle.mark} className="h-[64%] w-[64%]" />
+                            </div>
                           </div>
                         </div>
                         {/* Caption — new Phase 154 line below the frame,

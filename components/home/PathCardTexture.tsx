@@ -22,12 +22,9 @@
 // as after Phase 191.
 //
 // Phase 198 — Roy sent a fourth reference along with a full written spec
-// (literal hex values, an exact box-shadow, and explicit "mix-blend-mode"/
-// "debossed" instructions), and this file is finally wired into Paths.tsx's
-// front face for real. Each SVG below is now rendered twice per card (once
-// lightened/offset up-left, once darkened/offset down-right, both blended
-// via `mix-blend-mode`) to read as pressed into the card's surface rather
-// than printed flat on top of it — see Paths.tsx's own Phase 198 comment.
+// and this file was wired into Paths.tsx's front face for real; reverted
+// again immediately afterward, same as every attempt before it (see
+// EXECUTION_PLAN.md's Phase 198 entry). Left in place, unused, once more.
 export default function PathCardTexture({ index, className }: { index: number; className?: string }) {
   if (index === 1) {
     // Veterans — a fuller branching tree (trunk + two tiers of forking
