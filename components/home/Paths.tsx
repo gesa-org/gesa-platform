@@ -5,6 +5,7 @@ import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
+import PathCardTexture from "@/components/home/PathCardTexture";
 import type { HomeContent } from "@/lib/content";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
@@ -73,9 +74,18 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // their existing Veterans/Support titles and copy untouched — only the
   // front badge label changed, same "front label is independent of the back
   // face's own heading" precedent Phase 97 already established.
-  card1FrontLabel: "War",
-  card2FrontLabel: "Terror",
-  card3FrontLabel: "Disaster",
+  // Phase 191 — Roy sent a new reference mockup restyling the front badge
+  // back to each card's general category ("Resilience"/"Veterans"/
+  // "Support") rather than the specific-hardship names Phase 154
+  // introduced. The reference badge itself reads "SUPORT" (a typo,
+  // missing a P) — corrected here the same way Phase 100 corrected an
+  // identical "SJPPORT" typo in an earlier reference rather than copying
+  // it. Card 1 and 2's back-face titles/descriptions are untouched — only
+  // the front badge label changed, same "independent of the back face"
+  // precedent every prior label change here has followed.
+  card1FrontLabel: "Resilience",
+  card2FrontLabel: "Veterans",
+  card3FrontLabel: "Support",
   // Phase 154 — new short caption line under each card's frame, per Roy's
   // reference. Cards 1 and 2 share identical wording on purpose (both are
   // "gifted professional support" pathways); card 3 reads differently
@@ -228,15 +238,21 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // thing for a color with no existing token. The mark's ring colors
 // (sage/tan/terracotta) were already a close match to the reference and
 // were left untouched — only the card's background changed.
-const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] = [
+// Phase 191 — `textureClass` added: the color for each card's new
+// PathCardTexture background pattern (see that component), picked per
+// card so the faint line/tree/orbit texture reads against its own
+// background — dark on the two lighter cards, light on the darker one.
+const PATH_FRONT_STYLES: { bg: string; frame: string; textureClass: string; mark: GesaMarkColors }[] = [
   {
     bg: "bg-[#aed0e9]",
     frame: "border-clay",
+    textureClass: "text-black/15",
     mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
     bg: "bg-accent",
     frame: "border-clay",
+    textureClass: "text-black/15",
     mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
@@ -251,6 +267,7 @@ const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] =
     // in the reference and are untouched here too.
     bg: "bg-[#5f7a91]",
     frame: "border-clay",
+    textureClass: "text-white/20",
     mark: { outerRing: "#a99bc9", middleRing: "#8ad4c2", innerRing: "#4a9d92", dot: "#f2b385" },
   },
 ];
@@ -568,36 +585,29 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
                           />
                         </div>
-                        {/* Wood frame — layered gradients approximate grain
-                            instead of one flat tone, sharp corners (no
-                            border-radius) to match the reference exactly,
-                            and an offset directional shadow so it reads as
-                            hanging on a wall rather than sitting flush. */}
+                        {/* Phase 191 — replaced the wood-frame + cream-mat
+                            treatment (Phase 97/124) with a solid, chunky
+                            embossed color block per Roy's new reference:
+                            no separate frame/mat layers, just this card's
+                            own background color filling the space, a faint
+                            themed background texture (PathCardTexture —
+                            waves/tree/orbit per card), and the same
+                            centered GesaMark. The inset shadow pair fakes
+                            the reference's beveled/embossed edge (a light
+                            highlight top-left, a darker shadow bottom-
+                            right), and the outer shadow keeps the "lifted
+                            off the wall" depth the old wood frame's own
+                            directional shadow gave it. */}
                         <div
-                          className="relative w-full flex-1 min-h-0"
+                          className={`relative w-full flex-1 min-h-0 overflow-hidden rounded-[16px] ${frontStyle.bg}`}
                           style={{
-                            background:
-                              "repeating-linear-gradient(95deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 7px), linear-gradient(120deg, #e0c193 0%, #cea877 50%, #c39a6c 100%)",
-                            boxShadow: "10px 14px 22px -8px rgba(35,25,15,0.4)",
+                            boxShadow:
+                              "inset 3px 3px 6px rgba(255,255,255,0.35), inset -5px -5px 12px rgba(0,0,0,0.28), 8px 12px 20px -8px rgba(20,20,20,0.45)",
                           }}
                         >
-                          {/* Mat — Phase 124 (round 3): Roy flagged the live
-                              cards as not matching the reference photo. Pixel-
-                              sampled the reference directly: the wood frame is
-                              ~4% of the frame's own width/height thick and the
-                              cream mat a further ~9% — both far thicker than
-                              this had (a flat 10px each, which read as barely
-                              a hairline on an actual card-sized box). Switched
-                              both to percentage-based sizing so the border
-                              stays proportional at any card size, and lightened
-                              the wood gradient to match the reference's fairly
-                              uniform honey-oak tone (sampled ~#d2b494) instead
-                              of trending into a dark espresso-brown corner. */}
-                          <div className="absolute inset-[6%] flex items-center justify-center bg-[#f4efe3] p-[9%]">
-                            {/* Canvas */}
-                            <div className={`flex h-full w-full items-center justify-center overflow-hidden ${frontStyle.bg} p-4`}>
-                              <GesaMark colors={frontStyle.mark} className="h-[64%] w-[64%]" />
-                            </div>
+                          <PathCardTexture index={i} className={`absolute inset-0 h-full w-full ${frontStyle.textureClass}`} />
+                          <div className="absolute inset-0 flex items-center justify-center p-4">
+                            <GesaMark colors={frontStyle.mark} className="h-[54%] w-[54%]" />
                           </div>
                         </div>
                         {/* Caption — new Phase 154 line below the frame,
