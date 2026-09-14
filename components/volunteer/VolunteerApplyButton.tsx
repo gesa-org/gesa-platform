@@ -17,15 +17,28 @@ import VolunteerApplicationModal from "@/components/volunteer/VolunteerApplicati
 export default function VolunteerApplyButton({
   children,
   className,
+  onClick,
 }: {
   children: ReactNode;
   className?: string;
+  // Mobile nav drawer note — a caller that renders this inside an overlay
+  // (see MobileNavDrawer.tsx) needs to close that overlay the moment this
+  // is tapped, in addition to this component's own modal opening. Optional
+  // and a no-op by default so every existing plain call site is unaffected.
+  onClick?: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          onClick?.();
+        }}
+        className={className}
+      >
         {children}
       </button>
       {open && <VolunteerApplicationModal onClose={() => setOpen(false)} />}

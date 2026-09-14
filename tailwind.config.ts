@@ -8,6 +8,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Phase 199 (mobile responsiveness pass) — Tailwind ships sm(640)/
+      // md(768)/lg(1024)/xl(1280)/2xl(1536) by default with nothing between
+      // "no breakpoint" and 640px, but the header/nav cluster and several
+      // card grids need a distinction inside that gap (the smallest common
+      // phones — 320-390px — vs. larger phones/phablets — 400-639px).
+      // Defined under `extend`, not `theme.screens` directly, so it adds
+      // `xs` alongside the defaults instead of replacing them.
+      screens: {
+        xs: "400px",
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

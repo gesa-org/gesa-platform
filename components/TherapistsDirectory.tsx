@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { Users, Search, ChevronDown, Filter } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Users, Search, ChevronDown, Filter, X } from "lucide-react";
 import TherapistCard from "@/components/TherapistCard";
 import VolunteerApplyButton from "@/components/volunteer/VolunteerApplyButton";
 import EditableText from "@/components/ui-builder/public/EditableText";
@@ -92,6 +92,29 @@ export default function TherapistsDirectory({
   const [sessionFormat, setSessionFormat] = useState<"" | "online" | "in_person">("");
   const resultsRef = useRef<HTMLDivElement>(null);
 
+  // Phase 199 (mobile pass) — below `lg` the filter sidebar used to just
+  // render inline, full-width, above the results grid: on a phone that
+  // pushed every therapist card below several screens' worth of filter
+  // controls before a visitor saw a single result. `filtersOpen` now
+  // controls a mobile-only bottom-sheet/overlay presentation of the exact
+  // same filter fields (same state, same JSX) — at `lg`+ this is unused and
+  // the aside renders exactly as it always has (sticky sidebar, no overlay).
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setFiltersOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [filtersOpen]);
+
   // Phase 185 — `?? []` guards added throughout this block: a null
   // specialties/languages/session_lengths column on any one therapist row
   // used to throw here (crashing the whole directory, not just that row)
@@ -126,15 +149,76 @@ export default function TherapistsDirectory({
   // so there is no separate "visible window" to track anymore. A visitor
   // scrolls the full list naturally instead of clicking through pages.
   const hasActiveFilters = Boolean(name || role || lang || duration || gender || sessionFormat);
+  const activeFilterCount = [name, role, lang, duration, gender, sessionFormat].filter(Boolean).length;
   const countMessage = filtered.length
     ? hasActiveFilters
       ? `Showing ${filtered.length} of ${therapists.length} active therapists`
       : `Showing all ${therapists.length} active therapists`
     : "No therapists match your current filters.";
 
+  function clearAllFilters() {
+    setName("");
+    setRole("");
+    setLang("");
+    setDuration("");
+    setGender("");
+    setSessionFormat("");
+  }
+
   return (
-    <div className="mt-10 grid gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
-      <aside className="sticky top-[90px] rounded-[var(--radius)] border border-border bg-card p-6 shadow-soft">
+    <div className="mt-10 lg:grid lg:gap-8 lg:grid-cols-[280px_1fr] lg:items-start">
+      {/* Phase 199 (mobile pass) — filter trigger bar, only rendered below
+          `lg` (the sticky sidebar below takes over at `lg`+ and this whole
+          bar disappears). Shows the active-filter count and a one-tap
+          "Clear all" so a visitor can see and reset filter state without
+          opening the sheet. */}
+      <div className="mb-4 flex items-center gap-3 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(true)}
+          aria-haspopup="dialog"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-secondary"
+        >
+          <Filter size={16} /> Filters
+          {activeFilterCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-primary-fg">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="flex-none text-[14px] font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
+      <aside
+        className={`${
+          filtersOpen
+            ? "fixed inset-0 z-[120] flex flex-col bg-[#eef1f6]"
+            : "hidden"
+        } lg:sticky lg:top-[90px] lg:z-auto lg:block lg:max-h-none lg:overflow-visible lg:rounded-[var(--radius)] lg:border lg:border-border lg:bg-card lg:p-6 lg:shadow-soft`}
+      >
+        {/* Mobile-only sheet header — not rendered at `lg`+, where the aside
+            has no overlay/close affordance at all (it's just the sidebar). */}
+        <div className="flex flex-none items-center justify-between border-b border-border px-5 py-4 lg:hidden">
+          <span className="text-[15px] font-semibold uppercase tracking-wide text-muted-fg">Filters</span>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(false)}
+            aria-label="Close filters"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-colors hover:bg-secondary"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 lg:p-0">
         {/* Search by name — pill input with a leading icon, matching the new
             filter design Roy supplied. */}
         <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-muted-fg">
@@ -288,12 +372,25 @@ export default function TherapistsDirectory({
           <VolunteerApplyButton className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-fg transition-colors hover:bg-primary-600">
             <Users size={16} /> {content.joinAsTherapistLabel}
           </VolunteerApplyButton>
+        </div>
+        </div>
+
+        {/* Phase 199 (mobile pass) — mobile-only sticky sheet footer.
+            Filters already apply live as each control is tapped (same
+            `filtered` state as before), so this button's only job is to
+            close the sheet and bring the visitor back to the results —
+            it replaces the old "Apply filters" button, which just
+            scrolled to the results without ever closing anything. */}
+        <div className="flex-none border-t border-border bg-[#eef1f6] px-5 py-4 lg:hidden">
           <button
             type="button"
-            onClick={() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-accent bg-transparent px-4 py-3 text-sm font-semibold text-primary transition-colors hover:bg-accent-soft lg:hidden"
+            onClick={() => {
+              setFiltersOpen(false);
+              resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3.5 text-[15px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
           >
-            <Filter size={15} /> {content.applyFiltersLabel}
+            Show {filtered.length} result{filtered.length === 1 ? "" : "s"}
           </button>
         </div>
       </aside>

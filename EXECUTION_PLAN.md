@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-14 (Phase 196)
+Last updated: 2026-09-14 (Phase 199, in progress)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8735,6 +8735,35 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Revert Phase 197/198 path-card redesign attempts, restore original wood-frame front faces"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 199: Site-wide mobile responsiveness pass (in progress — first installment)
+
+Roy asked for a full mobile-UX/accessibility audit and fix pass across the entire platform — every public, authenticated, and admin page, at common phone widths (320-430px). Given the size of this ask, it's being delivered as a sequence of installments under one phase number rather than one giant simultaneous change, each reviewable on its own. This is installment one: the two highest-impact, highest-risk gaps.
+
+**1. Header/nav had no mobile menu at all.** `components/Header.tsx`'s `<nav>` has always been `hidden md:flex`, with zero fallback below that width — a phone visitor could not reach About/Find Support/Our Professionals/Community, and the Donate CTA was also hidden (`hidden sm:inline-flex`). `lib/navigation.ts` even had a `showOnMobile` flag already wired for exactly this, just never built (flagged in a standing code comment). Built `components/MobileNavDrawer.tsx`: a hamburger button (visible only below `md`) opening a right-side off-canvas panel with every primary nav link plus Donate, styled consistently with the site's existing pill/card language. Accessibility: traps Tab focus inside the panel, closes on Escape, locks body scroll while open, restores focus to the hamburger button on close, moves focus into the panel on open, and uses `role="dialog"`/`aria-modal`/`aria-label`/`aria-expanded`/`aria-controls`.
+
+To make room for the hamburger without crowding 320-375px screens further: `Header.tsx`'s padding/height/gaps shrink slightly below `sm`; the "GESA" wordmark hides below a new `xs` (400px) Tailwind breakpoint added under `theme.extend.screens` (additive only — doesn't touch the existing sm/md/lg/xl/2xl defaults), leaving just the recognizable "G" mark as the identity anchor at the very smallest widths; `AuthStatus`'s "Account" label and `LanguageSelector`'s padding now also compact below `sm`, matching a pattern the language selector already used for its own language name. `NotificationBell`'s dropdown panel was a flat `w-[340px]` — wider than a 320px screen — now sized to the viewport (`fixed inset-x-4`) below `sm` and unchanged at `sm`+.
+
+`VolunteerApplyButton`/`VolunteerPrimaryCta` gained an optional `onClick` prop (no-op by default, every existing call site unaffected) so the drawer's Donate button can close the drawer on tap regardless of whether it renders as the volunteer-modal trigger or a plain link.
+
+**2. Therapist directory filters buried the results.** `components/TherapistsDirectory.tsx`'s filter sidebar (`components/TherapistsDirectory.tsx`) used a `grid-cols-[280px_1fr]` layout that only became a real two-column grid at `lg`+; below that it rendered full-width and inline, stacked above the results — meaning a phone visitor had to scroll past the entire filter panel (search, specialty list, language, duration, gender, session format, apply button) before seeing a single therapist card. Converted to a bottom-sheet pattern below `lg`: a "Filters" trigger button (with a live active-filter-count badge) plus a "Clear all" link sit above the results; tapping "Filters" opens the exact same filter controls (same state, same logic — nothing about how filtering works changed) in a full-screen sheet with its own header/close button, Escape-to-close, body-scroll lock, and a "Show N results" footer button that closes the sheet and scrolls to the results. At `lg`+ this is inert — the sidebar renders exactly as it always has.
+
+Files touched: `components/Header.tsx`, `components/MobileNavDrawer.tsx` (new), `components/AuthStatus.tsx`, `components/LanguageSelector.tsx`, `components/admin/NotificationBell.tsx`, `components/volunteer/VolunteerPrimaryCta.tsx`, `components/volunteer/VolunteerApplyButton.tsx`, `components/TherapistsDirectory.tsx`, `tailwind.config.ts`.
+
+**Still to come in this phase (not yet started):** forms platform-wide (contact, donation, intake, booking, account, therapist onboarding), auth pages, Community/donation/professional-onboarding flows, footer + legal pages, CRM/admin dashboard tables and data screens, loading/error states, and a full cross-width (320/360/375/390/412/430px) QA pass with a final deliverables report. Each will land as its own reviewable installment under this same Phase 199 heading.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 199 (1/n): mobile nav drawer + therapist directory filter sheet"
 git push
 ```
 

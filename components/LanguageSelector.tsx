@@ -57,7 +57,8 @@ export default function LanguageSelector() {
       <button
         onClick={() => setOpen((v) => !v)}
         title={`Language: ${current.name}`}
-        className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+        aria-label={`Language: ${current.name}`}
+        className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-border bg-card px-2.5 py-2.5 sm:px-3 sm:py-2 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
         disabled={translating}
       >
         {translating ? (

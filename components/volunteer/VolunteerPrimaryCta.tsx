@@ -18,16 +18,25 @@ export default function VolunteerPrimaryCta({
   href,
   className,
   children,
+  onClick,
 }: {
   href: string;
   className?: string;
   children: ReactNode;
+  // See VolunteerApplyButton.tsx's own note — forwarded through so
+  // MobileNavDrawer.tsx can close itself on tap regardless of which branch
+  // renders (modal trigger or plain link). No-op by default.
+  onClick?: () => void;
 }) {
   if (href === VOLUNTEER_DEFAULT_HREF) {
-    return <VolunteerApplyButton className={className}>{children}</VolunteerApplyButton>;
+    return (
+      <VolunteerApplyButton className={className} onClick={onClick}>
+        {children}
+      </VolunteerApplyButton>
+    );
   }
   return (
-    <Link href={href} className={className}>
+    <Link href={href} className={className} onClick={onClick}>
       {children}
     </Link>
   );

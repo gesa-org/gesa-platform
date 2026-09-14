@@ -335,7 +335,7 @@ export default function NotificationBell() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={newCount > 0 ? `${newCount} new notification${newCount === 1 ? "" : "s"}` : "Notifications"}
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary"
       >
         <Bell size={18} />
         {newCount > 0 && (
@@ -348,7 +348,13 @@ export default function NotificationBell() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-12 z-50 flex max-h-[460px] w-[340px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
+          // Phase 199 (mobile pass) — a flat w-[340px] overflows every
+          // phone below ~375px (the panel is `absolute right-0`, anchored
+          // to the bell near the header's right edge, so it can't shrink
+          // itself away from the viewport edge on its own). `calc(100vw -
+          // 2rem)` caps it to the screen width minus a small margin on both
+          // sides on phones, then the fixed 340px kicks back in from `sm` up.
+          className="fixed inset-x-4 top-[68px] z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-[460px] sm:w-[340px]"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-[13px] font-semibold text-muted-fg">

@@ -46,14 +46,14 @@ export default function AuthStatus() {
 
   // Avoid a flash of "Sign In" before the client has checked the session.
   if (email === undefined) {
-    return <span className="inline-flex h-[46px] w-[92px] rounded-full bg-secondary/60" />;
+    return <span className="inline-flex h-11 w-16 sm:h-[46px] sm:w-[92px] rounded-full bg-secondary/60" />;
   }
 
   if (!email) {
     return (
       <Link
         href="/login"
-        className="inline-flex items-center gap-2 bg-secondary text-foreground hover:bg-muted px-6 py-3 rounded-full text-[15px] font-semibold transition-colors"
+        className="inline-flex items-center gap-2 bg-secondary text-foreground hover:bg-muted px-4 py-2.5 sm:px-6 sm:py-3 rounded-full text-[14px] sm:text-[15px] font-semibold transition-colors"
       >
         Sign In
       </Link>
@@ -62,11 +62,19 @@ export default function AuthStatus() {
 
   return (
     <div className="relative" ref={ref}>
+      {/* Phase 199 (mobile pass) — "Account" text now hides below `sm`
+          (button becomes icon+chevron only, ~44px min touch target still
+          intact via padding) so this doesn't push the header's right-side
+          cluster into overflow on 320-375px phones, same pattern already
+          used by LanguageSelector's language name. */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 bg-secondary text-foreground hover:bg-muted px-5 py-3 rounded-full text-[15px] font-semibold transition-colors"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Account menu"
+        className="inline-flex items-center gap-1.5 bg-secondary text-foreground hover:bg-muted px-3.5 py-3 sm:px-5 rounded-full text-[15px] font-semibold transition-colors"
       >
-        <User size={16} /> Account <ChevronDown size={14} />
+        <User size={16} /> <span className="hidden sm:inline">Account</span> <ChevronDown size={14} />
       </button>
       {open && (
         <div className="absolute right-0 top-[52px] z-50 w-56 overflow-hidden rounded-2xl border border-border bg-card shadow-lg">

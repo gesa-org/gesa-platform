@@ -6,6 +6,7 @@ import GesaWordmark from '@/components/GesaWordmark';
 import LanguageSelector from '@/components/LanguageSelector';
 import NotificationBell from '@/components/admin/NotificationBell';
 import VolunteerPrimaryCta from '@/components/volunteer/VolunteerPrimaryCta';
+import MobileNavDrawer from '@/components/MobileNavDrawer';
 import type { HeaderContent } from '@/lib/content';
 import { PRIMARY_NAVIGATION, resolveNavHref } from '@/lib/navigation';
 import EditableText from '@/components/ui-builder/public/EditableText';
@@ -57,10 +58,24 @@ export const HEADER_CONTENT_FALLBACK: HeaderContent = {
 export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?: HeaderContent }) {
   return (
     <header className="sticky top-0 z-40 bg-[#eef1f6d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
-      <div className="max-w-[1160px] mx-auto px-6 flex items-center h-[74px] gap-5">
-        <Link href="/" className="flex items-center gap-2.5 font-sans text-[19px] font-medium tracking-[0.25em] text-[#5c6470]">
-          <Logo size={34} />
-          <GesaWordmark />
+      {/* Phase 199 (mobile pass) — px-4 below `sm` (was a flat px-6 at every
+          width) buys back ~16px of edge room on 320-375px phones, where the
+          logo/wordmark + hamburger + bell + language + auth cluster below
+          all have to fit on one line; h-16 (was a flat h-[74px]) matches
+          the ~44-48px comfortable touch-target band better on small
+          screens without shrinking the desktop header. */}
+      <div className="max-w-[1160px] mx-auto px-4 sm:px-6 flex items-center h-16 sm:h-[74px] gap-1.5 sm:gap-5">
+        <Link
+          href="/"
+          className="flex items-center gap-2 sm:gap-2.5 font-sans text-[15px] sm:text-[19px] font-medium tracking-[0.18em] sm:tracking-[0.25em] text-[#5c6470]"
+        >
+          <Logo size={30} />
+          {/* The full wordmark reads as a wall of tracked-out letters at
+              320-360px next to the icons on the right; hiding it below
+              `xs` keeps the "G" mark (already the recognizable brand
+              element on its own, per Logo.tsx) as the identity anchor
+              instead of clipping/wrapping the wordmark. */}
+          <GesaWordmark className="hidden xs:inline-flex" />
         </Link>
         {/* ms-2/ms-auto (CSS logical "margin-inline-start", not a physical
             margin-left) rather than ml-2/ml-auto — these automatically flip
@@ -97,7 +112,7 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
             </Link>
           ))}
         </nav>
-        <div className="ms-auto flex items-center gap-2">
+        <div className="ms-auto flex items-center gap-1 sm:gap-2">
           {/* Phase 93 — VolunteerPrimaryCta (not a plain Link) so this opens
               the real volunteer application modal when donateHref is still
               the recognized default, same as the Home donate band's "Join
@@ -114,6 +129,14 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
           <NotificationBell />
           <LanguageSelector />
           <AuthStatus />
+          {/* Phase 199 (mobile pass) — the desktop <nav> above and the
+              Donate button just above are both hidden below `md`/`sm`
+              respectively with no other way to reach them on a phone.
+              MobileNavDrawer renders nothing at `md`+ (its own root is
+              `md:hidden`) and is the actual fix: a hamburger trigger that
+              opens an off-canvas panel with every primary nav link plus
+              Donate. */}
+          <MobileNavDrawer content={content} />
         </div>
       </div>
     </header>
