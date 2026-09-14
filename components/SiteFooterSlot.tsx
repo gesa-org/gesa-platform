@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Footer from "@/components/Footer";
 import { useRevealHeight } from "@/components/layout/useRevealHeight";
 import type { FooterContent, HeaderContent } from "@/lib/content";
+import type { Tables } from "@/lib/database.types";
 
 // The footer is rendered once, globally, in app/layout.tsx — most routes
 // get it in normal document flow. A specific set of top-level pages instead
@@ -50,20 +51,22 @@ const REVEAL_ROUTES = new Set(["/", "/find-your-therapist", "/therapists", "/sup
 export default function SiteFooterSlot({
   footerContent,
   headerContent,
+  partners,
 }: {
   footerContent?: FooterContent;
   headerContent?: HeaderContent;
+  partners?: Tables<"partners">[];
 }) {
   const pathname = usePathname();
   const isRevealPage = pathname !== null && REVEAL_ROUTES.has(pathname);
   const layerRef = useRevealHeight(isRevealPage);
 
-  if (!isRevealPage) return <Footer content={footerContent} headerContent={headerContent} />;
+  if (!isRevealPage) return <Footer content={footerContent} headerContent={headerContent} partners={partners} />;
 
   return (
     <div ref={layerRef} className="reveal-page__footer-layer">
       <div className="reveal-page__footer">
-        <Footer content={footerContent} headerContent={headerContent} />
+        <Footer content={footerContent} headerContent={headerContent} partners={partners} />
       </div>
     </div>
   );

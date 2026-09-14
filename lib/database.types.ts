@@ -69,11 +69,18 @@ export type CrisisResourceRow = {
   region: string;
 }
 
+// Phase 203 — `category` added (migration `phase_203_faq_categories`), NOT
+// NULL with a DB default of 'General' so every existing row already has a
+// real value. Declared optional here (not `category: string`) purely so
+// tests/unit/FaqAccordion.test.tsx's existing fixture literals — written
+// before this column existed and omitting it — keep type-checking; a real
+// row from the database always has it.
 export type FaqRow = {
   answer: string;
   id: string;
   question: string;
   sort: number;
+  category?: string;
 }
 
 export type GroupRegistrationRow = {
@@ -119,6 +126,21 @@ export type MediaAssetRow = {
   focal_point_x: number;
   focal_point_y: number;
   uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// Phase 203 — Trusted Partners. See migration `phase_203_trusted_partners`.
+// Replaces the Footer's 3 fixed, text-only, fixed-icon partner slots with a
+// real admin-managed list — see components/Footer.tsx's Phase 203 comment.
+export type PartnerRow = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  logo_alt: string | null;
+  link_url: string | null;
+  sort: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -881,6 +903,7 @@ export type Database = {
           },
         ];
       };
+      partners: { Row: PartnerRow; Insert: Partial<PartnerRow> & Pick<PartnerRow, "name">; Update: Partial<PartnerRow>; Relationships: [] };
       profiles: { Row: ProfileRow; Insert: Partial<ProfileRow> & Pick<ProfileRow, "id">; Update: Partial<ProfileRow>; Relationships: [] };
       site_content: { Row: SiteContentRow; Insert: Partial<SiteContentRow> & Pick<SiteContentRow, "key">; Update: Partial<SiteContentRow>; Relationships: [] };
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };

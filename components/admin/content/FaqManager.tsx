@@ -17,7 +17,7 @@ export default function FaqManager({ initialFaqs }: { initialFaqs: Faq[] }) {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function update(id: string, field: "question" | "answer", val: string) {
+  function update(id: string, field: "question" | "answer" | "category", val: string) {
     setFaqs((fs) => fs.map((f) => (f.id === id ? { ...f, [field]: val } : f)));
   }
 
@@ -27,7 +27,7 @@ export default function FaqManager({ initialFaqs }: { initialFaqs: Faq[] }) {
     const supabase = createClient();
     const { error } = await supabase
       .from("faqs")
-      .update({ question: faq.question, answer: faq.answer, sort: faq.sort })
+      .update({ question: faq.question, answer: faq.answer, sort: faq.sort, category: faq.category || "General" })
       .eq("id", faq.id);
     setSavingId(null);
     if (error) setError("Couldn't save that entry — try again.");
@@ -38,7 +38,7 @@ export default function FaqManager({ initialFaqs }: { initialFaqs: Faq[] }) {
     const nextSort = faqs.length ? Math.max(...faqs.map((f) => f.sort)) + 1 : 0;
     const { data, error } = await supabase
       .from("faqs")
-      .insert({ question: "New question", answer: "New answer", sort: nextSort })
+      .insert({ question: "New question", answer: "New answer", sort: nextSort, category: "General" })
       .select()
       .single();
     if (!error && data) setFaqs((fs) => [...fs, data]);
@@ -66,9 +66,21 @@ export default function FaqManager({ initialFaqs }: { initialFaqs: Faq[] }) {
   }
 
   const sortedFaqs = [...faqs].sort((a, b) => a.sort - b.sort);
+  // Phase 203 — every category already in use, for the datalist below. Lets
+  // an admin reuse "Billing" on a second question by typing the same few
+  // characters rather than needing to remember/retype it exactly, while
+  // still leaving the field free text (no separate categories table to
+  // manage) — see FaqAccordion.tsx for how these values group the public
+  // page's display once more than one distinct category exists.
+  const knownCategories = Array.from(new Set(faqs.map((f) => f.category || "General"))).sort();
 
   return (
     <div className="flex flex-col gap-4">
+      <datalist id="faq-category-options">
+        {knownCategories.map((c) => (
+          <option key={c} value={c} />
+        ))}
+      </datalist>
       {error && <p className="text-[13px] text-destructive">{error}</p>}
       {sortedFaqs.map((f, i) => (
         <div key={f.id} className="rounded-xl border border-border p-3.5">
@@ -103,6 +115,13 @@ export default function FaqManager({ initialFaqs }: { initialFaqs: Faq[] }) {
               </button>
             </div>
           </div>
+          <input
+            value={f.category || ""}
+            onChange={(e) => update(f.id, "category", e.target.value)}
+            list="faq-category-options"
+            placeholder="Category (e.g. General, Billing, Safety)"
+            className="mb-2 w-full max-w-[280px] rounded-xl border border-border px-3.5 py-2.5 text-[13px] focus:border-primary focus:outline-none"
+          />
           <input
             value={f.question}
             onChange={(e) => update(f.id, "question", e.target.value)}

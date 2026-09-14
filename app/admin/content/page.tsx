@@ -1,4 +1,4 @@
-import { getFaqs, getAllLegalPages, getSiteContentMap } from "@/lib/queries";
+import { getFaqs, getAllLegalPages, getSiteContentMap, getAllPartnersAdmin } from "@/lib/queries";
 import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
@@ -70,11 +70,12 @@ function merge<T extends Record<string, unknown>>(row: unknown, fallback: T): T 
 }
 
 export default async function AdminContentPage() {
-  const [map, faqs, legalPages, mediaAssets] = await Promise.all([
+  const [map, faqs, legalPages, mediaAssets, partners] = await Promise.all([
     getSiteContentMap(KEYS),
     getFaqs(),
     getAllLegalPages(),
     getAllMediaAssetsForAdmin(),
+    getAllPartnersAdmin(),
   ]);
 
   // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
@@ -134,6 +135,7 @@ export default async function AdminContentPage() {
         faqs={faqs}
         legalPages={legalPages}
         mediaAssets={mediaAssets}
+        partners={partners}
       />
     </div>
   );

@@ -77,6 +77,32 @@ export async function getFaqs(): Promise<Tables<"faqs">[]> {
   return data ?? [];
 }
 
+// Phase 203 — public read for the Footer's "Trusted Partners" row. Same
+// convention as getActiveClinicLocations(): RLS itself is permissive
+// (partners_public_read = true), the is_active filter is applied here in
+// the query, not in the policy.
+export async function getPartners(): Promise<Tables<"partners">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("partners")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort");
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Admin-only (Content Manager, Phase 203): every partner row regardless of
+// is_active, so an admin can find and re-enable a deactivated one — same
+// "admin list omits nothing, only the public query filters" shape as
+// getAllTherapistsAdmin() vs getActiveTherapists().
+export async function getAllPartnersAdmin(): Promise<Tables<"partners">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("partners").select("*").order("sort");
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getTestimonials(): Promise<Tables<"testimonials">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("testimonials").select("*").order("sort");

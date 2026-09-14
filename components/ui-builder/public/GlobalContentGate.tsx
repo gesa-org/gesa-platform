@@ -8,6 +8,7 @@ import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import { getEditableFields } from "@/lib/ui-builder/pageRegistry";
 import type { HeaderContent, FooterContent, CrisisButtonContent } from "@/lib/content";
+import type { Tables } from "@/lib/database.types";
 
 // Phase 140 — Header/Footer/CrisisButton render once in app/layout.tsx, a
 // Server Component that (unlike every page's own page.tsx) gets no
@@ -83,10 +84,15 @@ type GateProps = {
   headerContent: HeaderContent;
   footerContent: FooterContent;
   crisisButtonContent: CrisisButtonContent;
+  // Phase 203 — plain read-only data (not admin-editable text/draft
+  // content), so unlike header/footer/crisisButton it's threaded straight
+  // through with no `overlay`/`buildOverlay` handling: there's no UI
+  // Builder field or draft state for it to merge in here.
+  partners?: Tables<"partners">[];
   children: ReactNode;
 };
 
-export default function GlobalContentGate({ headerContent, footerContent, crisisButtonContent, children }: GateProps) {
+export default function GlobalContentGate({ headerContent, footerContent, crisisButtonContent, partners, children }: GateProps) {
   const [isEditorPreview, setIsEditorPreview] = useState(false);
   const [overlay, setOverlay] = useState<{
     header: Partial<HeaderContent>;
@@ -128,7 +134,7 @@ export default function GlobalContentGate({ headerContent, footerContent, crisis
     <>
       <Header content={mergedHeader} />
       {children}
-      <SiteFooterSlot footerContent={mergedFooter} headerContent={mergedHeader} />
+      <SiteFooterSlot footerContent={mergedFooter} headerContent={mergedHeader} partners={partners} />
       <CrisisButton content={mergedCrisisButton} />
     </>
   );

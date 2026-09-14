@@ -12,6 +12,7 @@ import AccessibilityProvider from "@/components/accessibility/AccessibilityProvi
 import AccessibilityWidget from "@/components/accessibility/AccessibilityWidget";
 import { MAIN_CONTENT_ID } from "@/lib/accessibility/config";
 import { getPageContent } from "@/lib/content";
+import { getPartners } from "@/lib/queries";
 import { DEFAULT_DESIGN_TOKENS, mergeDesignTokens, type DesignTokens } from "@/lib/ui-builder/types";
 import { designTokensToCssText } from "@/lib/ui-builder/tokensToCss";
 
@@ -29,11 +30,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [footerContent, headerContent, crisisButtonContent, themeTokensRaw] = await Promise.all([
+  const [footerContent, headerContent, crisisButtonContent, themeTokensRaw, partners] = await Promise.all([
     getPageContent("page_footer", FOOTER_CONTENT_FALLBACK),
     getPageContent("site_header", HEADER_CONTENT_FALLBACK),
     getPageContent("component_crisis_button", CRISIS_BUTTON_CONTENT_FALLBACK),
     getPageContent<DesignTokens>("theme_tokens", DEFAULT_DESIGN_TOKENS),
+    // Phase 203 — Trusted Partners. Fetched here (not inside Footer itself)
+    // for the same reason footerContent/headerContent already are: Footer
+    // renders from SiteFooterSlot, a Client Component, which can't import
+    // this server-only query.
+    getPartners(),
   ]);
   // Phase 132 — the UI Builder's published design tokens. mergeDesignTokens
   // re-fills anything missing (a row saved before a new field existed,
@@ -129,7 +135,12 @@ export default async function RootLayout({
                   mechanism. Every prop below is exactly what was already
                   fetched/passed here before this phase; normal visitors see
                   no change at all. */}
-              <GlobalContentGate headerContent={headerContent} footerContent={footerContent} crisisButtonContent={crisisButtonContent}>
+              <GlobalContentGate
+                headerContent={headerContent}
+                footerContent={footerContent}
+                crisisButtonContent={crisisButtonContent}
+                partners={partners}
+              >
                 {/* id/tabIndex added for the widget's "Skip To Content →
                     Main Content" control (components/accessibility/sections/
                     SkipToContentSection.tsx) — this landmark didn't have a

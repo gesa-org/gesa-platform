@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-14 (Phase 202 added)
+Last updated: 2026-09-15 (Phase 203 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8911,6 +8911,52 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 202: Donate page - editable impact section images (UI Builder)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 203: Trusted Partners + FAQ categories
+
+Third installment of the CMS/UI Builder rebuild (201 Media Library → 202 Donate photo editing, an interleaved follow-up → **203 Trusted Partners/FAQ categories**, this entry). Roy confirmed this scope explicitly (Trusted Partners/FAQ categories, not the roadmap's still-unbuilt "202 per-page SEO," which keeps its original number for whenever it's picked up next).
+
+**What shipped:**
+
+1. **New `partners` table** (migration `phase_203_trusted_partners`, Production): `id, name, logo_url, logo_alt, link_url, sort, is_active, created_at, updated_at`. RLS: `partners_public_read` (permissive `true`, matching the `clinic_locations`/`media_assets` convention — the `is_active` filter is applied in the query, not the policy) + `partners_admin_write` (`admin`/`super_admin`).
+
+2. **Replaces the Footer's 3 fixed, text-only, fixed-icon "Our Trusted Partners" slots** (`content.partner1Label`/`partner2Label`/`partner3Label` — no logo, no add/remove, hard-capped at 3) with a real admin-managed list: name, optional logo (uploaded through the existing Phase 201 `/api/admin/media/upload` route, `pathPrefix: "partners"`), optional link, active flag, manual sort. The 3 old `site_content` fields are kept in `FooterContent`'s type/fallback/DB row (not deleted — same "don't delete data a section stopped reading" precedent already used elsewhere in this file) and still render as-is whenever the `partners` table is empty, which is every existing render until Roy adds a real partner — **zero visual change today**.
+
+3. **New "Trusted Partners" tab in Content Manager** (`components/admin/content/PartnersManager.tsx`) — add/edit/reorder/delete, logo upload/replace, active toggle. Follows `FaqManager.tsx`'s existing pattern exactly (writes go straight to the table from the browser Supabase client, RLS-enforced) rather than new dedicated API routes — the only route involved is the existing Phase 201 upload route, reused as-is.
+
+4. **FAQ categories**: `faqs.category` column added (migration `phase_203_faq_categories`, `NOT NULL DEFAULT 'General'`), plus a per-question category input (with a datalist of already-used categories, so reusing one is a few keystrokes) in `FaqManager.tsx`. `FaqAccordion.tsx` now groups questions under a category heading **only when more than one distinct category actually exists** — every FAQ predating this column defaults to `'General'`, so a site with a single category (true today) renders exactly the same flat list as before, with no heading. `tests/unit/FaqAccordion.test.tsx` (and the two `Tables<"faqs">` smoke-test literals) needed no changes — `category` is declared optional on the hand-maintained `FaqRow` TS type specifically so those pre-existing fixtures (written before this column existed) keep type-checking, even though a real DB row always has a value.
+
+**Known issue fixed in passing:** `faqs_admin_write`'s RLS policy tested the literal `auth_role() = 'admin'`, excluding `super_admin` — a live instance of the role-check gap flagged (but not fixed) in Phase 201's notes. Since `FaqManager.tsx` writes to this table directly from the browser (no service-role route in front of it), a super_admin account could not add/edit/delete/reorder any FAQ at all before this fix. Corrected to `IN ('admin','super_admin')` as part of this phase's migration, since it was the natural point to touch this table anyway. Not addressed this phase: the other gaps documented in Phase 201 (`ImageUploadField.tsx`'s storage policy, `app/api/admin/inquiries/delete/route.ts`) — still open, still Roy's call on scope/timing.
+
+**Data/schema changes:** `partners` table (new) + RLS; `faqs.category` column (new) + RLS policy fix, as above.
+
+**Storage/permission changes:** none new — partner logos reuse the existing `site-content-images` bucket and the existing Phase 201 upload route/permissions.
+
+**Testing steps:**
+- Trusted Partners: Content Manager → Trusted Partners tab → Add partner → set a name, upload a logo, optionally a link → Save → confirm it appears on the live `/` (or any page) footer immediately (no draft/publish gate — this isn't a UI Builder field, it's a plain admin-managed table, same as FAQs). Toggle a partner inactive → confirm it disappears from the footer but stays listed in the admin tab. Delete a partner → confirm it's gone from both.
+- Footer fallback: with the `partners` table empty (current production state), confirm the footer still shows the original 3 text+icon labels exactly as before.
+- FAQ categories: Content Manager → FAQ tab → set two different FAQs to two different categories (e.g. "General" and "Billing") → Save both → visit `/faq` → confirm the questions now render under two headings, grouped correctly, with the normal one-open-at-a-time accordion behavior preserved. Set every FAQ back to the same category → confirm `/faq` returns to a flat list with no heading.
+- Regression: `npx jest` — `FaqAccordion.test.tsx` and `Footer.test.tsx` should both still pass unmodified.
+
+**Assumptions/follow-ups:**
+- FAQ categories are free text (no separate `faq_categories` lookup table) — simplest option given no separate reordering/renaming-a-category requirement was specified; a dedicated table can be added later if Roy wants to reorder categories independently of alphabetical order or rename one across every FAQ at once (currently that means editing each FAQ's category field individually).
+- Category display order on `/faq` is first-seen order from the sort-ordered `faqs` list (i.e. whichever category the earliest-sorted FAQ has comes first) — no separate "category sort" field exists.
+- Partner logos: no automatic compression/responsive variants, no orphaned-storage cleanup on replace/delete — same accepted precedent as Phase 201/202's media handling.
+
+Files touched: `lib/database.types.ts`, `lib/queries.ts`, `components/admin/content/PartnersManager.tsx` (new), `components/admin/content/ContentManagerApp.tsx`, `app/admin/content/page.tsx`, `components/Footer.tsx`, `components/SiteFooterSlot.tsx`, `components/ui-builder/public/GlobalContentGate.tsx`, `app/layout.tsx`, `components/admin/content/FaqManager.tsx`, `components/FaqAccordion.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 203: Trusted Partners + FAQ categories"
 git push
 ```
 

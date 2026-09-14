@@ -12,6 +12,7 @@ import { getFooterExploreItems } from '@/lib/navigation';
 import { SITE_FOOTER_ID } from '@/lib/accessibility/config';
 import EditableText from '@/components/ui-builder/public/EditableText';
 import { GESA_PUBLIC_CONTACT_EMAIL, GESA_PUBLIC_CONTACT_MAILTO } from '@/lib/contact';
+import type { Tables } from '@/lib/database.types';
 
 // Phase 57 — one icon per trusted-partner slot, fixed by position (not
 // editable — only each slot's label text is), same approach as About's
@@ -92,12 +93,26 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
 // caller/test that only ever passed `content` keeps working unchanged, while
 // app/layout.tsx's real render now threads the same HeaderContent object it
 // already fetches for <Header> down here too — see lib/navigation.ts for why.
+// Phase 203 — `partners` is a new, optional prop (defaults to `[]`, same
+// backward-compat shape as headerContent's own Phase 117 addition) sourced
+// from the new `partners` table via getPartners() (app/layout.tsx ->
+// GlobalContentGate -> SiteFooterSlot -> here). When it's empty — true for
+// every existing render until an admin adds a real partner via the new
+// "Trusted Partners" Content Manager tab — the row below renders exactly
+// the same 3 fixed text+icon labels it always has, so this ships with zero
+// visual change. Once partners exist, real logos/links take over and the
+// old 3 site_content labels (content.partner1Label etc.) simply stop being
+// read — they're kept in the type/fallback/DB row rather than deleted, same
+// "don't delete data just because a section stopped reading it" precedent
+// as this file's own exploreAboutLabel/supportDonateLabel fields above.
 export default function Footer({
   content = FOOTER_CONTENT_FALLBACK,
   headerContent = HEADER_CONTENT_FALLBACK,
+  partners = [],
 }: {
   content?: FooterContent;
   headerContent?: HeaderContent;
+  partners?: Tables<'partners'>[];
 }) {
   const year = new Date().getFullYear();
   const exploreItems = getFooterExploreItems(headerContent);
@@ -341,19 +356,53 @@ export default function Footer({
               <EditableText contentId="global.footer.trustedPartnersHeading" label="&quot;Our Trusted Partners&quot; heading" value={content.trustedPartnersHeading} as="span" />
             </span>
             <div className="flex flex-wrap items-center gap-4">
-              {[
-                { contentId: "global.footer.partner1Label", label: content.partner1Label },
-                { contentId: "global.footer.partner2Label", label: content.partner2Label },
-                { contentId: "global.footer.partner3Label", label: content.partner3Label },
-              ].map((partner, i) => {
-                const Icon = PARTNER_ICONS[i] ?? PARTNER_ICONS[PARTNER_ICONS.length - 1];
-                return (
-                  <span key={partner.contentId} className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc]">
-                    <Icon size={15} className="text-[#8b96a8]" />{" "}
-                    <EditableText contentId={partner.contentId} label="Partner label" value={partner.label} as="span" />
-                  </span>
-                );
-              })}
+              {partners.length > 0
+                ? partners.map((partner, i) => {
+                    const Icon = PARTNER_ICONS[i] ?? PARTNER_ICONS[PARTNER_ICONS.length - 1];
+                    const inner = (
+                      <>
+                        {partner.logo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={partner.logo_url}
+                            alt={partner.logo_alt ?? partner.name}
+                            className="h-5 w-auto object-contain"
+                          />
+                        ) : (
+                          <Icon size={15} className="text-[#8b96a8]" />
+                        )}
+                        {partner.name}
+                      </>
+                    );
+                    return partner.link_url ? (
+                      <a
+                        key={partner.id}
+                        href={partner.link_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc] transition-colors hover:text-[#eef1f6]"
+                      >
+                        {inner}
+                      </a>
+                    ) : (
+                      <span key={partner.id} className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc]">
+                        {inner}
+                      </span>
+                    );
+                  })
+                : [
+                    { contentId: "global.footer.partner1Label", label: content.partner1Label },
+                    { contentId: "global.footer.partner2Label", label: content.partner2Label },
+                    { contentId: "global.footer.partner3Label", label: content.partner3Label },
+                  ].map((partner, i) => {
+                    const Icon = PARTNER_ICONS[i] ?? PARTNER_ICONS[PARTNER_ICONS.length - 1];
+                    return (
+                      <span key={partner.contentId} className="flex items-center gap-1.5 text-[13px] text-[#b0bbcc]">
+                        <Icon size={15} className="text-[#8b96a8]" />{" "}
+                        <EditableText contentId={partner.contentId} label="Partner label" value={partner.label} as="span" />
+                      </span>
+                    );
+                  })}
             </div>
           </div>
         </Reveal>
