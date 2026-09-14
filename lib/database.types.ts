@@ -104,6 +104,33 @@ export type InquiryRow = {
   consent: boolean;
 }
 
+// Phase 201 — Media Library. See migration `phase_201_media_library`.
+export type MediaAssetRow = {
+  id: string;
+  storage_bucket: string;
+  storage_path: string;
+  file_name: string;
+  file_type: string | null;
+  file_size_bytes: number | null;
+  alt_text: string;
+  caption: string | null;
+  credit: string | null;
+  is_decorative: boolean;
+  focal_point_x: number;
+  focal_point_y: number;
+  uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MediaAssetUsageRow = {
+  id: string;
+  media_asset_id: string;
+  page_key: string;
+  section_key: string;
+  created_at: string;
+}
+
 export type LegalPageRow = {
   body: string;
   id: string;
@@ -826,6 +853,34 @@ export type Database = {
       group_registrations: { Row: GroupRegistrationRow; Insert: Partial<GroupRegistrationRow> & Pick<GroupRegistrationRow, "email" | "group_id" | "name">; Update: Partial<GroupRegistrationRow>; Relationships: [] };
       inquiries: { Row: InquiryRow; Insert: Partial<InquiryRow>; Update: Partial<InquiryRow>; Relationships: [] };
       legal_pages: { Row: LegalPageRow; Insert: Partial<LegalPageRow> & Pick<LegalPageRow, "slug" | "title">; Update: Partial<LegalPageRow>; Relationships: [] };
+      media_assets: {
+        Row: MediaAssetRow;
+        Insert: Partial<MediaAssetRow> & Pick<MediaAssetRow, "storage_path" | "file_name">;
+        Update: Partial<MediaAssetRow>;
+        Relationships: [
+          {
+            foreignKeyName: "media_assets_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      media_asset_usages: {
+        Row: MediaAssetUsageRow;
+        Insert: Partial<MediaAssetUsageRow> & Pick<MediaAssetUsageRow, "media_asset_id" | "page_key" | "section_key">;
+        Update: Partial<MediaAssetUsageRow>;
+        Relationships: [
+          {
+            foreignKeyName: "media_asset_usages_media_asset_id_fkey";
+            columns: ["media_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "media_assets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: { Row: ProfileRow; Insert: Partial<ProfileRow> & Pick<ProfileRow, "id">; Update: Partial<ProfileRow>; Relationships: [] };
       site_content: { Row: SiteContentRow; Insert: Partial<SiteContentRow> & Pick<SiteContentRow, "key">; Update: Partial<SiteContentRow>; Relationships: [] };
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };

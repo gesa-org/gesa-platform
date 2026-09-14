@@ -7,6 +7,7 @@ import DonateForm from "@/components/donate/DonateForm";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
+import { getMediaAssetsForPage, type MediaAssetWithUrl } from "@/lib/media";
 
 // Phase 98 — Roy sent a reference image for a full donate page (hero,
 // giving box, "what your gift helps make possible" icon row, a dark
@@ -93,11 +94,15 @@ const TRUST_ICONS = [ShieldCheck, Lock, Globe, Users];
 
 // Phase 200 — the 3 real, authentic photographs Roy provided for this page
 // (not stock photography): a community support circle, a one-on-one
-// conversation on a bench, and an AVP Toolkit training session. Hardcoded
-// here rather than made CMS-editable, same convention Hero.tsx already uses
-// for its own backgroundImage field — swapping the actual photo files is a
-// code change, only the headings/captions around them are admin-editable
-// (see DONATE_EDITABLE_FIELDS in pageRegistry.ts).
+// conversation on a bench, and an AVP Toolkit training session.
+//
+// Phase 201 — these are now the *fallback* only. The real, current image
+// for each slot is looked up at request time from the new Media Library
+// (lib/media.ts, keyed "page_donate" / "whySupport.photo1|2|3") so Roy can
+// upload/replace these photos himself from Content Manager > Media Library
+// without a code change — this array only renders if nothing has been
+// uploaded there yet, same "never render blank" fallback contract every
+// other CMS-backed field on this site already follows.
 const WHY_SUPPORT_PHOTOS = [
   {
     src: "/images/donate/community-support-circle.jpg",
@@ -113,6 +118,19 @@ const WHY_SUPPORT_PHOTOS = [
   },
 ] as const;
 
+// Phase 201 — small helper so the three whySupportPhotos entries above stay
+// readable: returns {src, alt} from the Media Library if that section key
+// has an assigned asset, or {} (spreads to nothing, leaving the hardcoded
+// fallback in place) if not.
+function mediaOverride(
+  mediaBySlot: Map<string, MediaAssetWithUrl>,
+  sectionKey: string
+): { src: string; alt: string } | Record<string, never> {
+  const asset = mediaBySlot.get(sectionKey);
+  if (!asset) return {};
+  return { src: asset.publicUrl, alt: asset.alt_text || asset.file_name };
+}
+
 // Phase 135 — hero band's text is now the visual editor's canvas-selectable
 // reference implementation for this page; the impact/movement/trust/crisis
 // sections below stay exactly as they render today (their fields are
@@ -125,7 +143,10 @@ export default async function DonatePage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 } = {}) {
-  const contentRaw = await getPageContent("page_donate", DONATE_PAGE_FALLBACK);
+  const [contentRaw, mediaBySlot] = await Promise.all([
+    getPageContent("page_donate", DONATE_PAGE_FALLBACK),
+    getMediaAssetsForPage("page_donate"),
+  ]);
   const { resolved, isEditorPreview } = await resolveEditorPreview("donate", contentRaw as unknown as Record<string, unknown>, searchParams);
   const content = resolved as unknown as typeof contentRaw;
   const crisisLinkIsExternal = content.crisisLinkHref.startsWith("http");
@@ -138,10 +159,15 @@ export default async function DonatePage({
 
   const trustBadges = [content.trustBadge1Label, content.trustBadge2Label, content.trustBadge3Label, content.trustBadge4Label];
 
+  // Phase 201 — Media Library asset wins over the hardcoded fallback when
+  // one has been assigned to that slot (see WHY_SUPPORT_PHOTOS's own
+  // comment above). "src"/"alt" only change if a real upload exists;
+  // category/caption text is unaffected either way — those are still plain
+  // site_content fields, not part of the Media Library.
   const whySupportPhotos = [
-    { ...WHY_SUPPORT_PHOTOS[0], category: content.photo1Category, caption: content.photo1Caption, categoryContentId: "donate.whySupport.photo1Category", captionContentId: "donate.whySupport.photo1Caption" },
-    { ...WHY_SUPPORT_PHOTOS[1], category: content.photo2Category, caption: content.photo2Caption, categoryContentId: "donate.whySupport.photo2Category", captionContentId: "donate.whySupport.photo2Caption" },
-    { ...WHY_SUPPORT_PHOTOS[2], category: content.photo3Category, caption: content.photo3Caption, categoryContentId: "donate.whySupport.photo3Category", captionContentId: "donate.whySupport.photo3Caption" },
+    { ...WHY_SUPPORT_PHOTOS[0], ...mediaOverride(mediaBySlot, "whySupport.photo1"), category: content.photo1Category, caption: content.photo1Caption, categoryContentId: "donate.whySupport.photo1Category", captionContentId: "donate.whySupport.photo1Caption" },
+    { ...WHY_SUPPORT_PHOTOS[1], ...mediaOverride(mediaBySlot, "whySupport.photo2"), category: content.photo2Category, caption: content.photo2Caption, categoryContentId: "donate.whySupport.photo2Category", captionContentId: "donate.whySupport.photo2Caption" },
+    { ...WHY_SUPPORT_PHOTOS[2], ...mediaOverride(mediaBySlot, "whySupport.photo3"), category: content.photo3Category, caption: content.photo3Caption, categoryContentId: "donate.whySupport.photo3Category", captionContentId: "donate.whySupport.photo3Caption" },
   ];
 
   const testimonials = [

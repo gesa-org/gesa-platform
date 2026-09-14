@@ -19,6 +19,8 @@ import DonateThankYouEditor from "@/components/admin/content/DonateThankYouEdito
 import CommunityIntroEditor from "@/components/admin/content/CommunityIntroEditor";
 import FaqManager from "@/components/admin/content/FaqManager";
 import LegalPagesManager from "@/components/admin/content/LegalPagesManager";
+import MediaLibrary from "@/components/admin/content/MediaLibrary";
+import type { MediaAssetRow, MediaAssetUsageRow } from "@/lib/database.types";
 import type {
   HomeContent,
   HeroContent,
@@ -65,6 +67,7 @@ type Props = {
   simplePageEntries: { key: string; label: string; hasDescription: boolean; fallback: SimplePageContent }[];
   faqs: Tables<"faqs">[];
   legalPages: Tables<"legal_pages">[];
+  mediaAssets: Array<MediaAssetRow & { publicUrl: string; usages: MediaAssetUsageRow[] }>;
 };
 
 // Tabs that need more than a plain banner — each gets its own bespoke block
@@ -108,6 +111,7 @@ const FIXED_TABS_END = [
   "Donate Band",
   "Crisis Button",
   "Volunteer Modal",
+  "Media Library",
 ] as const;
 
 // The Content Manager's tab shell — a client component so switching tabs is
@@ -255,6 +259,8 @@ export default function ContentManagerApp(props: Props) {
       {tab === "Crisis Button" && <CrisisButtonEditor initial={props.crisisButton} />}
 
       {tab === "Volunteer Modal" && <VolunteerApplicationModalEditor initial={props.volunteerModal} />}
+
+      {tab === "Media Library" && <MediaLibrary initialAssets={props.mediaAssets} />}
     </div>
   );
 }

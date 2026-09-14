@@ -8825,3 +8825,40 @@ git push
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 201: Media Library (Content Manager + UI Builder rebuild, installment 1)
+
+Roy asked for a full rebuild of `/admin/content` and `/admin/ui-builder` so they mirror every public page/section/form/asset (see `GESA_CMS_UI_Builder_Audit_and_Plan.md`, delivered this phase, for the full audit and the 6-phase rollout it proposes: 201 Media Library → 202 per-page SEO → 203 Trusted Partners/FAQ categories → 204 forms/system messages → 205 Content Manager IA rebuild → 206 section-level model/revision history). Roy confirmed starting from 201 and proceeding through 202/204/205 in order. This entry is Phase 201.
+
+**What shipped:**
+
+1. **New tables** (migration `phase_201_media_library`, applied directly to Production via the Supabase MCP tool — same no-migration-file convention as every schema change since ~Phase 126): `media_assets` (file metadata: alt text, caption, credit, decorative flag, focal point) and `media_asset_usages` (which `page_key`/`section_key` slot currently points at which asset — `on delete restrict` so an in-use asset can't be hard-deleted at the database level, not just blocked in the UI). RLS follows the standard admin+reviewer-read/admin-write pattern, written against `auth_role() IN ('admin','super_admin')` rather than the narrower `= 'admin'` check some older tables use (see Known Issues below).
+
+2. **Storage**: reused the existing public `site-content-images` bucket rather than provisioning new storage.
+
+3. **New API routes** (`app/api/admin/media/upload`, `/assign`, `/[id]`) — all re-check `admin`/`super_admin` server-side and use the service-role client, so uploads/deletes work regardless of the storage-policy gap noted below.
+
+4. **New "Media Library" tab in Content Manager** (`components/admin/content/MediaLibrary.tsx`) — upload, per-image alt text editing, a live usage list per asset, "assign to section" (currently wired to the Donate page's 3 "why your support matters" photo slots — more sections adopt this as their editors are migrated in later installments), and delete blocked with an explicit usage warning when an asset is still assigned somewhere.
+
+5. **`components/donate/DonatePage.tsx` and `lib/media.ts`**: the 3 "why your support matters" photos now resolve from the Media Library first, falling back to the existing hardcoded `/images/donate/*.jpg` paths only if nothing's been uploaded yet — same "never render blank" fallback contract every other CMS field on this site already follows. **This is the fix for the two 404'd Donate photos flagged earlier this session**: instead of Roy running a PowerShell copy command, he can now upload `one-on-one-conversation.jpg` and `avp-toolkit-training.jpg` (or any replacement photos) directly at Content Manager > Media Library and assign them to their slots — no code change or file-system access needed.
+
+**Known issues surfaced while building this (not fixed, flagged for Roy's decision):**
+
+- **Critical, unrelated to this project — 3 tables have RLS fully disabled in Production:** `gesa_therapist_photo_map`, `gesa_group_registrations`, `gesa_zoom_enrollments`. Not auto-fixed (enabling RLS with no policies would lock the app out of its own data) — needs a real look at what each table's access pattern should be. Remediation SQL is in `GESA_CMS_UI_Builder_Audit_and_Plan.md`.
+- **A parallel legacy schema exists**: a full second set of `gesa_`-prefixed tables (`gesa_site_content`, `gesa_faqs`, `gesa_testimonials`, `gesa_therapists`, etc.) sit alongside the tables the app actually reads. Not mentioned anywhere in the prior technical spec. Not touched this phase; worth a cleanup pass eventually.
+- **A role-check gap wider than previously documented**: several existing RLS policies and at least one hand-rolled API route check (`components/admin/content/ImageUploadField.tsx`'s underlying storage policy, `app/api/admin/inquiries/delete/route.ts`) test `auth_role() = 'admin'` or `profile.role !== "admin"` literally, silently excluding `super_admin` accounts even though `requireAdmin()` itself was fixed to accept both back in Phase 187. Confirmed as a live, reproducible bug for the existing `ImageUploadField` upload flow specifically (a super_admin's upload would fail there). Not fixed broadly this phase (out of scope) — new Phase 201 code was written correctly (`IN ('admin','super_admin')`) rather than copying the gap forward.
+
+Files touched: `lib/database.types.ts`, `lib/media.ts` (new), `app/api/admin/media/upload/route.ts` (new), `app/api/admin/media/assign/route.ts` (new), `app/api/admin/media/[id]/route.ts` (new), `components/admin/content/MediaLibrary.tsx` (new), `components/admin/content/ContentManagerApp.tsx`, `app/admin/content/page.tsx`, `components/donate/DonatePage.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 201: Media Library (Content Manager + UI Builder rebuild, installment 1)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

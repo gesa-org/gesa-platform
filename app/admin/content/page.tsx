@@ -13,6 +13,7 @@ import { INTAKE_FLOW_CONTENT_FALLBACK } from "@/app/intake/intakeContent";
 import { VOLUNTEER_MODAL_CONTENT_FALLBACK } from "@/components/volunteer/VolunteerApplicationModal";
 import { DONATE_THANK_YOU_CONTENT_FALLBACK } from "@/app/donate/thank-you/thankYouContent";
 import { COMMUNITY_INTRO_FALLBACK } from "@/components/support-groups/CommunityIntro";
+import { getAllMediaAssetsForAdmin } from "@/lib/media";
 import {
   SIMPLE_PAGE_ENTRIES,
   ABOUT_SECTIONS_FALLBACK,
@@ -69,7 +70,12 @@ function merge<T extends Record<string, unknown>>(row: unknown, fallback: T): T 
 }
 
 export default async function AdminContentPage() {
-  const [map, faqs, legalPages] = await Promise.all([getSiteContentMap(KEYS), getFaqs(), getAllLegalPages()]);
+  const [map, faqs, legalPages, mediaAssets] = await Promise.all([
+    getSiteContentMap(KEYS),
+    getFaqs(),
+    getAllLegalPages(),
+    getAllMediaAssetsForAdmin(),
+  ]);
 
   // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
   // Support Groups, Find Your Therapist, Blog, FAQ banner, Contact — and
@@ -127,6 +133,7 @@ export default async function AdminContentPage() {
         simplePageEntries={SIMPLE_PAGE_ENTRIES}
         faqs={faqs}
         legalPages={legalPages}
+        mediaAssets={mediaAssets}
       />
     </div>
   );
