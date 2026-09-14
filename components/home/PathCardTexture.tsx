@@ -1,18 +1,20 @@
-// Phase 191 (redone per Roy's follow-up — see Paths.tsx's own note) — the
-// three path cards' front faces get a solid-color, chunky embossed block
-// (no separate wood frame/cream mat like the previous design) with a faint
-// background pattern specific to each card's theme — flowing lines for the
-// resilience card, a branching tree for the veterans card, and an
-// orbit-and-stars constellation for the support card — behind the same
-// centered GesaMark. These three inline SVGs are that background texture,
-// hand-drawn (not extracted from the reference image, which is a raster
-// mockup with no vector source to trace) to approximate the same idea at a
-// low, non-competing opacity so the centered mark stays the clear focal
-// point. Rendered as a full-bleed absolute layer by the caller (see
-// Paths.tsx), one instance per card, colored via `stroke`/`fill`
-// "currentColor" so the caller sets the actual tone (each card uses a
-// subtle tint of its own background) rather than this component
-// hardcoding per-card colors.
+// Built for Phase 191 (two attempts, both reverted before shipping — see
+// EXECUTION_PLAN.md and this file's git history) and finally wired into
+// Paths.tsx in Phase 197, once Roy sent a reference image asking for this
+// exact treatment again. The three path cards' front faces are a
+// solid-color, chunky embossed block (no separate wood frame/cream mat like
+// the previous design) with a faint background pattern specific to each
+// card's theme — flowing lines for the resilience card, a branching tree
+// for the veterans card, and an orbit-and-stars constellation for the
+// support card — behind the same centered GesaMark. These three inline
+// SVGs are that background texture, hand-drawn (not extracted from the
+// reference image, which is a raster mockup with no vector source to trace)
+// to approximate the same idea at a low, non-competing opacity so the
+// centered mark stays the clear focal point. Rendered as a full-bleed
+// absolute layer by the caller (see Paths.tsx), one instance per card,
+// colored via `stroke`/`fill` "currentColor" so the caller sets the actual
+// tone (each card uses a subtle tint of its own background) rather than
+// this component hardcoding per-card colors.
 export default function PathCardTexture({ index, className }: { index: number; className?: string }) {
   if (index === 1) {
     // Veterans — a fuller branching tree (trunk + two tiers of forking

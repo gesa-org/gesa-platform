@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-14 (Phase 196)
+Last updated: 2026-09-14 (Phase 197)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -8701,6 +8701,37 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 196: Community page Charity Services / Professional Services booking + payment flows"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 197: Home path-card front faces — new embossed-panel design (third attempt at this; first two, Phase 191, were reverted)
+
+Roy sent a reference image (three tilted tile mockups labeled "RESILIENCE"/"VETERANS"/"SUPORT," each with a textured background, a centered logo mark, a gold badge above, and a caption below — "Gifted Professional Support" ×2, "Global Professional Directory") and asked for the Home page's three path cards' front faces to match it exactly, not the existing wood-frame/mat design.
+
+**Location, not About.** Roy calls this section "the About page" — the header's "About" nav item links to `/` (Home, rendered by `components/home/Paths.tsx`), while the literal `/about` route is labeled "About Us" in the nav and is separately a dead, unreachable redirect (see Phase 145's note in `app/about/page.tsx`) to `/find-your-therapist`. This is the same naming quirk flagged in Phase 121's comment in this same file — confirmed again this phase before touching anything.
+
+**This is the third attempt at this exact redesign.** Phase 191 built it twice (a plain version, then a denser-texture redo) and both were reverted at Roy's request before ever being committed — `components/home/PathCardTexture.tsx` (the three per-card SVG background textures: flowing lines / branching tree / orbit-and-stars) was left in the repo from that attempt, unused, per the standing no-delete rule. This phase reuses that same file as-is (still a faithful hand-drawn approximation of the reference's three texture patterns) rather than rebuilding it, and updates its header comment to reflect that it's finally wired in.
+
+**What actually changed in `components/home/Paths.tsx`:** the front face's wood-frame → cream-mat → small-canvas-box structure (Phase 97/100/124) is replaced with one solid-color panel per card, styled as a raised "embossed slab" via a single layered `box-shadow` (an inset light-from-above highlight, a darker inset shadow along the bottom/right, and an outer drop shadow so it reads as sitting slightly proud) — no wood grain, no mat, no border. `PathCardTexture` renders behind the mark at low opacity, colored per card (`text-black/10` on the two lighter cards, `text-white/12` on the darker slate-blue card, so it stays visible against each card's own background rather than disappearing or being tuned once and looking wrong on one card). `GesaMark` — the centered "C" logo, whose four per-card colors already matched the reference almost exactly, confirming this really is the same card/color model, just restyled — grew from 64% of a small mat-bound canvas box to 58% of the whole panel, since it's now the panel's own focal artwork. The gold label pill above the card and the caption below it are unchanged in position, styling, and content.
+
+**Labels — no data change needed.** The reference's three badge labels ("Resilience"/"Veterans"/"Support") turned out to already be live in the published `page_home` Content Manager row (checked directly against Production before touching anything) — Roy had evidently updated these at some point after Phase 154 set them to "War"/"Terror"/"Disaster," ahead of this fallback constant catching up. Updated `HOME_CONTENT_FALLBACK` in `Paths.tsx` to match what's already published, so a fresh/reset install shows the same labels — no Supabase write needed this phase.
+
+**Scope note — flat panel, not a literal 3D tilt.** Roy's reference renders the three tiles at a slight camera angle/perspective, typical of a design-mockup product shot. This phase reproduces every surface detail (color, texture, emboss, mark, badge, caption) but keeps the panel itself flat/untilted, since the front face is one half of an existing `rotateY` flip card (hover/focus reveals the back face's title/description/CTA) — adding a real 3D perspective tilt to a face that already animates in 3D space risked fighting with that existing transform. Flagging this explicitly since "copy exactly" was the instruction; happy to revisit if Roy specifically wants the tilt reproduced too.
+
+**Tests — `tests/unit/Paths.test.tsx`:** updated the one test that had gone stale independent of this phase — it asserted the Phase 100-era labels ("Crisis"/"Veterans"/"Support"), which no longer matched the Phase 154 fallback ("War"/"Terror"/"Disaster") that was live at the time, so it's not clear this assertion was passing before this phase touched it either. Now asserts the current, correct labels ("Resilience"/"Veterans"/"Support"). The other three tests (hero text/no artwork, three cards render, front+back faces both in the DOM) needed no changes — none of them touch the wood-frame markup this phase removed.
+
+Files touched: `components/home/Paths.tsx`, `components/home/PathCardTexture.tsx` (header comment only — the SVGs themselves are unchanged from Phase 191), `tests/unit/Paths.test.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 197: redesign Home path-card front faces to match new reference (embossed panel + texture, replacing wood-frame design)"
 git push
 ```
 

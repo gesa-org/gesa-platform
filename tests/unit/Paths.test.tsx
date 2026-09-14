@@ -74,10 +74,14 @@ describe("Paths (Home)", () => {
   // own category ("Crisis"/"Veterans"/"Support") rather than art-piece
   // names. This confirms the new labels render alongside the
   // still-unchanged back-face titles from the previous test.
+  // Phase 197 — front-face labels are "Resilience"/"Veterans"/"Support" as
+  // of Roy's latest reference (this replaces Phase 154's "War"/"Terror"/
+  // "Disaster" — this test's assertions predated that phase and had gone
+  // stale; updated here to match the current fallback content).
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Crisis")).toBeInTheDocument();
+    expect(screen.getByText("Resilience")).toBeInTheDocument();
     expect(screen.getByText("Veterans")).toBeInTheDocument();
     expect(screen.getByText("Support")).toBeInTheDocument();
 
