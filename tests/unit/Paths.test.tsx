@@ -71,19 +71,18 @@ describe("Paths (Home)", () => {
   // title/description/CTA content untouched.
   // Phase 100 — Roy sent a new reference recoloring an abstract mark per
   // card instead of a painting, with new badge labels matching each card's
-  // own category ("Crisis"/"Veterans"/"Support") rather than art-piece
-  // names. This confirms the new labels render alongside the
-  // still-unchanged back-face titles from the previous test.
-  // Phase 197 — front-face labels are "Resilience"/"Veterans"/"Support" as
-  // of Roy's latest reference (this replaces Phase 154's "War"/"Terror"/
-  // "Disaster" — this test's assertions predated that phase and had gone
-  // stale; updated here to match the current fallback content).
+  // own category rather than art-piece names.
+  // Phase 198 — labels updated again to "Resilience"/"Veterans"/"Suport" per
+  // Roy's latest reference image — "Suport" is a deliberate typo Roy asked
+  // to match literally ("match the exact spelling from the image asset").
+  // This confirms the new labels render alongside the still-unchanged
+  // back-face titles from the previous test.
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
     expect(screen.getByText("Resilience")).toBeInTheDocument();
     expect(screen.getByText("Veterans")).toBeInTheDocument();
-    expect(screen.getByText("Support")).toBeInTheDocument();
+    expect(screen.getByText("Suport")).toBeInTheDocument();
 
     // Back face content from the earlier test is still present, unchanged.
     expect(screen.getByText("In crisis right now")).toBeInTheDocument();
