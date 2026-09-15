@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 210 added)
+Last updated: 2026-09-15 (Phase 211 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9293,7 +9293,41 @@ git status
 npx tsc --noEmit
 npx jest
 git add -A
-git commit -m "Phase 210: Home pathway cards restyled again (recessed shadow-box + GesaMark); fix SWC build error from a tag mention in a comment"
+git commit -m "Phase 210: Home pathway cards restyled again (recessed shadow-box + GesaMark); fix stray brace breaking the build"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 211: Home pathway card frames refined into a real recessed niche
+
+Roy saved a new reference file, "New Design Frames.png," in the project folder and asked for the three pathway cards' frame styling updated to match — the same overall composition as Phase 210 (colored box holding the GesaMark swirl, gold badge below), but with a visible frame trim around the opening and the box's top/right interior walls shaded darker, so it reads as a real recessed wall niche with depth rather than a flat colored rectangle with a drop shadow.
+
+**What shipped:**
+
+1. **`components/home/Paths.tsx` — `PATH_FRONT_STYLES`** — added a `boxHex` field per card (the exact hex of that card's own established color — `#aed0e9`, `#9ba283`, `#5f7a91` — distinct from Phase 209's `door` field, which for card 1 is a slightly lighter tint, `#c7dced`, not this card's true color). `doorFrame` (already defined per card since Phase 209, a darker shade of the same hue) is reused as both the new frame trim color and the interior-wall shading tone, rather than adding a third color per card.
+2. **Front-face niche box** — replaced Phase 210's flat `frontStyle.bg` fill + inset-ring box-shadow with: a 3px solid border in `doorFrame` (the visible frame trim), a `boxHex` flat base color, and two diagonal `linear-gradient` overlays (top-right and bottom-right, both fading from transparent to a translucent `doorFrame` tint) layered on top of the flat color to simulate the top and right interior walls receding into shadow — plus a softer inset shadow and the same outward drop shadow as before for grounding. The GesaMark swirl centered inside is unchanged; badge position/text below the frame is unchanged from Phase 210.
+3. **Everything else — flip interaction, back face, badge text/icons, card sizing, caption removal from Phase 210 — is untouched.** This was a frame-rendering refinement only.
+
+**Files touched:** `components/home/Paths.tsx`.
+
+**Manual test scenarios:**
+- Load `/` (Home) and confirm each card's box now shows a visible darker-toned frame trim around its edge, with a subtle diagonal shading toward the top-right and bottom-right corners (simulating recessed depth), while the GesaMark swirl at the center stays a clean, undarkened read of the card's own color.
+- Confirm the gold badge still sits below the frame with the same gap, reading CRISIS/VETERANS/SUPPORT, and the flip-to-reveal back face still works on hover/focus.
+- Confirm the three cards' base colors are unchanged from Phase 210 (light blue, sage, slate-blue) — only the frame/shading treatment around them changed.
+
+**Assumptions/follow-ups:**
+- This is a CSS-gradient approximation of the reference's 3D niche look, not a literal traced illustration — flag if Roy wants a closer match to the reference's exact shadow falloff/angle after seeing it live.
+- Build/test verification (`tsc --noEmit`, Jest) could not be run this session — the sandboxed shell remains unreachable. Given Phase 210's build broke on a stray brace that slipped through manual review, this file's braces were re-verified line-by-line before committing this phase, but a real `tsc`/build pass is still the authoritative check — run the deploy-gate commands below once the shell or a local terminal is available, before treating this as deployed.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 211: Home pathway card frames refined into a real recessed niche"
 git push
 ```
 

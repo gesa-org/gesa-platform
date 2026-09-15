@@ -260,9 +260,21 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // future design reverts to the door treatment — same "don't delete a
 // superseded style, just stop reading it" precedent already set for `frame`
 // by Phase 124's own comment.
-const PATH_FRONT_STYLES: { bg: string; frame: string; door: string; doorFrame: string; mark: GesaMarkColors }[] = [
+// Phase 211 — Roy saved a new reference ("New Design Frames.png") showing
+// each card's box as a real recessed wall niche rather than a flat inset
+// color: a visible frame trim around the opening, and the top/right
+// interior walls shaded darker to read as receding into the wall (subtle
+// 3D depth), not just a drop shadow around a flat rectangle. `boxHex` is
+// the exact hex of each card's own established color (matching `bg` — for
+// card1 this is the true `#aed0e9`, distinct from `door`'s slightly lighter
+// `#c7dced` tint from Phase 209's door artwork) so the niche's flat face
+// reads as precisely this card's color, and `doorFrame` (already a darker
+// shade per card from Phase 209) is reused as both the frame trim and the
+// interior-wall shading tone, rather than deriving a third color.
+const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; mark: GesaMarkColors }[] = [
   {
     bg: "bg-[#aed0e9]",
+    boxHex: "#aed0e9",
     frame: "border-clay",
     door: "#c7dced",
     doorFrame: "#8fa9c2",
@@ -270,6 +282,7 @@ const PATH_FRONT_STYLES: { bg: string; frame: string; door: string; doorFrame: s
   },
   {
     bg: "bg-accent",
+    boxHex: "#9ba283",
     frame: "border-clay",
     door: "#9ba283",
     doorFrame: "#767c62",
@@ -277,6 +290,7 @@ const PATH_FRONT_STYLES: { bg: string; frame: string; door: string; doorFrame: s
   },
   {
     bg: "bg-[#5f7a91]",
+    boxHex: "#5f7a91",
     frame: "border-clay",
     door: "#5f7a91",
     doorFrame: "#425364",
@@ -607,18 +621,28 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          column as before, now just frame then badge, one
                          gap-3 between them. */
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 [backface-visibility:hidden]">
-                        {/* Shadow-box "recessed alcove" — Phase 210. Replaces
-                            Phase 209's door with a flat, colored box (this
-                            card's own `bg` tone) that reads as recessed into
-                            the wall via an inset ring plus a soft outward
-                            drop shadow, holding the GesaMark swirl centered —
-                            reverting to the Phase 97-162 "frame + mark"
-                            concept, minus the wood-grain frame and cream mat
-                            those phases used (this reference shows neither:
-                            just the card's flat color, front-to-back). */}
+                        {/* Recessed wall niche — Phase 211. Roy sent a new
+                            reference ("New Design Frames.png") refining
+                            Phase 210's flat shadow-box into a real recessed
+                            niche: a visible frame trim around the opening,
+                            plus the top/right interior walls shaded darker
+                            so the box reads as receding into the wall
+                            (subtle 3D depth) rather than a flat rectangle
+                            with a drop shadow. `boxHex`/`doorFrame` (per
+                            card, from PATH_FRONT_STYLES) supply the flat
+                            face color and the trim/interior-shading tone;
+                            the diagonal gradient overlay is what actually
+                            produces the "shaded side wall" look, layered on
+                            top of the flat face color rather than replacing
+                            it, so the center of the niche stays a true,
+                            undarkened read of this card's own color. */}
                         <div
-                          className={`relative w-full flex-1 min-h-0 overflow-hidden rounded-md ${frontStyle.bg}`}
-                          style={{ boxShadow: "inset 0 0 0 3px rgba(0,0,0,0.14), inset 0 8px 16px rgba(0,0,0,0.22), 6px 10px 18px -8px rgba(20,20,25,0.4)" }}
+                          className="relative w-full flex-1 min-h-0 overflow-hidden rounded-md"
+                          style={{
+                            background: `linear-gradient(135deg, transparent 58%, ${frontStyle.doorFrame}66 100%), linear-gradient(215deg, transparent 70%, ${frontStyle.doorFrame}4d 100%), ${frontStyle.boxHex}`,
+                            border: `3px solid ${frontStyle.doorFrame}`,
+                            boxShadow: `inset 0 6px 12px rgba(0,0,0,0.18), 6px 10px 18px -8px rgba(20,20,25,0.4)`,
+                          }}
                         >
                           <div className="flex h-full w-full items-center justify-center p-4">
                             <GesaMark colors={frontStyle.mark} className="h-[62%] w-[62%]" />
