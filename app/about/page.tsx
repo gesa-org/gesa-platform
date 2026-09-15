@@ -2,29 +2,37 @@ import Link from "next/link";
 import { ShieldCheck, HeartHandshake, Users, Globe2, Mail } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Hero, { HERO_CONTENT_FALLBACK } from "@/components/Hero";
-import DonateBand from "@/components/home/DonateBand";
+import DonateBand, { DONATE_BAND_CONTENT_FALLBACK } from "@/components/home/DonateBand";
 import Reveal from "@/components/motion/Reveal";
 import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
+import { getActiveClinicLocations, getActiveTherapists } from "@/lib/queries";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
-// Phase 145 — Roy asked to remove the standalone About Us page and fold its
-// content into the Find Support page instead. This file's JSX was copied
-// over to app/find-your-therapist/page.tsx (which now owns rendering for
-// this content, still via the same "page_about_hero"/"page_about_sections"
-// site_content keys and "about" pageKey/editable-field registrations), and
-// `/about` itself is now a permanent redirect to `/find-your-therapist`
-// (next.config.mjs's `redirects()`) — a config-level redirect is resolved
-// before Next.js ever matches a request to this route, so this component
-// never actually runs in production anymore. Left in place, unreachable,
-// rather than deleted — per this project's standing rule against removing
-// already-written files/content without confirming first.
+// Phase 215 — Roy flagged that the "About" nav link pointing at "/" (Home)
+// meant About had no real, distinct identity of its own — clicking "About"
+// just showed the Home page again. This file is the fix: it now renders,
+// byte-for-byte, what had been living at app/find-your-therapist/page.tsx
+// since Phase 145 (which had itself moved this exact content here from an
+// earlier version of this same file — see git history/EXECUTION_PLAN.md
+// Phase 84/145 entries for that content's own design history). Nothing
+// below was rewritten, simplified, or reworded — this is a page-location
+// move, not a content change. `/find-your-therapist` is now an
+// intentionally empty page instead (app/find-your-therapist/page.tsx) so
+// old bookmarks/links to it keep resolving rather than 404ing, and
+// `lib/navigation.ts`'s "about" nav item now points here (`/about`) instead
+// of "/" — the GESA logo is the only remaining nav-bar way to reach Home.
+// Content Manager wiring is completely unchanged: this still reads the same
+// two site_content keys ("page_about_hero"/"page_about_sections") through
+// the same "about" pageKey/editable-field registrations
+// (lib/ui-builder/pageRegistry.ts), so nothing an admin previously
+// published needs republishing.
 export const metadata = {
   title: "About — GESA",
-  description: "Who we are: GESA's mission, how it works, and the founders behind it.",
+  description: "Who we are: GESA's mission, how it works, and the founders behind it — plus how to get matched with a verified volunteer therapist.",
 };
 
 // Fixed icon-per-position for the "How GESA works" cards — icon choice
@@ -46,14 +54,16 @@ function initials(name: string) {
 // section further down, is the opaque "cover." The generic donate band +
 // footer sit in a separate fixed layer underneath (see SiteFooterSlot),
 // uncovered once the visitor scrolls past this page's reserved bottom
-// margin.
+// margin. Phase 145 pointed SiteFooterSlot's REVEAL_ROUTES at
+// "/find-your-therapist" to match that move; Phase 215 points it back at
+// "/about" to match this one.
 //
 // Phase 35 — every section on this page (Hero, mission, how-it-works cards,
-// founders, the volunteer CTA, the legal blurb) is now Content Manager-
-// editable via two site_content keys: "page_about_hero" (via the shared
-// Hero component) and "page_about_sections" (everything below it). The
-// fallback objects above are exactly today's live copy — publishing the
-// seeded rows changes nothing visually until an admin actually edits them.
+// founders, the volunteer CTA, the legal blurb) is Content Manager-editable
+// via two site_content keys: "page_about_hero" (via the shared Hero
+// component) and "page_about_sections" (everything below it). The fallback
+// objects above are exactly today's live copy — publishing the seeded rows
+// changes nothing visually until an admin actually edits them.
 //
 // Phase 45 — section headings get the standard fade+rise Reveal, and the
 // two card grids (how-it-works, founders) get the same staggered card
@@ -66,22 +76,38 @@ export default async function AboutPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const [heroContentRaw, sectionsRaw] = await Promise.all([
+  const [heroContentRaw, sectionsRaw, donateContentRaw, clinicLocations, therapists] = await Promise.all([
     getPageContent("page_about_hero", HERO_CONTENT_FALLBACK),
     getPageContent("page_about_sections", ABOUT_SECTIONS_FALLBACK),
+    // Phase 153 — DonateBand's own site_content row, fetched here (instead
+    // of left to that component's internal self-fetch) so this page's
+    // editor-preview draft layer below can reach it too — the same
+    // published-content object DonateBand would fetch itself either way.
+    getPageContent("component_donate_band", DONATE_BAND_CONTENT_FALLBACK),
+    // Phase 146 — fetched here (same as the old standalone Find Support
+    // page used to) so it can be handed down to Hero -> HeroFindSupportCta
+    // -> the AI Matching modal's MatchWizard, which needs the active
+    // clinic list for its Format & Location step.
+    getActiveClinicLocations(),
+    // Phase 151 — same pattern, for the new Browse Therapist search modal,
+    // which needs the active therapist roster to filter against (the exact
+    // same list/query Our Professionals already uses — no separate/parallel
+    // therapist list).
+    getActiveTherapists(),
   ]);
 
   const { resolved, isEditorPreview } = await resolveEditorPreview(
     "about",
-    { hero: heroContentRaw, sections: sectionsRaw } as unknown as Record<string, unknown>,
+    { hero: heroContentRaw, sections: sectionsRaw, donate: donateContentRaw } as unknown as Record<string, unknown>,
     searchParams
   );
   const heroContent = (resolved as unknown as { hero: typeof heroContentRaw }).hero;
   const sections = (resolved as unknown as { sections: typeof sectionsRaw }).sections;
+  const donateContent = (resolved as unknown as { donate: typeof donateContentRaw }).donate;
 
   const page = (
     <div className="reveal-page__main">
-      <Hero content={heroContent} />
+      <Hero content={heroContent} clinicLocations={clinicLocations} therapists={therapists} />
 
       {/* Phase 104 — Roy sent a screenshot of the "OUR STORY" mission
           section (eyebrow/heading/body, on the sage-soft wash) and asked to
@@ -99,7 +125,10 @@ export default async function AboutPage({
           longer rendered here — per the standing rule against removing
           data/editor fields without confirming first. */}
 
-      <section className="section bg-muted">
+      {/* Phase 145 — `id="how-it-works"` added so the Hero's primary CTA
+          (an in-page anchor, since this Hero renders on the same page
+          rather than linking out to it) has somewhere to scroll to. */}
+      <section id="how-it-works" className="section bg-muted">
         <div className="wrap">
           <Reveal type="fade-up" className="block">
             <h2 className="text-center text-[30px] mb-2">
@@ -330,7 +359,7 @@ export default async function AboutPage({
           layer (see SiteFooterSlot.tsx) so it's a normal, always-visible
           section instead of part of the hidden-until-scroll effect — only
           the Footer stays inside that reveal layer now. */}
-      <DonateBand />
+      <DonateBand content={donateContent} />
     </div>
   );
 

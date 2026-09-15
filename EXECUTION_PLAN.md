@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 215 added)
+Last updated: 2026-09-15 (Phase 216 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9469,6 +9469,45 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 215: hide header Sign In, add footer account-access link, full client registration + under-18 guardian-consent flow"
+git push
+```
+
+---
+
+## Phase 216: About and Home made genuinely distinct — About now holds the former Find Support content, Find Support emptied
+
+**Request:** the "About" nav link pointed at "/" (Home), so About had no real identity of its own — clicking it just showed Home again. Fix: move all content/functionality currently at `/find-your-therapist` into `/about`, point the "About" nav link there, and leave `/find-your-therapist` live but intentionally empty (shared header/footer only). Pure content relocation — nothing rewritten, simplified, or invented; Home page untouched.
+
+**Context found before changing anything:** this is actually the third time this exact content has moved. Phase 84 built it as the real `/about` page (founder spotlight, How GESA Works, Team & Advisors). Phase 88 relabeled the header nav so the item linking to "/" read "About" (a deliberate swap at the time) while the item linking to `/about` read "Find Support." Phase 145 then moved this page's actual JSX to `app/find-your-therapist/page.tsx` and made `/about` a permanent redirect there, and Phase 146 added the AI Matching modal to its Hero. So by the time this phase started, the real content already lived at `/find-your-therapist` (not a stale/older version) — this phase is a pure relocation of that already-current content back to `/about`, plus fixing the nav link that pointed "About" at Home.
+
+**What shipped:**
+
+1. **`app/about/page.tsx`** — replaced entirely with what had been at `app/find-your-therapist/page.tsx` (Hero with the AI Matching/Browse Therapist CTAs and crisis-service link, How GESA Works cards, founder spotlight for Ilana O'Malley, movement/volunteer CTA band, Team & Advisors, donate band) — copied verbatim, only the file's own header comment and `metadata` (title/description) updated to describe the move. Content Manager wiring (`page_about_hero`/`page_about_sections`/`component_donate_band` site_content keys, the "about" pageKey/editable-field registrations) is completely unchanged, so nothing an admin previously published needs republishing.
+2. **`app/find-your-therapist/page.tsx`** — replaced with an intentionally empty page (`export default function FindYourTherapistPage() { return null; }`). The route stays live (no redirect, no removal) per Roy's explicit request that old bookmarks/links keep resolving. Header, footer, accessibility widget, and crisis button all still render around it — those are wired globally in `app/layout.tsx`, not per-page, so an empty page body loses none of the shared shell.
+3. **`next.config.mjs`** — removed the Phase 145 permanent redirect from `/about` to `/find-your-therapist` (no longer needed now that `/about` is a real page again).
+4. **`lib/navigation.ts`** — `PRIMARY_NAVIGATION`'s `about` item (`homeLabel`, reads "About" in the live nav) now resolves to `/about` instead of `/`. The `findSupport` item (`aboutLabel`, reads "Find Support") is untouched — same label, same `/find-your-therapist` href, per Roy's explicit "keep it unchanged" instruction — it now just leads to the empty page. The GESA logo (`Header.tsx`/`Footer.tsx`, both already hardcoded `href="/"` — confirmed by reading every `<Logo>` call site in the repo, no changes needed there) is now the only nav-bar way back to Home.
+5. **`components/SiteFooterSlot.tsx`** — `REVEAL_ROUTES` (which pages get the "footer hidden until you scroll past it" treatment) swapped `/find-your-therapist` for `/about`, since that's where the actual `reveal-page__main`-wrapped content lives now.
+6. **`lib/ui-builder/pageRegistry.ts`** — the `about` pageKey's registry entry: `route` moved back to `/about`, `title` moved back to "About." Two field-label strings (`global.header.homeLabel`/`aboutLabel`) and `HeaderEditor.tsx`'s admin-facing note updated to describe the new hrefs accurately — display/description strings only, no change to what's actually editable or how.
+
+**Deliberately NOT touched:** `app/page.tsx` (Home) and `components/home/Paths.tsx` — no edits at all, per Roy's explicit constraint. `app/api/support-pathway/route.ts` and `app/api/support-match/route.ts`'s `source_page: "find-your-therapist"` analytics tags — these are free-text values written to `support_requests`/`support_pathway_events` rows for internal reporting, not routes or user-facing links; left as-is since relabeling historical analytics semantics wasn't part of the request and risks more than it fixes. `AboutSectionsContent.volunteerSecondaryHref`/`Label` (an orphaned, never-rendered-since-Phase-85 field pointing at `/find-your-therapist`) — confirmed via the page JSX that nothing renders it, so it's not a live broken link, just more of this codebase's existing "don't delete unused data fields" pattern.
+
+**Files touched:** `app/about/page.tsx`, `app/find-your-therapist/page.tsx`, `next.config.mjs`, `lib/navigation.ts`, `components/SiteFooterSlot.tsx`, `lib/ui-builder/pageRegistry.ts`, `components/admin/content/HeaderEditor.tsx`.
+
+**Tests added/updated:** `tests/unit/AboutPage.test.tsx` (added the `getActiveClinicLocations`/`getActiveTherapists` mocks this page now needs, since it fetches them for Hero's matching flow — existing founders/mission assertions untouched and still pass against the same fallback content), `tests/unit/FindYourTherapistPage.test.tsx` (new — asserts the page renders nothing), `tests/unit/navigation.test.ts` (new — locks in `about` → `/about`, `findSupport` → `/find-your-therapist` unchanged), `tests/e2e/navigation.spec.ts` (rewrote the nav-routing test for the new URLs/empty-page expectation, replaced the "/about redirects" test with the reverse — "/about" now renders real content — and added a dedicated "logo always opens Home, even from /about" check).
+
+**Manual test scenarios:** click "About" in the header/footer nav from any page → lands on `/about` showing the former Find Support content (Hero, AI Matching CTA, How GESA Works, founder spotlight, Team & Advisors, donate band); click "Find Support" → lands on `/find-your-therapist`, shows only the shared header/footer with an empty content area; click the GESA logo from `/about`, `/find-your-therapist`, or anywhere else → always lands on `/`; confirm Home (`/`) itself looks exactly as it did before this phase.
+
+**Assumptions/follow-ups:**
+- The admin Content Manager's `PAGE_FIXED_TABS` list (`components/admin/content/ContentManagerApp.tsx`) still labels the tab that edits `page_home` as "About" and the tab that edits `page_about_hero`/`page_about_sections` as "Find Support" — a pre-existing (Phase 88/145) mismatch between admin tab names and what they actually edit, now arguably more out of sync given this phase's public-facing changes. Deliberately not touched: this phase's request was scoped to public routing/page structure, and the admin tab-to-content mapping looked like it could involve matching logic elsewhere in that file I didn't fully trace — safer to flag it to Roy as a follow-up than guess at a fix in a tool I can't click through to verify.
+- Same deploy caveat as every other phase this session: no working shell (bash still wedged), so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 216: About and Home made genuinely distinct — About now holds the former Find Support content, Find Support emptied"
 git push
 ```
 

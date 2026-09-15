@@ -33,12 +33,13 @@ import type { Tables } from "@/lib/database.types";
 // pages, rather than sitting fixed underneath the page waiting to be
 // scrolled into view.
 //
-// Phase 145 — the former About page's content (and its reveal-page__main
-// wrapper) moved to app/find-your-therapist/page.tsx, and `/about` is now
-// just a redirect to that route (next.config.mjs) — so this set tracks that
-// move rather than "/about" itself, which a visitor's browser never
-// actually renders anymore.
-const REVEAL_ROUTES = new Set(["/", "/find-your-therapist", "/therapists", "/support-groups"]);
+// Phase 145 moved this content (and its reveal-page__main wrapper) to
+// app/find-your-therapist/page.tsx, with `/about` redirecting there.
+// Phase 215 moves it back to app/about/page.tsx (a real page again, not a
+// redirect) and empties out `/find-your-therapist` instead — this set
+// tracks that move: the reveal treatment belongs to wherever the actual
+// reveal-page__main content lives, which is `/about` again now.
+const REVEAL_ROUTES = new Set(["/", "/about", "/therapists", "/support-groups"]);
 
 // footerContent is fetched once in app/layout.tsx (a Server Component) and
 // passed down here — this component stays "use client" for usePathname(),

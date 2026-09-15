@@ -16,6 +16,17 @@ jest.mock("@/lib/content", () => {
   };
 });
 
+// Phase 215 — this page now renders what used to live at
+// app/find-your-therapist/page.tsx (Hero's AI Matching CTA needs the active
+// clinic/therapist lists it used to fetch there), so this file's existing
+// mocks need the same two queries stubbed out — real Supabase calls aren't
+// available in this test run. Empty arrays are enough: none of the
+// founders/mission assertions below touch Hero's matching flow.
+jest.mock("@/lib/queries", () => ({
+  getActiveClinicLocations: jest.fn(async () => []),
+  getActiveTherapists: jest.fn(async () => []),
+}));
+
 // Phase 84 — AboutPage renders <DonateBand /> (from Phase 75) as a plain
 // JSX child. `await AboutPage({})` awaits AboutPage's own async body, but
 // DonateBand is itself a separate async Server Component (Phase 80 round

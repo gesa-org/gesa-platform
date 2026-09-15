@@ -53,19 +53,31 @@ export type PrimaryNavItem = {
 // `/find-your-therapist`. Phase 144 added a separate `aboutPage` item
 // (`/about`) alongside it so that route stayed reachable from primary nav.
 //
-// Phase 145 — Roy reversed course entirely: the About page's content is now
-// what renders AT `/find-your-therapist` (see app/find-your-therapist/
-// page.tsx), and `/about` itself is a permanent redirect to that same route
-// (next.config.mjs). With both URLs now pointing at one destination, having
-// two separate nav entries ("Find Support" and "About Us") would show a
-// visitor the same page twice under different labels — exactly the
-// confusion Roy asked to eliminate. The `aboutPage` item is removed
-// entirely rather than left pointing at a redirect; `contentField:
-// "aboutPageLabel"` on HeaderContent is left defined but now unused/
-// orphaned data, same "don't delete data just because a section stopped
-// reading it" precedent as Footer's `exploreAboutLabel` etc.
+// Phase 145 — Roy reversed course entirely: the About page's content moved
+// to render AT `/find-your-therapist`, and `/about` became a permanent
+// redirect to that same route. With both URLs pointing at one destination,
+// having two separate nav entries ("Find Support" and "About Us") would
+// have shown a visitor the same page twice under different labels, so the
+// `aboutPage` item was removed entirely — `contentField: "aboutPageLabel"`
+// on HeaderContent stayed defined but unused/orphaned data.
+//
+// Phase 215 — Roy flagged the result of that chain: this `about` item's
+// `href: "/"` meant clicking "About" in the nav just opened Home again —
+// no distinct About page existed at all, which read as confusing/broken
+// rather than intentional. Fixed at the source: this item now links to a
+// real `/about` page containing everything that used to render at
+// `/find-your-therapist` (see app/about/page.tsx, moved verbatim from
+// app/find-your-therapist/page.tsx), and that route is now an
+// intentionally empty page instead (app/find-your-therapist/page.tsx) —
+// kept live rather than redirected/removed, per Roy's explicit request,
+// so existing bookmarks/links to it still resolve. The `findSupport` item
+// below is untouched — same label, same `/find-your-therapist` href, per
+// Roy's explicit "keep the Find Support nav item unchanged" instruction —
+// it just now leads to an intentionally empty page rather than this
+// content. The GESA logo (Header.tsx/Footer.tsx, always `href="/"`) is now
+// the only nav-bar way back to Home, also per Roy's explicit request.
 export const PRIMARY_NAVIGATION: PrimaryNavItem[] = [
-  { key: "about", href: "/", contentField: "homeLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
+  { key: "about", href: "/about", contentField: "homeLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "findSupport", href: "/find-your-therapist", contentField: "aboutLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "professionals", href: "/therapists", contentField: "therapistsLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },
   { key: "community", href: "/support-groups", contentField: "supportGroupsLabel", showInHeader: true, showInFooterExplore: true, showOnMobile: true },

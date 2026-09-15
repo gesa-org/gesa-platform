@@ -98,21 +98,21 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     ],
   },
   { pageKey: "home", route: "/", title: "Home", group: "core", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_home" }] },
-  // Phase 145 — this entry's `route` moved from "/about" to
-  // "/find-your-therapist" (Roy asked to fold the About page's content into
-  // the Find Support page and remove About Us as a separate destination).
-  // `pageKey`/`title`/`contentSources` are unchanged on purpose: every
-  // "about.*" contentId already registered below (ABOUT_EDITABLE_FIELDS)
-  // still matches this page's rendered content 1:1, and the two
-  // site_content keys it reads are the same rows admins have always edited
-  // — only the URL it's served at changed. The old, separate
-  // "find-your-therapist" pageKey entry (a simple eyebrow/title/description
-  // banner) is removed entirely below, since that route no longer renders
-  // that content.
+  // Phase 145 moved this entry's `route` from "/about" to
+  // "/find-your-therapist". Phase 215 moves it back: Roy asked for a real,
+  // distinct About page again (see app/about/page.tsx), so this content is
+  // served at "/about" once more. `pageKey`/`contentSources` are unchanged —
+  // every "about.*" contentId already registered below
+  // (ABOUT_EDITABLE_FIELDS) still matches this page's rendered content 1:1,
+  // and the two site_content keys it reads are the same rows admins have
+  // always edited, so nothing needs republishing. `title` moves back to
+  // "About" to match — no "find-your-therapist" pageKey entry exists
+  // (that route is now intentionally empty, with nothing for an admin to
+  // edit there).
   {
     pageKey: "about",
-    route: "/find-your-therapist",
-    title: "Find Support",
+    route: "/about",
+    title: "About",
     group: "core",
     supportsVisualEditor: true,
     contentSources: [
@@ -645,8 +645,8 @@ function legalPageFields(pageKey: string): EditableFieldDef[] {
 // effect, which is worse than not offering it.
 const GLOBAL_EDITABLE_FIELDS: EditableFieldDef[] = [
   // Header
-  { contentId: "global.header.homeLabel", path: "header.homeLabel", label: "Nav: \"About\" (links to /)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
-  { contentId: "global.header.aboutLabel", path: "header.aboutLabel", label: "Nav: \"Find Support\" (links to /find-your-therapist)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.homeLabel", path: "header.homeLabel", label: "Nav: \"About\" (links to /about)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
+  { contentId: "global.header.aboutLabel", path: "header.aboutLabel", label: "Nav: \"Find Support\" (links to /find-your-therapist, now an empty page)", type: "plainText", group: "Header navigation", maxLength: 40, contentScope: "global" },
   // Phase 145 — the "About Us" nav item (`aboutPage` in lib/navigation.ts)
   // this field used to label was removed entirely, so the field itself is
   // gone from this registry too — leaving it here would let an admin "edit"

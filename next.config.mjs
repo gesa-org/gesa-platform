@@ -36,23 +36,16 @@ const nextConfig = {
       },
     ],
   },
-  // Phase 145 — Roy asked to fold the old standalone About Us page into the
-  // Find Support page (app/find-your-therapist/page.tsx now renders what
-  // used to be app/about/page.tsx's content) and to remove About Us as a
-  // separate destination site-wide. `/about` stays a real, working URL
-  // rather than a dead link or 404 — it just permanently forwards visitors
-  // (and search engines) to the new canonical location. `permanent: true`
-  // sends a 308, so crawlers/browsers update bookmarks/index entries to the
-  // new URL instead of re-requesting `/about` forever.
-  async redirects() {
-    return [
-      {
-        source: "/about",
-        destination: "/find-your-therapist",
-        permanent: true,
-      },
-    ];
-  },
+  // Phase 145 previously redirected `/about` to `/find-your-therapist`
+  // (folding the old About Us page into Find Support). Phase 215 reverses
+  // that: `/about` is a real page again — it now renders what used to live
+  // at `/find-your-therapist` (see app/about/page.tsx), and
+  // `/find-your-therapist` itself is an intentionally empty page instead of
+  // a redirect, per Roy's explicit request that the route stay active
+  // rather than forwarding anywhere. No redirect is needed for `/about`
+  // anymore since it's a real destination again; none is added for
+  // `/find-your-therapist` either, since that route staying live (just
+  // empty) is the whole point.
 };
 
 export default nextConfig;

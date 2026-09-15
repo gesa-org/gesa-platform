@@ -9,7 +9,7 @@ export default function HeaderEditor({ initial }: { initial: HeaderContent }) {
       contentKey="site_header"
       initial={initial}
       note={
-        'This controls the sticky header shown on every page. Nav link destinations stay fixed — only the visible labels and the Donate button are editable. "Find Support" links to /find-your-therapist, which now shows the former About page content — there is no separate "About Us" nav item anymore (Phase 145).'
+        'This controls the sticky header shown on every page. Nav link destinations stay fixed — only the visible labels and the Donate button are editable. "About" links to /about; "Find Support" links to /find-your-therapist, which is now an intentionally empty page (Phase 215) — there is no separate "About Us" nav item.'
       }
       groups={[
         {
