@@ -381,6 +381,25 @@ export type DonatePageContent = {
   subtitle: string;
   boldLine: string;
   heroCtaLabel: string;
+  // Phase 223 — Roy sent "BG Donate Page.jpg" (a full mockup screenshot) as
+  // the exact reference for this hero's new look: a warm ivory-to-tan
+  // background, a faint dotted-globe graphic bleeding off the right edge,
+  // and 3 floating photos (a video-call screenshot captioned "Therapist
+  // (Kenya)", a volunteer reading with a child outdoors, and a clinical
+  // team reviewing a tablet) layered around the centered headline/CTA
+  // text. These 3 photo slots are real UI Builder fields (same "image"/
+  // "altText" pattern Phase 202 used for the "Why your support matters"
+  // photos below), draft/publish-gated the same way, so Roy can upload the
+  // 3 actual photos from his mockup via Admin > UI Builder > Page Content
+  // > Donate himself. See DonatePage.tsx's own Phase 223 comment for why
+  // the literal mockup file itself isn't used as a baked-in background.
+  heroPhoto1Image: string;
+  heroPhoto1ImageAlt: string;
+  heroPhoto1Caption: string;
+  heroPhoto2Image: string;
+  heroPhoto2ImageAlt: string;
+  heroPhoto3Image: string;
+  heroPhoto3ImageAlt: string;
   givingHeading: string;
   onceLabel: string;
   monthlyLabel: string;

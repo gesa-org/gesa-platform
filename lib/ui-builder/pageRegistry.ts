@@ -507,6 +507,17 @@ const DONATE_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "donate.hero.description", path: "subtitle", label: "Hero description", type: "plainText", group: "Hero", maxLength: 400, contentScope: "page" },
   { contentId: "donate.hero.boldLine", path: "boldLine", label: "Hero bold line", type: "plainText", group: "Hero", maxLength: 140, contentScope: "page" },
   { contentId: "donate.hero.ctaLabel", path: "heroCtaLabel", label: "Hero CTA label", type: "ctaLabel", group: "Hero", maxLength: 40, contentScope: "page" },
+  // Phase 223 — the 3 floating hero photos from Roy's "BG Donate Page.jpg"
+  // reference mockup (video call, volunteer + child, clinical team), same
+  // image/altText field pattern as the "Why your support matters" photos
+  // further down this file.
+  { contentId: "donate.hero.photo1Image", path: "heroPhoto1Image", label: "Hero photo 1 — video call", type: "image", group: "Hero photos", contentScope: "page", pairedAltContentId: "donate.hero.photo1ImageAlt" },
+  { contentId: "donate.hero.photo1ImageAlt", path: "heroPhoto1ImageAlt", label: "Hero photo 1 alt text", type: "altText", group: "Hero photos", maxLength: 200, contentScope: "page" },
+  { contentId: "donate.hero.photo1Caption", path: "heroPhoto1Caption", label: "Hero photo 1 caption", type: "plainText", group: "Hero photos", maxLength: 80, contentScope: "page" },
+  { contentId: "donate.hero.photo2Image", path: "heroPhoto2Image", label: "Hero photo 2 — volunteer with child", type: "image", group: "Hero photos", contentScope: "page", pairedAltContentId: "donate.hero.photo2ImageAlt" },
+  { contentId: "donate.hero.photo2ImageAlt", path: "heroPhoto2ImageAlt", label: "Hero photo 2 alt text", type: "altText", group: "Hero photos", maxLength: 200, contentScope: "page" },
+  { contentId: "donate.hero.photo3Image", path: "heroPhoto3Image", label: "Hero photo 3 — clinical team", type: "image", group: "Hero photos", contentScope: "page", pairedAltContentId: "donate.hero.photo3ImageAlt" },
+  { contentId: "donate.hero.photo3ImageAlt", path: "heroPhoto3ImageAlt", label: "Hero photo 3 alt text", type: "altText", group: "Hero photos", maxLength: 200, contentScope: "page" },
   { contentId: "donate.impact.heading", path: "impactHeading", label: "Impact section heading", type: "heading", group: "Impact section", maxLength: 100, contentScope: "page" },
   { contentId: "donate.impact.card1Title", path: "impact1Title", label: "Impact card 1 title", type: "plainText", group: "Impact section", maxLength: 60, contentScope: "page" },
   { contentId: "donate.impact.card1Description", path: "impact1Description", label: "Impact card 1 description", type: "plainText", group: "Impact section", maxLength: 200, contentScope: "page" },

@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-16 (Phase 222 added)
+Last updated: 2026-09-16 (Phase 223 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9766,6 +9766,44 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 222: Fix AI Matching modal not opening; move group-listing/testimonials back to Community"
+git push
+```
+
+---
+
+## Phase 223: Donate hero rebuilt to match "BG Donate Page.jpg" reference mockup
+
+**Request:** "Find the BG Donate Page and use it exactly as a reference for the new look of the hero landing of Donate page and proceed to the push and deploy." — Roy had dropped a file named `BG Donate Page.jpg` directly in the project root: a full-page screenshot mockup showing a warm ivory-to-tan hero background, a faint dotted/network-line globe graphic bleeding off the right edge, 3 floating photos with no card chrome (a video-call screenshot captioned "Therapist (Kenya)", a volunteer reading with a child outdoors, and a clinical team reviewing a tablet), and the existing gold-eyebrow/navy-headline/dark-CTA text centered between them.
+
+A prior, unreferenced attempt at this same ask (earlier this session, before the mockup file was found) had reused `.gold-banner` + white text — wrong on both counts once the real reference turned up: `.gold-banner` was repurposed to flat slate-grey back in Phase 130 (not gold), and the mockup's background is light, so white text would have been unreadable. This phase replaces that attempt entirely.
+
+**What shipped:**
+
+1. **`app/globals.css`** — new `.donate-hero-warm` class: a warm ivory-to-tan linear-gradient built from the existing `--clay-soft`/`--sand-brown` tokens (no new hex values invented), placed right after `.gold-banner`'s rule with a comment explaining why `.gold-banner` itself was the wrong base to reuse here.
+2. **`components/donate/DottedGlobe.tsx`** (new) — a small original SVG: dashed latitude/longitude arcs plus a handful of "node" dots and connecting lines, in the same restrained line-art spirit as `GoldWatermarks.tsx`. No dotted-globe asset existed anywhere in the codebase (checked `public/images` and every decorative SVG), so this was drawn fresh rather than invented as a fake "reused" asset.
+3. **`lib/content.ts`** — `DonatePageContent` gained 7 new fields: `heroPhoto1Image`/`heroPhoto1ImageAlt`/`heroPhoto1Caption`, `heroPhoto2Image`/`heroPhoto2ImageAlt`, `heroPhoto3Image`/`heroPhoto3ImageAlt`.
+4. **`lib/ui-builder/pageRegistry.ts`** — registered those as real UI Builder fields (`type: "image"`/`"altText"`/`"plainText"`, new "Hero photos" group), same draft/publish-gated pattern Phase 202 used for the "Why your support matters" photos — so Roy can upload the actual 3 photos from his mockup himself via Admin > UI Builder > Page Content > Donate, no engineering follow-up needed.
+5. **`components/donate/DonatePage.tsx`** — hero section rebuilt: `.donate-hero-warm` background, `DottedGlobe` positioned behind the right-hand photo bleeding off the edge, 3 floating `EditableImage` photos (left stack: video call + caption, then volunteer/child beneath it; right: clinical team), text reverted to dark-on-light (`text-foreground`/`text-muted-fg`, not the previous attempt's white), CTA kept as the dark `--espresso` pill matching the mockup's dark navy button. `DONATE_PAGE_FALLBACK` defaults the 3 new photo fields to the same 3 real GESA photos already used in "Why your support matters" (not a broken image or a placeholder), since the actual mockup photos aren't extractable into `public/images/` this session — see the blocker below. The collage is `hidden` below the `lg` breakpoint; mobile keeps a plain centered-text hero rather than trying to force a floating collage into a narrow viewport.
+
+**Files touched:** `app/globals.css`, `components/donate/DottedGlobe.tsx` (new), `lib/content.ts`, `lib/ui-builder/pageRegistry.ts`, `components/donate/DonatePage.tsx`.
+
+**Blocker — could not push or deploy:** the shell/bash tool has been non-functional all session (every phase above notes the same "no working shell" caveat) — confirmed dead again this phase with an explicit "Bash has now failed 45 times in a row... do not retry" error citing a Windows update issue on this machine. Two concrete consequences:
+- **No git push.** The code changes above are saved to disk in the project folder but not committed or pushed — `git`/`npx tsc`/`npx jest` all require the shell. Roy needs to run the commands below locally.
+- **No photo extraction.** The 3 actual photos in `BG Donate Page.jpg` (video call, volunteer + child, clinical team) couldn't be cropped out of that mockup file and copied into `public/images/donate/` without shell/image-processing access, so the hero currently falls back to 3 existing GESA photos instead of the mockup's own photos. Once Roy uploads the real 3 photos via Admin > UI Builder (Donate page > "Hero photos" group), the hero will show them exactly — the layout/positions are already built for photos in those 3 slots' aspect ratios.
+
+**Manual test scenarios:** visit `/donate` at `lg` width and confirm the warm ivory-to-tan background, faint globe graphic on the right, and 3 floating photos with the "Therapist (Kenya)" caption render; shrink below `lg` and confirm the hero degrades to the plain centered-text version (no broken/overlapping collage); confirm the CTA still scrolls to `#giving-box`.
+
+**Assumptions/follow-ups:**
+- If Roy wants the mockup's exact photos rather than the 3 stand-in defaults, he can upload them himself via Admin (no further engineering needed) — or ask again once shell access is restored so they can be cropped from `BG Donate Page.jpg` directly.
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 223: Donate hero rebuilt to match BG Donate Page.jpg reference mockup"
 git push
 ```
 

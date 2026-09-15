@@ -8,6 +8,7 @@ import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
 import EditableImage from "@/components/ui-builder/public/EditableImage";
+import DottedGlobe from "@/components/donate/DottedGlobe";
 
 // Phase 98 — Roy sent a reference image for a full donate page (hero,
 // giving box, "what your gift helps make possible" icon row, a dark
@@ -51,6 +52,23 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
     "Across the world, professionals are choosing to gift their time, experience and expertise. Your contribution helps GESA bring that support to eligible people and communities across languages, cultures and borders.",
   boldLine: "Their time is the gift. Your support helps it reach further.",
   heroCtaLabel: "Make support possible",
+  // Phase 223 — the 3 floating hero photos from Roy's "BG Donate Page.jpg"
+  // reference mockup. No local asset exists for the actual video-call/
+  // volunteer/clinical-team photos in that mockup (see EXECUTION_PLAN.md
+  // Phase 223 — bash was down this session so they couldn't be cropped out
+  // of the mockup file and copied into public/), so these default to the
+  // same 3 real GESA photographs already in use in the "Why your support
+  // matters" section below, purely so the hero never shows a broken image
+  // before Roy uploads the actual mockup photos via Admin > UI Builder >
+  // Page Content > Donate > "Hero photos" (same upload flow as every other
+  // image field on this page).
+  heroPhoto1Image: "/images/donate/community-support-circle.jpg",
+  heroPhoto1ImageAlt: "A therapist video-calling with clients as part of a remote support session",
+  heroPhoto1Caption: "Therapist (Kenya)",
+  heroPhoto2Image: "/images/donate/one-on-one-conversation.jpg",
+  heroPhoto2ImageAlt: "A volunteer reading with a child outdoors as part of a community support programme",
+  heroPhoto3Image: "/images/donate/avp-toolkit-training.jpg",
+  heroPhoto3ImageAlt: "A clinical team reviewing a case together on a tablet",
   givingHeading: "Choose how you would like to contribute",
   onceLabel: "Give once",
   monthlyLabel: "Give monthly",
@@ -195,33 +213,139 @@ export default async function DonatePage({
     { quote: content.testimonial2Quote, author: content.testimonial2Author, quoteId: "donate.testimonials.quote2", authorId: "donate.testimonials.author2" },
   ];
 
+  // Phase 223 — the 3 floating hero photos from Roy's "BG Donate Page.jpg"
+  // reference mockup. Same shape/pattern as whySupportPhotos above.
+  const heroPhotos = {
+    photo1: {
+      src: content.heroPhoto1Image,
+      alt: content.heroPhoto1ImageAlt,
+      fallback: PHOTO_ONERROR_FALLBACK[0],
+      imageContentId: "donate.hero.photo1Image",
+      altContentId: "donate.hero.photo1ImageAlt",
+    },
+    photo2: {
+      src: content.heroPhoto2Image,
+      alt: content.heroPhoto2ImageAlt,
+      fallback: PHOTO_ONERROR_FALLBACK[1],
+      imageContentId: "donate.hero.photo2Image",
+      altContentId: "donate.hero.photo2ImageAlt",
+    },
+    photo3: {
+      src: content.heroPhoto3Image,
+      alt: content.heroPhoto3ImageAlt,
+      fallback: PHOTO_ONERROR_FALLBACK[2],
+      imageContentId: "donate.hero.photo3Image",
+      altContentId: "donate.hero.photo3ImageAlt",
+    },
+  };
+
   const page = (
     <div>
-      {/* Hero — plain background, centered text, matching the reference's
-          white page with a black pill CTA (reused from --primary, the same
-          token the Header's own CTA and Button's "primary" variant use). */}
-      <section className="section">
-        <div className="wrap max-w-[680px] text-center">
-          <Reveal type="fade-up">
-            <span className="eyebrow">
-              <EditableText contentId="donate.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />
+      {/* Hero — Phase 223: rebuilt to match Roy's "BG Donate Page.jpg"
+          reference mockup (a full screenshot he dropped in the project
+          root) as closely as this codebase's existing patterns allow: a
+          warm ivory-to-tan background (`.donate-hero-warm`, see
+          globals.css — built from the existing --clay-soft/--sand-brown
+          tokens, since `.gold-banner` was repurposed to flat grey back in
+          Phase 130 and is the wrong base here), a faint dotted-globe
+          graphic bleeding off the right edge (DottedGlobe.tsx — no such
+          asset existed in the codebase, drawn fresh as simple dashed
+          lat/long arcs + node dots in the same restrained line-art spirit
+          as GoldWatermarks), and 3 floating photos with no card chrome:
+          a video-call screenshot (captioned, top-left), a volunteer
+          reading with a child (bottom-left), and a clinical team around a
+          tablet (bottom-right, the mockup's dominant photo). Text reverts
+          to dark-on-light (foreground/muted-fg) since the reference's
+          background is light, not the white-on-dark text the previous,
+          unreferenced version of this hero used. The CTA keeps the dark
+          --espresso pill, matching the mockup's dark navy button. Photos
+          are wired as real UI Builder image fields (donate.hero.photo1-3,
+          pageRegistry.ts "Hero photos" group) so Roy can upload the exact
+          3 photos from his mockup via Admin himself — see this file's
+          DONATE_PAGE_FALLBACK comment for why they default to the 3
+          existing donate photos in the meantime. */}
+      <section className="donate-hero-warm relative isolate overflow-hidden py-16 lg:py-24">
+        <div className="wrap relative z-10 lg:flex lg:items-center lg:gap-6">
+          {/* Left photo stack — video call (captioned) + volunteer/child,
+              hidden below lg since a floating collage doesn't degrade
+              gracefully to a narrow viewport; mobile keeps the plain
+              centered text hero. */}
+          <div className="relative hidden h-[420px] w-[26%] shrink-0 lg:block">
+            <span className="absolute -top-6 left-1 text-[12px] font-medium text-muted-fg">
+              <EditableText
+                contentId="donate.hero.photo1Caption"
+                label="Hero photo 1 caption"
+                value={content.heroPhoto1Caption}
+                as="span"
+              />
             </span>
-            <h1 className="mt-3 font-serif text-[38px] font-semibold leading-tight text-foreground sm:text-[44px]">
-              <EditableText contentId="donate.hero.heading" label="Hero heading" value={content.title} as="span" />
-            </h1>
-            <div className="mx-auto mt-5 max-w-[520px] text-[16px] leading-relaxed text-muted-fg">
-              <EditableText contentId="donate.hero.description" label="Hero description" value={content.subtitle} as="span" />
+            <div className="absolute left-0 top-6 aspect-[4/3] w-full overflow-hidden rounded-[var(--radius)] shadow-soft">
+              <EditableImage
+                contentId={heroPhotos.photo1.imageContentId}
+                altContentId={heroPhotos.photo1.altContentId}
+                label="Hero photo 1 (video call)"
+                src={heroPhotos.photo1.src}
+                alt={heroPhotos.photo1.alt}
+                fallbackSrc={heroPhotos.photo1.fallback.src}
+                fallbackAlt={heroPhotos.photo1.fallback.alt}
+                className="h-full w-full object-cover"
+              />
             </div>
-            <p className="mt-3 font-semibold text-foreground">
-              <EditableText contentId="donate.hero.boldLine" label="Hero bold line" value={content.boldLine} as="span" />
-            </p>
-            <a
-              href="#giving-box"
-              className="mt-7 inline-flex items-center justify-center rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-primary-fg shadow-soft transition-all hover:-translate-y-px hover:bg-primary-600"
-            >
-              <EditableText contentId="donate.hero.ctaLabel" label="Hero CTA label" value={content.heroCtaLabel} as="span" />
-            </a>
-          </Reveal>
+            <div className="absolute bottom-0 left-6 aspect-[4/3] w-[72%] overflow-hidden rounded-[var(--radius)] shadow-soft">
+              <EditableImage
+                contentId={heroPhotos.photo2.imageContentId}
+                altContentId={heroPhotos.photo2.altContentId}
+                label="Hero photo 2 (volunteer with child)"
+                src={heroPhotos.photo2.src}
+                alt={heroPhotos.photo2.alt}
+                fallbackSrc={heroPhotos.photo2.fallback.src}
+                fallbackAlt={heroPhotos.photo2.fallback.alt}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Center text column */}
+          <div className="relative z-10 mx-auto max-w-[520px] text-center lg:mx-0 lg:flex-1">
+            <Reveal type="fade-up">
+              <span className="eyebrow">
+                <EditableText contentId="donate.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />
+              </span>
+              <h1 className="mt-3 font-serif text-[38px] font-semibold leading-tight text-foreground sm:text-[44px]">
+                <EditableText contentId="donate.hero.heading" label="Hero heading" value={content.title} as="span" />
+              </h1>
+              <div className="mx-auto mt-5 max-w-[520px] text-[16px] leading-relaxed text-muted-fg">
+                <EditableText contentId="donate.hero.description" label="Hero description" value={content.subtitle} as="span" />
+              </div>
+              <p className="mt-3 font-semibold text-foreground">
+                <EditableText contentId="donate.hero.boldLine" label="Hero bold line" value={content.boldLine} as="span" />
+              </p>
+              <a
+                href="#giving-box"
+                className="mt-7 inline-flex items-center justify-center rounded-full bg-espresso px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white shadow-soft transition-all hover:-translate-y-px hover:bg-espresso/90"
+              >
+                <EditableText contentId="donate.hero.ctaLabel" label="Hero CTA label" value={content.heroCtaLabel} as="span" />
+              </a>
+            </Reveal>
+          </div>
+
+          {/* Right side — dotted globe behind the clinical-team photo,
+              bleeding off the section's right edge. */}
+          <div className="relative hidden h-[420px] w-[30%] shrink-0 lg:block">
+            <DottedGlobe className="pointer-events-none absolute -right-[18%] top-1/2 h-[130%] w-[130%] -translate-y-1/2 text-[color:var(--sand-brown)] opacity-40" />
+            <div className="absolute bottom-0 right-0 aspect-[16/11] w-[88%] overflow-hidden rounded-[var(--radius)] shadow-soft">
+              <EditableImage
+                contentId={heroPhotos.photo3.imageContentId}
+                altContentId={heroPhotos.photo3.altContentId}
+                label="Hero photo 3 (clinical team)"
+                src={heroPhotos.photo3.src}
+                alt={heroPhotos.photo3.alt}
+                fallbackSrc={heroPhotos.photo3.fallback.src}
+                fallbackAlt={heroPhotos.photo3.fallback.alt}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

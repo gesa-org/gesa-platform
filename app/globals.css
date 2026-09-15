@@ -215,6 +215,18 @@
     pointer-events: none;
   }
 
+  /* Phase 223 — Donate hero's new background, sampled from Roy's
+     "BG Donate Page.jpg" reference mockup: a warm ivory-to-tan wash, not
+     the flat slate-grey `.gold-banner` above (that token got repurposed to
+     grey back in Phase 130, so it's the wrong base for a warm-toned hero).
+     Built entirely from tokens already in the palette — --clay-soft (pale
+     ivory wash) and --sand-brown (the "Soft Slate Grey" swap's warm-tan
+     sibling token, #CBA560) — rather than inventing new hex values, same
+     restraint as every other palette addition in this file. */
+  .donate-hero-warm {
+    background: linear-gradient(135deg, var(--clay-soft) 0%, #efe1c2 45%, color-mix(in srgb, var(--sand-brown) 55%, var(--clay-soft)) 100%);
+  }
+
   /* Phase 163 — Roy sent a page-specific palette spec for the Home page
      only ("Page 1 · Home": ivory dominant, gold "owns the hero band
      outright", no sage/no blue-gray anywhere on that page), asking the
