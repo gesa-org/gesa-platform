@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 211 added)
+Last updated: 2026-09-15 (Phase 212 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9328,6 +9328,32 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 211: Home pathway card frames refined into a real recessed niche"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 212: Pathway card frames rebuilt as a flat two-tone frame (not a gradient)
+
+Roy pushed back hard on Phase 211: the deployed site (once he showed a screenshot) was still running pre-Phase-209 code with none of this frame work live at all, and separately, Phase 211's diagonal-gradient approach was flagged as reading like a generic CSS effect rather than an actual copy of "New Design Frames.png." Re-examined that reference image directly rather than working from memory: it isn't a soft gradient — it's a crisp, flat, two-tone frame (a solid light trim band in the card's own color, surrounding a solid, distinctly darker recess holding the GesaMark swirl), closer to Phase 124's old "mat" pattern than to any lighting effect.
+
+**What shipped:**
+
+1. **`components/home/Paths.tsx`** — replaced Phase 211's `linear-gradient` diagonal-shading approach with two flat, solid-color divs: an outer div filled `frontStyle.boxHex` with a uniform `11%` padding (the visible trim band, sized the same way Phase 124's wood-frame/mat treatment used percentage-based insets), and an inner div filled solid `frontStyle.doorFrame` holding the centered GesaMark swirl. No gradients, no inset shadows — just the two flat colors the reference actually shows, plus one solid outward drop shadow for grounding.
+2. **No other change** — badge position/text, flip interaction, back face, card sizing all untouched, same as Phases 210–211.
+
+**Files touched:** `components/home/Paths.tsx`.
+
+**Outstanding, disclosed to Roy directly:** the screenshot he shared showed flat, borderless squares with zero depth/frame styling of any kind — not even Phase 210's version, let alone 211's. That means none of Phases 209–212's code has actually reached production yet; this is a deploy-pipeline gap, not something further code changes here can fix. Confirm the `git push` after each phase actually completes and Vercel reports a successful build before judging any of this phase's visual work against what's live.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 212: Pathway card frames rebuilt as a flat two-tone frame matching New Design Frames.png"
 git push
 ```
 

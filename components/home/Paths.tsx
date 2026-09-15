@@ -621,30 +621,36 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          column as before, now just frame then badge, one
                          gap-3 between them. */
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 [backface-visibility:hidden]">
-                        {/* Recessed wall niche — Phase 211. Roy sent a new
-                            reference ("New Design Frames.png") refining
-                            Phase 210's flat shadow-box into a real recessed
-                            niche: a visible frame trim around the opening,
-                            plus the top/right interior walls shaded darker
-                            so the box reads as receding into the wall
-                            (subtle 3D depth) rather than a flat rectangle
-                            with a drop shadow. `boxHex`/`doorFrame` (per
-                            card, from PATH_FRONT_STYLES) supply the flat
-                            face color and the trim/interior-shading tone;
-                            the diagonal gradient overlay is what actually
-                            produces the "shaded side wall" look, layered on
-                            top of the flat face color rather than replacing
-                            it, so the center of the niche stays a true,
-                            undarkened read of this card's own color. */}
+                        {/* Recessed wall niche — Phase 212. Roy flagged
+                            Phase 211's diagonal-gradient version as reading
+                            like a generic CSS effect rather than a real copy
+                            of "New Design Frames.png." Re-examined that
+                            reference directly: it is not a subtle gradient
+                            at all — it's a crisp, flat TWO-TONE frame — a
+                            solid, evenly-thick trim band in the card's own
+                            light color (`boxHex`), surrounding a solid,
+                            distinctly darker recess (`doorFrame`) that the
+                            GesaMark swirl sits directly on. Rebuilt as
+                            exactly that: an outer div in `boxHex` with a
+                            uniform percentage padding forming the trim band
+                            (mirroring the `inset-[6%]`-style mat pattern this
+                            file already used for Phase 124's frame/mat), and
+                            an inner div filled solid `doorFrame` holding the
+                            mark — two flat, clearly separated colors, no
+                            gradients, matching the reference's own crisp
+                            look rather than approximating depth with a
+                            blurred diagonal fade. */}
                         <div
-                          className="relative w-full flex-1 min-h-0 overflow-hidden rounded-md"
+                          className="relative w-full flex-1 min-h-0 overflow-hidden rounded-sm p-[11%]"
                           style={{
-                            background: `linear-gradient(135deg, transparent 58%, ${frontStyle.doorFrame}66 100%), linear-gradient(215deg, transparent 70%, ${frontStyle.doorFrame}4d 100%), ${frontStyle.boxHex}`,
-                            border: `3px solid ${frontStyle.doorFrame}`,
-                            boxShadow: `inset 0 6px 12px rgba(0,0,0,0.18), 6px 10px 18px -8px rgba(20,20,25,0.4)`,
+                            backgroundColor: frontStyle.boxHex,
+                            boxShadow: "6px 10px 16px -6px rgba(20,20,25,0.45)",
                           }}
                         >
-                          <div className="flex h-full w-full items-center justify-center p-4">
+                          <div
+                            className="flex h-full w-full items-center justify-center rounded-[2px]"
+                            style={{ backgroundColor: frontStyle.doorFrame }}
+                          >
                             <GesaMark colors={frontStyle.mark} className="h-[62%] w-[62%]" />
                           </div>
                         </div>
