@@ -27,11 +27,14 @@ let lastSweep = Date.now();
 function sweep(now: number) {
   if (now - lastSweep < WINDOW_MS) return;
   lastSweep = now;
-  for (const [key, timestamps] of hits) {
+  // `for...of` over a Map needs `--downlevelIteration`/a newer `--target`,
+  // neither of which this project's tsconfig sets — `.forEach` avoids that
+  // entirely, same result.
+  hits.forEach((timestamps, key) => {
     const recent = timestamps.filter((t) => now - t < WINDOW_MS);
     if (recent.length === 0) hits.delete(key);
     else hits.set(key, recent);
-  }
+  });
 }
 
 export function isRateLimited(key: string): boolean {
