@@ -43,6 +43,11 @@ const NAV = [
   // no Hebrew dictionary entry to update in parallel; every string in
   // app/admin/** is a hardcoded English literal.
   { href: "/admin/therapists", label: "Our Professionals" },
+  // Phase 206 — privacy-conscious aggregate profile-view analytics (which
+  // therapist profiles get visited, today/week/month/all-time). Separate
+  // nav item from "Our Professionals" above since it's a read-only
+  // analytics view over a different table, not a therapist-record editor.
+  { href: "/admin/therapist-analytics", label: "Therapist Analytics" },
   { href: "/admin/users", label: "Users" },
   // Phase 187 — separate from "Users" above: invitation-only onboarding for
   // Administrator/Super Admin accounts specifically (invite, resend, revoke,

@@ -5,6 +5,7 @@ import { BadgeCheck, Clock, Globe2, GraduationCap, ArrowLeft, MapPin, HeartHands
 import { getTherapistBySlug } from "@/lib/queries";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
 import BookSessionButton from "@/components/therapists/BookSessionButton";
+import TherapistViewTracker from "@/components/TherapistViewTracker";
 
 export const revalidate = 60;
 
@@ -36,6 +37,11 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
 
   return (
     <section className="section wrap max-w-[880px]">
+      {/* Phase 206 — profile-view analytics. Only opening this specific
+          therapist's profile page counts as a "view" (not rendering their
+          card on /therapists) — see this component's own comment. Renders
+          nothing; purely a fire-and-forget tracking side effect. */}
+      <TherapistViewTracker therapistId={therapist.id} />
       <Link href="/therapists" className="mb-6 inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary">
         <ArrowLeft size={15} /> Back to all therapists
       </Link>

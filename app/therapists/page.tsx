@@ -7,6 +7,8 @@ import { getPageContent, THERAPISTS_CONTENT_FALLBACK } from "@/lib/content";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
+import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
+import { getAllTherapistViewSummaries } from "@/lib/analytics/therapistViews";
 
 export const revalidate = 60;
 
@@ -30,11 +32,25 @@ export default async function TherapistsPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const [therapists, contentRaw, directoryContentRaw] = await Promise.all([
+  const [therapists, contentRaw, directoryContentRaw, profile] = await Promise.all([
     getActiveTherapists(),
     getPageContent("page_therapists", THERAPISTS_CONTENT_FALLBACK),
     getPageContent("component_therapists_directory", THERAPISTS_DIRECTORY_CONTENT_FALLBACK),
+    getCurrentProfile(),
   ]);
+
+  // Phase 206 — profile-view analytics badge, admin/super_admin only. The
+  // summary map is only ever fetched (and only ever reaches the browser at
+  // all) when the requester is actually an admin — a public visitor's
+  // render never runs this query or receives this data, not merely a
+  // CSS-hidden version of it. The RPC itself also independently checks
+  // auth_role() (see the phase_206 migration), so this is defense-in-depth,
+  // not the sole gate.
+  const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+  const viewStatsRaw = isAdmin ? await getAllTherapistViewSummaries() : undefined;
+  const viewStats = viewStatsRaw
+    ? new Map(Array.from(viewStatsRaw, ([id, s]) => [id, { today: s.todayCount, week: s.weekCount }]))
+    : undefined;
 
   const { resolved, isEditorPreview } = await resolveEditorPreview(
     "therapists",
@@ -70,7 +86,7 @@ export default async function TherapistsPage({
           the matching comment on About's founder section. */}
       <section className="section pt-0 bg-sand-brown">
         <div className="wrap">
-          <TherapistsDirectory therapists={therapists} content={directoryContent} />
+          <TherapistsDirectory therapists={therapists} content={directoryContent} viewStats={viewStats} />
         </div>
       </section>
 

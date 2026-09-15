@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 205 added)
+Last updated: 2026-09-15 (Phase 206 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9047,6 +9047,63 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 205: Content Manager IA rebuild (grouped tabs)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 206: Therapist profile-view analytics (admin-only)
+
+A new, self-contained feature (not part of the 201-205 CMS/UI Builder rollout): admin-only tracking of which therapist profiles get visited, with today/week/month/all-time counts on the `/therapists` directory cards and a full ranked analytics page.
+
+**What shipped:**
+
+1. **New table `therapist_profile_views`** (migration `phase_206_therapist_profile_analytics`, Production): `id, therapist_id, viewed_at, visitor_key, anonymous_id_hash, referrer, created_at`. No IP address, name, email, or any other PII is ever stored — `visitor_key` and `anonymous_id_hash` are one-way sha256 hashes (salted) of a random, purely-technical anonymous cookie value, computed in `lib/analytics/hash.ts`. A unique index on `(therapist_id, visitor_key)` is what actually enforces "at most one counted visit per therapist per visitor per UTC calendar day" — the hash itself encodes visitor + therapist + day, so a repeat request for the same combination is a real database-level no-op (unique-violation 23505), not just an application-level check a race condition could slip past. A second index on `(therapist_id, viewed_at desc)` backs the aggregate queries.
+
+2. **RLS**: `therapist_profile_views_admin_read` (SELECT, `admin`/`super_admin` only) — no insert/update/delete policy for any role. Every write goes through the service-role client in the tracking API route (below), never a direct table write from the browser's anon key.
+
+3. **Three SECURITY DEFINER RPC functions** (`get_therapist_view_summary`, `get_all_therapist_view_summaries`, `get_therapist_view_daily_breakdown`), each with an internal `auth_role() IN ('admin','super_admin')` check that raises an exception for anyone else — the same defense-in-depth pattern as the existing `get_therapist_contact` RPC. `EXECUTE` is explicitly revoked from `public` and granted only to `authenticated`, so an unauthenticated request can't even attempt the call at the Postgres permission level. This is the "non-admin cannot query analytics by modifying frontend requests" requirement enforced at the database layer, not just the page.
+
+4. **`app/api/analytics/therapist-view/route.ts`** (new) — the only thing that ever writes to this table. Reads/sets a first-party, `httpOnly` anonymous cookie (`gesa-anon-id`, random UUID, 1-year expiry, never readable by client JS); checks a simple bot/crawler user-agent list (`lib/analytics/botDetect.ts` — the first bot-detection logic in this codebase); rate-limits by IP via a best-effort in-memory sliding window (`lib/analytics/rateLimit.ts` — the first rate limiter in this codebase, documented as per-instance/best-effort on Vercel's serverless runtime, with the real anti-abuse guarantee being the database's own unique constraint); validates the therapist id is real and active before inserting; treats a 23505 unique-violation as a normal, expected outcome (matching the existing `/api/intake-booking` precedent) rather than an error.
+
+5. **`components/TherapistViewTracker.tsx`** (new) — a tiny, invisible client component mounted once on `app/therapists/[slug]/page.tsx` (individual profile pages only — never on the `/therapists` directory, so rendering a card grid never counts as a view). Fires one fire-and-forget POST on mount; never blocks or delays the server-rendered profile page itself.
+
+6. **Admin-only eye-icon badge** (`components/admin/therapists/TherapistViewBadge.tsx`, new) on every card on `/therapists`: shows "👁 N today" with a tooltip ("N unique profile visits today. M this week."), keyboard-accessible (`aria-label="View analytics for [name]"`, visible focus ring), opens a modal with today/week/month/all-time counts, a 7-day mini bar chart, last-viewed timestamp (no visitor identity), and a "View full analytics" link. **The data is only ever fetched/sent to the browser at all when the requester is a signed-in admin/super_admin** — `app/therapists/page.tsx` checks `getCurrentProfile()` and only calls `getAllTherapistViewSummaries()` for an admin; a public visitor's render never includes this component or its data, not merely a CSS-hidden version of it. `TherapistCard.tsx`/`TherapistsDirectory.tsx` both gained an optional `viewStats` prop, threaded through only for this purpose — every other existing caller (e.g. the intake pathway pages) leaves it undefined and is completely unaffected.
+
+7. **`/admin/therapist-analytics`** (new page + `components/admin/TherapistAnalyticsTable.tsx`) — full ranked table: search by name, date-range tabs (Today/Last 7 days/Last 30 days — see Assumptions below on "Custom"), sort (Most viewed/Least viewed/Name A-Z, defaulting to highest-in-range then highest-weekly per spec), a "show zero-view therapists" toggle, and a client-side CSV export of the currently-filtered/sorted rows. Added to the admin sidebar nav (`app/admin/layout.tsx`) as "Therapist Analytics," gated by the layout's existing `requireAdmin()` like every other `/admin/**` route.
+
+**Data/schema changes:** `therapist_profile_views` table (new) + RLS + 3 RPC functions, as above. No changes to any existing table.
+
+**Booking/analytics sync note:** not applicable to this phase — this is a new, independent feature, not part of the earlier CMS content-sync work.
+
+**Role/permission changes:** none to existing roles — this only adds new admin/super_admin-gated reads (RLS + RPC) and a service-role-only write path. No existing permission was widened or narrowed.
+
+**Testing steps:**
+- Public visitor: open any `/therapists/[slug]` profile as a signed-out visitor (or a non-admin role) → confirm no eye icon appears anywhere on `/therapists`, and confirm the profile page itself renders with no visible change or delay.
+- Dedup: open the same profile 3 times in a row (refresh, back/forward) as the same anonymous visitor → confirm only 1 row is ever added to `therapist_profile_views` for that therapist+day (verify via Supabase or the admin badge's "Today" count not incrementing past 1 per visit-session).
+- Cross-therapist: view two different therapists' profiles as the same anonymous visitor → confirm each gets its own separate count of 1.
+- Admin badge: sign in as admin/super_admin, visit `/therapists` → confirm every card shows "👁 N today" top-left, hover/focus shows the tooltip, click opens the modal with today/week/month/all-time + mini chart + last-viewed, and "View full analytics" navigates to `/admin/therapist-analytics?therapist=<id>` with that therapist pre-searched.
+- Full analytics page: confirm search/sort/date-range/CSV export all work against the table; confirm a `reviewer`/`therapist`/`client`-role signed-in user is redirected away by the layout's `requireAdmin()` guard when visiting `/admin/therapist-analytics` directly.
+- Regression: `npx jest` — no existing test references any of the new files; `TherapistCard`/`TherapistsDirectory`'s new `viewStats` prop is optional and defaults to `undefined`, so every existing caller/test renders identically to before.
+
+**Assumptions/follow-ups:**
+- **Timezone**: "today"/"this week"/"this month" all use UTC boundaries (week starts Monday, via Postgres's `date_trunc('week', ...)`), matching this app's established convention for admin-facing timestamps elsewhere (e.g. `InquiryDetailModal`'s own `timeZone: "UTC"`) rather than a separate configurable "app timezone" concept, which doesn't otherwise exist in this codebase.
+- **`ANALYTICS_HASH_SALT`**: falls back to a fixed string if not set. The feature works either way (the anonymous cookie value is already random and non-PII on its own — the salt is defense-in-depth, not the sole security boundary), but **Roy should set a real secret value for this env var in Vercel** for production.
+- **Rate limiting is best-effort, not distributed**: the in-memory limiter is per serverless-instance on Vercel, not a global guarantee. The real, always-enforced anti-abuse mechanism is the database's unique constraint (a repeat request for the same visitor+therapist+day is a no-op regardless of rate limiting). A real distributed limiter (e.g. Upstash Redis) would be a reasonable future upgrade if this endpoint ever sees real abuse.
+- **"Custom" date range**: not implemented on the full analytics table — the three fixed columns (today/week/month/all-time) are the only ranges pre-aggregated server-side; a true arbitrary custom range across every therapist would need its own new aggregation query. Today/Last 7 days/Last 30 days (mapped onto those three existing columns) are fully functional; "Custom" is a follow-up if Roy wants it.
+- **Bot detection** is a simple user-agent substring list (first of its kind in this codebase), not a comprehensive bot-management solution — reasonable for "don't let search engine crawlers inflate a view counter," not a security control.
+- The `/intake` pathway pages reuse `TherapistsDirectory` but don't fetch/pass `viewStats` — an admin browsing those pages (not just `/therapists`) won't see eye-icon badges there. Easy to extend later if wanted; left out to keep this phase's scope to the page the spec named.
+
+Files touched: `lib/database.types.ts`, `lib/analytics/hash.ts` (new), `lib/analytics/botDetect.ts` (new), `lib/analytics/rateLimit.ts` (new), `lib/analytics/therapistViews.ts` (new), `app/api/analytics/therapist-view/route.ts` (new), `components/TherapistViewTracker.tsx` (new), `app/therapists/[slug]/page.tsx`, `components/admin/therapists/TherapistViewBadge.tsx` (new), `components/TherapistCard.tsx`, `components/TherapistsDirectory.tsx`, `app/therapists/page.tsx`, `app/admin/therapist-analytics/page.tsx` (new), `components/admin/TherapistAnalyticsTable.tsx` (new), `app/admin/layout.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 206: Therapist profile-view analytics (admin-only)"
 git push
 ```
 

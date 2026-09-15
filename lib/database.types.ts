@@ -133,6 +133,20 @@ export type MediaAssetRow = {
 // Phase 203 — Trusted Partners. See migration `phase_203_trusted_partners`.
 // Replaces the Footer's 3 fixed, text-only, fixed-icon partner slots with a
 // real admin-managed list — see components/Footer.tsx's Phase 203 comment.
+// Phase 206 — Therapist profile-view analytics (admin-only). See migration
+// `phase_206_therapist_profile_analytics`. `visitor_key`/`anonymous_id_hash`
+// are one-way sha256 hashes computed in lib/analytics/hash.ts — never the
+// raw anonymous cookie value, never an IP address or any other PII.
+export type TherapistProfileViewRow = {
+  id: string;
+  therapist_id: string;
+  viewed_at: string;
+  visitor_key: string;
+  anonymous_id_hash: string | null;
+  referrer: string | null;
+  created_at: string;
+}
+
 export type PartnerRow = {
   id: string;
   name: string;
@@ -904,6 +918,20 @@ export type Database = {
         ];
       };
       partners: { Row: PartnerRow; Insert: Partial<PartnerRow> & Pick<PartnerRow, "name">; Update: Partial<PartnerRow>; Relationships: [] };
+      therapist_profile_views: {
+        Row: TherapistProfileViewRow;
+        Insert: Partial<TherapistProfileViewRow> & Pick<TherapistProfileViewRow, "therapist_id" | "visitor_key">;
+        Update: Partial<TherapistProfileViewRow>;
+        Relationships: [
+          {
+            foreignKeyName: "therapist_profile_views_therapist_id_fkey";
+            columns: ["therapist_id"];
+            isOneToOne: false;
+            referencedRelation: "therapists";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: { Row: ProfileRow; Insert: Partial<ProfileRow> & Pick<ProfileRow, "id">; Update: Partial<ProfileRow>; Relationships: [] };
       site_content: { Row: SiteContentRow; Insert: Partial<SiteContentRow> & Pick<SiteContentRow, "key">; Update: Partial<SiteContentRow>; Relationships: [] };
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };
@@ -1040,6 +1068,38 @@ export type Database = {
       get_therapist_contact: {
         Args: { p_therapist_id: string };
         Returns: { contact_email: string | null; contact_phone: string | null }[];
+      };
+      // Phase 206 — therapist profile-view analytics. All three are
+      // SECURITY DEFINER with an internal auth_role() admin/super_admin
+      // check (see migration `phase_206_therapist_profile_analytics`) that
+      // raises a Postgres exception for any non-admin caller — surfaced by
+      // supabase-js as `{ data: null, error }`, which every call site here
+      // (lib/analytics/therapistViews.ts, TherapistViewBadge.tsx) already
+      // handles the same way it handles any other Supabase error.
+      get_therapist_view_summary: {
+        Args: { p_therapist_id: string };
+        Returns: {
+          today_count: number;
+          week_count: number;
+          month_count: number;
+          all_time_count: number;
+          last_viewed_at: string | null;
+        }[];
+      };
+      get_all_therapist_view_summaries: {
+        Args: Record<string, never>;
+        Returns: {
+          therapist_id: string;
+          today_count: number;
+          week_count: number;
+          month_count: number;
+          all_time_count: number;
+          last_viewed_at: string | null;
+        }[];
+      };
+      get_therapist_view_daily_breakdown: {
+        Args: { p_therapist_id: string; p_days?: number };
+        Returns: { day: string; view_count: number }[];
       };
     };
     Enums: {
