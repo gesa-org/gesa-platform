@@ -9159,4 +9159,69 @@ git push
 ```
 
 ---
+
+## Phase 208: Therapist Diary Calendar Embed ("My Diary")
+
+An explicit, detailed spec: give every therapist a way to view their own external diary/calendar inside GESA, without leaving the site. Before writing any code, audited the existing Therapist Account (a single flat page, no sidebar) and the existing `diary_link`/`diary_link_status` columns — confirmed those are a different concept (a public, client-facing "book a new session" link, used by `BookSessionButton.tsx`) from what this spec needs (a private "view my own already-booked sessions" embed). Presented the dashboard-restructure scope question to Roy directly — full 5-item sidebar rebuild vs. a single added section — and Roy chose the full rebuild.
+
+**What shipped:**
+
+1. **Migration `phase_208_therapist_diary_calendar_embed`** (Production): added `therapists.calendar_embed_url text`, `calendar_embed_provider text`, `calendar_embed_enabled boolean not null default false`, `calendar_embed_updated_at timestamptz`. Two new CHECK constraints (`https://` only, provider in a fixed set). None of these 4 columns were added to `therapists_public` — they stay private to the owning therapist and admins, unlike `diary_link` which is intentionally public. Extended the existing `protect_therapist_sensitive_fields` trigger (from Phase 186) with a new block: unless `auth_role()` is `admin` or `super_admin`, any attempted change to these 4 columns is silently reverted to the prior value, on both INSERT and UPDATE — stricter than the trigger's pre-existing block (which allows `reviewer` for other fields), since this spec is explicit that only Administrators manage diary/calendar configuration. This means a therapist can never set or enable their own embed, or read/target another therapist's, even by crafting a direct Supabase client request — enforced at the database level, not just hidden in the UI.
+
+2. **`lib/diary/embedAllowlist.ts`** (new) — the one place that decides "is this URL safe to iframe." HTTPS-only, and the host must match an allowlist of providers with a real, documented *read-only calendar embed/publish* feature: Google Calendar's own "Integrate calendar → Embed code," and Outlook/Microsoft 365's "Publish a calendar" HTML view. **Calendly is deliberately excluded from the allowlist** — it has no equivalent "view my booked events" embed, only a public "book a new time" widget (a different concept, already covered by the existing `diary_link`). Checked both when an admin saves a URL and again, independently, immediately before the therapist-facing page ever renders an `<iframe>` — so a bad value reaching the database any other way still can't be rendered.
+
+3. **Admin CRM (`components/admin/TherapistEditForm.tsx`)** — new "My Diary — calendar embed" section, separate save button from the main form: URL field, provider dropdown (Google Calendar / Outlook / Calendly / Other — Calendly is explicitly labeled "embed not supported" so an admin isn't confused when it's rejected), an Enabled checkbox (a kill switch independent of clearing the URL), a "Last updated" timestamp, and an admin-only live iframe **Preview** toggle (only ever rendered for a URL that already passed `validateEmbedUrl`) so an admin can confirm a link actually renders before enabling it for the therapist. Saving a non-empty URL that fails validation shows the reason inline and doesn't save; clearing the field (to remove an invalid/outdated link) is always allowed.
+
+4. **Therapist dashboard rebuilt into 5 sections** with a new sidebar (`components/therapist/TherapistNav.tsx`, mirroring `AdminNav.tsx`'s pattern), wired into `app/therapist/layout.tsx`, in the exact order specified — **Dashboard → My Bookings → My Diary → Notifications → Profile/Settings** — with a calendar icon next to "My Diary":
+   - **Dashboard** (`app/therapist/page.tsx`) — slimmed down to today's confirmed-session count plus two quick-link cards into My Bookings and My Diary.
+   - **My Bookings** (`app/therapist/bookings/page.tsx`, new route) — every section that used to live on the old single dashboard page (Upcoming sessions, AI Support Bookings, Scheduling-link activity, Past & other requests), relocated **verbatim** — same queries, same RLS-plus-explicit-`.eq("therapist_id", ...)` scoping, same filtering logic. Nothing about how real GESA bookings are fetched or displayed changed, only which route renders it — zero regression risk to the canonical booking data.
+   - **My Diary** (`app/therapist/diary/page.tsx` + `components/therapist/DiaryEmbed.tsx`, new) — the new feature; see below.
+   - **Notifications** (`app/therapist/notifications/page.tsx` + `components/therapist/TherapistNotificationsList.tsx`, new) — a full-page, read-only list using the *same* data source the header bell already uses for a therapist (`/api/admin/support-requests/notifications`, therapist branch — already scoped server-side to `selected_therapist_id = this therapist's id`), so the page and the bell can never disagree. Each item gets "View in Calendar" (→ My Bookings) and "Open my diary" (→ My Diary) links, per spec.
+   - **Profile / Settings** (`app/therapist/settings/page.tsx`, new) — a read-only profile summary + link to the public profile, plus the existing `ChangePasswordForm` (reused verbatim from Account Settings). Deliberately does **not** duplicate `TherapistEditForm.tsx`'s bio/credentials/photo editing — that stays admin-only, so there's exactly one place that can write those columns.
+
+5. **`app/therapist/diary/page.tsx`** — reads only the signed-in therapist's own row (`requireTherapist()` resolves the id server-side from the session; the query adds its own `.eq("id", self.therapist.id)` on top of the `therapists_self_read` RLS policy, same defense-in-depth convention as every other therapist-scoped query in this app). Takes no therapist id from the URL/request at all, so there's no parameter to tamper with. Three states: **not configured** (`calendar_embed_url` null or `calendar_embed_enabled` false) shows "Your diary calendar has not yet been connected. Please contact the GESA administrator for assistance."; **configured but fails the allowlist** (e.g. a stale/invalid saved URL) shows a safe fallback message plus an "Open Diary Securely" button, never attempting to force-render it; **configured and valid** renders `DiaryEmbed`.
+
+6. **`components/therapist/DiaryEmbed.tsx`** (new) — the actual iframe. Descriptive title (`"Therapist diary calendar"`), responsive height (520px mobile-friendly up to 620px, with an Expand toggle to 85vh), conservative `sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"` (no top-navigation, no modals, no downloads), `referrerPolicy="no-referrer"`, a loading spinner shown until `onLoad` fires, and an always-visible "Open Diary Securely" button (opens the same URL in a new tab, `noopener,noreferrer`) — not hidden behind a failure state, since a provider silently blocking embedding via X-Frame-Options/CSP does not reliably fire a JS-detectable error in most browsers (documented limitation, see Assumptions below).
+
+7. **`components/admin/NotificationBell.tsx`** — small additive change only: the existing notification detail modal, when showing a therapist's own `kind === "session"` item (unchanged data/fetch logic), now also shows "View in Calendar" (→ `/therapist/bookings`) and "Open my diary" (→ `/therapist/diary`) links. No admin-facing notification kind is affected, and the bell's polling/fetch/badge-count logic was not touched at all.
+
+**Data/schema changes:** `therapists.calendar_embed_url/calendar_embed_provider/calendar_embed_enabled/calendar_embed_updated_at` (new, private) + 2 CHECK constraints + extended `protect_therapist_sensitive_fields` trigger, as above. No changes to `session_bookings`, `diary_scheduling_events`, `support_requests`, or any RLS policy.
+
+**New therapist profile fields:** `calendar_embed_url` (text, nullable — the provider-approved embed/publish URL), `calendar_embed_provider` (text, nullable — `google_calendar`/`outlook`/`calendly`/`other`, informational only), `calendar_embed_enabled` (boolean, default false — admin kill switch), `calendar_embed_updated_at` (timestamptz, nullable — set on every admin save).
+
+**Administrator CRM changes:** see item 3 above — `TherapistEditForm.tsx`'s new "My Diary — calendar embed" section is the only admin-facing change; no new admin route was needed.
+
+**Iframe security approach:** HTTPS-only; allowlisted hosts are `calendar.google.com`, `calendar.app.google`, `outlook.office.com`, `outlook.office365.com`, `outlook.live.com` (see `lib/diary/embedAllowlist.ts`); validated at admin-save time and again at render time; conservative `sandbox` attributes; `referrer-policy: no-referrer`; a permanent (not error-gated) "Open Diary Securely" fallback button that only ever opens the signed-in therapist's own URL in a new tab.
+
+**Booking synchronization:** unchanged and explicitly not attempted — `session_bookings` remains the sole source of truth for real GESA bookings; the embed is view-only and creates no records of any kind; no push-to-external-diary integration exists, and none is implied anywhere in the new UI copy (the diary page's own footnote says this explicitly: "This is a read-only view of your external calendar. It does not create or change GESA bookings").
+
+**External-provider limitations discovered:** Calendly has no "view my own scheduled events" embed at all — only a public "book a new time" widget (already served by the pre-existing `diary_link`). A Calendly-using therapist will always see the "configured but can't be safely embedded" fallback with a secure open-in-new-tab button, never a broken/blocked iframe. Separately: a provider that blocks iframing via X-Frame-Options/CSP does not reliably fire a JS-detectable error on an `<iframe>` in most browsers — there is no fully reliable client-side way to detect a silent embed block, which is why the fallback button is always shown rather than gated behind an "error" state that might never trigger.
+
+**Role/permission changes:** none widened. The new columns are more restricted than any existing therapist-editable field (admin/super_admin only, not even reviewer) — tighter than the pre-existing self-update policy, not looser.
+
+**Manual test scenarios:**
+- *Administrator*: open a therapist's edit page → add a Calendly URL → confirm it's rejected with an explanation → add a real Google Calendar embed URL → Preview renders it → Save → confirm "Last updated" appears → toggle Enabled off → confirm the therapist's My Diary page falls back to the "not connected" message even though a URL is still saved → toggle back on.
+- *Administrator*: attempt (via direct SQL or API testing, not the UI) to have a non-admin session update `calendar_embed_url` on a therapists row → confirm the trigger reverts it.
+- *Therapist*: sign in, confirm sidebar shows Dashboard/My Bookings/My Diary/Notifications/Profile-Settings in that order with a calendar icon on My Diary → open My Diary with no embed configured → see the exact "hasn't yet been connected" message → after an admin configures one, refresh → see the iframe load with a spinner, then the calendar, plus a working Expand toggle and Open Diary Securely button → confirm My Bookings still shows the exact same upcoming/past sessions as before this phase → open Notifications → click View in Calendar and Open my diary on an item → confirm both navigate correctly → open the header bell on a session notification → confirm the same two links appear there too.
+- *Client/User*: confirm no diary link, embed URL, or "My Diary" surface is reachable or visible anywhere in the client account area; confirm `/therapist/**` redirects a client-role session away (`requireTherapist()`, unchanged).
+- *Cross-therapist*: as Therapist A, confirm there is no URL parameter or request on `/therapist/diary` that could target Therapist B's `calendar_embed_url` — the page takes no id from the request at all.
+
+**Assumptions/follow-ups:**
+- No live URL-reachability check on save (matches the existing `diary_link` convention) — "valid" means "well-formed and on the allowlist," not "confirmed to resolve."
+- No true cross-origin fullscreen for the embedded provider's own UI — "Expand" grows the iframe to 85vh within the GESA page, since a cross-origin iframe's own fullscreen affordance can't be controlled by GESA's page.
+- If Roy wants another provider allowlisted later (e.g. Acuity, SimplyBook.it), confirm first that it offers a genuine read-only "my calendar" embed/publish URL and doesn't block iframing, then add its host to `lib/diary/embedAllowlist.ts` — do not add a host without that confirmation.
+
+Files touched: `lib/database.types.ts`, `lib/queries.ts`, `lib/diary/embedAllowlist.ts` (new), `components/admin/TherapistEditForm.tsx`, `components/therapist/TherapistNav.tsx` (new), `app/therapist/layout.tsx`, `app/therapist/page.tsx`, `app/therapist/bookings/page.tsx` (new), `app/therapist/diary/page.tsx` (new), `components/therapist/DiaryEmbed.tsx` (new), `app/therapist/notifications/page.tsx` (new), `components/therapist/TherapistNotificationsList.tsx` (new), `app/therapist/settings/page.tsx` (new), `components/admin/NotificationBell.tsx`.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 208: Therapist Diary Calendar Embed (My Diary)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

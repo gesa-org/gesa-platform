@@ -232,8 +232,14 @@ export async function getRandomMatchedTherapist(): Promise<PublicTherapistRow | 
 // (therapists.profile_views), per the instruction that the CRM display and
 // the public directory count must share one source, not two separately
 // computed numbers.
+// Phase 208 — calendar_embed_url/provider/enabled/updated_at added so the
+// admin edit form (TherapistEditForm.tsx) can show/manage the "My Diary"
+// embed configuration. These 4 columns are private (never selected into
+// therapists_public/PublicTherapistRow) and are trigger-protected against
+// non-admin writes regardless of what this query returns — see the
+// phase_208 migration.
 const THERAPIST_ADMIN_LIST_COLUMNS =
-  "id, full_name, slug, bio, credentials, country, city, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, offers_online, offers_in_person, photo_url, price_note, profile_id, profile_views, session_lengths, short_summary, specialties, support_pathways, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
+  "id, full_name, slug, bio, credentials, country, city, created_at, diary_link, diary_link_status, calendar_embed_url, calendar_embed_provider, calendar_embed_enabled, calendar_embed_updated_at, gender, is_active, is_verified, languages, offers_online, offers_in_person, photo_url, price_note, profile_id, profile_views, session_lengths, short_summary, specialties, support_pathways, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
 
 export async function getAllTherapistsAdmin(): Promise<Omit<Tables<"therapists">, "contact_email" | "contact_phone">[]> {
   const supabase = await createClient();

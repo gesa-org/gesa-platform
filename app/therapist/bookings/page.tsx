@@ -1,0 +1,226 @@
+import { CalendarClock, ExternalLink, Mail, Sparkle } from "lucide-react";
+import { requireTherapist } from "@/lib/auth/requireTherapist";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Tables } from "@/lib/database.types";
+
+const SUPPORT_STATUS_LABEL: Record<string, string> = {
+  therapist_selected: "Client selected you",
+  booking_requested: "Booking requested",
+  scheduled: "Scheduled",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+export const dynamic = "force-dynamic";
+
+const CHANNEL_LABEL: Record<string, string> = {
+  email: "Email",
+  whatsapp: "WhatsApp",
+  zoom: "Zoom",
+};
+
+// Phase 208 — "My Bookings," relocated verbatim from app/therapist/page.tsx
+// (which used to be this therapist dashboard's only page) as part of the
+// new 5-item sidebar (Dashboard / My Bookings / My Diary / Notifications /
+// Profile-Settings — see app/therapist/layout.tsx). Every query, filter, and
+// list below is byte-for-byte the same logic that lived on the old
+// dashboard page — nothing about how bookings are fetched, scoped, or
+// displayed changed, only which route renders it. GESA's session_bookings
+// table remains the single source of truth for real, conflict-free
+// reservations; nothing here reads from or writes to any external diary —
+// see app/therapist/diary/page.tsx for the (view-only) embed.
+export default async function TherapistBookingsPage() {
+  const self = await requireTherapist();
+
+  if (!self) {
+    return (
+      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+        <h2 className="mb-1.5 text-lg">Your account isn&apos;t linked to a professional profile yet</h2>
+        <p className="text-[14px] text-muted-fg">
+          This login exists, but no professional record points to it yet. Contact the GESA team so an admin can
+          link your account from your profile&apos;s edit page.
+        </p>
+      </div>
+    );
+  }
+
+  const supabase = await createClient();
+  // Phase 142 — support_requests has no RLS policies at all (service-role
+  // only — see the create_support_requests migration), so this one read
+  // uses the admin client instead of the cookie-based `supabase` above.
+  // Still scoped defense-in-depth to this therapist's own id, same as every
+  // other query on this page, even though there's no RLS to double up on
+  // here specifically.
+  const adminSupabase = createAdminClient();
+  const [{ data: sessionBookings }, { data: diaryEvents }, { data: supportRequests }] = await Promise.all([
+    supabase
+      .from("session_bookings")
+      .select("id, client_name, session_date, session_time, contact_channel, status, created_at")
+      .eq("therapist_id", self.therapist.id)
+      .order("session_date", { ascending: true })
+      .order("session_time", { ascending: true }),
+    supabase
+      .from("diary_scheduling_events")
+      .select("id, client_name, client_email, created_at, status")
+      .eq("therapist_id", self.therapist.id)
+      .order("created_at", { ascending: false }),
+    adminSupabase
+      .from("support_requests")
+      .select("id, full_name, email, treatment_type, session_format, status, created_at")
+      .eq("selected_therapist_id", self.therapist.id)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const bookings = (sessionBookings ?? []) as Pick<
+    Tables<"session_bookings">,
+    "id" | "client_name" | "session_date" | "session_time" | "contact_channel" | "status" | "created_at"
+  >[];
+  const diaryHandoffs = (diaryEvents ?? []) as Pick<
+    Tables<"diary_scheduling_events">,
+    "id" | "client_name" | "client_email" | "created_at" | "status"
+  >[];
+  const aiSupportBookings = (supportRequests ?? []) as Pick<
+    Tables<"support_requests">,
+    "id" | "full_name" | "email" | "treatment_type" | "session_format" | "status" | "created_at"
+  >[];
+
+  const today = new Date().toISOString().slice(0, 10);
+  const upcoming = bookings.filter((b) => b.session_date >= today && b.status === "confirmed");
+  const past = bookings.filter((b) => b.session_date < today || b.status !== "confirmed");
+
+  return (
+    <div className="flex flex-col gap-6">
+      {!self.therapist.is_active && (
+        <div className="rounded-[var(--radius)] border border-border bg-card px-4 py-3 text-[13.5px] text-muted-fg">
+          Your profile isn&apos;t currently visible in the public directory. If that doesn&apos;t look right,
+          reach out to the GESA team.
+        </div>
+      )}
+
+      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+        <h2 className="mb-1 flex items-center gap-2 text-lg">
+          <CalendarClock size={18} className="text-primary" /> Upcoming sessions
+        </h2>
+        <p className="mb-4 text-[13px] text-muted-fg">
+          Real, reserved slots from clients who used the built-in date/time picker — each one is guaranteed
+          conflict-free.
+        </p>
+        {upcoming.length === 0 ? (
+          <p className="text-[14px] text-muted-fg">No upcoming sessions right now.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {upcoming.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div>
+                  <div className="font-medium">{b.client_name}</div>
+                  <div className="text-[13px] text-muted-fg">
+                    {b.session_date} at {b.session_time.slice(0, 5)} · {CHANNEL_LABEL[b.contact_channel] ?? b.contact_channel}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+        <h2 className="mb-1 flex items-center gap-2 text-lg">
+          <Sparkle size={18} className="text-primary" /> AI Support Bookings
+        </h2>
+        <p className="mb-4 text-[13px] text-muted-fg">
+          Clients who found you through GESA&apos;s AI Support match and selected you as their preferred therapist.
+        </p>
+        {aiSupportBookings.length === 0 ? (
+          <p className="text-[14px] text-muted-fg">No AI Support matches yet.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {aiSupportBookings.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div>
+                  <div className="font-medium">{s.full_name || "A GESA client"}</div>
+                  {s.email && (
+                    <div className="flex items-center gap-1 text-[13px] text-muted-fg">
+                      <Mail size={12} /> {s.email}
+                    </div>
+                  )}
+                  <div className="text-[12.5px] text-muted-fg">
+                    {s.treatment_type ? `${s.treatment_type} · ` : ""}
+                    {new Date(s.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium text-muted-fg">
+                  {SUPPORT_STATUS_LABEL[s.status] ?? s.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+        <h2 className="mb-1 flex items-center gap-2 text-lg">
+          <ExternalLink size={18} className="text-primary" /> Scheduling-link activity
+        </h2>
+        <p className="mb-4 text-[13px] text-muted-fg">
+          Clients who were sent to your own scheduling link. GESA has no way to confirm they actually picked a
+          time — check your own calendar for the real outcome. &quot;Opened&quot; means the link was sent, not
+          that a session is booked.
+        </p>
+        {diaryHandoffs.length === 0 ? (
+          <p className="text-[14px] text-muted-fg">No scheduling-link activity yet.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {diaryHandoffs.map((d) => (
+              <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div>
+                  <div className="font-medium">{d.client_name || "A GESA client"}</div>
+                  {d.client_email && (
+                    <div className="flex items-center gap-1 text-[13px] text-muted-fg">
+                      <Mail size={12} /> {d.client_email}
+                    </div>
+                  )}
+                  <div className="text-[12.5px] text-muted-fg">
+                    {new Date(d.created_at).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium capitalize text-muted-fg">
+                  {d.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {past.length > 0 && (
+        <div className="rounded-[var(--radius)] border border-border bg-card p-6">
+          <h2 className="mb-1 text-lg">Past &amp; other requests</h2>
+          <p className="mb-4 text-[13px] text-muted-fg">
+            Earlier or non-confirmed session requests, for your records.
+          </p>
+          <ul className="flex flex-col divide-y divide-border">
+            {past.map((b) => (
+              <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div>
+                  <div className="font-medium">{b.client_name}</div>
+                  <div className="text-[13px] text-muted-fg">
+                    {b.session_date} at {b.session_time.slice(0, 5)}
+                  </div>
+                </div>
+                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium capitalize text-muted-fg">
+                  {b.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}

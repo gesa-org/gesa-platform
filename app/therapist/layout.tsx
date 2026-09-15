@@ -1,11 +1,24 @@
 import Link from "next/link";
+import { LayoutDashboard, CalendarCheck2, CalendarDays, Bell, UserCog } from "lucide-react";
 import { requireTherapist } from "@/lib/auth/requireTherapist";
+import TherapistNav, { type TherapistNavItem } from "@/components/therapist/TherapistNav";
 
-// Mirrors app/admin/layout.tsx's shape (one guard, one shared chrome) but
-// much smaller — a therapist's dashboard is a single page today (their own
-// bookings + diary handoffs), not a multi-section CRM, so there's no
-// AdminNav-style sidebar here yet. If this grows a second page later, pull
-// a nav out the same way admin's did.
+// Phase 208 — was a single flat page with no sidebar at all (see this
+// file's own prior comment: "a therapist's dashboard is a single page
+// today... If this grows a second page later, pull a nav out the same way
+// admin's did."). It grew a second page — this pulls the nav out, the same
+// way admin's did, per that comment's own plan. Order matches the explicit
+// spec: Dashboard, My Bookings, My Diary, Notifications, Profile/Settings —
+// "My Diary" immediately after "My Bookings".
+const NAV: TherapistNavItem[] = [
+  { href: "/therapist", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/therapist/bookings", label: "My Bookings", icon: CalendarCheck2 },
+  // Calendar icon required next to this label specifically, per spec.
+  { href: "/therapist/diary", label: "My Diary", icon: CalendarDays },
+  { href: "/therapist/notifications", label: "Notifications", icon: Bell },
+  { href: "/therapist/settings", label: "Profile / Settings", icon: UserCog },
+];
+
 export default async function TherapistLayout({ children }: { children: React.ReactNode }) {
   const self = await requireTherapist();
 
@@ -30,7 +43,14 @@ export default async function TherapistLayout({ children }: { children: React.Re
             </Link>
           )}
         </div>
-        {children}
+        {self ? (
+          <div className="grid gap-6 lg:grid-cols-[240px_1fr] lg:items-start">
+            <TherapistNav items={NAV} />
+            <div className="min-w-0">{children}</div>
+          </div>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );

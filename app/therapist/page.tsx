@@ -1,34 +1,16 @@
-import { CalendarClock, ExternalLink, Mail, Sparkle } from "lucide-react";
+import Link from "next/link";
+import { CalendarCheck2, CalendarDays, CalendarClock } from "lucide-react";
 import { requireTherapist } from "@/lib/auth/requireTherapist";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import type { Tables } from "@/lib/database.types";
-
-const SUPPORT_STATUS_LABEL: Record<string, string> = {
-  therapist_selected: "Client selected you",
-  booking_requested: "Booking requested",
-  scheduled: "Scheduled",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
 
 export const dynamic = "force-dynamic";
 
-const CHANNEL_LABEL: Record<string, string> = {
-  email: "Email",
-  whatsapp: "WhatsApp",
-  zoom: "Zoom",
-};
-
-// Roy's spec asked for a therapist-facing view of "their own bookings and
-// diary handoffs" — this page is exactly that, nothing more: two lists,
-// each scoped to this therapist's own `id`. Both queries add an explicit
-// `.eq("therapist_id", ...)` on top of what `session_bookings_therapist_read`
-// / `diary_events_therapist_read` RLS already enforces — defense-in-depth,
-// same reasoning as every admin query elsewhere in this codebase (RLS is
-// the real enforcement; the query-level filter means this page can never
-// accidentally show someone else's rows even if a future RLS change were
-// buggy).
+// Phase 208 — this used to be the therapist dashboard's only page (every
+// section now lives at its own route — see app/therapist/bookings/page.tsx
+// and app/therapist/diary/page.tsx, reached via the new sidebar in
+// app/therapist/layout.tsx). "Dashboard" is now a slim overview: today's
+// real, confirmed session count plus quick links into the sections that
+// hold the detail, rather than duplicating every list here too.
 export default async function TherapistDashboardPage() {
   const self = await requireTherapist();
 
@@ -45,48 +27,15 @@ export default async function TherapistDashboardPage() {
   }
 
   const supabase = await createClient();
-  // Phase 142 — support_requests has no RLS policies at all (service-role
-  // only — see the create_support_requests migration), so this one read
-  // uses the admin client instead of the cookie-based `supabase` above.
-  // Still scoped defense-in-depth to this therapist's own id, same as every
-  // other query on this page, even though there's no RLS to double up on
-  // here specifically.
-  const adminSupabase = createAdminClient();
-  const [{ data: sessionBookings }, { data: diaryEvents }, { data: supportRequests }] = await Promise.all([
-    supabase
-      .from("session_bookings")
-      .select("id, client_name, session_date, session_time, contact_channel, status, created_at")
-      .eq("therapist_id", self.therapist.id)
-      .order("session_date", { ascending: true })
-      .order("session_time", { ascending: true }),
-    supabase
-      .from("diary_scheduling_events")
-      .select("id, client_name, client_email, created_at, status")
-      .eq("therapist_id", self.therapist.id)
-      .order("created_at", { ascending: false }),
-    adminSupabase
-      .from("support_requests")
-      .select("id, full_name, email, treatment_type, session_format, status, created_at")
-      .eq("selected_therapist_id", self.therapist.id)
-      .order("created_at", { ascending: false }),
-  ]);
-
-  const bookings = (sessionBookings ?? []) as Pick<
-    Tables<"session_bookings">,
-    "id" | "client_name" | "session_date" | "session_time" | "contact_channel" | "status" | "created_at"
-  >[];
-  const diaryHandoffs = (diaryEvents ?? []) as Pick<
-    Tables<"diary_scheduling_events">,
-    "id" | "client_name" | "client_email" | "created_at" | "status"
-  >[];
-  const aiSupportBookings = (supportRequests ?? []) as Pick<
-    Tables<"support_requests">,
-    "id" | "full_name" | "email" | "treatment_type" | "session_format" | "status" | "created_at"
-  >[];
-
   const today = new Date().toISOString().slice(0, 10);
-  const upcoming = bookings.filter((b) => b.session_date >= today && b.status === "confirmed");
-  const past = bookings.filter((b) => b.session_date < today || b.status !== "confirmed");
+  const { data: todaySessions } = await supabase
+    .from("session_bookings")
+    .select("id")
+    .eq("therapist_id", self.therapist.id)
+    .eq("session_date", today)
+    .eq("status", "confirmed");
+
+  const todayCount = todaySessions?.length ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -99,127 +48,41 @@ export default async function TherapistDashboardPage() {
 
       <div className="rounded-[var(--radius)] border border-border bg-card p-6">
         <h2 className="mb-1 flex items-center gap-2 text-lg">
-          <CalendarClock size={18} className="text-primary" /> Upcoming sessions
+          <CalendarClock size={18} className="text-primary" /> Today
         </h2>
-        <p className="mb-4 text-[13px] text-muted-fg">
-          Real, reserved slots from clients who used the built-in date/time picker — each one is guaranteed
-          conflict-free.
+        <p className="text-[14px] text-muted-fg">
+          {todayCount === 0
+            ? "No confirmed sessions scheduled for today."
+            : `${todayCount} confirmed session${todayCount === 1 ? "" : "s"} scheduled for today.`}
         </p>
-        {upcoming.length === 0 ? (
-          <p className="text-[14px] text-muted-fg">No upcoming sessions right now.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-border">
-            {upcoming.map((b) => (
-              <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <div>
-                  <div className="font-medium">{b.client_name}</div>
-                  <div className="text-[13px] text-muted-fg">
-                    {b.session_date} at {b.session_time.slice(0, 5)} · {CHANNEL_LABEL[b.contact_channel] ?? b.contact_channel}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
 
-      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-        <h2 className="mb-1 flex items-center gap-2 text-lg">
-          <Sparkle size={18} className="text-primary" /> AI Support Bookings
-        </h2>
-        <p className="mb-4 text-[13px] text-muted-fg">
-          Clients who found you through GESA&apos;s AI Support match and selected you as their preferred therapist.
-        </p>
-        {aiSupportBookings.length === 0 ? (
-          <p className="text-[14px] text-muted-fg">No AI Support matches yet.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-border">
-            {aiSupportBookings.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <div>
-                  <div className="font-medium">{s.full_name || "A GESA client"}</div>
-                  {s.email && (
-                    <div className="flex items-center gap-1 text-[13px] text-muted-fg">
-                      <Mail size={12} /> {s.email}
-                    </div>
-                  )}
-                  <div className="text-[12.5px] text-muted-fg">
-                    {s.treatment_type ? `${s.treatment_type} · ` : ""}
-                    {new Date(s.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium text-muted-fg">
-                  {SUPPORT_STATUS_LABEL[s.status] ?? s.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Link
+          href="/therapist/bookings"
+          className="flex items-center gap-3 rounded-[var(--radius)] border border-border bg-card p-5 transition-colors hover:bg-secondary"
+        >
+          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-accent-soft text-primary">
+            <CalendarCheck2 size={18} />
+          </span>
+          <div>
+            <div className="text-[15px] font-medium">My Bookings</div>
+            <div className="text-[13px] text-muted-fg">Upcoming sessions, AI Support matches, and past requests</div>
+          </div>
+        </Link>
+        <Link
+          href="/therapist/diary"
+          className="flex items-center gap-3 rounded-[var(--radius)] border border-border bg-card p-5 transition-colors hover:bg-secondary"
+        >
+          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-accent-soft text-primary">
+            <CalendarDays size={18} />
+          </span>
+          <div>
+            <div className="text-[15px] font-medium">My Diary</div>
+            <div className="text-[13px] text-muted-fg">View your external calendar without leaving GESA</div>
+          </div>
+        </Link>
       </div>
-
-      <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-        <h2 className="mb-1 flex items-center gap-2 text-lg">
-          <ExternalLink size={18} className="text-primary" /> Scheduling-link activity
-        </h2>
-        <p className="mb-4 text-[13px] text-muted-fg">
-          Clients who were sent to your own scheduling link. GESA has no way to confirm they actually picked a
-          time — check your own calendar for the real outcome. &quot;Opened&quot; means the link was sent, not
-          that a session is booked.
-        </p>
-        {diaryHandoffs.length === 0 ? (
-          <p className="text-[14px] text-muted-fg">No scheduling-link activity yet.</p>
-        ) : (
-          <ul className="flex flex-col divide-y divide-border">
-            {diaryHandoffs.map((d) => (
-              <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <div>
-                  <div className="font-medium">{d.client_name || "A GESA client"}</div>
-                  {d.client_email && (
-                    <div className="flex items-center gap-1 text-[13px] text-muted-fg">
-                      <Mail size={12} /> {d.client_email}
-                    </div>
-                  )}
-                  <div className="text-[12.5px] text-muted-fg">
-                    {new Date(d.created_at).toLocaleString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                </div>
-                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium capitalize text-muted-fg">
-                  {d.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {past.length > 0 && (
-        <div className="rounded-[var(--radius)] border border-border bg-card p-6">
-          <h2 className="mb-1 text-lg">Past &amp; other requests</h2>
-          <p className="mb-4 text-[13px] text-muted-fg">
-            Earlier or non-confirmed session requests, for your records.
-          </p>
-          <ul className="flex flex-col divide-y divide-border">
-            {past.map((b) => (
-              <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-                <div>
-                  <div className="font-medium">{b.client_name}</div>
-                  <div className="text-[13px] text-muted-fg">
-                    {b.session_date} at {b.session_time.slice(0, 5)}
-                  </div>
-                </div>
-                <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-medium capitalize text-muted-fg">
-                  {b.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }

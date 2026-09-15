@@ -315,7 +315,28 @@ export type TherapistRow = {
   // own comment for why this can never drift from the event table's row
   // count. Public data as of Phase 207 (see therapists_public below).
   profile_views: number;
+  // Phase 208 — therapist diary calendar embed (My Diary), admin-managed
+  // only (see the phase_208 migration's extended protect_therapist_
+  // sensitive_fields trigger — a therapist can never set these on their own
+  // row, even via a direct client request). Deliberately separate from the
+  // public diary_link/diary_link_status pair above: diary_link is the
+  // client-facing "book a new session" link; these are a private,
+  // provider-approved "view my own already-booked sessions" embed URL.
+  // Never added to therapists_public/PublicTherapistRow below.
+  calendar_embed_url: string | null;
+  calendar_embed_provider: CalendarEmbedProvider;
+  calendar_embed_enabled: boolean;
+  calendar_embed_updated_at: string | null;
 }
+
+// Phase 208 — matches the phase_208 migration's
+// therapists_calendar_embed_provider_chk check constraint. "other" covers
+// any provider-approved embed URL from a service not explicitly named here
+// (e.g. Acuity, SimplyBook.it, Teamup) — the provider allowlist in
+// lib/diary/embedAllowlist.ts is what actually gates which URLs are ever
+// rendered in an iframe, not this label, which is purely informational for
+// the admin CRM.
+export type CalendarEmbedProvider = "google_calendar" | "outlook" | "calendly" | "other" | null;
 
 // Phase 186 — see TherapistRow.profile_status's own comment.
 export type TherapistProfileStatus = "draft" | "pending_publication" | "active" | "inactive" | "archived";

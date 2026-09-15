@@ -10,7 +10,8 @@ import PhoneNumberInput from "@/components/ui/PhoneNumberInput";
 import TherapistProfileStatusBadge from "@/components/admin/TherapistProfileStatusBadge";
 import TherapistArchiveButton from "@/components/admin/TherapistArchiveButton";
 import type { TherapistAdminRow } from "@/lib/queries";
-import type { TherapistProfileStatus } from "@/lib/database.types";
+import type { CalendarEmbedProvider, TherapistProfileStatus } from "@/lib/database.types";
+import { validateEmbedUrl } from "@/lib/diary/embedAllowlist";
 
 function isLikelyUrl(value: string): boolean {
   try {
@@ -104,6 +105,74 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
   const [linkEmailInput, setLinkEmailInput] = useState("");
   const [linkPending, setLinkPending] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+
+  // Phase 208 — "My Diary" calendar embed, entirely separate from the
+  // "Scheduling link" field above: that one sends clients out to book a new
+  // session; this one is a private, provider-approved read-only view of the
+  // therapist's own already-booked sessions, shown inside their GESA
+  // dashboard. Saved independently of the main onSubmit below (its own
+  // button, its own status line) since it has its own validation step
+  // (validateEmbedUrl) and shouldn't block or be blocked by an unrelated
+  // bio/photo edit — same reasoning as the "Professional login" section.
+  const [embedUrl, setEmbedUrl] = useState(therapist.calendar_embed_url ?? "");
+  const [embedProvider, setEmbedProvider] = useState<CalendarEmbedProvider>(
+    therapist.calendar_embed_provider ?? null
+  );
+  const [embedEnabled, setEmbedEnabled] = useState(therapist.calendar_embed_enabled ?? false);
+  const [embedUpdatedAt, setEmbedUpdatedAt] = useState(therapist.calendar_embed_updated_at);
+  const [embedPending, setEmbedPending] = useState(false);
+  const [embedError, setEmbedError] = useState<string | null>(null);
+  const [embedSaved, setEmbedSaved] = useState(false);
+  const [embedPreviewOpen, setEmbedPreviewOpen] = useState(false);
+
+  async function onSaveEmbed(e: React.FormEvent) {
+    e.preventDefault();
+    setEmbedPending(true);
+    setEmbedError(null);
+    setEmbedSaved(false);
+    const trimmed = embedUrl.trim();
+
+    // An admin can always disable/clear regardless of validation — only a
+    // non-empty URL that's about to be (re)enabled or saved has to pass the
+    // allowlist check. Clearing the field is always allowed as an escape
+    // hatch for "this was set wrong, take it out."
+    if (trimmed) {
+      const result = validateEmbedUrl(trimmed);
+      if (!result.ok) {
+        setEmbedError(result.reason);
+        setEmbedPending(false);
+        return;
+      }
+    } else if (embedEnabled) {
+      setEmbedError("Add a calendar embed URL before enabling the embed, or turn Enabled off.");
+      setEmbedPending(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from("therapists")
+      .update({
+        calendar_embed_url: trimmed || null,
+        calendar_embed_provider: trimmed ? embedProvider : null,
+        calendar_embed_enabled: trimmed ? embedEnabled : false,
+        calendar_embed_updated_at: nowIso,
+      })
+      .eq("id", therapist.id);
+    setEmbedPending(false);
+    if (error) {
+      setEmbedError("Couldn't save — try again.");
+      return;
+    }
+    if (!trimmed) {
+      setEmbedEnabled(false);
+      setEmbedProvider(null);
+    }
+    setEmbedUpdatedAt(nowIso);
+    setEmbedSaved(true);
+    setEmbedPreviewOpen(false);
+  }
 
   async function onLinkAccount(e: React.FormEvent) {
     e.preventDefault();
@@ -520,6 +589,107 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
           </form>
         )}
         {linkError && <p className="mt-2 text-[13px] text-destructive">{linkError}</p>}
+      </div>
+
+      <div className="mt-6 border-t border-border pt-5">
+        <h3 className="mb-1.5 text-[15px] font-semibold">My Diary — calendar embed</h3>
+        <p className="mb-3 text-[13px] text-muted-fg">
+          Lets this professional view their own booked sessions inside GESA, without leaving the site. This is a
+          private, read-only view for them — different from the public &quot;Scheduling link&quot; above, which
+          clients use to book. GESA&apos;s internal Calendar/My Bookings stays the source of truth for real
+          bookings; this is only a view of the professional&apos;s external calendar.
+        </p>
+        <form onSubmit={onSaveEmbed} className="flex flex-col gap-3.5">
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Calendar embed URL</label>
+            <input
+              type="url"
+              value={embedUrl}
+              onChange={(e) => {
+                setEmbedUrl(e.target.value);
+                setEmbedSaved(false);
+              }}
+              placeholder="https://calendar.google.com/calendar/embed?... or an Outlook published-calendar view.html link"
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+            <p className="mt-1 text-[12.5px] text-muted-fg">
+              Must be a provider-approved &quot;embed&quot; or &quot;publish calendar&quot; link (Google Calendar
+              or Outlook), not a personal login URL. Calendly has no equivalent read-only embed — a Calendly
+              professional will see a secure &quot;Open Diary&quot; button instead of an embedded calendar.
+            </p>
+          </div>
+
+          <div className="grid gap-3.5 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-sm font-semibold">Provider</label>
+              <select
+                value={embedProvider ?? ""}
+                onChange={(e) => setEmbedProvider((e.target.value || null) as CalendarEmbedProvider)}
+                className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 focus:border-primary focus:outline-none"
+              >
+                <option value="">Not set</option>
+                <option value="google_calendar">Google Calendar</option>
+                <option value="outlook">Outlook / Microsoft 365</option>
+                <option value="calendly">Calendly (embed not supported)</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="flex items-end pb-2.5">
+              <label className="flex items-center gap-2 text-[13.5px]">
+                <input
+                  type="checkbox"
+                  checked={embedEnabled}
+                  onChange={(e) => {
+                    setEmbedEnabled(e.target.checked);
+                    setEmbedSaved(false);
+                  }}
+                  className="h-4 w-4"
+                />
+                Embed enabled
+              </label>
+            </div>
+          </div>
+
+          {embedUpdatedAt && (
+            <p className="text-[12.5px] text-muted-fg">
+              Last updated {new Date(embedUpdatedAt).toLocaleString("en-US", { timeZone: "UTC" })} UTC.
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="submit" variant="outline" size="sm" disabled={embedPending}>
+              {embedPending ? "Saving…" : "Save diary embed"}
+            </Button>
+            {embedUrl.trim() && validateEmbedUrl(embedUrl).ok && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEmbedPreviewOpen((v) => !v)}
+              >
+                {embedPreviewOpen ? "Hide preview" : "Preview"}
+              </Button>
+            )}
+            {embedSaved && <span className="text-[13.5px] font-medium text-primary">Saved.</span>}
+            {embedError && <span className="text-[13.5px] font-medium text-destructive">{embedError}</span>}
+          </div>
+
+          {/* Admin-only preview, so an admin can confirm a link actually
+              renders a real calendar before enabling it for the
+              professional — never shown to anyone but admins, and only
+              rendered for a URL that already passed validateEmbedUrl. */}
+          {embedPreviewOpen && embedUrl.trim() && validateEmbedUrl(embedUrl).ok && (
+            <div className="overflow-hidden rounded-xl border border-border">
+              <iframe
+                src={embedUrl.trim()}
+                title="Calendar embed preview"
+                className="h-[360px] w-full"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          )}
+        </form>
       </div>
 
       <div className="mt-6 border-t border-border pt-5">

@@ -550,6 +550,33 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
             </div>
           )}
         </div>
+
+        {/* Phase 208 — "View in Calendar" for a therapist's own session
+            notification: tries GESA's internal Calendar (My Bookings) first,
+            per spec, plus a secondary link into the new diary embed. Only
+            ever rendered for `kind === "session"`, which this component's
+            own therapist-role branch is the only thing that ever produces —
+            an admin viewing a `sessionBooking`/`match`/etc. item never sees
+            this, and it links to a fixed route for the *signed-in* user's
+            own dashboard, never to another therapist's data. */}
+        {item.kind === "session" && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+            <Link
+              href="/therapist/bookings"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-2 text-[12.5px] font-semibold text-primary-fg transition-colors hover:bg-primary-600"
+            >
+              <CalendarClock size={13} /> View in Calendar
+            </Link>
+            <Link
+              href="/therapist/diary"
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[12.5px] font-medium text-primary transition-colors hover:bg-secondary"
+            >
+              Open my diary
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
