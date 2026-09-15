@@ -49,12 +49,14 @@ describe("Paths (Home)", () => {
   // hover/focus rotate classes that drive the effect.
   // Phase 100 — the front face's painting (asserted here via its "artwork"
   // alt text through Phase 97/99) was replaced by the GesaMark graphic, an
-  // inline SVG with no alt text of its own; this now asserts the mark
-  // renders (three <svg> front faces) instead.
-  it("renders both the front (GesaMark) and back (text/CTA) faces of each flip card", () => {
+  // inline SVG with no alt text of its own.
+  // Phase 209 — GesaMark itself was replaced by DoorMark (an ajar-door SVG,
+  // viewBox "0 0 100 150"), per Roy's new reference image; this now asserts
+  // that mark renders (three <svg> front faces) instead.
+  it("renders both the front (DoorMark) and back (text/CTA) faces of each flip card", () => {
     render(<Paths />);
 
-    const frontMarks = document.querySelectorAll('.gold-card-hover svg[viewBox="0 0 200 220"]');
+    const frontMarks = document.querySelectorAll('.gold-card-hover svg[viewBox="0 0 100 150"]');
     expect(frontMarks.length).toBe(3);
 
     const flipWrapper = screen.getByText("In crisis right now").closest('[class*="transform-style"]') as HTMLElement;
@@ -68,11 +70,13 @@ describe("Paths (Home)", () => {
 
   // Phase 97 first restyled the front face as framed artwork + gold badge
   // dome, explicitly keeping the flip effect and the back face's own
-  // title/description/CTA content untouched.
+  // title/description/CTA content untouched. Phase 209 relabeled the badge
+  // text from each card's specific hardship (War/Terror/Disaster, Phase 154)
+  // back to its category name, matching the new door reference image.
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Crisis")).toBeInTheDocument();
+    expect(screen.getByText("Resilience")).toBeInTheDocument();
     expect(screen.getByText("Veterans")).toBeInTheDocument();
     expect(screen.getByText("Support")).toBeInTheDocument();
 

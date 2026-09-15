@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GESA Platform — Technical Specification v2.0</title>
+<style>
+  @page { size: A4; margin: 2.2cm 2cm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1f2430;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+    background: #f4f5f7;
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 56px 64px;
+  }
+  .doc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid #b9bfca;
+    padding-bottom: 8px;
+    margin-bottom: 28px;
+    font-size: 11px;
+    color: #5b6472;
+  }
+  .doc-header .brand { display: flex; align-items: center; gap: 6px; font-weight: bold; color: #14213d; font-size: 13px; }
+  .cover { text-align: center; padding-top: 60px; }
+  .cover .logo { margin: 40px auto 28px; }
+  .cover h1 { font-size: 30px; margin: 0 0 6px; color: #14213d; }
+  .cover h2 { font-size: 16px; font-weight: 600; margin: 0 0 26px; color: #2b3140; }
+  .cover .prepared { font-size: 14px; margin-bottom: 4px; }
+  .cover .date { font-size: 13px; color: #444; margin-bottom: 14px; }
+  .cover .docctl { font-style: italic; font-size: 12px; color: #555; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 8px 0; display: inline-block; margin-top: 10px; }
+  .pagebreak { page-break-before: always; }
+  h1.section { font-size: 20px; color: #14213d; border-bottom: 2.5px solid #bfa046; padding-bottom: 6px; margin-top: 0; }
+  h2.sub { font-size: 15px; color: #1c2740; margin-top: 26px; }
+  h3.subsub { font-size: 13.5px; color: #33405c; margin-top: 18px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 18px; font-size: 12px; }
+  th { background: #14213d; color: #fff; text-align: left; padding: 6px 10px; font-size: 11.5px; }
+  td { border: 1px solid #d7dbe2; padding: 6px 10px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f6f7f9; }
+  code, .mono { font-family: "Consolas", "Courier New", monospace; font-size: 11.5px; background: #eef0f4; padding: 1px 5px; border-radius: 3px; }
+  .callout { background: #fbf6e8; border-left: 4px solid #bfa046; padding: 10px 14px; margin: 14px 0; font-size: 12.5px; }
+  .callout.warn { background: #fdeeec; border-left-color: #bb5138; }
+  .callout.new { background: #eaf0e4; border-left-color: #6f8a52; }
+  ul, ol { margin: 6px 0 12px; padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  .toc a { color: #14213d; text-decoration: none; }
+  .toc-line { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 3px 0; font-size: 12.5px; }
+  .toc-line.l2 { padding-left: 18px; font-size: 12px; color: #333; }
+  .badge-new { display: inline-block; background: #6f8a52; color: #fff; font-size: 9.5px; font-weight: bold; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+  .badge-changed { display: inline-block; background: #8c6f1f; color: #fff; font-size: 9.5px; font-weight: bold; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+  .pagenum { text-align: center; font-size: 11px; color: #999; margin-top: 30px; }
+  @media print {
+    body { background: #fff; }
+    .page { box-shadow: none; padding: 0; }
+    .noprint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page cover">
+  <div class="logo">
+    <svg width="230" height="86" viewBox="0 0 230 86" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="vgrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1b3a8a"/>
+          <stop offset="55%" stop-color="#2f6fd6"/>
+          <stop offset="100%" stop-color="#57b8e6"/>
+        </linearGradient>
+      </defs>
+      <path d="M6 16 C 20 40, 34 58, 46 66 C 58 58, 70 40, 80 20 L 68 20 C 60 34, 52 46, 46 52 C 40 44, 32 30, 24 16 Z" fill="url(#vgrad)"/>
+      <path d="M30 16 C 40 34, 48 46, 54 52 C 62 44, 70 32, 76 20" stroke="#57b8e6" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.55"/>
+      <text x="92" y="52" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#14213d">entVest</text>
+    </svg>
+  </div>
+  <h1>GESA Platform</h1>
+  <h2>Technical Specification &amp; System Documentation</h2>
+  <div class="prepared">Prepared by VentVest for Roy</div>
+  <div class="date">September 2026</div>
+  <div class="docctl">Document Control: v2.0 — Confidential — Prepared for QA handoff &amp; internal review</div>
+</div>
+
+<div class="page pagebreak">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">Document Control — Version History</h1>
+  <table>
+    <tr><th>Version</th><th>Date</th><th>Author</th><th>Reviewer / Approver</th><th>Description</th></tr>
+    <tr><td>1.0</td><td>2026-08-29</td><td>R. Rapada</td><td>J. Buena</td><td>Initial technical specification: tech stack, architecture, database schema, email system, public site pages, admin CRM, content management, design system, environment/deployment notes.</td></tr>
+    <tr><td>1.1 – 1.7</td><td>2026-08-29 → 2026-08-30</td><td>R. Rapada</td><td>J. Buena</td><td>VentVest rebrand of the document (cover page + running header), added Functional Requirements / Client Workflow / Therapist Workflow / QA &amp; Testing Reference sections, corrected numbering, restyled the version-history table, moved this page to stand alone after the cover.</td></tr>
+    <tr><td><strong>2.0</strong></td><td>2026-09-15</td><td>Claude (VentVest engineering assistant), on Roy's request</td><td>Pending Roy's review</td><td>
+      Full re-audit of the live codebase against <span class="mono">EXECUTION_PLAN.md</span> through <strong>Phase 208</strong>. This version supersedes v1.7 entirely. Major changes: Therapist Workflow section rewritten top-to-bottom — therapists now have a full self-service dashboard (Dashboard / My Bookings / My Diary / Notifications / Profile-Settings), including the new <strong>Therapist Diary Calendar Embed</strong>. Database Schema section adds 11 new tables and multiple new columns on <span class="mono">therapists</span>. Admin CRM nav updated from 11 to 16 items. Content Management System rewritten for the new 4-group / 18-tab structure. New Functional Requirements for Donations/Payments, Media Library, Trusted Partners, categorized FAQ, custom error pages, public profile-view counter, and admin invitations. QA &amp; Testing Reference expanded with new test scenarios and a dedicated "Known Security Items to Re-Verify" list.
+    </td></tr>
+  </table>
+</div>
+
+<div class="page pagebreak">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">Table of Contents</h1>
+  <div class="toc">
+    <div class="toc-line"><a href="#s1">1. Overview</a><span>3</span></div>
+    <div class="toc-line"><a href="#s2">2. Tech Stack &amp; Architecture</a><span>3</span></div>
+    <div class="toc-line l2"><a href="#s2-1">2.1 Core Dependencies</a><span></span></div>
+    <div class="toc-line l2"><a href="#s2-2">2.2 Deployment Topology</a><span></span></div>
+    <div class="toc-line l2"><a href="#s2-3">2.3 Authentication Architecture</a><span></span></div>
+    <div class="toc-line l2"><a href="#s2-4">2.4 Row-Level Security Pattern &amp; Known Gaps</a><span></span></div>
+    <div class="toc-line l2"><a href="#s2-5">2.5 Database Functions (RPC) &amp; Triggers</a><span></span></div>
+    <div class="toc-line"><a href="#s3">3. Database Schema</a><span>4</span></div>
+    <div class="toc-line"><a href="#s4">4. Email System</a><span>4</span></div>
+    <div class="toc-line"><a href="#s5">5. Public Website — Pages &amp; Features</a><span>5</span></div>
+    <div class="toc-line"><a href="#s6">6. Admin CRM Dashboard</a><span>5</span></div>
+    <div class="toc-line"><a href="#s7">7. Content Management System</a><span>5</span></div>
+    <div class="toc-line"><a href="#s8">8. Design System</a><span>6</span></div>
+    <div class="toc-line"><a href="#s9">9. Environment Variables &amp; Deployment Notes</a><span>6</span></div>
+    <div class="toc-line"><a href="#s10">10. Functional Requirements</a><span>6</span></div>
+    <div class="toc-line"><a href="#s11">11. Client Workflow</a><span>7</span></div>
+    <div class="toc-line"><a href="#s12">12. Therapist Workflow <span class="badge-changed">MAJOR REWRITE</span></a><span>7</span></div>
+    <div class="toc-line"><a href="#s13">13. QA &amp; Testing Reference</a><span>7</span></div>
+  </div>
+</div>
+
+<div class="page pagebreak" id="s1">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">1. Overview</h1>
+  <p>GESA (Global Emotional Support Alliance) is a nonprofit platform connecting people in need of emotional support with a global network of verified volunteer therapists, at no cost to the client. The platform consists of a public marketing/intake site, a set of client-facing tools (accounts, chat, session booking, donations), a full <strong>therapist self-service dashboard</strong> (new since v1.7), and an internal CRM/admin dashboard for staff to manage therapists, submissions, scheduling, payments, and site content.</p>
+  <p><strong>Stack at a glance:</strong> Next.js 14 (App Router, TypeScript) on Vercel, Supabase (Postgres, Auth, Storage, Realtime) as the backend, Resend for transactional email, Mollie and PayPal for payments, and an Anthropic-powered AI matching engine with a rule-based fallback.</p>
+  <p><strong>Repository conventions:</strong> all work is tracked as sequential numbered "Phases" in <span class="mono">EXECUTION_PLAN.md</span>, each ending with a review gate before the next begins. As of this document, <strong>208 phases</strong> have shipped. No migration files are kept in the repository — every schema change is applied directly to the live Supabase project, with its rationale recorded only in the corresponding phase entry; <span class="mono">EXECUTION_PLAN.md</span> is therefore the authoritative schema changelog, not a <span class="mono">supabase/migrations/</span> folder. The codebase favors editing existing files over deleting them — deprecated components/fields are commented as unused rather than removed.</p>
+  <div class="callout new">This version (v2.0) supersedes v1.7 in full. Two other markdown specification drafts exist in the repository root (<span class="mono">GESA_TECHNICAL_SPECIFICATION.md</span> and <span class="mono">GESA_Platform_Technical_Specification_v2.md</span>) — both predate Phase 200 and should be treated as superseded by this document.</div>
+</div>
+
+<div class="page pagebreak" id="s2">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">2. Tech Stack &amp; Architecture</h1>
+
+  <h2 class="sub" id="s2-1">2.1 Core Dependencies</h2>
+  <table>
+    <tr><th>Category</th><th>Library</th><th>Version</th></tr>
+    <tr><td>Framework</td><td>Next.js</td><td>14.2.3 (App Router, TypeScript)</td></tr>
+    <tr><td>UI</td><td>React / React DOM</td><td>^18</td></tr>
+    <tr><td>Backend / DB / Auth</td><td>@supabase/supabase-js</td><td>^2.42.0</td></tr>
+    <tr><td>Backend / DB / Auth</td><td>@supabase/ssr</td><td>^0.12.4</td></tr>
+    <tr><td>Styling</td><td>Tailwind CSS</td><td>^3.4.1</td></tr>
+    <tr><td>Animation</td><td>Framer Motion</td><td>^11.18.2</td></tr>
+    <tr><td>Icons</td><td>lucide-react</td><td>^0.370.0</td></tr>
+    <tr><td>Email</td><td>Resend</td><td>^3.2.0</td></tr>
+    <tr><td>Validation</td><td>Zod</td><td>^3.23.8</td></tr>
+    <tr><td>AI matching</td><td>@anthropic-ai/sdk</td><td>^0.32.1 (model <span class="mono">claude-haiku-4-5-20251001</span>; falls back to a rule-based scorer if unset)</td></tr>
+    <tr><td>Payments <span class="badge-new">NEW</span></td><td>@mollie/api-client</td><td>^4.6.0 — Donate page (one-time &amp; recurring)</td></tr>
+    <tr><td>Payments <span class="badge-new">NEW</span></td><td>PayPal Smart Buttons SDK</td><td>loaded via client-side script tag, not an npm dependency — Community page Professional Services checkout</td></tr>
+    <tr><td>Rich text <span class="badge-new">NEW</span></td><td>@tiptap/react + suite</td><td>^2.27.3 — UI Builder's rich-text/formatting toolbar</td></tr>
+    <tr><td>Sanitization <span class="badge-new">NEW</span></td><td>sanitize-html</td><td>2.17.4 — strips unsafe markup from rich-text fields before storage/render</td></tr>
+    <tr><td>Phone validation <span class="badge-new">NEW</span></td><td>libphonenumber-js</td><td>^1.13.12 — international phone number field</td></tr>
+    <tr><td>Language</td><td>TypeScript</td><td>^5</td></tr>
+    <tr><td>Unit testing</td><td>Jest / Testing Library</td><td>^29.7 / ^16</td></tr>
+    <tr><td>E2E testing</td><td>Playwright</td><td>^1.48.0</td></tr>
+    <tr><td>Runtime</td><td>Node.js</td><td>&gt;= 20</td></tr>
+  </table>
+  <p><strong>NPM scripts:</strong> <span class="mono">dev</span>, <span class="mono">build</span>, <span class="mono">start</span>, <span class="mono">lint</span>, <span class="mono">typecheck</span>, <span class="mono">test</span>, <span class="mono">test:e2e</span>, <span class="mono">db:types</span> (regenerates <span class="mono">lib/database.types.ts</span> from the live schema — several recent phases hand-edited this file directly instead, when the local Supabase CLI/shell was unreachable; a fresh <span class="mono">db:types</span> run is recommended before this document's next revision to confirm no drift).</p>
+
+  <h2 class="sub" id="s2-2">2.2 Deployment Topology</h2>
+  <p>Unchanged from v1.7: Vercel + GitHub, three branches (<span class="mono">main</span> → Production, <span class="mono">uat</span> → temporarily pointed at Dev, other/PRs → Preview/Dev). No <span class="mono">vercel.json</span> committed; configuration lives in Vercel's dashboard per environment.</p>
+
+  <h2 class="sub" id="s2-3">2.3 Authentication Architecture</h2>
+  <p>Unchanged structurally from v1.7 (browser client / server client / admin service-role client / session-refresh middleware). Roles (<span class="mono">AppRole</span>): <span class="mono">admin, reviewer, therapist, client, finance, super_admin</span> — <strong><span class="mono">super_admin</span> is new since v1.7</strong>, added alongside the Phase 187 invitation-only admin onboarding system.</p>
+
+  <h2 class="sub" id="s2-4">2.4 Row-Level Security Pattern &amp; Known Gaps</h2>
+  <p>The core pattern from v1.7 is unchanged (public insert / no public read / admin+reviewer read / admin-only status writes / narrower therapist-read policies). Several things have been added or discovered since and should be part of QA's security pass:</p>
+  <ul>
+    <li><strong>New DB triggers:</strong> <span class="mono">protect_therapist_sensitive_fields()</span> (Phase 186, extended Phase 208) prevents a therapist from self-editing their own lifecycle fields (<span class="mono">is_verified</span>, <span class="mono">is_active</span>, <span class="mono">profile_status</span>, etc.) and — as of Phase 208 — the 4 new calendar-embed columns, restricted to <span class="mono">admin</span>/<span class="mono">super_admin</span> only, not even <span class="mono">reviewer</span>. <span class="mono">protect_profile_role_column()</span> (closing a real vulnerability, see below) prevents a signed-in user from setting their own <span class="mono">role</span>. <span class="mono">protect_last_super_admin()</span> guarantees a role change or delete can never leave zero <span class="mono">super_admin</span> accounts.</li>
+    <li class="callout warn" style="display:block;"><strong>Two real vulnerabilities were found and fixed pre-Phase-187</strong> — worth a regression test each: (1) <span class="mono">handle_new_user()</span> used to auto-grant the <span class="mono">therapist</span> role to any public signup whose email matched an existing therapist's public contact email; every public signup now always receives <span class="mono">role: 'client'</span>. (2) The <span class="mono">profiles_self_update</span> RLS policy had no <span class="mono">WITH CHECK</span> restricting which columns a user could change on their own row — a client could previously have set <span class="mono">role = 'admin'</span> on themselves via a direct request. Both are closed; QA should attempt both again as regression checks.</li>
+    <li><strong>Open item — <span class="mono">admin</span> vs. <span class="mono">super_admin</span> check gap:</strong> several policies/routes still check the literal <span class="mono">auth_role() = 'admin'</span> instead of <span class="mono">IN ('admin','super_admin')</span>, which silently excludes a valid Super Admin account from some actions (confirmed still open in <span class="mono">ImageUploadField.tsx</span>'s storage policy and <span class="mono">app/api/admin/inquiries/delete/route.ts</span>). <strong>QA should specifically test every admin-only action while signed in as a <span class="mono">super_admin</span> account, not only as <span class="mono">admin</span></strong> — this class of bug only reproduces for that role.</li>
+    <li><strong>Open item — RLS fully disabled on 3 tables in Production:</strong> <span class="mono">gesa_therapist_photo_map</span>, <span class="mono">gesa_group_registrations</span>, <span class="mono">gesa_zoom_enrollments</span>. Flagged, not yet remediated.</li>
+    <li><strong>Open item — a parallel legacy <span class="mono">gesa_</span>-prefixed schema exists</strong> (<span class="mono">gesa_site_content</span>, <span class="mono">gesa_faqs</span>, <span class="mono">gesa_testimonials</span>, <span class="mono">gesa_therapists</span>, etc.) sitting alongside the tables the live app actually reads. Not cleaned up. A database audit that doesn't know to ignore these will produce false findings — worth a note to any external security reviewer.</li>
+    <li><span class="mono">support_requests</span> deliberately has <strong>zero RLS policies</strong> — by design, not oversight — it is only ever read/written through server-side API routes using the service-role client, since it collects more sensitive free-text data (a "feelings" field) than any other submission table.</li>
+  </ul>
+
+  <h2 class="sub" id="s2-5">2.5 Database Functions (RPC) &amp; Triggers</h2>
+  <p>All v1.7 functions (<span class="mono">auth_role()</span>, <span class="mono">get_or_create_my_client()</span>, <span class="mono">get_or_create_thread()</span>, <span class="mono">get_booked_slots()</span>, <span class="mono">handle_new_user()</span>) remain in place. New since v1.7:</p>
+  <table>
+    <tr><th>Function</th><th>Purpose</th></tr>
+    <tr><td><span class="mono">get_therapist_contact()</span></td><td>SECURITY DEFINER RPC gating <span class="mono">contact_email</span>/<span class="mono">contact_phone</span> reads to admin/reviewer/the therapist themself.</td></tr>
+    <tr><td><span class="mono">record_therapist_profile_view()</span></td><td>Phase 207 — atomically inserts a dedup event row into <span class="mono">therapist_profile_views</span> and, only on a genuine new insert, increments <span class="mono">therapists.profile_views</span> in the same statement. Service-role only.</td></tr>
+    <tr><td><span class="mono">get_therapist_view_summary / get_all_therapist_view_summaries / get_therapist_view_daily_breakdown</span></td><td>Phase 206 — SECURITY DEFINER, admin/super_admin only, back the Therapist Analytics CRM page.</td></tr>
+    <tr><td><span class="mono">protect_therapist_sensitive_fields()</span></td><td>Trigger, see §2.4.</td></tr>
+    <tr><td><span class="mono">protect_profile_role_column()</span></td><td>Trigger, see §2.4.</td></tr>
+    <tr><td><span class="mono">protect_last_super_admin()</span></td><td>Trigger, see §2.4.</td></tr>
+  </table>
+</div>
+
+<div class="page pagebreak" id="s3">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">3. Database Schema</h1>
+  <p>Source of truth: <span class="mono">lib/database.types.ts</span>. Every table from v1.7 remains present and unchanged in shape unless noted. Below covers only what's new or changed since v1.7 — for tables not mentioned here (e.g. <span class="mono">blog_posts</span>, <span class="mono">testimonials</span>, <span class="mono">crisis_resources</span>, <span class="mono">clinic_locations</span>, <span class="mono">profiles</span>, <span class="mono">clients</span>, <span class="mono">chat_threads</span>, <span class="mono">chat_messages</span>, <span class="mono">translation_cache</span>), refer to v1.7 — no schema changes were found.</p>
+
+  <h2 class="sub">3.1 New Tables</h2>
+  <table>
+    <tr><th>Table</th><th>Added</th><th>Columns / Purpose</th></tr>
+    <tr><td><span class="mono">media_assets</span></td><td>Phase 201</td><td><span class="mono">id, storage_bucket, storage_path, file_name, file_type, file_size_bytes, alt_text, caption, credit, is_decorative, focal_point_x, focal_point_y, uploaded_by, created_at, updated_at</span> — backs the Media Library.</td></tr>
+    <tr><td><span class="mono">media_asset_usages</span></td><td>Phase 201</td><td><span class="mono">id, media_asset_id, page_key, section_key, created_at</span> — tracks where each asset is used; <span class="mono">ON DELETE RESTRICT</span> against <span class="mono">media_assets</span> so an in-use image can't be hard-deleted.</td></tr>
+    <tr><td><span class="mono">partners</span></td><td>Phase 203</td><td><span class="mono">id, name, logo_url, logo_alt, link_url, sort, is_active, created_at, updated_at</span> — Trusted Partners, rendered in the Footer.</td></tr>
+    <tr><td><span class="mono">therapist_profile_views</span></td><td>Phase 206</td><td><span class="mono">id, therapist_id, viewed_at, visitor_key, anonymous_id_hash, referrer, created_at</span> — granular, privacy-safe (hashed, no PII/IP) profile-view events; admin-read-only RLS.</td></tr>
+    <tr><td><span class="mono">support_requests</span></td><td>Phase 142</td><td>The current "Find Support" flow's primary table (replaced <span class="mono">match_requests</span> as the active write target — see §3.2). Zero RLS policies by design; service-role access only. Full column list includes <span class="mono">pathway, status, full_name, email, phone, age_confirmed, consent_at, gender_preference, support_categories, treatment_type, preferred_language, session_format, clinic_location_id, availability_notes, accessibility_needs, feelings_text, crisis_disclaimer_shown_at, matched_therapist_ids, ai_reasoning, gender_preference_honored, selected_therapist_id, preferred_date, preferred_time, diary_scheduling_event_id, source_page, created_at, updated_at</span>.</td></tr>
+    <tr><td><span class="mono">invitations</span></td><td>Phase 187</td><td>Invitation-only Admin/Super Admin/Therapist onboarding: <span class="mono">email, invited_role, token_hash, token_expires_at, status, sent_at, opened_at, accepted_at, revoked_at, resend_count, ...</span>. Raw token never stored (sha256 hash only).</td></tr>
+    <tr><td><span class="mono">gesa_admin_audit_log</span></td><td>reused Phase 186</td><td><span class="mono">id, admin_id, action, target_type, target_id, metadata, created_at</span> — the real admin audit trail (publish/status-change actions, etc.).</td></tr>
+    <tr><td><span class="mono">crm_ui_drafts</span></td><td>Phase 132</td><td>UI Builder's draft/publish staging for site-wide design tokens.</td></tr>
+    <tr><td><span class="mono">booking_intake_forms</span></td><td>Phase 128</td><td>Required client-intake step before a client reaches a therapist's public <span class="mono">diary_link</span> scheduler — separate from <span class="mono">support_requests</span>/<span class="mono">session_bookings</span>.</td></tr>
+    <tr><td><span class="mono">diary_scheduling_events</span></td><td>Phase 129, extended 196</td><td>Client-reported (never provider-verified) echo of an external diary-link booking; extended with <span class="mono">service_type</span>, payment fields (<span class="mono">payment_status/provider/reference</span>, <span class="mono">price_amount/currency</span>) for Professional Services checkout.</td></tr>
+    <tr><td><span class="mono">donations</span></td><td>Phase 98/99</td><td><span class="mono">full_name, email, phone, frequency, amount, message, status, currency, mollie_payment_id, mollie_customer_id, mollie_subscription_id, paid_at, created_at</span>.</td></tr>
+  </table>
+
+  <h2 class="sub">3.2 <span class="mono">match_requests</span> vs. <span class="mono">support_requests</span> — legacy status</h2>
+  <p><span class="mono">match_requests</span> is <strong>legacy</strong>: since Phase 142, the "Find Your Therapist" AI wizard writes to <span class="mono">support_requests</span> instead. Phase 150 removed <span class="mono">match_requests</span>' CRM nav link (kept reachable only by direct URL, at <span class="mono">/admin/match-requests</span>, for historical/audit access — not deleted, per the project's no-delete-data convention) and fixed the CRM dashboard/notification bell/KPI tiles, which had been silently reading the stale table. <span class="mono">booking_requests</span> is <strong>not</strong> legacy — it remains a separate, actively-used workflow with its own nav item.</p>
+
+  <h2 class="sub">3.3 <span class="mono">therapists</span> — new columns</h2>
+  <table>
+    <tr><th>Column</th><th>Phase</th><th>Notes</th></tr>
+    <tr><td><span class="mono">diary_link</span> / <span class="mono">diary_link_status</span></td><td>126</td><td>Public, client-facing "book a new session" link. <strong>Not</strong> the same concept as the Phase 208 calendar-embed columns below.</td></tr>
+    <tr><td><span class="mono">country</span> / <span class="mono">price_note</span></td><td>126</td><td>Public.</td></tr>
+    <tr><td><span class="mono">offers_online</span> / <span class="mono">offers_in_person</span></td><td>151</td><td>Browse-search flags.</td></tr>
+    <tr><td><span class="mono">city, latitude, longitude</span></td><td>151</td><td>Lat/long nullable, never populated (no geocoding step exists), never public.</td></tr>
+    <tr><td><span class="mono">support_pathways</span></td><td>152</td><td><span class="mono">string[]</span> — which <span class="mono">/intake?path=</span> pathways this therapist serves.</td></tr>
+    <tr><td><span class="mono">profile_status</span></td><td>186</td><td><span class="mono">draft | pending_publication | active | inactive | archived</span> — kept in sync 1:1 with <span class="mono">is_active</span> by trigger.</td></tr>
+    <tr><td><span class="mono">volunteer_application_id</span></td><td>186</td><td>Nullable FK; DB-enforced to only ever reference an <em>approved</em> application.</td></tr>
+    <tr><td><span class="mono">session_price_amount / session_price_currency</span></td><td>196</td><td>Structured price for Professional Services checkout; no admin UI yet (SQL-only).</td></tr>
+    <tr><td><span class="mono">profile_views</span></td><td>207</td><td>Public, denormalized all-time counter — same number shown on the public card and in the admin Therapist Analytics "All time" column.</td></tr>
+    <tr><td><span class="mono">calendar_embed_url</span></td><td>208</td><td><strong>Private</strong> — never in <span class="mono">therapists_public</span>. Admin-managed "My Diary" embed URL. See §12.</td></tr>
+    <tr><td><span class="mono">calendar_embed_provider</span></td><td>208</td><td><span class="mono">google_calendar | outlook | calendly | other | null</span>.</td></tr>
+    <tr><td><span class="mono">calendar_embed_enabled</span></td><td>208</td><td>Admin kill switch, default <span class="mono">false</span>.</td></tr>
+    <tr><td><span class="mono">calendar_embed_updated_at</span></td><td>208</td><td>Set on every admin save.</td></tr>
+  </table>
+
+  <h2 class="sub">3.4 <span class="mono">therapists_public</span> view — current exact column list</h2>
+  <p><span class="mono">id, full_name, slug, bio, credentials, gender, is_verified, languages, photo_url, session_lengths, short_summary, specialties, time_zone, tracks, years_experience, diary_link, diary_link_status, country, price_note, created_at, updated_at, offers_online, offers_in_person, city, support_pathways, session_price_amount, session_price_currency, profile_views</span>, plus a derived <span class="mono">has_whatsapp: boolean</span>. Excludes <span class="mono">contact_email, contact_phone, is_active, profile_id, verified_at, verified_by</span>, and <strong>all 4 calendar-embed columns</strong>.</p>
+
+  <h2 class="sub">3.5 Other schema notes</h2>
+  <ul>
+    <li><span class="mono">faqs.category</span> <span class="badge-new">NEW</span> (Phase 203) — text, default <span class="mono">'General'</span>.</li>
+    <li><span class="mono">legal_pages</span> — new row <span class="mono">affidavit</span> (Phase 189), placeholder content pending real copy.</li>
+    <li><span class="mono">site_content</span> — new key <span class="mono">page_not_found</span> (Phase 204), typed <span class="mono">NotFoundPageContent</span> (<span class="mono">eyebrow, heading, body, ctaLabel</span>).</li>
+  </ul>
+</div>
+
+<div class="page pagebreak" id="s4">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">4. Email System</h1>
+  <p>Unchanged from v1.7 in mechanism (<span class="mono">sendEmailSafely()</span> in <span class="mono">lib/email/resend.ts</span> remains the single choke point, still best-effort/never-blocking). No new confirmed email templates were found beyond v1.7's list during this audit pass; QA should treat the Donations flow's email behavior (if any) as an open item to verify directly against the live Mollie/PayPal integration, since it was not explicitly confirmed in this pass.</p>
+</div>
+
+<div class="page pagebreak" id="s5">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">5. Public Website — Pages &amp; Features</h1>
+
+  <h2 class="sub">5.1 Find Your Therapist — <span class="mono">/find-your-therapist</span> <span class="badge-changed">CHANGED</span></h2>
+  <p>The URL is unchanged, but its identity shifted (Phase 145–146): this route now renders what used to be the About page's content (the standalone pre-Phase-145 "Find Support" choice screen was removed), and the full AI/Manual matching wizard (<span class="mono">ChoiceScreen</span> → <span class="mono">MatchWizard</span>) is now reached via a modal (<span class="mono">FindSupportModal.tsx</span>) triggered from this page's hero CTA, rather than being the page's entire content. Per a deliberate Phase 88 header-label swap, the header nav's <span class="mono">/</span> link reads "About" and <span class="mono">/about</span> reads "Find Support" — not a typo, confirm with product before treating as a defect.</p>
+
+  <h2 class="sub">5.2 Donate — <span class="mono">/donate</span> (or embedded Donate page) <span class="badge-new">NEW</span></h2>
+  <p>Full one-time/recurring donation flow via Mollie (Phases 98–99, 200–202): amount selection, frequency, message, and a "why your support matters" photo section (now Content-Manager/Media-Library editable, Phase 201–202 — the photos that previously 404'd are fixed via the Media Library). Content editable via the Donate Page and Donate Band Content Manager tabs (§7).</p>
+
+  <h2 class="sub">5.3 Community — Charity &amp; Professional Services <span class="badge-new">NEW</span></h2>
+  <p>Support Groups page extended (Phase 196) with a Professional Services booking path, tagged via <span class="mono">diary_scheduling_events.service_type</span> (<span class="mono">"charity"</span> vs. <span class="mono">"professional"</span>), with a PayPal-backed payment step for the professional tier (<span class="mono">components/booking/PaymentModal.tsx</span>).</p>
+
+  <h2 class="sub">5.4 Custom Error &amp; Not Found Pages <span class="badge-new">NEW</span></h2>
+  <ul>
+    <li><span class="mono">app/not-found.tsx</span> (Phase 204) — full 404 page inside the normal site chrome (Header/Footer/Crisis Button), Content-Manager-editable via the new "Not Found Page" tab.</li>
+    <li><span class="mono">app/error.tsx</span> (Phase 204) — segment-level error boundary, hardcoded (not CMS-editable — it only ever receives <span class="mono">{error, reset}</span> props, no server-fetched content path).</li>
+    <li><span class="mono">app/global-error.tsx</span> (Phase 204) — root-layout error boundary; renders its own bare <span class="mono">&lt;html&gt;/&lt;body&gt;</span> with inline styles only (no Tailwind/component imports), since it can't assume anything else loaded successfully.</li>
+  </ul>
+
+  <h2 class="sub">5.5 Our Therapists — public profile-view counter <span class="badge-new">NEW</span></h2>
+  <p>Every therapist card on <span class="mono">/therapists</span> now shows a public <span class="mono">Eye</span> icon + view count immediately after the country line (Phase 207), for every visitor — <span class="mono">aria-label="N profile views"</span>. This is separate from, and supersedes, an earlier Phase 206 admin-only version of the same feature.</p>
+
+  <h2 class="sub">5.6 Trusted Partners in Footer <span class="badge-new">NEW</span></h2>
+  <p>The Footer now optionally renders real partner logos/names/links from the <span class="mono">partners</span> table (Phase 203), falling back to the original 3 fixed text labels when no partners are configured — zero visual change until an admin adds one via the Content Manager.</p>
+
+  <h2 class="sub">5.7 FAQ — categorized <span class="badge-new">NEW</span></h2>
+  <p>The FAQ accordion (<span class="mono">FaqAccordion.tsx</span>) now groups by <span class="mono">faqs.category</span>, but only once more than one distinct category exists — otherwise it's the same flat list as before (Phase 203).</p>
+
+  <h2 class="sub">5.8 Everything else</h2>
+  <p>Home, About (now living at a different URL slot — see §5.1), Our Therapists directory/profile, Support Groups, Contact, Legal Pages, Accounts/Auth/Messaging, and the (still disabled) Blog are functionally unchanged from v1.7's descriptions.</p>
+</div>
+
+<div class="page pagebreak" id="s6">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">6. Admin CRM Dashboard</h1>
+  <p>Every <span class="mono">/admin/**</span> route remains wrapped by <span class="mono">requireAdmin()</span>, unchanged in principle from v1.7.</p>
+  <h2 class="sub">6.1 Navigation — now 16 items (was 11)</h2>
+  <table>
+    <tr><th>#</th><th>Label</th><th>Route</th><th>Status</th></tr>
+    <tr><td>1</td><td>Overview</td><td><span class="mono">/admin</span></td><td>unchanged</td></tr>
+    <tr><td>2</td><td>Session bookings</td><td><span class="mono">/admin/sessions</span></td><td>unchanged</td></tr>
+    <tr><td>3</td><td>Charity/Professional Bookings</td><td><span class="mono">/admin/service-bookings</span></td><td><span class="badge-new">NEW</span> Phase 196</td></tr>
+    <tr><td>4</td><td>Find Support requests</td><td><span class="mono">/admin/support-requests</span></td><td><span class="badge-changed">RENAMED/REWIRED</span> — reads <span class="mono">support_requests</span>, not <span class="mono">match_requests</span></td></tr>
+    <tr><td>5</td><td>Booking requests</td><td><span class="mono">/admin/bookings</span></td><td>unchanged</td></tr>
+    <tr><td>6</td><td>Volunteer Applications</td><td><span class="mono">/admin/volunteer-applications</span></td><td>unchanged</td></tr>
+    <tr><td>7</td><td>Donations</td><td><span class="mono">/admin/donations</span></td><td><span class="badge-new">NEW</span></td></tr>
+    <tr><td>8</td><td>Inquiries</td><td><span class="mono">/admin/inquiries</span></td><td>unchanged</td></tr>
+    <tr><td>9</td><td>Group registrations</td><td><span class="mono">/admin/registrations</span></td><td>unchanged</td></tr>
+    <tr><td>10</td><td>Messages</td><td><span class="mono">/admin/messages</span></td><td>unchanged</td></tr>
+    <tr><td>11</td><td>Our Professionals</td><td><span class="mono">/admin/therapists</span></td><td>unchanged (renamed from "Therapists" pre-v1.7)</td></tr>
+    <tr><td>12</td><td>Therapist Analytics</td><td><span class="mono">/admin/therapist-analytics</span></td><td><span class="badge-new">NEW</span> Phase 206</td></tr>
+    <tr><td>13</td><td>Users</td><td><span class="mono">/admin/users</span></td><td>unchanged</td></tr>
+    <tr><td>14</td><td>Administrators</td><td><span class="mono">/admin/administrators</span></td><td><span class="badge-new">NEW</span> Phase 187 — invitation-only Admin/Super Admin onboarding</td></tr>
+    <tr><td>15</td><td>Content Manager</td><td><span class="mono">/admin/content</span></td><td>restructured, see §7</td></tr>
+    <tr><td>16</td><td>UI Builder</td><td><span class="mono">/admin/ui-builder</span></td><td><span class="badge-new">NEW</span> Phase 132 — visual design-token builder, draft/publish/live preview, separate from Content Manager</td></tr>
+  </table>
+
+  <h2 class="sub">6.2 Therapist Analytics <span class="badge-new">NEW</span></h2>
+  <p>Ranked table of therapist profile views: search, date-range tabs (Today/7d/30d), sort, zero-view toggle, CSV export. "All time" reads the same public <span class="mono">profile_views</span> counter shown on the public site, so the two numbers can never disagree.</p>
+
+  <h2 class="sub">6.3 Administrators <span class="badge-new">NEW</span></h2>
+  <p>Lists current Administrators/Super Admins with Deactivate, plus pending invitations with Resend/Revoke — separate from the "Users" screen, which still handles direct-create for Client/Reviewer/Finance only.</p>
+
+  <h2 class="sub">6.4 Everything else</h2>
+  <p>Session Bookings, Booking Requests, Volunteer Applications, Inquiries &amp; Group Registrations, Messages (monitoring-only), Users, Notification Bell (see §12.4 for its new therapist-facing links), and the Scheduling Overview Calendar are functionally unchanged from v1.7's descriptions.</p>
+</div>
+
+<div class="page pagebreak" id="s7">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">7. Content Management System <span class="badge-changed">RESTRUCTURED</span></h1>
+  <p>The underlying mechanism is unchanged (<span class="mono">site_content</span> key/value jsonb table, <span class="mono">getPageContent()</span> fallback contract, <span class="mono">upsert(..., {onConflict:"key"})</span>). As of Phase 205, the Content Manager's tab picker is reorganized into <strong>4 groups, 18 tabs total</strong> (pure UI reorg — no tab's underlying data/editor changed):</p>
+
+  <table>
+    <tr><th>Group</th><th>Tabs</th></tr>
+    <tr><td><strong>Pages</strong> (9)</td><td>About, Find Support, Our Professionals, Community, Blog (disabled), Contact, Intake, FAQ, <strong>Not Found Page</strong> <span class="badge-new">NEW</span></td></tr>
+    <tr><td><strong>Global Elements</strong> (3)</td><td>Header, Footer, Crisis Button</td></tr>
+    <tr><td><strong>Forms &amp; Popups</strong> (3)</td><td>Donate Page, Donate Band, Volunteer Modal</td></tr>
+    <tr><td><strong>Data &amp; Media</strong> (3)</td><td>Legal Pages, <strong>Media Library</strong> <span class="badge-new">NEW</span>, <strong>Trusted Partners</strong> <span class="badge-new">NEW</span></td></tr>
+  </table>
+
+  <h2 class="sub">7.1 Media Library <span class="badge-new">NEW</span></h2>
+  <p>Upload / alt-text editing / per-asset usage list / assign-to-section / delete-blocked-while-in-use. All writes route through <span class="mono">app/api/admin/media/*</span> (service-role, admin/super_admin re-checked server-side), not direct table access — both to bypass a pre-existing storage-policy gap and to pre-check <span class="mono">media_asset_usages</span> before the DB's <span class="mono">ON DELETE RESTRICT</span> would otherwise surface a raw error.</p>
+
+  <h2 class="sub">7.2 Trusted Partners <span class="badge-new">NEW</span></h2>
+  <p>Add/edit/reorder/delete partners with logo upload, link URL, active toggle — writes go directly to the <span class="mono">partners</span> table from the browser client (RLS-enforced), same pattern as the pre-existing FAQ manager.</p>
+
+  <h2 class="sub">7.3 Not Found Page <span class="badge-new">NEW</span></h2>
+  <p>A plain flat-fields editor over 4 fields (<span class="mono">eyebrow, heading, body, ctaLabel</span>) — no new editing mechanism.</p>
+
+  <div class="callout">Open item carried over from Phase 205: the Content Manager has no deep-linking — a page refresh always resets to the "Header" tab. <span class="mono">CONTENT_GUIDE.md</span>, referenced historically as the CMS's conventions doc, no longer exists in the repository.</div>
+</div>
+
+<div class="page pagebreak" id="s8">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">8. Design System</h1>
+  <p>All v1.7 color tokens remain in place and unchanged. New tokens confirmed in <span class="mono">app/globals.css</span>:</p>
+  <table>
+    <tr><th>Token</th><th>Hex</th><th>Role</th></tr>
+    <tr><td><span class="mono">--sand-brown</span> <span class="badge-new">NEW</span></td><td>#cba560</td><td>Icon-circle backgrounds (e.g. trust badges)</td></tr>
+    <tr><td><span class="mono">--donate-navy / --donate-navy-600</span> <span class="badge-new">NEW</span></td><td>—</td><td>The header's Donate CTA specifically, deliberately separate from <span class="mono">--primary</span></td></tr>
+    <tr><td><span class="mono">--green-sage</span></td><td>#9ba689</td><td>Retained through several background revert cycles (Stats.tsx)</td></tr>
+    <tr><td><span class="mono">--home-gray</span></td><td>#b0bac3</td><td>Added Phase 170, still used by several sections</td></tr>
+  </table>
+  <p>Also present: a Hebrew/RTL font override (Heebo) and three alternate accessibility themes (high-contrast light, high-contrast dark, grayscale) backing a site-wide Accessibility Adjustments widget — not previously documented in v1.7.</p>
+  <p>Reusable UI components, motion system, and signature visual treatments (gold banner, gold card hover, footer-reveal effect) are unchanged from v1.7.</p>
+</div>
+
+<div class="page pagebreak" id="s9">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">9. Environment Variables &amp; Deployment Notes</h1>
+  <table>
+    <tr><th>Variable</th><th>Exposure</th><th>Purpose</th></tr>
+    <tr><td colspan="3"><em>All 10 variables from v1.7 remain in use, unchanged (Supabase URL/anon key/service role, Resend, contact inbox, Anthropic key, Google Translate key, site URL, app env).</em></td></tr>
+    <tr><td><span class="mono">ANALYTICS_HASH_SALT</span> <span class="badge-new">NEW</span></td><td>Server-only</td><td>Salts the anonymous profile-view tracking hash (Phase 206). Falls back to a fixed string if unset — set a real secret in Production.</td></tr>
+    <tr><td><span class="mono">MOLLIE_API_KEY</span> <span class="badge-new">NEW</span></td><td>Server-only</td><td>Donate page payment processing.</td></tr>
+    <tr><td><span class="mono">PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET / PAYPAL_ENV</span> <span class="badge-new">NEW</span></td><td>Server-only</td><td>Community page Professional Services checkout. <span class="mono">PAYPAL_ENV</span> selects sandbox/live.</td></tr>
+    <tr><td><span class="mono">NEXT_PUBLIC_PAYPAL_CLIENT_ID</span> <span class="badge-new">NEW</span></td><td>Public</td><td>Client-side PayPal Smart Buttons SDK.</td></tr>
+    <tr><td><span class="mono">NEXT_PUBLIC_GESA_CONTACT_EMAIL</span> <span class="badge-new">NEW</span></td><td>Public</td><td>Publicly displayed contact address (Contact page/footer) — separate from <span class="mono">GESA_CONTACT_INBOX</span>, which is where admin notifications land.</td></tr>
+  </table>
+  <p>No dedicated media/storage env var exists — Media Library reuses the pre-existing public storage bucket.</p>
+  <p>Open items carried over unresolved from v1.7: Production schema lag risk (mitigate by re-confirming against this document's §3 before the next deploy), no dedicated UAT Supabase project yet, the Supabase Auth redirect allow-list requirement for <span class="mono">/reset-password</span>, and the unset service-role key policy (now partially superseded — the service-role client <em>is</em> in active use for Media Library, invitations, and Therapist Analytics RPCs, so this key must be set in every environment going forward).</p>
+</div>
+
+<div class="page pagebreak" id="s10">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">10. Functional Requirements</h1>
+  <p>All FR-1 through FR-32 from v1.7 remain valid and unchanged unless noted below. New requirements derived from the codebase as of Phase 208:</p>
+  <ul>
+    <li><strong>FR-33</strong> — The system shall accept one-time and recurring donations via Mollie, recording status, amount, currency, and payment references in a <span class="mono">donations</span> table.</li>
+    <li><strong>FR-34</strong> — The system shall support a paid "Professional Services" booking path (Community page) via PayPal, tagged distinctly from free "Charity" bookings via <span class="mono">diary_scheduling_events.service_type</span>.</li>
+    <li><strong>FR-35</strong> — The system shall provide a Media Library allowing admins to upload, tag (alt text/caption/credit), and reuse images across editable page sections, and shall block deletion of an image still in use.</li>
+    <li><strong>FR-36</strong> — The system shall allow admins to manage a list of Trusted Partners (name, logo, link, active flag, order) rendered in the site Footer, falling back to static labels when none are configured.</li>
+    <li><strong>FR-37</strong> — The system shall support grouping FAQ entries by category, rendering a flat list when only one category exists.</li>
+    <li><strong>FR-38</strong> — The system shall render a branded 404 page and dedicated segment/root error boundaries instead of a default framework error screen.</li>
+    <li><strong>FR-39</strong> — The system shall track and display an aggregate, privacy-safe (hashed, non-PII) count of profile views per therapist, visible to the public and mirrored exactly in the admin CRM.</li>
+    <li><strong>FR-40</strong> — The system shall let a therapist view a read-only embed of their own external calendar inside their GESA dashboard when an admin has configured and enabled a provider-approved embed URL for their account, with a secure fallback when embedding is not possible (see §12.3).</li>
+    <li><strong>FR-41</strong> — The system shall provide a full therapist self-service dashboard (Dashboard, My Bookings, My Diary, Notifications, Profile/Settings), gated to the <span class="mono">therapist</span> role and scoped so a therapist can only ever see their own data.</li>
+    <li><strong>FR-42</strong> — The system shall support invitation-only onboarding for Administrator and Super Admin accounts, with a time-limited, single-use, hashed token and Resend/Revoke actions.</li>
+    <li><strong>FR-43</strong> — The system shall guarantee at the database level that at least one Super Admin account always exists.</li>
+  </ul>
+</div>
+
+<div class="page pagebreak" id="s11">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">11. Client Workflow</h1>
+  <p>The end-to-end client journey described in v1.7 (homepage paths → quick-entry intake or guided wizard → matched therapist → preferred-time request or conflict-free booking → optional account/chat) remains structurally accurate, with these updates:</p>
+  <ul>
+    <li>The guided wizard's preferred-time request now writes to <span class="mono">support_requests</span>, not <span class="mono">match_requests</span> (see §3.2).</li>
+    <li>A client can now separately donate (one-time or recurring, via Mollie) from the Donate page, independent of any booking/matching flow.</li>
+    <li>A client pursuing the Community page's Professional Services path now completes a PayPal payment step before their booking is confirmed as a <span class="mono">diary_scheduling_events</span> row with <span class="mono">service_type = "professional"</span>.</li>
+  </ul>
+  <p>Key records touched: all tables from v1.7's table remain accurate, with <span class="mono">support_requests</span> replacing <span class="mono">match_requests</span> as the wizard's write target, and <span class="mono">donations</span> added for the new donation flow.</p>
+</div>
+
+<div class="page pagebreak" id="s12">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">12. Therapist Workflow <span class="badge-changed">MAJOR REWRITE</span></h1>
+  <div class="callout warn"><strong>v1.7 stated: "Therapists do not have a self-service portal."</strong> This is no longer true as of Phase 208 and must be struck from any future reference to the old document. The sections below fully replace v1.7's §12.</p></div>
+
+  <h2 class="sub">12.1 Application, Admin Review &amp; Manual Promotion</h2>
+  <p>Unchanged from v1.7: a prospective volunteer therapist applies via a public form (writes to <span class="mono">therapist_applications</span>), an admin reviews and sets a status (<span class="mono">new/reviewing/approved/rejected</span>), and approving an application remains a tracking label only — an admin must separately, manually create or edit a live <span class="mono">therapists</span> row to actually publish someone to the public directory. Availability (<span class="mono">therapist_weekly_hours</span>) also remains admin-managed only, unless configured through the new dashboard's future scope (not present as of Phase 208 — see §12.6 open items).</p>
+
+  <h2 class="sub">12.2 The Therapist Self-Service Dashboard <span class="badge-new">NEW — Phase 208</span></h2>
+  <p>Once a therapist's directory record is linked to a real login (<span class="mono">therapists.profile_id</span>), signing in at <span class="mono">/login</span> takes them to <span class="mono">/therapist</span> — a full 5-section dashboard behind <span class="mono">requireTherapist()</span>, with a sidebar (<span class="mono">components/therapist/TherapistNav.tsx</span>) in this exact order:</p>
+  <table>
+    <tr><th>#</th><th>Section</th><th>Route</th><th>Icon</th><th>Contents</th></tr>
+    <tr><td>1</td><td>Dashboard</td><td><span class="mono">/therapist</span></td><td>LayoutDashboard</td><td>Today's confirmed-session count + quick links into My Bookings and My Diary.</td></tr>
+    <tr><td>2</td><td>My Bookings</td><td><span class="mono">/therapist/bookings</span></td><td>CalendarCheck2</td><td>Upcoming sessions (real, conflict-free reservations), AI Support Bookings, Scheduling-link activity, Past &amp; other requests — every list a therapist could previously see, relocated to its own page.</td></tr>
+    <tr><td>3</td><td><strong>My Diary</strong></td><td><span class="mono">/therapist/diary</span></td><td><strong>CalendarDays</strong></td><td>The Therapist Diary Calendar Embed — see §12.3.</td></tr>
+    <tr><td>4</td><td>Notifications</td><td><span class="mono">/therapist/notifications</span></td><td>Bell</td><td>Full-page list of the same activity feed as the header bell, each item with "View in Calendar" and "Open my diary" links.</td></tr>
+    <tr><td>5</td><td>Profile / Settings</td><td><span class="mono">/therapist/settings</span></td><td>UserCog</td><td>Read-only profile summary + link to public profile + password change (reused from Account Settings). Does not duplicate the admin's bio/credentials editor.</td></tr>
+  </table>
+
+  <h2 class="sub">12.3 My Diary — Therapist Diary Calendar Embed <span class="badge-new">NEW — Phase 208</span></h2>
+  <p><strong>Purpose:</strong> let a therapist view their own external, already-booked diary/calendar inside GESA without leaving the site — a private, read-only view of already-scheduled sessions. This is a distinct concept from the pre-existing public <span class="mono">diary_link</span> (which clients use to book a <em>new</em> session) — the 4 new columns backing this feature (<span class="mono">calendar_embed_url/provider/enabled/updated_at</span>) are never exposed publicly and are trigger-protected so only an admin/super_admin can ever set them (see §2.4/§2.5).</p>
+
+  <h3 class="subsub">Admin configuration</h3>
+  <p>In each therapist's CRM edit page (<span class="mono">TherapistEditForm.tsx</span>), a "My Diary — calendar embed" section lets an admin set the embed URL, pick a provider label (Google Calendar / Outlook / Calendly [marked "embed not supported"] / Other), toggle Enabled independently of the URL, see when it was last updated, and preview the live embed before enabling it for the therapist.</p>
+
+  <h3 class="subsub">Allowed providers &amp; security model</h3>
+  <p>Only HTTPS URLs on an explicit host allowlist are ever rendered: <span class="mono">calendar.google.com, calendar.app.google, outlook.office.com, outlook.office365.com, outlook.live.com</span> — providers with a genuine, documented "publish/embed my calendar as a read-only view" feature. <strong>Calendly is deliberately excluded</strong> — it has no equivalent "view my own booked events" embed, only a public booking widget (already served by <span class="mono">diary_link</span>). Validation runs twice, independently: once when an admin saves, and again immediately before the therapist-facing page ever renders an iframe.</p>
+  <p>The iframe itself uses a descriptive title ("Therapist diary calendar"), a conservative <span class="mono">sandbox</span> attribute (scripts + same-origin + popups only — no top-navigation, modals, or downloads), <span class="mono">referrerPolicy="no-referrer"</span>, a loading spinner until the frame loads, and an <strong>always-visible</strong> "Open Diary Securely" fallback button (opens the same URL in a new tab) — not gated behind an error state, since a provider silently blocking embedding via X-Frame-Options/CSP does not reliably produce a JavaScript-detectable error in most browsers.</p>
+
+  <h3 class="subsub">States a therapist can see on My Diary</h3>
+  <ul>
+    <li><strong>Not configured</strong> — "Your diary calendar has not yet been connected. Please contact the GESA administrator for assistance."</li>
+    <li><strong>Configured but not embeddable</strong> (e.g. a stale/invalid saved link) — a safe fallback message plus an "Open Diary Securely" button; the system never attempts to force-render or work around a provider's restriction.</li>
+    <li><strong>Working</strong> — the live embed, with an Expand toggle and the same secure "Open" button always available alongside it.</li>
+  </ul>
+  <p>A therapist can never reach another therapist's embed — the page takes no id from the URL or request at all; it is resolved entirely from the signed-in session.</p>
+
+  <h2 class="sub">12.4 Notifications &amp; the Header Bell</h2>
+  <p>The shared header Notification Bell (unchanged in its core fetch/polling behavior — see §6) gained, additively, "View in Calendar" (→ My Bookings) and "Open my diary" (→ My Diary) links inside a therapist's own session-notification detail view. The same two links appear on the new full-page Notifications section.</p>
+
+  <h2 class="sub">12.5 Booking Synchronization — explicitly not automated</h2>
+  <p><span class="mono">session_bookings</span> remains the sole source of truth for real GESA appointments. The diary embed is view-only: it creates no booking records of any kind, and there is currently no integration that pushes a GESA booking into a therapist's external calendar, or vice versa. Any future such integration is out of scope for this document and should not be assumed by QA.</p>
+
+  <h2 class="sub">12.6 Open items</h2>
+  <ul>
+    <li>Availability (<span class="mono">therapist_weekly_hours</span>) is still admin-managed only — the new dashboard does not yet let a therapist edit their own recurring hours.</li>
+    <li>The Profile/Settings section is deliberately read-only for professional details (bio, credentials, photo) — a therapist who needs those changed still contacts the GESA team.</li>
+  </ul>
+</div>
+
+<div class="page pagebreak" id="s13">
+  <div class="doc-header"><span class="brand">VentVest</span><span>GESA Platform — Technical Specification</span></div>
+  <h1 class="section">13. QA &amp; Testing Reference</h1>
+  <p>All form-field, button/CTA, navigation, error/empty-state, and accessibility notes from v1.7's §13 remain valid for every unchanged surface. This section adds only what's new or changed since v1.7 — combine with v1.7's original tables for full coverage of unchanged pages.</p>
+
+  <h2 class="sub">13.1 New/Changed Navigation</h2>
+  <p>Admin sidebar is now 16 items (§6.1), not 11. Content Manager is now 18 tabs across 4 groups (§7), not a flat list. Therapist accounts now have a 5-item sidebar (§12.2) where none existed before.</p>
+
+  <h2 class="sub">13.2 New Test Scenarios — Therapist Diary Calendar Embed</h2>
+  <ul>
+    <li>As admin: add a Calendly URL to a therapist's diary embed field and confirm it is rejected with an explanation; add a real Google Calendar embed URL, confirm Preview renders it, Save, confirm "Last updated" appears; toggle Enabled off and confirm the therapist's My Diary falls back to "not connected" even though a URL is still saved.</li>
+    <li>As therapist: confirm the sidebar shows Dashboard/My Bookings/My Diary/Notifications/Profile-Settings in that exact order with a calendar icon on My Diary; open My Diary with nothing configured and confirm the exact configuration message; after an admin configures one, confirm the iframe loads with a spinner then the calendar, the Expand toggle works, and "Open Diary Securely" opens the same calendar in a new tab.</li>
+    <li>Confirm My Bookings shows the exact same upcoming/past sessions as the previous single-page dashboard did (regression check on the Phase 208 relocation).</li>
+    <li>Confirm Therapist A cannot reach Therapist B's diary by any URL parameter manipulation on <span class="mono">/therapist/diary</span> (there is none to manipulate — verify this directly).</li>
+    <li>As a client or public visitor, confirm no diary embed URL, "My Diary" link, or any <span class="mono">/therapist/**</span> route is reachable or exposed anywhere.</li>
+  </ul>
+
+  <h2 class="sub">13.3 New Test Scenarios — Other Phase 200–208 Features</h2>
+  <ul>
+    <li><strong>Media Library:</strong> upload an image, assign it to a page section, confirm it renders; attempt to delete an in-use image and confirm it's blocked with a clear message; delete an unused image and confirm it succeeds.</li>
+    <li><strong>Trusted Partners:</strong> add a partner with a logo/link, confirm it renders in the Footer; deactivate it and confirm it disappears; with zero active partners, confirm the Footer falls back to the original 3 static labels.</li>
+    <li><strong>FAQ categories:</strong> with only one category set, confirm the FAQ page renders as a flat list; add a second category and confirm it now groups under headings.</li>
+    <li><strong>Custom error pages:</strong> visit an unknown URL and confirm the branded 404 (not a framework default); if feasible in a lower environment, force a render-time error and confirm the segment error boundary appears with its own "try again" affordance, not a raw stack trace.</li>
+    <li><strong>Public profile-view counter:</strong> as a public visitor, open a therapist's profile, then check their directory card shows an incremented count; confirm the same number appears in the admin Therapist Analytics "All time" column; open the profile again from the same browser session and confirm the count does not double-increment.</li>
+    <li><strong>Donations (Mollie):</strong> complete a one-time donation in a test/sandbox environment and confirm a <span class="mono">donations</span> row is created with the correct status; verify recurring donation setup if enabled in the environment under test.</li>
+    <li><strong>Professional Services checkout (PayPal):</strong> complete a paid Community-page booking in sandbox mode and confirm a <span class="mono">diary_scheduling_events</span> row is created with <span class="mono">service_type = "professional"</span> and the correct payment status.</li>
+    <li><strong>Admin invitations:</strong> send an Administrator invitation, confirm the emailed link works once and only once, confirm Revoke invalidates an unused invitation, and confirm Resend issues a usable new link.</li>
+    <li><strong>Super Admin protection:</strong> attempt to demote or delete the last remaining Super Admin account and confirm the system blocks it.</li>
+  </ul>
+
+  <h2 class="sub">13.4 Known Security Items to Re-Verify <span class="badge-changed">CARRIED FROM AUDIT</span></h2>
+  <div class="callout warn">
+    <ul>
+      <li>Test every admin-only action while signed in as a <strong><span class="mono">super_admin</span></strong> account specifically (not just <span class="mono">admin</span>) — at least the image-upload storage policy and the inquiries-delete API route are known to still check for <span class="mono">admin</span> only.</li>
+      <li>Attempt, as a signed-in <span class="mono">client</span>, to set your own <span class="mono">role</span> to <span class="mono">admin</span> via a direct API/Supabase call — confirm the <span class="mono">protect_profile_role_column()</span> trigger blocks it (regression check on a previously-real vulnerability).</li>
+      <li>Sign up a new public account using an email address that matches an existing therapist's contact email — confirm the new account is always created as <span class="mono">client</span>, never auto-promoted to <span class="mono">therapist</span> (regression check on a previously-real vulnerability).</li>
+      <li>Confirm <span class="mono">gesa_therapist_photo_map</span>, <span class="mono">gesa_group_registrations</span>, and <span class="mono">gesa_zoom_enrollments</span> still have RLS disabled in Production and flag to Roy/engineering as an outstanding remediation item, not a new finding.</li>
+    </ul>
+  </div>
+
+  <p style="margin-top:24px; font-style:italic; color:#555;">This document reflects the codebase as of Phase 208 in <span class="mono">EXECUTION_PLAN.md</span> at the time of writing (September 2026). For the authoritative, most current state of any specific feature, defer to the live code and that file's latest entries.</p>
+</div>
+
+</body>
+</html>

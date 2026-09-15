@@ -4,7 +4,7 @@ import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
-import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
+import DoorMark from "@/components/home/DoorMark";
 import type { HomeContent } from "@/lib/content";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
@@ -73,17 +73,27 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // their existing Veterans/Support titles and copy untouched — only the
   // front badge label changed, same "front label is independent of the back
   // face's own heading" precedent Phase 97 already established.
-  card1FrontLabel: "War",
-  card2FrontLabel: "Terror",
-  card3FrontLabel: "Disaster",
+  // Phase 209 — Roy sent a new reference image restyling the front face as
+  // an ajar door per card, with the gold badge above it relabeled from each
+  // card's specific hardship (War/Terror/Disaster) back to its broader
+  // category (Resilience/Veterans/Support) — matching that reference badge
+  // text exactly, same "front label follows the newest reference" precedent
+  // Phases 97/100/154 already established for this same field.
+  card1FrontLabel: "Resilience",
+  card2FrontLabel: "Veterans",
+  card3FrontLabel: "Support",
   // Phase 154 — new short caption line under each card's frame, per Roy's
   // reference. Cards 1 and 2 share identical wording on purpose (both are
   // "gifted professional support" pathways); card 3 reads differently
   // ("Global Professional Directory") since it points to the general,
   // browsable Our Professionals directory rather than a gifted-session path.
-  card1FrontCaption: "Gifted Professional Support",
-  card2FrontCaption: "Gifted Professional Support",
-  card3FrontCaption: "Global Professional Directory",
+  // Phase 209 — captions relabeled to match the door reference image's own
+  // captions ("Global Crisis Directory" / "Veterans & Carer Directory" /
+  // "Well Being Directory"), replacing the Phase 154 "Gifted Professional
+  // Support" / "Global Professional Directory" wording.
+  card1FrontCaption: "Global Crisis Directory",
+  card2FrontCaption: "Veterans & Carer Directory",
+  card3FrontCaption: "Well Being Directory",
 };
 
 // Phase 16 — replaced the scroll-pinned, 300vh-tall crossfade showcase
@@ -228,31 +238,20 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // thing for a color with no existing token. The mark's ring colors
 // (sage/tan/terracotta) were already a close match to the reference and
 // were left untouched — only the card's background changed.
-const PATH_FRONT_STYLES: { bg: string; frame: string; mark: GesaMarkColors }[] = [
-  {
-    bg: "bg-[#aed0e9]",
-    frame: "border-clay",
-    mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
-  },
-  {
-    bg: "bg-accent",
-    frame: "border-clay",
-    mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
-  },
-  {
-    // Phase 162 — Roy sent a new reference photo of this same card asking
-    // for the mark's colors updated again, replacing Phase 158's navy/red/
-    // gold with a softer purple/teal/peach palette — matched by eye from
-    // that photo: outer crescent a dusty lavender-purple, middle and inner
-    // crescents a continuous mint-to-teal band (mint on the outer wave,
-    // a slightly deeper teal on the inner one, so the "C" shape reads with
-    // its own subtle shading rather than one flat tone), dot a soft peach.
-    // `bg`/`frame` (the blue-gray canvas + gold wood frame) were untouched
-    // in the reference and are untouched here too.
-    bg: "bg-[#5f7a91]",
-    frame: "border-clay",
-    mark: { outerRing: "#a99bc9", middleRing: "#8ad4c2", innerRing: "#4a9d92", dot: "#f2b385" },
-  },
+// Phase 209 — `door`/`doorFrame` are the two colors DoorMark needs for each
+// card's new ajar-door front face. Picked to match this same card's existing
+// `bg` tone exactly (already a light powder-blue / sage-olive / slate-blue-
+// gray per card, coincidentally the same three tones the reference door
+// image uses), so the door reads as "this card's established color, now
+// shaped like a door" rather than an unrelated new palette. `doorFrame` is a
+// darker shade of the same hue for the surrounding wall-opening frame.
+// `bg`/`frame`/`mark` are kept, unused, in case a future design reverts to
+// the GesaMark treatment — same precedent already set for the `frame` field
+// by Phase 124's own comment above.
+const PATH_FRONT_STYLES: { bg: string; frame: string; door: string; doorFrame: string }[] = [
+  { bg: "bg-[#aed0e9]", frame: "border-clay", door: "#c7dced", doorFrame: "#8fa9c2" },
+  { bg: "bg-accent", frame: "border-clay", door: "#9ba283", doorFrame: "#767c62" },
+  { bg: "bg-[#5f7a91]", frame: "border-clay", door: "#5f7a91", doorFrame: "#425364" },
 ];
 
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
@@ -581,37 +580,16 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
                           />
                         </div>
-                        {/* Wood frame — layered gradients approximate grain
-                            instead of one flat tone, sharp corners (no
-                            border-radius) to match the reference exactly,
-                            and an offset directional shadow so it reads as
-                            hanging on a wall rather than sitting flush. */}
-                        <div
-                          className="relative w-full flex-1 min-h-0"
-                          style={{
-                            background:
-                              "repeating-linear-gradient(95deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 7px), linear-gradient(120deg, #e0c193 0%, #cea877 50%, #c39a6c 100%)",
-                            boxShadow: "10px 14px 22px -8px rgba(35,25,15,0.4)",
-                          }}
-                        >
-                          {/* Mat — Phase 124 (round 3): Roy flagged the live
-                              cards as not matching the reference photo. Pixel-
-                              sampled the reference directly: the wood frame is
-                              ~4% of the frame's own width/height thick and the
-                              cream mat a further ~9% — both far thicker than
-                              this had (a flat 10px each, which read as barely
-                              a hairline on an actual card-sized box). Switched
-                              both to percentage-based sizing so the border
-                              stays proportional at any card size, and lightened
-                              the wood gradient to match the reference's fairly
-                              uniform honey-oak tone (sampled ~#d2b494) instead
-                              of trending into a dark espresso-brown corner. */}
-                          <div className="absolute inset-[6%] flex items-center justify-center bg-[#f4efe3] p-[9%]">
-                            {/* Canvas */}
-                            <div className={`flex h-full w-full items-center justify-center overflow-hidden ${frontStyle.bg} p-4`}>
-                              <GesaMark colors={frontStyle.mark} className="h-[64%] w-[64%]" />
-                            </div>
-                          </div>
+                        {/* Door — Phase 209. Replaces the Phase 97-124 wood-
+                            frame/mat/GesaMark treatment with an ajar door per
+                            Roy's reference image (a wall-mounted frame, one
+                            raised-panel leaf swung open, a small handle),
+                            colored per card via PATH_FRONT_STYLES' new
+                            door/doorFrame values. A soft floor-contact shadow
+                            is baked into the SVG itself so the door reads as
+                            standing in the frame rather than flat artwork. */}
+                        <div className="relative flex w-full flex-1 min-h-0 items-center justify-center">
+                          <DoorMark door={frontStyle.door} frame={frontStyle.doorFrame} className="h-full w-auto drop-shadow-[4px_8px_10px_rgba(20,20,25,0.28)]" />
                         </div>
                         {/* Caption — new Phase 154 line below the frame,
                             distinct from the badge above it and from the

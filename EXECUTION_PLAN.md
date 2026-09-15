@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 206 added)
+Last updated: 2026-09-15 (Phase 209 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9220,6 +9220,42 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 208: Therapist Diary Calendar Embed (My Diary)"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 209: Home pathway cards restyled as ajar doors
+
+Roy sent a reference image (three pastel doors — light blue, sage green, blue-gray — each ajar in a wall opening, a gold pill badge above reading RESILIENCE/VETERANS/SUPPORT, and a caption below reading "Global Crisis Directory"/"Veterans & Carer Directory"/"Well Being Directory") and asked for the Home page's three pathway cards (`components/home/Paths.tsx`) redesigned to match. Confirmed scope with Roy first: keep the existing 3D flip interaction (front face changes, back face title/description/CTA untouched) and update the badge/caption text to match the reference exactly, rather than leaving the old War/Terror/Disaster wording.
+
+**What shipped:**
+
+1. **`components/home/DoorMark.tsx`** (new) — a small SVG component (viewBox `0 0 100 150`) rendering the ajar-door illustration: a wall-opening frame, a dark gap suggesting depth into the doorway, a trapezoidal door leaf (perspective = "swung open toward the viewer"), an inset raised-panel outline, a handle, and a soft floor-contact shadow. Takes `door`/`frame` color props so the same artwork renders in all three card colors. Built as coded SVG rather than a photo/image asset, matching the reference's flat vector-illustration style and the same "code an SVG rather than source a photo" precedent `GesaMark` (the component it replaces) already set.
+2. **`components/home/Paths.tsx`** — replaced the Phase 97-124 wood-frame/mat/`GesaMark` front-face block with `DoorMark`, reusing each card's existing background tone (`PATH_FRONT_STYLES[i].bg`) as the door's own fill — a happy accident: the three colors already live on the cards (light powder-blue, sage/olive `--accent`, slate-blue-gray) are the same three tones the reference image's doors use, so no card was recolored, only reshaped. Added `door`/`doorFrame` hex fields to `PATH_FRONT_STYLES` for this. Removed the now-unused `GesaMark` import and the `mark`/`GesaMarkColors` fields (kept `bg`/`frame` in case of a future revert, same precedent Phase 124 set for `frame`). Front badge icons (`Sprout`/`Tags`/`Waves`) needed no change — they already matched Resilience/Veterans/Support conceptually before this phase.
+3. **Text updated to match the reference**: `card1FrontLabel/card2FrontLabel/card3FrontLabel` changed from "War"/"Terror"/"Disaster" (Phase 154) to "Resilience"/"Veterans"/"Support"; `card1FrontCaption/card2FrontCaption/card3FrontCaption` changed from "Gifted Professional Support" / "Gifted Professional Support" / "Global Professional Directory" to "Global Crisis Directory" / "Veterans & Carer Directory" / "Well Being Directory". These are the same Content Manager-editable fields as before (`home.crisis-card.label`, `home.crisis-card.caption`, etc.) — only the seeded fallback values changed; a live-published `page_home` row with the old text will keep showing it until an admin re-publishes, same shallow-merge caveat already documented for every other CMS field.
+4. **Back face, flip mechanics, badge icons, card sizing, and all other Home page content are unchanged** — this was a front-face artwork + label/caption swap only, per the confirmed scope.
+
+**Files touched:** `components/home/DoorMark.tsx` (new), `components/home/Paths.tsx`, `tests/unit/Paths.test.tsx` (updated the front-face SVG selector from GesaMark's `viewBox="0 0 200 220"` to DoorMark's `viewBox="0 0 100 150"`, and the badge-label assertion from "Crisis" to "Resilience" to match the new fallback content).
+
+**Manual test scenarios:**
+- Load `/` (Home) and confirm all three cards show an ajar door (not the old wood-frame/mat/mark) in the same three colors as before, with badge labels "RESILIENCE"/"VETERANS"/"SUPPORT" above and captions "Global Crisis Directory"/"Veterans & Carer Directory"/"Well Being Directory" below.
+- Hover/focus each card and confirm the flip still works, revealing the unchanged back face (title, description, "Reach out now" button linking to the same `/intake?path=...` / `/therapists` destinations as before).
+- In the Content Manager (Home tab), confirm the three badge-label and caption fields are still individually editable via the UI Builder's `EditableText` inline editing, same content IDs as before.
+- Confirm mobile layout (single column) still renders each door card at the same fixed height with no overflow or clipping.
+
+**Assumptions/follow-ups:**
+- The door artwork is a coded SVG illustration, not the literal photo/render style of Roy's reference image — flag if pixel-level photorealism (wood grain, lighting) is wanted later; this is a flat vector approximation, consistent with how `GesaMark` (the mark it replaces) was itself never a photo.
+- Build/test verification (`tsc --noEmit`, Jest) could not be run this session — the sandboxed shell has been unreachable (see prior phases' same caveat); review the diff directly and run the standard deploy-gate commands below once the shell/CI is available.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 209: Home pathway cards restyled as ajar doors"
 git push
 ```
 
