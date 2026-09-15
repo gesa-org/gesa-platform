@@ -5,6 +5,7 @@ import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
+import FrameBox, { FRAME_BOX_RECESS_RECT } from "@/components/home/FrameBox";
 import type { HomeContent } from "@/lib/content";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
@@ -81,6 +82,16 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // labels ("CRISIS"/"VETERANS"/"SUPPORT," typo-corrected) — the field has
   // now round-tripped through War/Terror/Disaster (154) and
   // Resilience/Veterans/Support (209) and landed back where it started.
+  // Phase 213 — Roy's "copy exactly" message this round also named the
+  // badge text as "war, terror, disaster," which conflicts with his own
+  // immediately prior message ("I have no problem with the text, ... All i
+  // want is to copy exactly the frames") and with "New Design Frames.png"
+  // itself, whose badges visibly read CRISIS/VETERANS/SUPPORT — the same
+  // wording already here. Read as a slip back to Phase 154's old wording
+  // rather than a new instruction, since the explicit, scope-narrowing
+  // message ("I have no problem with the text") is the one that directly
+  // answered this exact ambiguity. Left this field untouched; flagged for
+  // Roy to confirm directly rather than silently overriding either message.
   card1FrontLabel: "Crisis",
   card2FrontLabel: "Veterans",
   card3FrontLabel: "Support",
@@ -271,13 +282,25 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // reads as precisely this card's color, and `doorFrame` (already a darker
 // shade per card from Phase 209) is reused as both the frame trim and the
 // interior-wall shading tone, rather than deriving a third color.
-const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; mark: GesaMarkColors }[] = [
+// Phase 213 — Roy sent "New Design Frames.png" a third time and was
+// explicit the earlier attempts still weren't a real "3D" copy: two flat
+// colors (Phase 212) still reads as a flat rectangle with a drop shadow,
+// not the reference's actual recessed shadowbox (a visible top face and a
+// visible right face, each their own flat plane, receding into the wall).
+// Added `top`/`side` per card for FrameBox's three-plane SVG below — `top`
+// close to `boxHex` (same light hitting the top edge as the front trim),
+// `side` a further-darkened step past `doorFrame` (the deepest, most
+// shadowed plane, at the wall's inside corner) — sampled by eye against the
+// reference's own top/right shading on each of its three boxes.
+const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; top: string; side: string; mark: GesaMarkColors }[] = [
   {
     bg: "bg-[#aed0e9]",
     boxHex: "#aed0e9",
     frame: "border-clay",
     door: "#c7dced",
     doorFrame: "#8fa9c2",
+    top: "#96b8d4",
+    side: "#6f89a3",
     mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
@@ -286,6 +309,8 @@ const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: stri
     frame: "border-clay",
     door: "#9ba283",
     doorFrame: "#767c62",
+    top: "#838a6e",
+    side: "#5d6250",
     mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
   },
   {
@@ -294,6 +319,8 @@ const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: stri
     frame: "border-clay",
     door: "#5f7a91",
     doorFrame: "#425364",
+    top: "#4f6478",
+    side: "#34424f",
     mark: { outerRing: "#a99bc9", middleRing: "#8ad4c2", innerRing: "#4a9d92", dot: "#f2b385" },
   },
 ];
@@ -621,37 +648,45 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          column as before, now just frame then badge, one
                          gap-3 between them. */
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 [backface-visibility:hidden]">
-                        {/* Recessed wall niche — Phase 212. Roy flagged
-                            Phase 211's diagonal-gradient version as reading
-                            like a generic CSS effect rather than a real copy
-                            of "New Design Frames.png." Re-examined that
-                            reference directly: it is not a subtle gradient
-                            at all — it's a crisp, flat TWO-TONE frame — a
-                            solid, evenly-thick trim band in the card's own
-                            light color (`boxHex`), surrounding a solid,
-                            distinctly darker recess (`doorFrame`) that the
-                            GesaMark swirl sits directly on. Rebuilt as
-                            exactly that: an outer div in `boxHex` with a
-                            uniform percentage padding forming the trim band
-                            (mirroring the `inset-[6%]`-style mat pattern this
-                            file already used for Phase 124's frame/mat), and
-                            an inner div filled solid `doorFrame` holding the
-                            mark — two flat, clearly separated colors, no
-                            gradients, matching the reference's own crisp
-                            look rather than approximating depth with a
-                            blurred diagonal fade. */}
-                        <div
-                          className="relative w-full flex-1 min-h-0 overflow-hidden rounded-sm p-[11%]"
-                          style={{
-                            backgroundColor: frontStyle.boxHex,
-                            boxShadow: "6px 10px 16px -6px rgba(20,20,25,0.45)",
-                          }}
-                        >
+                        {/* Recessed wall niche — Phase 213. Roy sent "New
+                            Design Frames.png" again and said Phase 212's flat
+                            two-tone box still wasn't a real "3D" copy — it
+                            read as one flat rectangle with a drop shadow, not
+                            an actual shadowbox recessed into a wall. The
+                            reference itself shows three distinct flat planes
+                            (front trim, a lit top edge, a shadowed right
+                            edge) receding at an angle, which no CSS box can
+                            draw on its own — so that geometry now comes from
+                            FrameBox, a small SVG that draws the front/top/
+                            side faces as explicit flat polygons (see its own
+                            Phase 213 header comment) plus a blurred ground
+                            shadow, using this card's `boxHex`/`top`/`side`
+                            colors for the three planes. The recess itself is
+                            drawn inside that same SVG (`frontStyle.doorFrame`
+                            passed as `recess`); GesaMark is layered on top,
+                            absolutely positioned over `FRAME_BOX_RECESS_RECT`
+                            (the percentages FrameBox exports for exactly
+                            where its own recess sits) so the swirl still
+                            renders as a real, recolorable React component
+                            rather than being redrawn as more inline SVG. */}
+                        <div className="relative w-full flex-1 min-h-0">
+                          <FrameBox
+                            front={frontStyle.boxHex}
+                            top={frontStyle.top}
+                            side={frontStyle.side}
+                            recess={frontStyle.doorFrame}
+                            className="h-full w-full"
+                          />
                           <div
-                            className="flex h-full w-full items-center justify-center rounded-[2px]"
-                            style={{ backgroundColor: frontStyle.doorFrame }}
+                            className="absolute flex items-center justify-center"
+                            style={{
+                              top: FRAME_BOX_RECESS_RECT.top,
+                              left: FRAME_BOX_RECESS_RECT.left,
+                              width: FRAME_BOX_RECESS_RECT.width,
+                              height: FRAME_BOX_RECESS_RECT.height,
+                            }}
                           >
-                            <GesaMark colors={frontStyle.mark} className="h-[62%] w-[62%]" />
+                            <GesaMark colors={frontStyle.mark} className="h-[72%] w-[72%]" />
                           </div>
                         </div>
                         {/* Gold label pill — back below the frame (Phase 97's

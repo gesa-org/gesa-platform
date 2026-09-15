@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 212 added)
+Last updated: 2026-09-15 (Phase 213 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9354,6 +9354,35 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 212: Pathway card frames rebuilt as a flat two-tone frame matching New Design Frames.png"
+git push
+```
+
+---
+
+## Phase 213: Pathway card frames rebuilt as a real 3-plane shadowbox (FrameBox SVG)
+
+Roy sent "New Design Frames.png" a third time and was explicit that Phase 212's flat two-tone frame still wasn't a real "3D" copy — his own words named "the 3D, Rectangle shape, Colour scheme, the logo inside the rectangle, the sahdow" as the things to copy exactly. Re-examined the reference again: it isn't two flat colors with a drop shadow, it's an actual recessed shadowbox — three distinct flat planes (a front trim face, a lit top edge, a shadowed right edge) receding into the wall at an angle, which no combination of CSS `padding`/`box-shadow` can draw, since those only ever describe one flat plane plus a blur.
+
+**What shipped:**
+
+1. **New `components/home/FrameBox.tsx`** — a small SVG component drawing the frame as three explicit flat polygons (front, top, side faces) plus a blurred ground-shadow ellipse, taking `front`/`top`/`side`/`recess` colors as props. Exports `FRAME_BOX_RECESS_RECT`, the percentage rect (top/left/width/height) where its own recess sits, so a caller can position other content over it precisely.
+2. **`components/home/Paths.tsx`** — replaced Phase 212's two flat `<div>`s with `<FrameBox>`, fed each card's `boxHex`/`top`/`side`/`doorFrame` colors, and layered `GesaMark` on top via `FRAME_BOX_RECESS_RECT` so the swirl still renders as its own recolorable React component rather than being redrawn as more inline SVG markup.
+3. **`PATH_FRONT_STYLES`** — added `top`/`side` per card (a lighter shade near `boxHex` for the top face, a further-darkened shade past `doorFrame` for the shadowed side face), sampled by eye against the reference's own three-box shading.
+4. **Badge text left unchanged** (`Crisis`/`Veterans`/`Support`) — Roy's message this round also said the gold button should read "war, terror, disaster," which conflicts with his own immediately prior message ("I have no problem with the text... All i want is to copy exactly the frames") and with the reference image's own visible badges (CRISIS/VETERANS/SUPPORT). Read as a slip back to old Phase 154 wording rather than a new instruction — flagged directly to Roy in chat rather than silently changing published/fallback text on a guess. See the new comment on `card1FrontLabel` etc. in `HOME_CONTENT_FALLBACK`.
+
+**Files touched:** `components/home/FrameBox.tsx` (new), `components/home/Paths.tsx`.
+
+**Manual test scenarios:** Home page — each of the three cards' front face should show a recessed box with a visible lit top edge and a visible shadowed right edge (not a flat rectangle), the GesaMark swirl centered inside the recess, and the gold badge pill below it reading Crisis/Veterans/Support.
+
+**Assumptions/follow-ups:** `top`/`side` colors were hand-picked, not derived programmatically from `boxHex`/`doorFrame` — revisit if Roy wants them recalculated to a formula instead. Same deploy-pipeline caveat as Phase 212: I have no working shell this session (bash confirmed wedged again, 40th consecutive failure — Windows update, Sept 8, "Claude Code is unaffected"), so Roy needs to run the commands below in his own terminal and confirm Vercel shows "Ready," not just that the local commands succeeded.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 213: Pathway card frames rebuilt as a real 3-plane shadowbox (FrameBox SVG)"
 git push
 ```
 
