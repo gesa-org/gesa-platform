@@ -54,8 +54,8 @@ export default async function TherapistAnalyticsPage({
         <h2 className="text-lg">Therapist Profile Analytics</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
           Privacy-conscious aggregate profile-view counts — never who viewed a profile, only how many unique
-          anonymous visitors did, at most once per therapist per browser session. "All-time" matches the count
-          shown publicly on the Our Professionals page.
+          anonymous visitors did, at most once per therapist per browser session. The All-time column matches
+          the count shown publicly on the Our Professionals page.
         </p>
       </div>
       <TherapistAnalyticsTable initialRows={rows} initialSearch={focusTherapist?.name ?? ""} />
