@@ -12,6 +12,17 @@ export type DocumentType = "certificate" | "license" | "insurance" | "agreement"
 export type GenderType = "woman" | "man" | "nonbinary" | "no_preference";
 export type SessionDuration = "30" | "45" | "60" | "90";
 export type TrackType = "war_terror" | "antisemitism_diaspora" | "helping_helpers" | "group_support";
+// Phase 214 — client registration + under-18 guardian-consent safeguarding.
+// An adult's row goes straight to "active" (set by handle_new_user() from
+// signUp's own options.data, never client-writable afterward — see
+// protect_profile_account_status_column_trigger). A minor's row is created
+// as "pending_guardian_consent" and stays there — sign-in itself isn't
+// blocked at the database level (Supabase Auth creates the session
+// regardless of profile state), so app/login/page.tsx checks this status
+// after a successful sign-in and signs the session back out if it's not
+// "active", showing the guardian-consent notice instead of a dashboard.
+export type ProfileAccountStatus = "active" | "pending_guardian_consent" | "suspended";
+export type GuardianConsentStatus = "pending" | "confirmed" | "expired" | "revoked";
 
 export type BlogPostRow = {
   author: string | null;
@@ -184,6 +195,35 @@ export type ProfileRow = {
   phone: string | null;
   preferred_language: string | null;
   role: AppRole;
+  updated_at: string;
+  // Phase 214 — see the ProfileAccountStatus/GuardianConsentStatus comment
+  // above for how these four are populated and guarded.
+  date_of_birth: string | null;
+  account_status: ProfileAccountStatus;
+  terms_accepted_at: string | null;
+  terms_version: string | null;
+}
+
+// Phase 214 — one row per guardian-consent attempt for an under-18
+// registration (a resend creates a new row rather than mutating an
+// already-sent one, same precedent as InvitationRow). `token_hash` is the
+// sha256 hex digest of the raw token that goes into the guardian's email
+// link — the raw token itself is never stored, same model as
+// InvitationRow.token_hash (see lib/invitations.ts).
+export type GuardianConsentRow = {
+  id: string;
+  profile_id: string;
+  guardian_full_name: string;
+  guardian_email: string;
+  guardian_relationship: string;
+  token_hash: string;
+  token_expires_at: string;
+  status: GuardianConsentStatus;
+  terms_version: string;
+  sent_at: string | null;
+  consented_at: string | null;
+  consented_ip: string | null;
+  created_at: string;
   updated_at: string;
 }
 
@@ -963,6 +1003,22 @@ export type Database = {
         ];
       };
       profiles: { Row: ProfileRow; Insert: Partial<ProfileRow> & Pick<ProfileRow, "id">; Update: Partial<ProfileRow>; Relationships: [] };
+      // Phase 214 — see GuardianConsentRow's own comment above.
+      guardian_consents: {
+        Row: GuardianConsentRow;
+        Insert: Partial<GuardianConsentRow> &
+          Pick<GuardianConsentRow, "profile_id" | "guardian_full_name" | "guardian_email" | "guardian_relationship" | "token_hash" | "token_expires_at" | "terms_version">;
+        Update: Partial<GuardianConsentRow>;
+        Relationships: [
+          {
+            foreignKeyName: "guardian_consents_profile_id_fkey";
+            columns: ["profile_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       site_content: { Row: SiteContentRow; Insert: Partial<SiteContentRow> & Pick<SiteContentRow, "key">; Update: Partial<SiteContentRow>; Relationships: [] };
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };

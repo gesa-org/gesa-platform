@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 214 added)
+Last updated: 2026-09-15 (Phase 215 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9411,6 +9411,64 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 214: Remove diagonal shimmer/glare sweep from the three pathway cards"
+git push
+```
+
+---
+
+## Phase 215: Public nav Sign In hidden, footer account-access link, full client registration + under-18 guardian-consent flow
+
+**Numbering note:** every in-code comment for this phase's own work reads "Phase 214," written before noticing Phase 214 was already taken by the same day's earlier "remove the shimmer" work above. Rather than re-editing ~15 files to renumber every comment, this plan entry is filed as Phase 215 and cross-references "Phase 214" in code as this same phase — search the codebase for "Phase 214" to find every file this phase touched.
+
+**Request:** hide "Sign In" from the public header, add a "Sign In / Create Account" link to the footer's Explore column, and build a full client registration flow (first/last name, email, password+confirm, DOB, country, required Terms & Conditions/Privacy Policy consent) with under-18 guardian-consent safeguarding — a minor's account is created but held inactive until a parent/guardian confirms via an emailed, expiring, single-use link.
+
+**What shipped:**
+
+1. **Database (applied directly to Production, `iddeoavrlnvwwfopsacy`, via Supabase MCP — migration `phase214_client_registration_guardian_consent`):**
+   - `profiles` gained `date_of_birth date`, `account_status text` (`active` / `pending_guardian_consent` / `suspended`, default `active`, check-constrained), `terms_accepted_at timestamptz`, `terms_version text`.
+   - New trigger `protect_profile_account_status_column_trigger` (mirrors the existing `protect_profile_role_column_trigger` exactly): only the service-role client or an admin/super_admin may change `account_status` — closes the gap where `profiles_self_update`'s RLS policy would otherwise let a minor just set their own row back to `active`.
+   - `handle_new_user()` extended to populate the four new columns from `auth.signUp`'s `options.data` (same mechanism it already used for `full_name`) — `role` stays hardcoded `client` and the existing `session_bookings` back-link is untouched.
+   - New table `guardian_consents` (one row per consent attempt — a resend creates a new row rather than mutating an old one, same precedent as `invitations`): guardian name/email/relationship, hashed token + expiry (sha256, same as `invitations.token_hash` — the raw token only ever lives in the email URL), status (`pending`/`confirmed`/`expired`/`revoked`), `terms_version`, `sent_at`/`consented_at`/`consented_ip`. RLS enabled, admin-all policy only — public access goes exclusively through the service-role client, same model as `/accept-invitation`.
+   - `lib/database.types.ts` updated by hand (the MCP `generate_typescript_types` call itself returned too large a payload to consume this session) — added `ProfileAccountStatus`/`GuardianConsentStatus`, extended `ProfileRow`, added `GuardianConsentRow` and its `Database` table entry.
+
+2. **Header — Sign In hidden:** `components/AuthStatus.tsx`'s signed-out branch now renders `null` instead of a "Sign In" link/button (previously sat next to `LanguageSelector` in `Header.tsx`). The signed-in "Account" menu (My account / CRM Dashboard / My Dashboard / Sign out) is completely untouched — this only removes the header placement of the entry point, not any auth functionality. `/login` and `/signup` still work directly.
+
+3. **Footer — new link:** `components/Footer.tsx`'s Explore column gained a plain-styled "Sign In / Create Account" link immediately after Donate, pointing at the new `/account-access` route, using the same link classes every other Explore item uses (not Donate's distinct gold/icon treatment).
+
+4. **New tabbed auth landing page:** `app/account-access/page.tsx` — a client component with `role="tablist"` Sign In / Create Account tabs, rendering the same shared `SignInForm`/`CreateAccountForm` components the standalone `/login`/`/signup` routes now use (no duplicated logic between the three).
+
+5. **Shared auth components (new):**
+   - `components/auth/SignInForm.tsx` — extracted from `app/login/page.tsx` verbatim, plus the new guardian-consent gate: after `signInWithPassword` succeeds, reads the fresh session's own `profiles.account_status`; if it isn't `active`, immediately calls `signOut()` and shows a named "waiting on parent/guardian consent" message instead of redirecting. Also fixed a pre-existing accessibility gap while here: the Email field's `<label>` had no `htmlFor`/`id` association at all.
+   - `components/auth/CreateAccountForm.tsx` — the full registration form: first/last name, email, password + confirm (reusing the existing `PasswordInput`/`PasswordRequirements`/`evaluatePassword` policy), date of birth, country (reuses `components/crisis/CountrySelector.tsx` and its `lib/countries.ts` data — not a new field), and a required "I have read and agree to the GESA Terms & Conditions and Privacy Policy" checkbox with real links to `/terms-and-conditions`/`/privacy-policy`. The submit button stays disabled (`canSubmit`) until every required field is valid; every field has its own inline, `role="alert"` error message on blur. Age is computed live from date of birth (`lib/auth/age.ts`'s `isMinor()`) — under 18 reveals a guardian section (guardian full name/email/relationship + the minor's own "I confirm that my parent or legal guardian knows..." checkbox) and blocks submission until it's complete too.
+   - `components/auth/GuardianConsentForm.tsx` + `app/guardian-consent/page.tsx` — the public landing page a guardian reaches from their emailed link, structured exactly like `/accept-invitation` (Server Component validates the token before anything renders; named copy per invalid/expired/already-confirmed/revoked reason). The actual "I am the parent or legal guardian of this user, and I agree to the GESA Terms & Conditions and Privacy Policy on their behalf" checkbox the spec asks for lives here — deliberately NOT on the minor's own signup form, since only the guardian can truthfully check that box.
+
+6. **Server-side guardian-consent plumbing:**
+   - `lib/guardianConsent.ts` — token generation/hashing/expiry/validation, mirroring `lib/invitations.ts` exactly (32-byte random token, sha256 hash at rest, 7-day expiry).
+   - `lib/auth/age.ts` — `calculateAge`/`isMinor`/`isValidPastDate` (real calendar-age math, not just year subtraction) and `CURRENT_TERMS_VERSION`, recorded against every consent (`profiles.terms_version` / `guardian_consents.terms_version`) for audit purposes.
+   - `lib/email/templates.ts` — new `guardianConsentEmail()`, calm/plain-language, explicit that no account is active and nothing happens unless the guardian clicks through.
+   - `app/api/auth/guardian-consent/route.ts` (POST, called by `CreateAccountForm` right after a minor's Supabase Auth account is created) — re-validates `account_status === "pending_guardian_consent"` server-side before creating the consent row/sending the email (a neutral `{ok:true}` for anything else, so this can't be used to probe profile IDs/states), rate-limited via the existing `lib/invitations.ts` `isRateLimited` helper.
+   - `app/api/auth/guardian-consent/confirm/route.ts` (POST, called by `GuardianConsentForm`) — re-validates the token, then uses the service-role client to mark the consent `confirmed` and flip `profiles.account_status` to `active` (the only path allowed to make that specific write, per the new trigger above).
+
+7. **Sign-in gating (task 7):** implemented inside `SignInForm.tsx` (item 5 above) rather than as a separate gate — Supabase Auth has no native concept of "this account can't sign in yet," so the block happens one beat after a successful `signInWithPassword`, before this component ever treats the visitor as signed in.
+
+**Files touched:** `components/AuthStatus.tsx`, `components/Footer.tsx`, `app/login/page.tsx`, `app/signup/page.tsx`, `app/account-access/page.tsx` (new), `app/guardian-consent/page.tsx` (new), `components/auth/SignInForm.tsx` (new), `components/auth/CreateAccountForm.tsx` (new), `components/auth/GuardianConsentForm.tsx` (new), `lib/auth/age.ts` (new), `lib/guardianConsent.ts` (new), `lib/email/templates.ts`, `lib/database.types.ts`, `app/api/auth/guardian-consent/route.ts` (new), `app/api/auth/guardian-consent/confirm/route.ts` (new); Production database migration `phase214_client_registration_guardian_consent` (applied live).
+
+**Tests added/updated:** `tests/unit/AuthStatus.test.tsx` (new — signed-out renders nothing, signed-in Account menu untouched), `tests/unit/Footer.test.tsx` (new case — link present, positioned right after Donate), `tests/unit/SignupPage.test.tsx` (rewritten — disabled-until-valid, password-mismatch inline error, adult happy path, minor happy path incl. the guardian-consent API call), `tests/unit/LoginPage.test.tsx` (new cases — normal sign-in still redirects, pending-guardian account is signed back out and shown the waiting message, never redirected), `tests/unit/GuardianConsentForm.test.tsx` (new — disabled until checked, successful confirm, error state).
+
+**Manual test scenarios:** header no longer shows "Sign In" next to the language dropdown (signed-in Account menu still does); footer "Sign In / Create Account" opens `/account-access` with working tabs; adult signup (18+) reaches "Check your email"; under-18 signup reveals the guardian section, reaches "Almost there," and the guardian's email actually arrives with a working, once-only link; clicking that link and confirming activates the account; attempting to sign in as the minor before that confirmation is rejected with the waiting message and no session; attempting to sign in after confirmation works normally.
+
+**Assumptions/follow-ups:**
+- Country is treated as optional on the registration form (`profiles.country` is nullable and no existing flow on this site treats it as a hard gate) — flag to Roy if it should be required instead.
+- No admin-CRM UI was added for browsing/resending `guardian_consents` rows this phase (out of scope for "the client-facing flow") — the table itself has everything needed (status, timestamps, guardian contact, terms version) for a future CRM tab or a direct SQL/Supabase-dashboard lookup in the meantime.
+- Same deploy caveat as every other phase this session: no working shell (bash confirmed wedged again), so `git push` and a real `npm run typecheck`/`npx jest` run are still Roy's to do locally — the database migration itself IS already live (applied directly via Supabase MCP, independent of the wedged shell), so the schema side of this phase is real and deployed; only the application code is waiting on a push.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 215: hide header Sign In, add footer account-access link, full client registration + under-18 guardian-consent flow"
 git push
 ```
 

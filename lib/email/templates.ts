@@ -129,6 +129,50 @@ export function administratorInvitationEmail(params: {
   `);
 }
 
+// Phase 214 — sent to the parent/legal guardian named on an under-18
+// registration. Deliberately calm/plain-language (this is a mental-health
+// platform, and the recipient may be encountering GESA for the first time
+// through this email) and explicit that no account is active and nothing
+// happens unless they follow the link — same "safe to ignore" reassurance
+// pattern invitationCta() above already uses for staff invitations, since a
+// forwarded/mistaken guardian-consent email is exactly the same kind of
+// "don't want an unintended click to silently do something" case.
+export function guardianConsentEmail(params: {
+  guardianFullName: string;
+  minorName: string | null;
+  consentUrl: string;
+  expiresAtLabel: string;
+}) {
+  const { guardianFullName, minorName, consentUrl, expiresAtLabel } = params;
+  const minorLabel = minorName?.trim() || "a young person who gave your contact details";
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">Your consent is needed, ${guardianFullName || "there"}</h1>
+    <p style="color:#33352d;line-height:1.6;">
+      <strong>${minorLabel}</strong> has asked to create a GESA account for free, confidential mental-health
+      support. Because they're under 18, GESA requires a parent or legal guardian's consent before the account
+      can be activated — no account is active yet, and nothing happens unless you use the link below.
+    </p>
+    <p style="color:#33352d;line-height:1.6;">
+      If you are this person's parent or legal guardian and agree to GESA's Terms &amp; Conditions and Privacy
+      Policy on their behalf, confirm below.
+    </p>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${consentUrl}" style="display:inline-block;background:#5c6a4c;color:#fffdf8;text-decoration:none;
+        font-weight:700;font-size:15px;padding:13px 28px;border-radius:999px;">Review and confirm consent</a>
+    </div>
+    <p style="color:#6f6a5c;font-size:12.5px;line-height:1.6;">
+      This link expires <strong>${expiresAtLabel}</strong> and can only be used once — please don't forward this
+      email. If the button above doesn't work, copy and paste this link into your browser:<br/>
+      <span style="word-break:break-all;">${consentUrl}</span>
+    </p>
+    <p style="color:#6f6a5c;font-size:12.5px;line-height:1.6;">
+      Didn't expect this email, or don't recognize this request? You can safely ignore it — no account will be
+      activated unless the link above is used, and nothing about the young person's registration is changed or
+      revealed by ignoring it.
+    </p>
+  `);
+}
+
 export function contactReceivedEmail(name: string, subject: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">Thanks for reaching out, ${name}</h1>

@@ -184,6 +184,29 @@ export default function Footer({
                   </Link>
                 </li>
               ))}
+              {/* Phase 214 — Roy asked for account access to move out of the
+                  public header (see AuthStatus.tsx's own Phase 214 comment)
+                  and into the footer instead, placed right after Donate
+                  (the last item in exploreItems above) using the same plain-
+                  link styling every other Explore link uses — not Donate's
+                  distinct gold/icon treatment, since this isn't a monetary
+                  ask. Links to /account-access, the new tabbed Sign In /
+                  Create Account screen (see app/account-access/page.tsx);
+                  /login and /signup still work directly for anyone with an
+                  existing link. Not wired through PRIMARY_NAVIGATION like
+                  the items above — it deliberately does NOT appear in the
+                  header (that's the whole point of this phase), and every
+                  existing PRIMARY_NAVIGATION item is shared with the header
+                  by design (see lib/navigation.ts's Phase 117 comment), so
+                  adding it there would either put it back in the header or
+                  require a new "footer-only" flag for a single, one-off
+                  link — a plain literal entry here is simpler and doesn't
+                  risk that drift. */}
+              <li>
+                <Link href="/account-access" className="hover:text-[#eef1f6] transition-colors">
+                  Sign In / Create Account
+                </Link>
+              </li>
             </ul>
           </StaggerItem>
           <StaggerItem>

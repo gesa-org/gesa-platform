@@ -44,20 +44,20 @@ export default function AuthStatus() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  // Avoid a flash of "Sign In" before the client has checked the session.
-  if (email === undefined) {
-    return <span className="inline-flex h-11 w-16 sm:h-[46px] sm:w-[92px] rounded-full bg-secondary/60" />;
-  }
-
-  if (!email) {
-    return (
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-2 bg-secondary text-foreground hover:bg-muted px-4 py-2.5 sm:px-6 sm:py-3 rounded-full text-[14px] sm:text-[15px] font-semibold transition-colors"
-      >
-        Sign In
-      </Link>
-    );
+  // Phase 214 — Roy asked for the "Sign In" entry point removed from the
+  // public header entirely (account access now lives in the footer's
+  // "Sign In / Create Account" link instead — see Footer.tsx). This
+  // component still renders nothing while the session check is in flight
+  // (email === undefined) and nothing at all once it resolves to "no
+  // session" — no loading skeleton is needed for a slot that never renders
+  // anything visible either way. The signed-in "Account" menu below is
+  // completely untouched: /login, /signup, and every Supabase Auth call
+  // this component makes are unchanged, so a visitor who reaches /login or
+  // /account-access directly (via the footer link, a bookmark, or a
+  // deep link) still signs in exactly as before — only this header
+  // placement of the entry point is gone.
+  if (email === undefined || !email) {
+    return null;
   }
 
   return (

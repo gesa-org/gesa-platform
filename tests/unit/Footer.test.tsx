@@ -32,6 +32,24 @@ describe("Footer", () => {
     expect(screen.getByText(/A registered non-profit organization\./)).toBeInTheDocument();
   });
 
+  // Phase 214 — Roy asked for account access to move out of the public
+  // header (AuthStatus.test.tsx covers that side) and into the footer's
+  // Explore column instead, right after Donate, linking to the new tabbed
+  // /account-access screen.
+  it("renders a 'Sign In / Create Account' link in Explore, after Donate", () => {
+    render(<Footer />);
+
+    const signInLink = screen.getByRole("link", { name: "Sign In / Create Account" });
+    expect(signInLink).toHaveAttribute("href", "/account-access");
+
+    const exploreList = signInLink.closest("ul") as HTMLElement;
+    const linkTexts = Array.from(exploreList.querySelectorAll("a")).map((a) => a.textContent?.trim());
+    const donateIndex = linkTexts.findIndex((t) => t?.includes("DONATE"));
+    const signInIndex = linkTexts.indexOf("Sign In / Create Account");
+    expect(donateIndex).toBeGreaterThanOrEqual(0);
+    expect(signInIndex).toBe(donateIndex + 1);
+  });
+
   // Phase 70 — the footer grew a 5th column embedding the new "Help us
   // grow" form; this just checks it's actually present alongside the
   // existing four nav columns, not that the form itself works end-to-end
