@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 217 added)
+Last updated: 2026-09-15 (Phase 218 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9553,6 +9553,42 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 217: Move Community content onto Find Support; Community and About both left empty"
+git push
+```
+
+---
+
+## Phase 218: Revert Phase 217
+
+**Request:** Roy asked to revert Phase 217 entirely.
+
+**What shipped:** Phase 217 fully undone, restoring Phase 216's routing/content split:
+
+1. **`app/about/page.tsx`** — restored to full content (Hero with AI Matching/Browse Therapist CTAs, How GESA Works, founder spotlight for Ilana O'Malley, movement/volunteer CTA band, Team & Advisors, closing DonateBand) — the same content Phase 217 had moved to `/find-your-therapist`. Same content sources (`page_about_hero`/`page_about_sections`/`component_donate_band`), same `"about"` pageKey.
+2. **`app/support-groups/page.tsx`** — restored to full Community content (gold `PageHero` banner with `CommunityHeroExtras`, `CommunityIntro`, the `support-groups-list` group listing/registration flow, `Testimonials`, and its own closing `<DonateBand />` — the duplicate Phase 217 had deliberately dropped is back, since it's no longer a duplicate on this page). Same content sources, same `"support-groups"` pageKey.
+3. **`app/find-your-therapist/page.tsx`** — emptied again (`return null`), back to its Phase 216 state. Route stays live.
+4. **`components/SiteFooterSlot.tsx`** — `REVEAL_ROUTES` reverted to `["/", "/about", "/therapists", "/support-groups"]`.
+5. **`lib/ui-builder/pageRegistry.ts`** — `"about"` pageKey entry's `route`/`title` moved back to `/about`/"About"; `"support-groups"` pageKey entry's `route` moved back to `/support-groups` (content/`pageKey`/`title` unchanged throughout).
+
+**Deliberately NOT touched:** `lib/navigation.ts` — Phase 217 never touched it either, and its hrefs (`about` → `/about`, `findSupport` → `/find-your-therapist`) already match this reverted state exactly, so no change was needed.
+
+**Files touched:** `app/about/page.tsx`, `app/support-groups/page.tsx`, `app/find-your-therapist/page.tsx`, `components/SiteFooterSlot.tsx`, `lib/ui-builder/pageRegistry.ts`.
+
+**Tests reverted:** `tests/unit/AboutPage.test.tsx` (back to founders/mission assertions), `tests/unit/SupportGroupsPage.test.tsx` (back to Community banner/mission/pathway/DonateBand assertions), `tests/unit/FindYourTherapistPage.test.tsx` (back to a minimal "renders nothing" test), `tests/e2e/navigation.spec.ts` (nav-routing test reverted to expect content at `/about` and `/support-groups`, empty at `/find-your-therapist`).
+
+**Manual test scenarios:** click "About" in the nav → Hero/AI Matching content through Team & Advisors; click "Find Support" in the nav → empty page, shared header/footer only; click "Community" in the nav → full Community experience (Charity/Professional Services CTAs, group cards, registration forms/modals, testimonials, its own DonateCTA band).
+
+**Assumptions/follow-ups:**
+- This restores exactly the Phase 216 end-state — including its own flagged trade-off that the admin Content Manager's `PAGE_FIXED_TABS` tab labels ("About" edits `page_home`, "Find Support" edits `page_about_hero`/`page_about_sections`) still don't match the public nav labels 1:1. Not touched here, same as Phase 216 left it.
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 218: Revert Phase 217 — About and Community restored to their own pages, Find Support emptied again"
 git push
 ```
 

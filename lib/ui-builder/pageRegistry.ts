@@ -100,21 +100,16 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
   { pageKey: "home", route: "/", title: "Home", group: "core", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_home" }] },
   // Phase 145 moved this entry's `route` from "/about" to
   // "/find-your-therapist". Phase 216 moved it back to "/about". Phase 217
-  // moves it one more time, back to "/find-your-therapist" — that page now
-  // also carries the former Community/support-groups content underneath
-  // this content (see the "support-groups" entry below, and
-  // app/find-your-therapist/page.tsx's own comment). `pageKey`/
-  // `contentSources` are unchanged throughout all of this — every "about.*"
-  // contentId already registered below (ABOUT_EDITABLE_FIELDS) still
-  // matches this page's rendered content 1:1, and the two site_content keys
-  // it reads are the same rows admins have always edited, so nothing needs
-  // republishing. `title` moves back to "Find Support" to match. `/about`
-  // is now intentionally empty (app/about/page.tsx), with nothing for an
-  // admin to edit there — no separate pageKey entry exists for it.
+  // moved it to "/find-your-therapist" again. Phase 218 reverts Phase 217
+  // (Roy asked to undo it entirely), moving it back to "/about" once more —
+  // `pageKey`/`contentSources` are unchanged throughout all of this; every
+  // "about.*" contentId already registered below (ABOUT_EDITABLE_FIELDS)
+  // still matches this page's rendered content 1:1. `/find-your-therapist`
+  // is intentionally empty again (app/find-your-therapist/page.tsx).
   {
     pageKey: "about",
-    route: "/find-your-therapist",
-    title: "Find Support",
+    route: "/about",
+    title: "About",
     group: "core",
     supportsVisualEditor: true,
     contentSources: [
@@ -141,18 +136,14 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
       { namespace: "directory", siteContentKey: "component_therapists_directory" },
     ],
   },
-  // Phase 217 — Roy asked for this page's content to move onto Find
-  // Support (see app/find-your-therapist/page.tsx, which now renders it
-  // directly below that page's own content) and `/support-groups` left
-  // intentionally empty. `pageKey`/`contentSources`/`title` are unchanged —
-  // this is still genuinely the Community content and its same three
-  // site_content keys, an admin publishing from this "Community" entry in
-  // the Page Editor changes exactly what always changed — only `route`
-  // moves, since that's now where this content actually renders and where
-  // this entry's "View live page" link should point.
+  // Phase 217 moved this entry's `route` to "/find-your-therapist" when
+  // Roy asked for this page's content to move onto Find Support. Phase 218
+  // reverts that (Roy asked to undo Phase 217 entirely) — this content
+  // renders at "/support-groups" again (app/support-groups/page.tsx).
+  // `pageKey`/`contentSources`/`title` are unchanged throughout.
   {
     pageKey: "support-groups",
-    route: "/find-your-therapist",
+    route: "/support-groups",
     title: "Community",
     group: "core",
     supportsVisualEditor: true,

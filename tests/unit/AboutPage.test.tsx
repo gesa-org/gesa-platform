@@ -1,15 +1,54 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import AboutPage from "@/app/about/page";
+import { ABOUT_SECTIONS_FALLBACK } from "@/lib/content";
 
-// Phase 217 — Roy asked for Find Support's own content (which had briefly
-// moved here in Phase 216) to move back to /find-your-therapist, alongside
-// the newly-transferred Community content — see FindYourTherapistPage.test
-// .tsx for the founders/mission/Community assertions that used to live in
-// this file. `/about` is intentionally empty again, same pattern Phase 216
-// used for /find-your-therapist at the time.
+// Phase 218 — reverting Phase 217 (Roy asked to undo it entirely). This
+// page's Find Support content (moved briefly to /find-your-therapist per
+// Phase 217) is back here, so these assertions are restored to their
+// pre-217 form.
+jest.mock("@/lib/content", () => {
+  const actual = jest.requireActual("@/lib/content");
+  return {
+    ...actual,
+    getPageContent: jest.fn(async (_key: string, fallback: unknown) => fallback),
+  };
+});
+
+jest.mock("@/lib/queries", () => ({
+  getActiveClinicLocations: jest.fn(async () => []),
+  getActiveTherapists: jest.fn(async () => []),
+}));
+
+// Phase 84 — DonateBand is an async Server Component; nesting its unawaited
+// JSX inside this page's own async body throws "Objects are not valid as a
+// React child (found: [object Promise])" the moment render() is called.
+jest.mock("@/components/home/DonateBand", () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
 describe("AboutPage", () => {
-  it("renders nothing", () => {
-    const { container } = render(<AboutPage />);
-    expect(container).toBeEmptyDOMElement();
+  it("shows the initials block when no founder has a photoUrl (today's real content)", async () => {
+    const jsx = await AboutPage({});
+    render(jsx);
+
+    expect(screen.getByText("IO")).toBeInTheDocument(); // Ilana O'Malley
+    expect(screen.getByText("KH")).toBeInTheDocument(); // Karin Horen
+  });
+
+  it("no longer renders the volunteer CTA band or the legal/tax-note section (Phase 85)", async () => {
+    const jsx = await AboutPage({});
+    render(jsx);
+
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.volunteerHeading)).not.toBeInTheDocument();
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.taxNote)).not.toBeInTheDocument();
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.legalBlurb)).not.toBeInTheDocument();
+  });
+
+  it("no longer renders the 'Why GESA exists' mission section (Phase 77)", async () => {
+    const jsx = await AboutPage({});
+    render(jsx);
+
+    expect(screen.queryByText(ABOUT_SECTIONS_FALLBACK.missionParagraphs[0])).not.toBeInTheDocument();
   });
 });

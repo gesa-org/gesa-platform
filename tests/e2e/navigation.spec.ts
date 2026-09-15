@@ -30,34 +30,27 @@ test.describe("Site navigation", () => {
   // had a real destination of its own, leaving /find-your-therapist
   // intentionally empty.
   //
-  // Phase 217 (this test's own update) — Roy then asked for the Community
-  // page's full content to move onto Find Support, which surfaced a
-  // conflict with Phase 215's move: confirmed with Roy that the Find
-  // Support content itself belongs back at /find-your-therapist (undoing
-  // that part of Phase 215) rather than staying split across two pages, so
-  // /find-your-therapist now carries both the original Find Support content
-  // AND the transferred Community content (PageHero banner, "Why GESA
-  // exists"/pathway cards, the group listing/registration flow,
-  // testimonials) appended after it, behind a new "Explore More Ways to
-  // Receive Support" transition heading. /about and /support-groups are
-  // both intentionally empty now — the GESA logo (checked in the next test)
-  // is the only nav-bar way back to Home.
+  // Phase 217 briefly moved that content (plus the Community page's own
+  // content) onto /find-your-therapist, leaving /about and /support-groups
+  // both empty. Phase 218 (this test's own update) reverts Phase 217
+  // entirely per Roy's request: /about carries the Find Support content
+  // again, /support-groups carries the Community content again, and
+  // /find-your-therapist is back to intentionally empty — the GESA logo
+  // (checked in the next test) is the only nav-bar way back to Home from
+  // there.
   test("header nav links reach the right pages", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("link", { name: "About" }).first().click();
     await expect(page).toHaveURL(/\/about$/);
-    // Intentionally empty page — no former content, just the shared
-    // header/footer chrome from the root layout.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /emotional support should feel human/i })).toBeVisible();
 
     await page.goto("/");
     await page.getByRole("link", { name: "Find Support" }).first().click();
     await expect(page).toHaveURL(/\/find-your-therapist$/);
-    await expect(page.getByRole("heading", { name: /emotional support should feel human/i })).toBeVisible();
-    // The transferred Community content lives further down this same page.
-    await expect(page.getByRole("heading", { name: "Explore More Ways to Receive Support" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Why GESA exists" })).toBeVisible();
+    // Intentionally empty page — no content, just the shared header/footer
+    // chrome from the root layout.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
 
     await page.goto("/");
     await page.getByRole("link", { name: "Our Professionals" }).first().click();
@@ -66,15 +59,13 @@ test.describe("Site navigation", () => {
 
     await page.getByRole("link", { name: "Community" }).first().click();
     await expect(page).toHaveURL(/\/support-groups$/);
-    // Also intentionally empty now — the content that used to be here moved
-    // to /find-your-therapist, checked above.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Why GESA exists" })).toBeVisible();
   });
 
   // Phase 215 — the GESA logo (header and footer) must always open Home,
-  // regardless of which page it's clicked from. Checked from /about, which
-  // is empty as of Phase 217 but was the page most likely to be mistaken
-  // for Home before Phase 215.
+  // regardless of which page it's clicked from. Checked from /about, the
+  // page most likely to be mistaken for Home before Phase 215 (and, as of
+  // Phase 218, home to the real Find Support content again).
   test("the GESA logo always opens Home, even from /about", async ({ page }) => {
     await page.goto("/about");
     await page.getByRole("link", { name: "GESA" }).first().click();
