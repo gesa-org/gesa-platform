@@ -4,7 +4,7 @@ import GoldWatermarks from "@/components/ui/GoldWatermarks";
 import Reveal from "@/components/motion/Reveal";
 import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
-import DoorMark from "@/components/home/DoorMark";
+import GesaMark, { type GesaMarkColors } from "@/components/home/GesaMark";
 import type { HomeContent } from "@/lib/content";
 import EditableText from "@/components/ui-builder/public/EditableText";
 
@@ -73,13 +73,15 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // their existing Veterans/Support titles and copy untouched — only the
   // front badge label changed, same "front label is independent of the back
   // face's own heading" precedent Phase 97 already established.
-  // Phase 209 — Roy sent a new reference image restyling the front face as
-  // an ajar door per card, with the gold badge above it relabeled from each
-  // card's specific hardship (War/Terror/Disaster) back to its broader
-  // category (Resilience/Veterans/Support) — matching that reference badge
-  // text exactly, same "front label follows the newest reference" precedent
-  // Phases 97/100/154 already established for this same field.
-  card1FrontLabel: "Resilience",
+  // Phase 210 — Roy sent yet another reference image (a recessed colored
+  // "shadow box" alcove holding the GesaMark swirl, with the gold badge
+  // below it reading CRISIS/VETERANS/SUPPORT) and asked for it copied
+  // exactly, superseding Phase 209's door artwork and its "Resilience"
+  // relabel. This wording is actually identical to the very first Phase 100
+  // labels ("CRISIS"/"VETERANS"/"SUPPORT," typo-corrected) — the field has
+  // now round-tripped through War/Terror/Disaster (154) and
+  // Resilience/Veterans/Support (209) and landed back where it started.
+  card1FrontLabel: "Crisis",
   card2FrontLabel: "Veterans",
   card3FrontLabel: "Support",
   // Phase 154 — new short caption line under each card's frame, per Roy's
@@ -87,10 +89,16 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // "gifted professional support" pathways); card 3 reads differently
   // ("Global Professional Directory") since it points to the general,
   // browsable Our Professionals directory rather than a gifted-session path.
-  // Phase 209 — captions relabeled to match the door reference image's own
-  // captions ("Global Crisis Directory" / "Veterans & Carer Directory" /
-  // "Well Being Directory"), replacing the Phase 154 "Gifted Professional
-  // Support" / "Global Professional Directory" wording.
+  // Phase 209 — captions relabeled to match that phase's door reference
+  // image ("Global Crisis Directory" / "Veterans & Carer Directory" /
+  // "Well Being Directory"). Phase 210 — Roy's newest reference image shows
+  // no caption line at all (frame, then badge below it, nothing more), so
+  // this field is no longer rendered on the front face as of Phase 210 —
+  // see the front-face JSX below. Left in the data model rather than
+  // deleted (still a real, CMS-editable `home.*-card.caption` field) in
+  // case a future design brings a caption line back, consistent with how
+  // this file keeps other superseded fields (e.g. `frame`/`door` in
+  // PATH_FRONT_STYLES below) rather than removing them.
   card1FrontCaption: "Global Crisis Directory",
   card2FrontCaption: "Veterans & Carer Directory",
   card3FrontCaption: "Well Being Directory",
@@ -238,20 +246,42 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // thing for a color with no existing token. The mark's ring colors
 // (sage/tan/terracotta) were already a close match to the reference and
 // were left untouched — only the card's background changed.
-// Phase 209 — `door`/`doorFrame` are the two colors DoorMark needs for each
-// card's new ajar-door front face. Picked to match this same card's existing
-// `bg` tone exactly (already a light powder-blue / sage-olive / slate-blue-
-// gray per card, coincidentally the same three tones the reference door
-// image uses), so the door reads as "this card's established color, now
-// shaped like a door" rather than an unrelated new palette. `doorFrame` is a
-// darker shade of the same hue for the surrounding wall-opening frame.
-// `bg`/`frame`/`mark` are kept, unused, in case a future design reverts to
-// the GesaMark treatment — same precedent already set for the `frame` field
-// by Phase 124's own comment above.
-const PATH_FRONT_STYLES: { bg: string; frame: string; door: string; doorFrame: string }[] = [
-  { bg: "bg-[#aed0e9]", frame: "border-clay", door: "#c7dced", doorFrame: "#8fa9c2" },
-  { bg: "bg-accent", frame: "border-clay", door: "#9ba283", doorFrame: "#767c62" },
-  { bg: "bg-[#5f7a91]", frame: "border-clay", door: "#5f7a91", doorFrame: "#425364" },
+// Phase 210 — Roy's newest reference image shows each card as a recessed,
+// colored "shadow box" alcove (the card's own bg tone, with a darker inset
+// border and a soft depth shadow — not a door, not a wood-grain frame) with
+// the GesaMark swirl centered inside, and the gold badge sitting *below*
+// the box with a visible gap (reverting Phase 154's "badge above" layout).
+// `mark` is back (identical values to the pre-Phase-209 Phase 162 palette,
+// since this reference's three swirl colors are the same sage/tan/
+// terracotta, white/peach/terracotta, and lavender/teal/peach this app has
+// used since Phase 97/162) — brought back rather than re-deriving new
+// values, since nothing about the swirl's own coloring changed in the new
+// reference. `door`/`doorFrame` (Phase 209) are kept, unused, in case a
+// future design reverts to the door treatment — same "don't delete a
+// superseded style, just stop reading it" precedent already set for `frame`
+// by Phase 124's own comment.
+const PATH_FRONT_STYLES: { bg: string; frame: string; door: string; doorFrame: string; mark: GesaMarkColors }[] = [
+  {
+    bg: "bg-[#aed0e9]",
+    frame: "border-clay",
+    door: "#c7dced",
+    doorFrame: "#8fa9c2",
+    mark: { outerRing: "#9db99f", middleRing: "#d9a98c", innerRing: "#c1694f", dot: "#c1694f" },
+  },
+  {
+    bg: "bg-accent",
+    frame: "border-clay",
+    door: "#9ba283",
+    doorFrame: "#767c62",
+    mark: { outerRing: "#dbe2e7", middleRing: "#e8c9a0", innerRing: "#c1694f", dot: "#c1694f" },
+  },
+  {
+    bg: "bg-[#5f7a91]",
+    frame: "border-clay",
+    door: "#5f7a91",
+    doorFrame: "#425364",
+    mark: { outerRing: "#a99bc9", middleRing: "#8ad4c2", innerRing: "#4a9d92", dot: "#f2b385" },
+  },
 ];
 
 // Phase 35 — the top banner (eyebrow/headline/subtitle) is Content
@@ -553,20 +583,39 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     const cardKey = CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1];
                     return (
-                      /* Phase 154 — Roy asked for the category badge to move
-                         above the frame (it used to sit below it, with the
-                         same visible gap) and for a new caption line to
-                         appear below the frame instead. Same flex column,
-                         same gap-3 rhythm between every piece — only the
-                         badge's position in the column changed, plus one new
-                         flex-none child at the end. The frame itself keeps
-                         `flex-1 min-h-0`, so it's still the piece that
-                         absorbs whatever height the badge + gaps + new
-                         caption don't use, keeping the whole card the same
-                         fixed h-[300px] with no overflow. */
-                      <div className="absolute inset-0 flex flex-col items-center gap-3 [backface-visibility:hidden]">
-                        {/* Gold label pill — now sits above the frame with a
-                            visible gap, per the revised reference. Icon +
+                      /* Phase 210 — Roy sent a new reference image (a
+                         recessed colored "shadow box" holding the GesaMark
+                         swirl, with the gold badge below it — no caption
+                         line at all) and asked for it copied exactly. This
+                         moves the badge back below the frame, the layout
+                         Phase 97 originally used before Phase 154 moved it
+                         above, and drops the Phase 154 caption line from the
+                         front face entirely (kept in the data model, not
+                         rendered — see the caption field's own Phase 210
+                         comment in HOME_CONTENT_FALLBACK above). Same flex
+                         column as before, now just frame then badge, one
+                         gap-3 between them. */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 [backface-visibility:hidden]">
+                        {/* Shadow-box "recessed alcove" — Phase 210. Replaces
+                            Phase 209's door with a flat, colored box (this
+                            card's own `bg` tone) that reads as recessed into
+                            the wall via an inset ring plus a soft outward
+                            drop shadow, holding the GesaMark swirl centered —
+                            reverting to the Phase 97-162 "frame + mark"
+                            concept, minus the wood-grain frame and cream mat
+                            those phases used (this reference shows neither:
+                            just the card's flat color, front-to-back). */}
+                        <div
+                          className={`relative w-full flex-1 min-h-0 overflow-hidden rounded-md ${frontStyle.bg}`}
+                          style={{ boxShadow: "inset 0 0 0 3px rgba(0,0,0,0.14), inset 0 8px 16px rgba(0,0,0,0.22), 6px 10px 18px -8px rgba(20,20,25,0.4)" }}
+                        >
+                          <div className="flex h-full w-full items-center justify-center p-4">
+                            <GesaMark colors={frontStyle.mark} className="h-[62%] w-[62%]" />
+                          </div>
+                        </div>
+                        {/* Gold label pill — back below the frame (Phase 97's
+                            original position), with the same visible gap the
+                            column's own `gap-3` already provides. Icon +
                             label are separate from the back face's badge/
                             title (PATH_BADGE_ICONS / p.title) since they show
                             at different flip states. */}
@@ -580,31 +629,6 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             className="text-[11px] font-semibold uppercase tracking-wide text-espresso"
                           />
                         </div>
-                        {/* Door — Phase 209. Replaces the Phase 97-124 wood-
-                            frame/mat/GesaMark treatment with an ajar door per
-                            Roy's reference image (a wall-mounted frame, one
-                            raised-panel leaf swung open, a small handle),
-                            colored per card via PATH_FRONT_STYLES' new
-                            door/doorFrame values. A soft floor-contact shadow
-                            is baked into the SVG itself so the door reads as
-                            standing in the frame rather than flat artwork. */}
-                        <div className="relative flex w-full flex-1 min-h-0 items-center justify-center">
-                          <DoorMark door={frontStyle.door} frame={frontStyle.doorFrame} className="h-full w-auto drop-shadow-[4px_8px_10px_rgba(20,20,25,0.28)]" />
-                        </div>
-                        {/* Caption — new Phase 154 line below the frame,
-                            distinct from the badge above it and from the
-                            back face's own title/description. Kept small and
-                            single-line-height so it never competes with the
-                            frame above or the card's fixed height; `px-2`
-                            keeps it clear of the card's own rounded edges at
-                            narrow widths. */}
-                        <EditableText
-                          contentId={`home.${cardKey}.caption`}
-                          label="Card front caption"
-                          value={p.frontCaption}
-                          as="span"
-                          className="flex-none px-2 text-center text-[11.5px] font-medium leading-snug text-espresso/80"
-                        />
                       </div>
                     );
                   })()}

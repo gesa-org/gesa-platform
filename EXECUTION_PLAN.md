@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 209 added)
+Last updated: 2026-09-15 (Phase 210 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9256,6 +9256,43 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 209: Home pathway cards restyled as ajar doors"
+git push
+```
+
+---
+**Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
+
+## Phase 210: Home pathway cards restyled again — recessed shadow-box + GesaMark
+
+Roy sent a new reference image the same day as Phase 209 (three recessed, colored "shadow box" alcoves — each card's own light-blue/sage/slate-blue tone, with a darker inset ring and a soft depth shadow, no wood grain, no door) holding the GesaMark swirl centered, with a gold pill badge reading CRISIS/VETERANS/SUPPORT sitting *below* the box, and no caption line — and asked for it copied exactly. This supersedes Phase 209's door artwork one phase later.
+
+**What shipped:**
+
+1. **`components/home/Paths.tsx`** — replaced Phase 209's `DoorMark` front face with a flat, colored "shadow box" (`frontStyle.bg`, an inset `box-shadow` ring + a soft outward drop shadow simulating a recessed alcove) holding `GesaMark` centered — reverting to the Phase 97-162 "frame + mark" concept, but without the wood-grain frame or cream mat those phases used (the new reference shows neither). Brought back `GesaMark`/`GesaMarkColors` (removed in Phase 209) and re-added `mark` to `PATH_FRONT_STYLES`, reusing the exact same three swirl palettes Phase 97/162 already established (sage/tan/terracotta, white/peach/terracotta, lavender/teal/peach) — the new reference's swirl colors are an exact match to those, so nothing needed re-deriving. `door`/`doorFrame` (Phase 209) are kept, unused, in `PATH_FRONT_STYLES`, same "don't delete a superseded style" precedent already set for `frame` back in Phase 124.
+2. **Badge moved back below the frame** (Phase 97's original position, before Phase 154 moved it above) — same gold pill, same icon (`Sprout`/`Tags`/`Waves`, unchanged since these already matched Crisis/Veterans/Support conceptually), same `EditableText` content ID.
+3. **Caption line removed from the front face** — the new reference shows no caption under the badge at all. `card1FrontCaption`/`card2FrontCaption`/`card3FrontCaption` (Phase 209's "Global Crisis Directory" etc.) are left in `HOME_CONTENT_FALLBACK` rather than deleted — still a real, CMS-editable `home.*-card.caption` field, just not rendered — in case a future design brings a caption line back.
+4. **Badge label text reverted to "Crisis"/"Veterans"/"Support"** — the wording round-tripped through War/Terror/Disaster (154) and Resilience/Veterans/Support (209) and has now landed back on the exact wording Phase 100 originally used.
+5. **Flip interaction, back-face content, CTA destinations, card sizing all unchanged** — front-face artwork/layout and label text only, consistent with the scope Roy confirmed for Phase 209 and unchanged here.
+
+**Files touched:** `components/home/Paths.tsx`, `tests/unit/Paths.test.tsx` (front-face SVG selector back to GesaMark's `viewBox="0 0 200 220"`, badge-label assertion back to "Crisis"). `components/home/DoorMark.tsx` (Phase 209) is left in the codebase, unused — not deleted, per this file's standing convention.
+
+**Manual test scenarios:**
+- Load `/` (Home) and confirm all three cards show a flat, recessed colored box (not a door, not a wood frame) with the GesaMark swirl centered, and a gold badge reading "CRISIS"/"VETERANS"/"SUPPORT" below each box with a visible gap — no caption text anywhere on the front face.
+- Hover/focus each card and confirm the flip still works, revealing the unchanged back face.
+- Confirm the swirl's three ring colors + dot are visibly distinct per card and match the reference image's palette (sage/tan/terracotta on light blue; white/peach/terracotta on sage; lavender/teal/peach on slate-blue).
+- Confirm mobile layout still renders each card at the same fixed height with no overflow.
+
+**Assumptions/follow-ups:**
+- Build/test verification (`tsc --noEmit`, Jest) could not be run this session — the sandboxed shell remains unreachable; run the deploy-gate commands below once it's available.
+- Two pathway-card redesigns landed the same day (209 then 210) — if a third revision is likely, worth asking Roy whether to consolidate future reference images into one round rather than iterating live on Production.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 210: Home pathway cards restyled again (recessed shadow-box + GesaMark)"
 git push
 ```
 

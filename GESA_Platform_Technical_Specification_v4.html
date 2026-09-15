@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GESA Platform — Technical Specification (v4.0)</title>
+<title>GESA Platform — Technical Specification (v4.2)</title>
 <style>
   :root{
     --navy:#1c2b45; --navy-dark:#12192b; --slate:#2b3140; --gold:#bfa046;
@@ -25,7 +25,7 @@
     font-size:11.5px; color:var(--muted);
   }
   .runningbar .logo{display:inline-flex; align-items:center; gap:5px; font-weight:800; color:var(--vv-navy); font-size:13px; letter-spacing:0.2px;}
-  .runningbar .logo svg{height:16px; width:auto;}
+  .runningbar .logo img.vv-logo{height:18px; width:auto;}
   .section-block{padding-top:18px;}
   hr.rule{border:none; border-top:1px solid var(--border); margin:28px 0;}
 
@@ -42,8 +42,7 @@
     font-size:44px; font-weight:800; color:var(--vv-navy); letter-spacing:0.2px;
     font-family:Arial, Helvetica, sans-serif;
   }
-  .cover .logo-mark svg{ height:48px; width:auto; position:relative; top:2px; }
-  .vv-wordmark{ display:inline-flex; align-items:center; gap:0; }
+  .cover .logo-mark img.vv-logo{ height:64px; width:auto; }
   .cover .eyebrow{
     text-transform:uppercase; letter-spacing:2.5px; font-size:11.5px; font-weight:700;
     color:var(--gold); margin:0 0 14px 0;
@@ -62,7 +61,7 @@
     border-top:1.5px solid var(--navy); padding:14px 48px; font-size:11px; color:var(--muted);
   }
   .cover-footer .cf-brand{display:inline-flex; align-items:center; gap:5px; font-weight:800; color:var(--vv-navy);}
-  .cover-footer .cf-brand svg{height:15px; width:auto;}
+  .cover-footer .cf-brand img.vv-logo{height:16px; width:auto;}
 
   h1.sec{
     font-size:22px; color:var(--navy); border-bottom:2.5px solid var(--gold);
@@ -114,17 +113,17 @@
   <div class="cover-page">
     <div class="cover-topbar"></div>
     <div class="cover">
-      <div class="logo-mark"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="vv-wordmark">entVest</span></div>
+      <div class="logo-mark"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div>
       <p class="eyebrow">Technical Specification</p>
       <h1>GESA Platform</h1>
       <h2>Technical Specification &amp; System Documentation</h2>
       <div class="rule-gold"></div>
       <p class="prepared">Prepared by <strong>VentVest</strong> for <strong>Roy</strong></p>
-      <p class="prepared">October 2026 &nbsp;·&nbsp; Version 4.0</p>
-      <p class="doccontrol">Document Control: v4.0 — Confidential — Prepared for internal handoff and QA test planning</p>
+      <p class="prepared">October 2026 &nbsp;·&nbsp; Version 4.2</p>
+      <p class="doccontrol">Document Control: v4.2 — Confidential — Prepared for internal handoff and QA test planning</p>
     </div>
     <div class="cover-footer">
-      <div class="cf-brand"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div>
+      <div class="cf-brand"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div>
       <div>GESA Platform — Technical Specification · Confidential</div>
     </div>
   </div>
@@ -132,19 +131,21 @@
   <div class="print-note">
     <strong>Note on this file format.</strong> This edition is delivered as a single self-contained HTML file
     rather than the PDF/Word shell used for v1.0–v1.7, because the sandboxed build environment normally used to
-    render a native PDF (LibreOffice/pandoc pipeline) is currently unreachable. The VentVest mark is redrawn
-    here as inline vector artwork (SVG) matching the logo's colors and swoosh/checkmark shape, since the
-    original logo file wasn't available to embed directly as an image asset — swap in the real logo file's
-    <code>&lt;img&gt;</code> tag in its place if pixel-exact fidelity to the source file is required. The cover
-    layout, running header on every section, footer bar, and Document Control table are built to match the
-    v1.7 PDF's letterhead treatment as closely as HTML/CSS allows. To get a PDF, open this file in a browser
-    and use Print → Save as PDF — the running VentVest header/footer will carry onto every printed page.
+    render a native PDF (LibreOffice/pandoc pipeline) is currently unreachable. The VentVest mark shown on the
+    cover, every section's running header, and the cover footer is now the <strong>actual logo file</strong>
+    ("Ventvest Logo.png.png," saved in this same folder) referenced by a relative <code>&lt;img&gt;</code> path
+    — not a redrawn approximation. Keep this HTML file and the logo file together in the same folder so that
+    reference resolves; if you move or rename either one, update the <code>src="Ventvest Logo.png.png"</code>
+    references to match. The cover layout, running header on every section, footer bar, and Document Control
+    table are built to match the v1.7 PDF's letterhead treatment as closely as HTML/CSS allows. To get a PDF,
+    open this file in a browser and use Print → Save as PDF — the running VentVest header/footer (with the
+    real logo) will carry onto every printed page.
   </div>
 
   <div class="section-break"></div>
 
   <!-- ============ DOCUMENT CONTROL ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">Document Control — Version History</h1>
   <table>
     <tr><th>Version</th><th>Date</th><th>Author</th><th>Reviewer / Approver</th><th>Description</th></tr>
@@ -158,7 +159,9 @@
     <tr><td>1.7</td><td>2026-08-30</td><td>R. Rapada</td><td>J. Buena</td><td>Moved this page to start on page 2 (title page now stands alone); set Author/Reviewer to R. Rapada / J. Buena; switched document font to Arial.</td></tr>
     <tr><td>2.0</td><td>2026-09-14</td><td>Claude (Cowork)</td><td>Roy</td><td>Full content revision covering every phase from 88 through 199 — architecture, RLS/security, schema, email, every public page, the 15-section admin CRM, CMS + new UI Builder, design system, environment variables, FR-1 through FR-79, client/therapist workflows, and two new QA-focused sections (Known Issues/Reverted Work, Mobile Responsiveness Status). Delivered as Markdown — build shell unreachable, so PDF/DOCX rendering was deferred.</td></tr>
     <tr><td>3.0</td><td>2026-09-14</td><td>Claude (Cowork)</td><td>Roy</td><td>Re-requested with the original v1.0 PDF as a formatting reference. Added this Document Control section and a note on reusing the v1.7 page shell once the build shell is reachable. Content unchanged from v2.0 — still current through Phase 199.</td></tr>
-    <tr><td><strong>4.0</strong></td><td>2026-09-15</td><td>Claude (Cowork)</td><td>Roy</td><td><strong>Full content revision covering every phase from 200 through 208</strong> — Media Library, Donate page storytelling photos/testimonials, Trusted Partners footer section, FAQ categories, branded 404/error boundary pages, Content Manager's 4-group tab reorganization, therapist profile-view analytics (built admin-only, then made a public counter on every therapist card), and the full Therapist Diary Calendar Embed feature, which rebuilds the therapist dashboard from one read-only page into five sections (Dashboard, My Bookings, My Diary, Notifications, Profile/Settings). Restores a dedicated QA &amp; Testing Reference section (form validation, button/CTA inventory, navigation reference, error/empty states, test scenarios) in the spirit of v1.3, updated for every phase since. Rendered as a single branded HTML file matching the v1.7 cover/layout, since the build shell was unreachable for a native PDF render (see cover-page note).</td></tr>
+    <tr><td>4.0</td><td>2026-09-15</td><td>Claude (Cowork)</td><td>Roy</td><td>Full content revision covering every phase from 200 through 208 — Media Library, Donate page storytelling photos/testimonials, Trusted Partners footer section, FAQ categories, branded 404/error boundary pages, Content Manager's 4-group tab reorganization, therapist profile-view analytics (built admin-only, then made a public counter on every therapist card), and the full Therapist Diary Calendar Embed feature, which rebuilds the therapist dashboard from one read-only page into five sections (Dashboard, My Bookings, My Diary, Notifications, Profile/Settings). Restored a dedicated QA &amp; Testing Reference section (form validation, button/CTA inventory, navigation reference, error/empty states, test scenarios) in the spirit of v1.3, updated for every phase since. Rendered as a single branded HTML file matching the v1.7 cover/layout, since the build shell was unreachable for a native PDF render.</td></tr>
+    <tr><td>4.1</td><td>2026-09-15</td><td>Claude (Cowork)</td><td>Roy</td><td>Adds Phase 209 — the Home page's three pathway cards were restyled from the wood-frame/cream-mat/abstract-mark front face to an ajar-door illustration (<code>DoorMark.tsx</code>), with the gold badge and caption on each card relabeled to match Roy's reference image (War/Terror/Disaster → Resilience/Veterans/Support; captions changed to the three "Directory" names). Updated §5.3 and §13.3 accordingly. Also redrew the cover/running-header/footer VentVest mark as inline vector artwork after Roy shared the actual logo image, replacing the earlier plain-text/checkmark placeholder (no content-section changes from that pass, cosmetic only). No other phase content changed — v4.0's Phase 200–208 coverage is otherwise unchanged and still current.</td></tr>
+    <tr><td><strong>4.2</strong></td><td>2026-09-15</td><td>Claude (Cowork)</td><td>Roy</td><td><strong>Replaces the v4.1 redrawn VentVest mark with the actual logo file.</strong> Roy saved the real logo ("Ventvest Logo.png.png") into this same project folder; every occurrence of the vector approximation — the cover page, all 16 section running headers, and the cover footer — now references that file directly via a relative <code>&lt;img&gt;</code> path, so the exact logo (not a recreation) renders everywhere the VentVest mark appears. No content-section changes — cosmetic only, same as v4.1's own logo pass.</td></tr>
   </table>
 
   <div class="callout">
@@ -173,7 +176,7 @@
   <div class="section-break"></div>
 
   <!-- ============ TABLE OF CONTENTS ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">Table of Contents</h1>
   <div class="toc">
     <div class="toc-item"><span>1. Overview</span></div>
@@ -197,7 +200,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 1. OVERVIEW ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">1. Overview</h1>
   <p>GESA (Global Emotional Support Alliance) is a nonprofit platform connecting people in need of emotional
   support with a global network of volunteer therapists, at no cost to the client for most pathways. The
@@ -246,7 +249,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 2. TECH STACK ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">2. Tech Stack &amp; Architecture</h1>
 
   <h2 class="sub">2.1 Core Dependencies</h2>
@@ -376,7 +379,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 3. DATABASE SCHEMA ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">3. Database Schema</h1>
   <p>Source of truth: <code>lib/database.types.ts</code> (regenerated via <code>npm run db:types</code>), schema
   <code>public</code>. Everything in the original core content, therapist, submission, and admin/auth/messaging
@@ -452,7 +455,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 4. EMAIL SYSTEM ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">4. Email System</h1>
   <p><code>lib/email/resend.ts</code>'s <code>sendEmailSafely()</code> remains the single choke point for every
   outbound email: a missing <code>RESEND_API_KEY</code> makes it a no-op (<code>{ skipped: true }</code>), any
@@ -494,7 +497,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 5. PUBLIC WEBSITE ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">5. Public Website — Pages &amp; Features</h1>
 
   <h2 class="sub">5.1 Current full route inventory</h2>
@@ -535,11 +538,33 @@
   </ul>
 
   <h2 class="sub">5.3 <code>/</code> — Home ("About" in the nav)</h2>
-  <p>Three flip-animated pathway cards remain the centerpiece (badges WAR/TERROR/DISASTER; links to
-  <code>/intake?path=crisis</code>, <code>?path=veteran</code>, and <code>/therapists</code>). Background is
-  <code>--home-gray</code> with an animated gold sheen. <strong>QA must test the original wood-frame/cream-mat
-  card design</strong> — four separate redesign attempts were built and reverted at Roy's request; an unused
-  <code>PathCardTexture.tsx</code> remains in the codebase but is not wired in.</p>
+  <p>Three flip-animated pathway cards remain the centerpiece, linking to <code>/intake?path=crisis</code>,
+  <code>?path=veteran</code>, and <code>/therapists</code>. Background is <code>--home-gray</code> with an
+  animated gold sheen. The flip mechanic itself (front face on hover/focus rotates to a back face with title,
+  description, and a "Reach out now" button) is unchanged since Phase 72 — only the front face's artwork and
+  the badge/caption text have been restyled several times since (five attempts total, one of which is now
+  live — see the Phase 209 callout below).</p>
+  <div class="callout new">
+    <strong>New, Phase 209 — pathway cards restyled as ajar doors.</strong> The front face's artwork changed
+    from the Phase 97–124 wood-frame/cream-mat/abstract-mark treatment to an ajar-door illustration
+    (<code>components/home/DoorMark.tsx</code>, a coded SVG — a wall-opening frame, a raised-panel door leaf
+    swung open, a handle, and a floor shadow), matching a reference image Roy provided. Each door reuses that
+    card's own existing background tone (light powder-blue, sage/olive, slate-blue-gray) reshaped into a door
+    rather than a new palette. The gold badge above each door and the caption below it were both relabeled to
+    match the reference: badges changed from <strong>War / Terror / Disaster</strong> (Phase 154) to
+    <strong>Resilience / Veterans / Support</strong>; captions changed from "Gifted Professional Support" /
+    "Gifted Professional Support" / "Global Professional Directory" to <strong>"Global Crisis Directory" /
+    "Veterans & Carer Directory" / "Well Being Directory."</strong> The flip interaction, back-face content
+    (title/description/CTA), CTA destinations, badge icons (Sprout/Tags/Waves), and card sizing are all
+    unchanged — this was a front-face artwork and label swap only. Both fields remain individually editable
+    through the Content Manager's existing per-card <code>EditableText</code> fields (same content IDs as
+    before: <code>home.crisis-card.label</code>, <code>home.crisis-card.caption</code>, etc.) — only the
+    seeded fallback text changed, so a previously-published <code>page_home</code> row keeps showing its old
+    wording until an admin re-publishes, the same shallow-merge caveat documented for every other CMS field
+    (§15.5). The four earlier redesign attempts (wood-frame/cream-mat original, and three since-reverted
+    variants) remain in <strong>13.3</strong> for QA's reference; <code>PathCardTexture.tsx</code> is still
+    unused, unrelated dead code from one of those earlier attempts.
+  </div>
   <div class="callout new">
     <strong>Phase 200 — Donate page storytelling (see §5.7 for the page itself; noted here since it also
     touches Home's donate band styling conventions).</strong>
@@ -659,7 +684,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 6. ADMIN CRM ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">6. Admin CRM Dashboard</h1>
   <p>Every <code>/admin/**</code> route remains wrapped by <code>requireAdmin()</code>, explicit
   defense-in-depth on top of Postgres RLS.</p>
@@ -747,7 +772,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 7. CMS ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">7. Content Management System</h1>
   <p>The <code>site_content</code> mechanism is unchanged in shape — one generic <code>key</code>/<code>value(jsonb)</code>
   table, read through <code>getPageContent()</code> with a fallback-to-hardcoded-constant contract, written via
@@ -795,7 +820,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 8. DESIGN SYSTEM ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">8. Design System</h1>
 
   <h2 class="sub">8.1 Color Tokens</h2>
@@ -839,7 +864,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 9. ENV VARS ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">9. Environment Variables &amp; Deployment Notes</h1>
   <table>
     <tr><th>Variable</th><th>Exposure</th><th>Purpose</th></tr>
@@ -867,7 +892,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 10. FUNCTIONAL REQUIREMENTS ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">10. Functional Requirements</h1>
   <p>FR-1 through FR-32 (original core intake/matching/content/accounts/CRM requirements) and FR-33 through
   FR-78 (accessibility, donations/payments, confidentiality, scheduling-link booking, Find Support, pathway
@@ -909,7 +934,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 11. CLIENT WORKFLOW ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">11. Client Workflow</h1>
   <p>The overall shape (entry points → choosing a therapist → two distinct booking mechanisms → optional
   account/messaging) remains correct, with these standing corrections from earlier phases still in force:</p>
@@ -942,7 +967,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 12. THERAPIST WORKFLOW ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">12. Therapist Workflow <span class="tag-new">MAJOR UPDATE — PHASE 208</span></h1>
   <div class="callout warn">
     <strong>This section has changed more than any other since the original v1.0 specification.</strong> v1.0
@@ -1052,7 +1077,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 13. KNOWN ISSUES ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">13. Known Issues, Regressions &amp; Work That Was Reverted (QA focus)</h1>
   <p>This section exists so QA does not spend time either reporting long-disclosed, intentional gaps as new
   bugs, or testing for a design/feature that was tried and explicitly reverted.</p>
@@ -1116,8 +1141,10 @@
 
   <h2 class="sub">13.3 Explicitly built, then reverted — should NOT be found live</h2>
   <ul>
-    <li>Four separate redesign attempts of the Home pathway cards' front faces — the live design is the
-    original wood-frame/cream-mat card; an unused <code>PathCardTexture.tsx</code> remains in the codebase.</li>
+    <li>Four earlier redesign attempts of the Home pathway cards' front faces, including the original
+    wood-frame/cream-mat/abstract-mark design — all four superseded by <strong>Phase 209's ajar-door
+    design</strong> (§5.3), which is what should now be live. An unused <code>PathCardTexture.tsx</code> from
+    one of these earlier attempts remains in the codebase, unrelated to the current door artwork.</li>
     <li>An interactive, mouse-reactive glow effect on the Home hero's icon background.</li>
     <li>Several full-site hero-background color schemes (dark navy, all-gold, various gradients).</li>
     <li>A ~50-language switcher expansion, reverted back to English/Hebrew only.</li>
@@ -1127,7 +1154,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 14. MOBILE ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">14. Mobile Responsiveness Status (Phase 199, in progress)</h1>
   <p>Roy requested a full mobile UX/accessibility audit and fix pass across every public, authenticated, and
   admin page at common phone widths (320–430px). Only the first installment has landed as of this document.</p>
@@ -1171,7 +1198,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 15. APPENDIX ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">15. Appendix — Open Items for Handoff</h1>
   <ol>
     <li><strong>Two Supabase environments are out of sync</strong> — Production has tables the Dev/Preview
@@ -1220,7 +1247,7 @@
   <div class="section-break"></div>
 
   <!-- ============ 16. QA REFERENCE ============ -->
-  <div class="runningbar"><div class="logo"><svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg"><path d="M4 58 Q 36 76 70 52" stroke="#2f8fc9" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M4 70 Q 42 92 82 60" stroke="#7cc6ea" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M8 16 L44 68 L102 4" stroke="#1d2b57" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>entVest</div><div>GESA Platform — Technical Specification</div></div>
+  <div class="runningbar"><div class="logo"><img src="Ventvest Logo.png.png" alt="VentVest" class="vv-logo"></div><div>GESA Platform — Technical Specification</div></div>
   <h1 class="sec">16. QA &amp; Testing Reference <span class="tag-new">RESTORED &amp; UPDATED</span></h1>
   <p>This section restores and updates the detailed, field-level QA reference from v1.3 of this document
   (form validation, button/CTA inventory, navigation reference, error/empty states, and test scenarios),
