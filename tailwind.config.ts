@@ -43,6 +43,14 @@ const config: Config = {
           DEFAULT: "var(--clay)",
           soft: "var(--clay-soft)",
         },
+        // Roy's "warm ivory" request for the form-modal background (Join as
+        // a Volunteer/Professional, booking, intake, AI Matching/Browse
+        // Therapist, admin add/invite, etc.) — see app/globals.css's
+        // --modal-ivory comment for why this is a dedicated token rather
+        // than a retune of --card.
+        modal: {
+          ivory: "var(--modal-ivory)",
+        },
         // Roy's "Sand Brown" (#CBA560) swap for the Founder spotlight, "Why
         // GESA exists," and Our Professionals' directory band section
         // backgrounds — see app/globals.css's --sand-brown comment for why

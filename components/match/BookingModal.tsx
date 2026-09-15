@@ -96,8 +96,13 @@ export default function BookingModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      {/* Phase 220 — warm ivory modal background, matching every other form
+          modal site-wide (see components/ui/Modal.tsx's own Phase 220
+          comment and app/globals.css's --modal-ivory). This modal renders
+          its own panel div instead of going through the shared Modal.tsx,
+          so it needed the same class swap applied directly here. */}
       <div
-        className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-[var(--radius)] bg-card p-6 shadow-2xl"
+        className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-[var(--radius)] bg-modal-ivory p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">

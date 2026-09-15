@@ -7,6 +7,14 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MOTION_DURATION, MOTION_EASE } from "@/components/motion/config";
 
+// Phase 220 — Roy sent a reference screenshot of the volunteer/caregiver
+// application modal and asked for a "warm ivory" background applied to it
+// and every other form modal site-wide. This shared panel is what every
+// modal that doesn't set its own background class renders through, so this
+// one line recolors most of them at once; a handful of modals set their own
+// className instead (see those files' own Phase 220 comments) and were
+// updated to match. See app/globals.css's --modal-ivory comment.
+//
 // Phase 46 — this is the single most-reused interactive surface on the
 // site (booking, intake, and support-group registration all go through
 // this one component), and it previously had zero transition at all: a
@@ -62,7 +70,7 @@ export default function Modal({
           transition={{ duration: MOTION_DURATION.micro, ease: MOTION_EASE }}
         >
           <motion.div
-            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-card p-7 shadow-lg"
+            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-modal-ivory p-7 shadow-lg"
             onClick={(e) => e.stopPropagation()}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

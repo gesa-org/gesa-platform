@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 219 added)
+Last updated: 2026-09-15 (Phase 220 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9625,6 +9625,48 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 219: Move Community content onto Find Support (exact copy); Community emptied"
+git push
+```
+
+---
+
+## Phase 220: Warm ivory background for form modals site-wide
+
+**Request:** Roy sent a reference screenshot of the "Join us as a volunteer or caregiver" application modal (the same modal the "Join as a professional" CTA opens) and asked for its warm-ivory background to be applied to that modal and every other form modal on the site.
+
+**Investigation:** every modal on the site either renders through the shared `components/ui/Modal.tsx` panel or sets its own outer `className` — both resolved to `bg-card` (`#e3e8ef`, "Soft Mist," a pale blue-gray), not ivory. `--card` is also used site-wide for non-modal surfaces (page cards, the home Stats row, therapist/testimonial cards), so retuning that shared token directly would have recolored things Roy didn't ask about — the same "dedicated token, not a shared retune" pattern this project has followed for every prior palette request (`--sand-brown`, `--green-sage`, `--slate-banner`, etc.).
+
+**What shipped:**
+
+1. **`app/globals.css`** — new `--modal-ivory: #f8f1df` token (warm ivory) added to `:root`, plus matching overrides in the three accessibility color modes (`light-contrast` → `#ffffff`, `high-contrast` → `#000000`, `monochrome` → `#f2f2f2`) so those modes' modal panels stay consistent with the rest of their own palette rather than picking up an ivory tone that would break their contrast guarantees.
+2. **`tailwind.config.ts`** — new `modal.ivory` color, giving `bg-modal-ivory` as a Tailwind utility (same wiring pattern as `sand.brown`/`green.sage`).
+3. **`components/ui/Modal.tsx`** — the shared modal panel's background changed from `bg-card` to `bg-modal-ivory`. This is the single most-reused modal surface on the site (booking, intake, support-group registration, volunteer/professional application, etc. all render through it), so this one change recolors most of the site's form modals at once.
+4. Three modals that render their own panel `<div>` instead of going through `Modal.tsx`, updated individually to the same `bg-modal-ivory`:
+   - `components/match/BookingModal.tsx` (MatchWizard's booking-confirmation modal)
+   - `components/find-support/FindSupportModal.tsx` (the AI Matching entry modal)
+   - `components/find-support/BrowseTherapistModal.tsx` (the Browse Therapist booking dialog — its therapist result *cards*, a separate `bg-card` usage in the same file, were deliberately left unchanged since they're page content, not modal chrome)
+
+**Deliberately NOT touched:**
+- The admin/CRM modals (`components/admin/*Modal.tsx`, `InquiryDetailModal.tsx`, `DeleteConfirmModal.tsx`, `AddTherapistModal.tsx`, `AddUserModal.tsx`, `InviteAdministratorModal.tsx`, `BulkInviteTherapistsModal.tsx`) — these are internal CRM tooling, not public-facing "form modals on the GESA website," which is how this request read. Flagging this scoping call to Roy — easy to extend the same `bg-modal-ivory` class to these if he'd like the admin panel to match too.
+- Individual form field styling inside modals (input/select backgrounds, toggle-button unselected states like the session-type picker in `BrowseTherapistModal.tsx`) — the request was about the modal's own background color, not a redesign of every control inside it; those keep their existing `bg-card`/border treatment for now.
+- `--card` itself, and every non-modal surface that uses it.
+
+**Files touched:** `app/globals.css`, `tailwind.config.ts`, `components/ui/Modal.tsx`, `components/match/BookingModal.tsx`, `components/find-support/FindSupportModal.tsx`, `components/find-support/BrowseTherapistModal.tsx`.
+
+**Manual test scenarios:** open "Join as a professional" / "Join us as a volunteer or caregiver" (VolunteerApplicationModal, via Modal.tsx) → warm ivory background; open a booking flow's confirmation step (BookingModal) → warm ivory; open AI Matching (FindSupportModal) and Browse Therapist's booking dialog (BrowseTherapistModal) → warm ivory; open a support-group registration modal (SupportGroupsInteractive, via Modal.tsx) → warm ivory; toggle each accessibility color mode (light-contrast/high-contrast/monochrome) and confirm modal panels still follow that mode's own palette, not the new ivory.
+
+**Assumptions/follow-ups:**
+- Whether the admin/CRM modals should also switch to warm ivory — left untouched pending Roy's confirmation (see above).
+- No live browser available in this environment to screenshot the result — flagging so Roy can visually confirm the exact tone (`#f8f1df`) matches his reference image closely enough, or nudge the hex if not.
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 220: Warm ivory background for form modals site-wide"
 git push
 ```
 
