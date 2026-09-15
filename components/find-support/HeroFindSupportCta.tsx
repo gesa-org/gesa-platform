@@ -18,6 +18,21 @@ import BrowseTherapistModal from "@/components/find-support/BrowseTherapistModal
 // field's flexibility away.
 const MATCH_MODAL_TRIGGER_HREF = "#how-it-works";
 
+// Phase 222 — Roy reported the AI Matching modal wouldn't open at all. Root
+// cause: the live "page_about_hero" Content Manager row's Primary CTA link
+// had drifted to "/find-your-therapist" (almost certainly a side effect of
+// this session's About/Find-Support/Community routing changes) — an exact
+// repeat of the "/Find-your-therapist" incident already documented above
+// this constant. The live data has been corrected back to the literal
+// sentinel, but a free-text admin field with no validation will drift again
+// eventually, so this comparison is now whitespace/case-tolerant as a second
+// line of defense — it will still recognize the sentinel even if an admin
+// pastes " #How-It-Works " or similar, while any href that isn't recognizably
+// this value still falls through to the plain-link branch unchanged.
+function isMatchModalTrigger(value: string): boolean {
+  return value.trim().toLowerCase() === MATCH_MODAL_TRIGGER_HREF;
+}
+
 export default function HeroFindSupportCta({
   href,
   className,
@@ -50,7 +65,7 @@ export default function HeroFindSupportCta({
     setBrowseOpen(true);
   }
 
-  if (href === MATCH_MODAL_TRIGGER_HREF) {
+  if (isMatchModalTrigger(href)) {
     return (
       <>
         <button type="button" onClick={() => setOpen(true)} className={className}>

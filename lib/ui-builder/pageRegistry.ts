@@ -146,6 +146,17 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
   // unchanged throughout — still genuinely the Community content, same
   // three site_content keys, this "Community" entry in the Page Editor
   // still controls exactly what it always did.
+  //
+  // Phase 222 — Roy asked for just the group-listing/registration flow
+  // (the "directory" source below) and Testimonials to move back to
+  // `/support-groups`, while the banner ("" source) and CommunityIntro
+  // ("intro" source) stayed on `/find-your-therapist`. `route` is left
+  // pointing at `/find-your-therapist` since two of this pageKey's three
+  // sources still render there — the "directory" source is now the one
+  // exception, rendering on `/support-groups` instead (see that page's own
+  // comment). This only affects this entry's "View live page" link in the
+  // admin UI Builder; publishing/resolving/previewing each source's content
+  // still works correctly regardless of which page it renders on.
   {
     pageKey: "support-groups",
     route: "/find-your-therapist",

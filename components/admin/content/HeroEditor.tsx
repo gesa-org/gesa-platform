@@ -6,6 +6,23 @@ import Button from "@/components/ui/Button";
 import ImageUploadField from "@/components/admin/content/ImageUploadField";
 import type { HeroContent } from "@/lib/content";
 
+// Phase 222 — Roy reported the AI Matching modal wouldn't open in
+// Production; root cause was this form's free-text "Primary CTA link"
+// field having drifted away from the exact sentinel value
+// (components/find-support/HeroFindSupportCta.tsx's `MATCH_MODAL_TRIGGER_HREF`)
+// that tells that button to open the modal instead of behaving as a plain
+// link — the second time this exact failure mode has happened (see the
+// removed inline comment this replaces, which documented the first
+// incident). A text hint alone didn't prevent it recurring, so this field
+// is now a locked toggle instead of free text by default: checked (the
+// default, and what every past incident actually wanted) forces the value
+// to the real sentinel and disables the input entirely, so it can no longer
+// be mistyped or accidentally overwritten. Unchecking it reveals a normal
+// text field for the rare case this CTA should genuinely be a plain link
+// instead — its own value is tracked separately so toggling back and forth
+// doesn't lose whatever an admin typed there.
+const AI_MATCHING_SENTINEL = "#how-it-works";
+
 // Full hero editor — currently only used on About (components/Hero.tsx),
 // but written against the general HeroContent shape so it can be pointed
 // at another page's hero later just by changing contentKey.
@@ -15,7 +32,13 @@ export default function HeroEditor({ contentKey, initial }: { contentKey: string
   const [highlight, setHighlight] = useState(initial.highlight);
   const [subtitle, setSubtitle] = useState(initial.subtitle);
   const [ctaPrimaryLabel, setCtaPrimaryLabel] = useState(initial.ctaPrimaryLabel);
-  const [ctaPrimaryHref, setCtaPrimaryHref] = useState(initial.ctaPrimaryHref);
+  const initialOpensAiMatching = initial.ctaPrimaryHref.trim().toLowerCase() === AI_MATCHING_SENTINEL;
+  const [opensAiMatching, setOpensAiMatching] = useState(initialOpensAiMatching);
+  // Remembers whatever custom link was in place (or typed) while the
+  // checkbox is unchecked, so switching the checkbox on and back off doesn't
+  // silently discard it.
+  const [customPrimaryHref, setCustomPrimaryHref] = useState(initialOpensAiMatching ? "" : initial.ctaPrimaryHref);
+  const ctaPrimaryHref = opensAiMatching ? AI_MATCHING_SENTINEL : customPrimaryHref;
   const [ctaSecondaryLabel, setCtaSecondaryLabel] = useState(initial.ctaSecondaryLabel);
   const [ctaSecondaryHref, setCtaSecondaryHref] = useState(initial.ctaSecondaryHref);
   const [backgroundImage, setBackgroundImage] = useState(initial.backgroundImage);
@@ -101,21 +124,25 @@ export default function HeroEditor({ contentKey, initial }: { contentKey: string
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Primary CTA link</label>
+          <label className="mb-1.5 flex items-center gap-2 text-[13px] font-medium">
+            <input
+              type="checkbox"
+              checked={opensAiMatching}
+              onChange={(e) => setOpensAiMatching(e.target.checked)}
+              className="h-4 w-4"
+            />
+            Open the AI Matching flow (recommended)
+          </label>
           <input
             value={ctaPrimaryHref}
-            onChange={(e) => setCtaPrimaryHref(e.target.value)}
-            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            onChange={(e) => setCustomPrimaryHref(e.target.value)}
+            disabled={opensAiMatching}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none disabled:bg-secondary disabled:text-muted-fg"
           />
-          {/* Fixed one production incident where this field got edited to
-              "/Find-your-therapist" (this page's own URL), which silently
-              disabled the AI Matching modal — HeroFindSupportCta only opens
-              it when this value is exactly "#how-it-works"; anything else
-              renders as a plain link instead, so the button quietly stopped
-              doing anything. Added this note so the next edit here doesn't
-              repeat that by accident. */}
           <p className="mt-1 text-[12px] text-muted-fg">
-            Leave as <code className="rounded bg-secondary px-1 py-0.5">#how-it-works</code> to keep this button
-            opening the AI Matching flow. Any other value turns it into a plain link instead.
+            {opensAiMatching
+              ? "Locked to the AI Matching flow — uncheck above to make this a plain link instead."
+              : "This button will link straight to the address above instead of opening AI Matching."}
           </p>
         </div>
         <div>

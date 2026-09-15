@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-16 (Phase 221 added)
+Last updated: 2026-09-16 (Phase 222 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9726,6 +9726,46 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 221: Find a professional modal — Location replaced with Languages/Type of Treatment"
+git push
+```
+
+---
+
+## Phase 222: Fixed AI Matching modal not opening; moved group-listing/testimonials back to Community
+
+**Request:** two items — (1) move the support-group cards + "Stories of Healing" testimonials section back from Find Support to the Community page, and (2) the AI Matching flow "cannot open" — investigate and fix.
+
+**Bug investigation and root cause (AI Matching):** `components/find-support/HeroFindSupportCta.tsx` opens the AI Matching modal only when the Hero's Primary CTA href is the *exact* sentinel string `#how-it-works` — any other value renders as a plain link instead, silently. Queried the live Production `site_content` row for key `page_about_hero` directly and found `ctaPrimaryHref` had drifted to `/find-your-therapist` — almost certainly a side effect of this session's About/Find-Support/Community routing changes (someone/some phase re-saved this Content Manager field with a leftover value). This is documented in-code as having happened once before already (a `/Find-your-therapist` incident) — this is the second occurrence of the same failure mode.
+
+**What shipped:**
+
+1. **Immediate data fix** — updated the live `page_about_hero` row directly via Supabase (`jsonb_set`) to restore `ctaPrimaryHref` to the literal `#how-it-works`. The AI Matching modal opens again immediately, no deploy needed for this part.
+2. **`components/find-support/HeroFindSupportCta.tsx`** — hardened as defense-in-depth: the sentinel comparison is now trim + case-insensitive (`isMatchModalTrigger()`) instead of exact `===`, so a minor accidental variation (stray whitespace, different case) won't break the button even if the field drifts slightly again.
+3. **`components/admin/content/HeroEditor.tsx`** — the real fix for *why* this keeps happening: the "Primary CTA link" field was free text with only a text hint warning not to change it, which has now failed twice. Replaced with a locked toggle: a checkbox "Open the AI Matching flow (recommended)", checked by default, which forces the field to the real sentinel value and disables the text input entirely so it can't be mistyped or overwritten by accident. Unchecking it reveals a normal text field for the rare case this CTA should genuinely be a plain link — its value is tracked separately so toggling the checkbox back and forth doesn't lose whatever custom link was there.
+
+**Section move (Find Support → Community):** Roy confirmed (asked directly, since the screenshot only showed part of the previously-merged Community content) that only the group-listing/registration flow (`SupportGroupsInteractive`, the `support-groups-list` section) and the Testimonials section should move — the gold PageHero banner and CommunityIntro's "Why GESA exists"/pathway cards stay on Find Support.
+
+4. **`app/find-your-therapist/page.tsx`** — removed the `support-groups-list` section and `<Testimonials>`, along with the now-unused `getSupportGroups()`/`getTestimonials()` fetches and `SupportGroupsInteractive`/`Testimonials` imports. Still renders `PageHero`, `CommunityHeroExtras`, `CommunityIntro`, and closes with `DonateBand`.
+5. **`app/support-groups/page.tsx`** — no longer empty. Fetches `component_support_groups_directory` content, `getSupportGroups()`, and `getTestimonials()`, and renders the `support-groups-list` section (`SupportGroupsInteractive`) plus `Testimonials`. Route was already live with header/footer; now has real content again too.
+6. **`lib/ui-builder/pageRegistry.ts`** — added a comment on the `"support-groups"` pageKey entry noting that its `route` stays `/find-your-therapist` (where 2 of its 3 content sources — banner + intro — still render) even though its `"directory"` source now renders on `/support-groups`. Cosmetic-only mismatch in the admin UI Builder's "View live page" link; publishing/resolving each source still works correctly.
+
+**Files touched:** `components/find-support/HeroFindSupportCta.tsx`, `components/admin/content/HeroEditor.tsx`, `app/find-your-therapist/page.tsx`, `app/support-groups/page.tsx`, `lib/ui-builder/pageRegistry.ts`, plus a direct Production data fix (no migration file — a content-value UPDATE, not a schema change).
+
+**Tests updated:** `tests/unit/FindYourTherapistPage.test.tsx` (removed the support-groups-list assertion, added one confirming it's gone), `tests/unit/SupportGroupsPage.test.tsx` (rewritten from "renders nothing" to assert the group listing and its no-groups fallback message render), `tests/e2e/navigation.spec.ts` (Community nav assertion updated from "zero content" to real content; Find Support assertion updated to confirm the group listing is gone from that page).
+
+**Manual test scenarios:** click the AI Matching CTA on `/about` and confirm the modal opens (was broken, now fixed); as an admin, open the Hero content editor and confirm the "Primary CTA link" field is locked/disabled while the new checkbox is checked, and that unchecking it reveals an editable field; visit `/find-your-therapist` and confirm the group cards/testimonials are gone but the banner and pathway cards remain; visit `/support-groups` and confirm the group cards + testimonials now render there with working registration.
+
+**Assumptions/follow-ups:**
+- The `pageRegistry.ts` route/content-source split (§ above) is flagged, not restructured further — a future phase could split this into two pageKeys if the admin UI Builder's live-page link accuracy becomes a real problem.
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally. The Supabase data fix, however, is already live in Production — no deploy needed for the AI Matching fix to take effect.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 222: Fix AI Matching modal not opening; move group-listing/testimonials back to Community"
 git push
 ```
 
