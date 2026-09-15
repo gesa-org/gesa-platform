@@ -345,38 +345,49 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
     { title: content.card3Title, description: content.card3Description, ctaLabel: content.card3CtaLabel, ctaLink: content.card3CtaLink, frontLabel: content.card3FrontLabel, frontCaption: content.card3FrontCaption },
   ];
 
+  // Phase 167 — Roy sent his Home-page reference image again and asked
+  // for the page's background to match it, specifically calling out that
+  // this shouldn't be a revert of the Phase 165/166 work he'd undone
+  // earlier. Re-examined the reference itself: the hero band and the
+  // card-grid area below it are one continuous warm-ivory field with no
+  // visible seam, so this section gets its own `bg-clay-soft` (the same
+  // ivory the hero band already uses) as new Phase 167 work — the sheen
+  // sweep on the hero itself is untouched (still the shared white sweep,
+  // not the gold-tinted Phase 166 version Roy asked not to bring back).
+  //
+  // Phase 170 — Roy sent a new reference mockup replacing that ivory wash
+  // with a cool neutral gray across this same continuous field (hero band
+  // + this section, no seam between them, same as Phase 167 established).
+  // `bg-clay-soft` is a shared Tailwind utility used by buttons/badges/
+  // admin-nav elsewhere in the app, so swapped for the new page-scoped
+  // `--home-gray` token (app/globals.css) via an arbitrary-value class
+  // instead of retuning that shared utility.
+  // Phase 194 — Roy flagged that the animated parallax/sheen background
+  // only covered the upper hero sub-div (`pt-16 pb-[210px]`), while this
+  // whole section (the hero band AND the card-grid area below it) shares
+  // one continuous slate-blue/gray field (`--home-gray`, same color used
+  // on both, no seam between them per Phase 167/170). So the decorative
+  // layer needed to live on this outer, full-height wrapper, not the
+  // shorter hero div nested inside it. Moved `.gold-banner.home-hero`
+  // (background + the `::before` sheen animation) up to this outer
+  // section itself, and moved the ParallaxLayer decorative blob/watermarks
+  // block (previously inside the hero div below) to be this section's own
+  // direct child, sized `absolute inset-0` so it always matches this
+  // section's real rendered height — including on mobile, where the same
+  // content stacks taller. No shapes, colors, motion, or opacity changed;
+  // only which element owns/sizes the layer did.
+  // Phase 210 (build-fix note) — this comment block was moved from just
+  // inside `return (` (directly before the JSX) to here, above `return`.
+  // A `//` comment in that position naming an HTML tag by name — this
+  // block used to read "whole <section> — hero band..." — reliably tripped
+  // the Vercel build's SWC parser with "Unexpected token `section`.
+  // Expected jsx identifier," even though the tag mention was plain
+  // comment text, not real markup. Rewording the mention (now "whole
+  // section" with no angle brackets) and relocating the comment block
+  // outside the parenthesized JSX expression both independently avoid the
+  // trigger; both are applied here so this can't recur if a future edit
+  // reintroduces a literal `<tag>` inside a comment in this position.
   return (
-    // Phase 167 — Roy sent his Home-page reference image again and asked
-    // for the page's background to match it, specifically calling out that
-    // this shouldn't be a revert of the Phase 165/166 work he'd undone
-    // earlier. Re-examined the reference itself: the hero band and the
-    // card-grid area below it are one continuous warm-ivory field with no
-    // visible seam, so this section gets its own `bg-clay-soft` (the same
-    // ivory the hero band already uses) as new Phase 167 work — the sheen
-    // sweep on the hero itself is untouched (still the shared white sweep,
-    // not the gold-tinted Phase 166 version Roy asked not to bring back).
-    //
-    // Phase 170 — Roy sent a new reference mockup replacing that ivory wash
-    // with a cool neutral gray across this same continuous field (hero band
-    // + this section, no seam between them, same as Phase 167 established).
-    // `bg-clay-soft` is a shared Tailwind utility used by buttons/badges/
-    // admin-nav elsewhere in the app, so swapped for the new page-scoped
-    // `--home-gray` token (app/globals.css) via an arbitrary-value class
-    // instead of retuning that shared utility.
-    // Phase 194 — Roy flagged that the animated parallax/sheen background
-    // only covered the upper hero sub-div (`pt-16 pb-[210px]`), while this
-    // whole <section> — hero band AND the card-grid area below it — shares
-    // one continuous slate-blue/gray field (`--home-gray`, same color used
-    // on both, no seam between them per Phase 167/170). So the decorative
-    // layer needed to live on this outer, full-height wrapper, not the
-    // shorter hero div nested inside it. Moved `.gold-banner.home-hero`
-    // (background + the `::before` sheen animation) up to this <section>
-    // itself, and moved the ParallaxLayer decorative blob/watermarks block
-    // (previously inside the hero div below) to be this section's own direct
-    // child, sized `absolute inset-0` so it always matches this section's
-    // real rendered height — including on mobile, where the same content
-    // stacks taller. No shapes, colors, motion, or opacity changed; only
-    // which element owns/sizes the layer did.
     <section aria-labelledby="paths-heading" className="gold-banner home-hero relative overflow-hidden">
       {/* Phase 194 — decorative sheen/blob/watermark layer, now sized to
           this entire section (see comment above) rather than only the hero

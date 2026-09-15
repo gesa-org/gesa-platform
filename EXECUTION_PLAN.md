@@ -9283,8 +9283,9 @@ Roy sent a new reference image the same day as Phase 209 (three recessed, colore
 - Confirm mobile layout still renders each card at the same fixed height with no overflow.
 
 **Assumptions/follow-ups:**
-- Build/test verification (`tsc --noEmit`, Jest) could not be run this session — the sandboxed shell remains unreachable; run the deploy-gate commands below once it's available.
 - Two pathway-card redesigns landed the same day (209 then 210) — if a third revision is likely, worth asking Roy whether to consolidate future reference images into one round rather than iterating live on Production.
+
+**Build fix (same phase):** Roy's actual Vercel deploy failed with `Unexpected token 'section'. Expected jsx identifier` at `components/home/Paths.tsx:377`. Root cause: a long `//` comment block sat directly between `return (` and the component's first real JSX element (`<section>`), and one of those comment lines named the tag literally — `// whole <section> — hero band...`. That specific combination (a bare `<tag>` mention inside a `//` comment positioned exactly where the parser is deciding whether the next token starts JSX) reliably trips SWC's parser, even though it's only comment text. This pattern predates Phase 209/210 (the comment block itself is from Phases 167/170/194) and was never previously verified against a real build — the shell has been unreachable for most of this session's work, so this is the first time any of Phases 200–210's changes to this file were actually build-tested. Fixed by moving the whole comment block to sit above `return (` (a normal, safe position for a comment) and rewording the one line that named the tag directly (now "whole section," no angle brackets), so the trigger can't recur even if a future edit reintroduces a `<tag>`-style mention in a comment in that position. No JSX, styling, or content changed by this fix — comment placement and wording only.
 
 ```
 cd "path\to\your\project"
@@ -9292,7 +9293,7 @@ git status
 npx tsc --noEmit
 npx jest
 git add -A
-git commit -m "Phase 210: Home pathway cards restyled again (recessed shadow-box + GesaMark)"
+git commit -m "Phase 210: Home pathway cards restyled again (recessed shadow-box + GesaMark); fix SWC build error from a tag mention in a comment"
 git push
 ```
 
