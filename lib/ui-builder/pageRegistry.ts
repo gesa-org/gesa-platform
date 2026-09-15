@@ -137,13 +137,18 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
     ],
   },
   // Phase 217 moved this entry's `route` to "/find-your-therapist" when
-  // Roy asked for this page's content to move onto Find Support. Phase 218
-  // reverts that (Roy asked to undo Phase 217 entirely) — this content
-  // renders at "/support-groups" again (app/support-groups/page.tsx).
-  // `pageKey`/`contentSources`/`title` are unchanged throughout.
+  // Roy asked for this page's content to move onto Find Support; Phase 218
+  // reverted that. Phase 219 moves it to "/find-your-therapist" once more —
+  // Roy asked again for this content to move onto Find Support (this time
+  // as a straight, exact-copy move with no merge into any other page's
+  // content) and for `/support-groups` to be left intentionally empty
+  // (app/support-groups/page.tsx). `pageKey`/`contentSources`/`title` are
+  // unchanged throughout — still genuinely the Community content, same
+  // three site_content keys, this "Community" entry in the Page Editor
+  // still controls exactly what it always did.
   {
     pageKey: "support-groups",
-    route: "/support-groups",
+    route: "/find-your-therapist",
     title: "Community",
     group: "core",
     supportsVisualEditor: true,

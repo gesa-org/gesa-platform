@@ -32,12 +32,20 @@ test.describe("Site navigation", () => {
   //
   // Phase 217 briefly moved that content (plus the Community page's own
   // content) onto /find-your-therapist, leaving /about and /support-groups
-  // both empty. Phase 218 (this test's own update) reverts Phase 217
-  // entirely per Roy's request: /about carries the Find Support content
-  // again, /support-groups carries the Community content again, and
-  // /find-your-therapist is back to intentionally empty — the GESA logo
-  // (checked in the next test) is the only nav-bar way back to Home from
-  // there.
+  // both empty. Phase 218 reverted Phase 217 entirely: /about carried the
+  // Find Support content again, /support-groups carried the Community
+  // content again, and /find-your-therapist went back to intentionally
+  // empty.
+  //
+  // Phase 219 (this test's own update) — Roy asked again for the Community
+  // page's content to move onto Find Support, this time as a straight,
+  // exact-copy move (no merge with About's content, no new transition
+  // copy). /about is untouched by this phase and keeps its own Find-
+  // Support-style content; /find-your-therapist now shows the Community
+  // content (PageHero banner, "Why GESA exists"/pathway cards, the group
+  // listing/registration flow, testimonials); /support-groups is
+  // intentionally empty again — the GESA logo (checked in the next test) is
+  // the only nav-bar way back to Home from there.
   test("header nav links reach the right pages", async ({ page }) => {
     await page.goto("/");
 
@@ -48,9 +56,7 @@ test.describe("Site navigation", () => {
     await page.goto("/");
     await page.getByRole("link", { name: "Find Support" }).first().click();
     await expect(page).toHaveURL(/\/find-your-therapist$/);
-    // Intentionally empty page — no content, just the shared header/footer
-    // chrome from the root layout.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Why GESA exists" })).toBeVisible();
 
     await page.goto("/");
     await page.getByRole("link", { name: "Our Professionals" }).first().click();
@@ -59,7 +65,9 @@ test.describe("Site navigation", () => {
 
     await page.getByRole("link", { name: "Community" }).first().click();
     await expect(page).toHaveURL(/\/support-groups$/);
-    await expect(page.getByRole("heading", { name: "Why GESA exists" })).toBeVisible();
+    // Intentionally empty page — no content, just the shared header/footer
+    // chrome from the root layout.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
   });
 
   // Phase 215 — the GESA logo (header and footer) must always open Home,

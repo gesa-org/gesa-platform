@@ -38,11 +38,13 @@ import type { Tables } from "@/lib/database.types";
 // Phase 216 moved it to app/about/page.tsx instead. Phase 217 moved it back
 // to app/find-your-therapist/page.tsx (now also carrying the former
 // Community/support-groups content) and emptied both `/about` and
-// `/support-groups`. Phase 218 reverts Phase 217 (Roy asked to undo it
-// entirely) — this set tracks that: the reveal treatment belongs to
-// wherever the actual reveal-page__main content lives, which is `/about`
-// and `/support-groups` again, with `/find-your-therapist` empty.
-const REVEAL_ROUTES = new Set(["/", "/about", "/therapists", "/support-groups"]);
+// `/support-groups`. Phase 218 reverted Phase 217. Phase 219 moves the
+// Community content onto app/find-your-therapist/page.tsx again (an exact
+// copy this time, not merged with About's content) and empties
+// `/support-groups` — this set tracks that: `/about` keeps its own content
+// and reveal treatment (untouched by this phase), `/find-your-therapist`
+// owns it again, `/support-groups` is empty.
+const REVEAL_ROUTES = new Set(["/", "/about", "/find-your-therapist", "/therapists"]);
 
 // footerContent is fetched once in app/layout.tsx (a Server Component) and
 // passed down here — this component stays "use client" for usePathname(),

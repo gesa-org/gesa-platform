@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 218 added)
+Last updated: 2026-09-15 (Phase 219 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9589,6 +9589,42 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 218: Revert Phase 217 — About and Community restored to their own pages, Find Support emptied again"
+git push
+```
+
+---
+
+## Phase 219: Community content moved onto Find Support (exact copy), Community emptied
+
+**Request:** move the Community page's (`/support-groups`) complete main content onto Find Support (`/find-your-therapist`), transferred exactly as it existed — no rewrite, no merge with any other page's content, no new copy added, same section order/styling/components/functionality. Find Support was empty at the time of this request. Afterward, leave `/support-groups` with an empty main content area, route/nav link/shared layout unchanged.
+
+Unlike Phase 217 (which merged Community's content with the Find Support/About content and added a new transition heading), this request has no conflict to resolve: `/find-your-therapist` was already empty (Phase 218's revert), so this is a straight move — Community's content lands on Find Support unchanged, nothing else is touched.
+
+**What shipped:**
+
+1. **`app/find-your-therapist/page.tsx`** — now renders the former Community page's content verbatim: the gold `PageHero` banner with `CommunityHeroExtras` (Charity Services / Professional Services CTAs, opening the real Browse Therapist search modal), `CommunityIntro` ("Why GESA exists" mission blurb + "Choose your pathway" three-card navigator), the `support-groups-list`-id section wrapping `SupportGroupsInteractive` (the real group listing, registration forms, and modals), `Testimonials`, and its own closing `<DonateBand />`. Same components, same content sources (`page_support_groups`/`component_support_groups_directory`/`component_community_intro`, `"support-groups"` pageKey) — nothing rewritten, reorganized, or added.
+2. **`app/support-groups/page.tsx`** — emptied (`return null`). Route stays live, no redirect — the "Community" nav link continues to open this now-empty page, same intentionally-empty pattern used throughout this project's routing history.
+3. **`components/SiteFooterSlot.tsx`** — `REVEAL_ROUTES` updated to `["/", "/about", "/find-your-therapist", "/therapists"]` (dropped `/support-groups`, added `/find-your-therapist`) — the footer-reveal treatment belongs to whichever route actually renders `reveal-page__main` content now. `/about` is untouched, since it keeps its own separate content from Phase 218's revert.
+4. **`lib/ui-builder/pageRegistry.ts`** — the `"support-groups"` pageKey entry's `route` moved to `/find-your-therapist` (content/`pageKey`/`title` "Community" unchanged) — an admin publishing from this "Community" entry in the Page Editor changes exactly what always changed. The `"about"` pageKey entry is untouched.
+
+**Deliberately NOT touched:** `lib/navigation.ts` (nav hrefs — out of scope, only page content was requested), `app/about/page.tsx` (untouched, keeps its own Find-Support-style content from Phase 216/218), `app/page.tsx` (Home).
+
+**Files touched:** `app/find-your-therapist/page.tsx`, `app/support-groups/page.tsx`, `components/SiteFooterSlot.tsx`, `lib/ui-builder/pageRegistry.ts`.
+
+**Tests updated:** `tests/unit/FindYourTherapistPage.test.tsx` (rewritten — now asserts the Community banner/mission/pathway content, the `support-groups-list` section id, and that DonateBand mounts once), `tests/unit/SupportGroupsPage.test.tsx` (rewritten — asserts the page renders nothing), `tests/e2e/navigation.spec.ts` (nav-routing test updated for the new content locations).
+
+**Manual test scenarios:** click "Find Support" in the nav → the full Community experience (Charity/Professional Services CTAs, group cards, registration forms/modals, testimonials, donate band); click "Community" in the nav → shared header/footer only, no content; click "About" in the nav → unaffected, still shows its own content; every CTA/modal/form that worked on the old `/support-groups` page still works identically on `/find-your-therapist`; verified layout intent for both desktop and mobile — no styling was touched, so the existing responsive classes on the moved components carry over unchanged (no live browser available in this environment to screenshot; flagging so Roy can spot-check visually after deploy).
+
+**Assumptions/follow-ups:**
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 219: Move Community content onto Find Support (exact copy); Community emptied"
 git push
 ```
 
