@@ -23,29 +23,41 @@ test.describe("Site navigation", () => {
   // (homeLabel) pointed at "/" (Home) instead of a real About page — which
   // is exactly the confusion the next phase below was asked to fix.
   //
-  // Phase 215 (this test's own update) — Roy flagged that having "About"
-  // click through to Home (same page, same interface) was confusing, and
-  // asked for About and Home to be genuinely distinct again: the "About"
-  // nav link now routes to a real `/about` page containing everything that
-  // used to live at /find-your-therapist (Hero w/ AI Matching CTA, How
-  // GESA Works, founder spotlight, team & advisors, donate band) — a
-  // straight content relocation, not a rewrite — and `/find-your-therapist`
-  // itself is now an intentionally empty page (shared header/footer only)
-  // so old bookmarks/links to it don't 404. The GESA logo (checked in the
-  // next test) is the only remaining way to reach "/" from the nav bar.
+  // Phase 215 flagged that having "About" click through to Home (same page,
+  // same interface) was confusing, and moved the Find Support content
+  // (Hero w/ AI Matching CTA, How GESA Works, founder spotlight, team &
+  // advisors, donate band) from /find-your-therapist to /about so "About"
+  // had a real destination of its own, leaving /find-your-therapist
+  // intentionally empty.
+  //
+  // Phase 217 (this test's own update) — Roy then asked for the Community
+  // page's full content to move onto Find Support, which surfaced a
+  // conflict with Phase 215's move: confirmed with Roy that the Find
+  // Support content itself belongs back at /find-your-therapist (undoing
+  // that part of Phase 215) rather than staying split across two pages, so
+  // /find-your-therapist now carries both the original Find Support content
+  // AND the transferred Community content (PageHero banner, "Why GESA
+  // exists"/pathway cards, the group listing/registration flow,
+  // testimonials) appended after it, behind a new "Explore More Ways to
+  // Receive Support" transition heading. /about and /support-groups are
+  // both intentionally empty now — the GESA logo (checked in the next test)
+  // is the only nav-bar way back to Home.
   test("header nav links reach the right pages", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("link", { name: "About" }).first().click();
     await expect(page).toHaveURL(/\/about$/);
-    await expect(page.getByRole("heading", { name: /emotional support should feel human/i })).toBeVisible();
+    // Intentionally empty page — no former content, just the shared
+    // header/footer chrome from the root layout.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
 
     await page.goto("/");
     await page.getByRole("link", { name: "Find Support" }).first().click();
     await expect(page).toHaveURL(/\/find-your-therapist$/);
-    // Intentionally empty page — no heading, no former About/Find Support
-    // content, just the shared header/footer chrome from the root layout.
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /emotional support should feel human/i })).toBeVisible();
+    // The transferred Community content lives further down this same page.
+    await expect(page.getByRole("heading", { name: "Explore More Ways to Receive Support" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Why GESA exists" })).toBeVisible();
 
     await page.goto("/");
     await page.getByRole("link", { name: "Our Professionals" }).first().click();
@@ -54,12 +66,15 @@ test.describe("Site navigation", () => {
 
     await page.getByRole("link", { name: "Community" }).first().click();
     await expect(page).toHaveURL(/\/support-groups$/);
+    // Also intentionally empty now — the content that used to be here moved
+    // to /find-your-therapist, checked above.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
   });
 
   // Phase 215 — the GESA logo (header and footer) must always open Home,
-  // regardless of which page it's clicked from — including from the new
-  // /about page, which is the page most likely to be mistaken for Home
-  // before this phase (see the test above).
+  // regardless of which page it's clicked from. Checked from /about, which
+  // is empty as of Phase 217 but was the page most likely to be mistaken
+  // for Home before Phase 215.
   test("the GESA logo always opens Home, even from /about", async ({ page }) => {
     await page.goto("/about");
     await page.getByRole("link", { name: "GESA" }).first().click();

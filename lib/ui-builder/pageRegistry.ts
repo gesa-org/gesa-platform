@@ -99,20 +99,22 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
   },
   { pageKey: "home", route: "/", title: "Home", group: "core", supportsVisualEditor: true, contentSources: [{ namespace: "", siteContentKey: "page_home" }] },
   // Phase 145 moved this entry's `route` from "/about" to
-  // "/find-your-therapist". Phase 215 moves it back: Roy asked for a real,
-  // distinct About page again (see app/about/page.tsx), so this content is
-  // served at "/about" once more. `pageKey`/`contentSources` are unchanged —
-  // every "about.*" contentId already registered below
-  // (ABOUT_EDITABLE_FIELDS) still matches this page's rendered content 1:1,
-  // and the two site_content keys it reads are the same rows admins have
-  // always edited, so nothing needs republishing. `title` moves back to
-  // "About" to match — no "find-your-therapist" pageKey entry exists
-  // (that route is now intentionally empty, with nothing for an admin to
-  // edit there).
+  // "/find-your-therapist". Phase 216 moved it back to "/about". Phase 217
+  // moves it one more time, back to "/find-your-therapist" — that page now
+  // also carries the former Community/support-groups content underneath
+  // this content (see the "support-groups" entry below, and
+  // app/find-your-therapist/page.tsx's own comment). `pageKey`/
+  // `contentSources` are unchanged throughout all of this — every "about.*"
+  // contentId already registered below (ABOUT_EDITABLE_FIELDS) still
+  // matches this page's rendered content 1:1, and the two site_content keys
+  // it reads are the same rows admins have always edited, so nothing needs
+  // republishing. `title` moves back to "Find Support" to match. `/about`
+  // is now intentionally empty (app/about/page.tsx), with nothing for an
+  // admin to edit there — no separate pageKey entry exists for it.
   {
     pageKey: "about",
-    route: "/about",
-    title: "About",
+    route: "/find-your-therapist",
+    title: "Find Support",
     group: "core",
     supportsVisualEditor: true,
     contentSources: [
@@ -139,9 +141,18 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
       { namespace: "directory", siteContentKey: "component_therapists_directory" },
     ],
   },
+  // Phase 217 — Roy asked for this page's content to move onto Find
+  // Support (see app/find-your-therapist/page.tsx, which now renders it
+  // directly below that page's own content) and `/support-groups` left
+  // intentionally empty. `pageKey`/`contentSources`/`title` are unchanged —
+  // this is still genuinely the Community content and its same three
+  // site_content keys, an admin publishing from this "Community" entry in
+  // the Page Editor changes exactly what always changed — only `route`
+  // moves, since that's now where this content actually renders and where
+  // this entry's "View live page" link should point.
   {
     pageKey: "support-groups",
-    route: "/support-groups",
+    route: "/find-your-therapist",
     title: "Community",
     group: "core",
     supportsVisualEditor: true,

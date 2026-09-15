@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 216 added)
+Last updated: 2026-09-15 (Phase 217 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9508,6 +9508,51 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 216: About and Home made genuinely distinct — About now holds the former Find Support content, Find Support emptied"
+git push
+```
+
+---
+
+## Phase 217: Community content moved onto Find Support; Community and About both left empty
+
+**Request:** move all Community page (`/support-groups`) content onto Find Support, and leave Community intentionally empty (route stays live). Reuse existing components, no duplication, preserve every CTA/form/modal.
+
+**Conflict found and resolved before writing any code:** Phase 216 (immediately prior) had moved Find Support's own content (Hero w/ AI Matching, How GESA Works, founder, team) from `/find-your-therapist` to `/about`, leaving `/find-your-therapist` empty. This request describes "current Find Support content" — AI Support flow, Browse Therapist flow, therapist search/booking — as already living at `/find-your-therapist`, which was no longer true. Asked Roy directly (AskUserQuestion) rather than guess: confirmed the Find Support content should move back to `/find-your-therapist` (undoing that part of Phase 216), with the Community content then appended after it there. `/about` goes back to being empty/unused for now — flagged to Roy as a real trade-off, not decided silently.
+
+**What shipped:**
+
+1. **`app/find-your-therapist/page.tsx`** — now carries both halves:
+   - The original Find Support content, moved back verbatim from `app/about/page.tsx` (Hero with AI Matching/Browse Therapist CTAs, How GESA Works, founder spotlight for Ilana O'Malley, movement/volunteer CTA band, Team & Advisors) — unchanged content, same Content Manager wiring (`page_about_hero`/`page_about_sections`/`component_donate_band`, "about" pageKey).
+   - A new transition section, exact wording from Roy's spec: heading "Explore More Ways to Receive Support," body "Choose the support option that best fits your needs, from charity-supported services to professional care."
+   - The full Community content, moved verbatim from `app/support-groups/page.tsx`: the gold `PageHero` banner with `CommunityHeroExtras` (Charity Services / Professional Services CTAs, which open the real Browse Therapist search modal), `CommunityIntro` ("Why GESA exists" mission blurb + the "Choose your pathway" three-card navigator), the `support-groups-list`-id section wrapping `SupportGroupsInteractive` (the real group listing, registration forms, and modals), and `Testimonials`. Same components, same content sources (`page_support_groups`/`component_support_groups_directory`/`component_community_intro`, "support-groups" pageKey) — nothing duplicated or rewritten.
+   - One deliberate omission: Community's own closing `<DonateBand />` call was dropped rather than moved — this page already ends with its own DonateBand, and DonateBand is `"a single component shared identically across Home, Our Professionals, and Community"` (its own Phase 80 comment), so rendering it twice on one merged page would be a literal duplicate section, which the request explicitly asked to avoid.
+   - `getActiveTherapists()` is fetched once and passed to both Hero (Browse Therapist modal) and `CommunityHeroExtras` (Charity/Professional Services CTAs) — one query, two consumers, per the request's "reuse existing components/avoid duplication."
+   - Two independent `resolveEditorPreview()` calls (keyed `"about"` and `"support-groups"`, matching each half's own existing pageKey) so admin draft-preview edits to either half keep resolving against the correct scope — confirmed this is safe to call twice on one page (it's a pure function of pageKey + searchParams + admin role, not global state).
+   - `metadata` (title/description) rewritten per the request's explicit "update SEO copy" instruction, to describe both halves.
+2. **`app/about/page.tsx`** — emptied (`return null`), same intentionally-empty pattern Phase 216 used for `/find-your-therapist` at the time. Route stays live, no redirect. The "About" nav link (unchanged this phase) currently opens this empty page — flagged above.
+3. **`app/support-groups/page.tsx`** — emptied (`return null`). Route stays live, no redirect, per Roy's explicit "do not automatically redirect it." The "Community" nav link (unchanged this phase) opens this empty page, exactly as the request's own item 5 allows.
+4. **`components/SiteFooterSlot.tsx`** — `REVEAL_ROUTES` updated to `["/", "/find-your-therapist", "/therapists"]` (dropped `/about` and `/support-groups`, added back `/find-your-therapist`) — the footer-reveal treatment belongs to whichever route actually renders `reveal-page__main` content now.
+5. **`lib/ui-builder/pageRegistry.ts`** — the `"about"` pageKey entry's `route`/`title` moved back to `/find-your-therapist`/"Find Support"; the `"support-groups"` pageKey entry's `route` moved to `/find-your-therapist` too (content, `pageKey`, and `title` "Community" unchanged) — two registry entries now legitimately share one route, confirmed safe by checking there's no reverse route→pageKey lookup anywhere in the codebase that would assume route uniqueness.
+
+**Deliberately NOT touched:** `lib/navigation.ts` (nav hrefs) — out of scope for this request, which only asked about page content, not nav routing; the "About"/"Community" nav items keep pointing at their now-empty pages, consistent with the precedent Phase 215/216 already established (an intentionally-empty page is a valid nav destination in this codebase). `app/page.tsx` (Home) — untouched, not mentioned in this request.
+
+**Files touched:** `app/find-your-therapist/page.tsx`, `app/about/page.tsx`, `app/support-groups/page.tsx`, `components/SiteFooterSlot.tsx`, `lib/ui-builder/pageRegistry.ts`.
+
+**Tests added/updated:** `tests/unit/AboutPage.test.tsx` (rewritten — now asserts the page renders nothing), `tests/unit/SupportGroupsPage.test.tsx` (new — asserts the page renders nothing), `tests/unit/FindYourTherapistPage.test.tsx` (rewritten — merges the founders/mission assertions that used to live in AboutPage.test.tsx with new assertions for the transition heading, the Community banner/mission/pathway content, the `support-groups-list` section id, and a check that DonateBand mounts exactly once, not twice), `tests/e2e/navigation.spec.ts` (nav-routing test updated for the new content locations; the GESA-logo test's own comment updated to note `/about` is empty as of this phase).
+
+**Manual test scenarios:** click "Find Support" in the nav → Hero/AI Matching content, then (scrolling down) the "Explore More Ways to Receive Support" heading, then the full Community experience (Charity/Professional Services CTAs, group cards, registration forms/modals, testimonials); click "About" or "Community" in the nav → both show only the shared header/footer, no content; every CTA/modal/form that worked on the old `/support-groups` page (Browse Therapist search, group registration, etc.) still works identically on its new page.
+
+**Assumptions/follow-ups:**
+- `/about` is now empty with no clear future purpose — Roy may want its nav link repointed (to "/", removed, or given new content) in a future phase; left as-is since it wasn't part of this request.
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 217: Move Community content onto Find Support; Community and About both left empty"
 git push
 ```
 
