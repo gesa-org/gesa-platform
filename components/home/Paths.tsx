@@ -605,7 +605,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          rendered — see the caption field's own Phase 210
                          comment in HOME_CONTENT_FALLBACK above). Same flex
                          column as before, now just frame then badge, one
-                         gap-3 between them. */}
+                         gap-3 between them. */
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 [backface-visibility:hidden]">
                         {/* Shadow-box "recessed alcove" — Phase 210. Replaces
                             Phase 209's door with a flat, colored box (this
