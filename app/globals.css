@@ -304,11 +304,21 @@
     background: linear-gradient(160deg, #ecd48f 0%, var(--clay) 50%, var(--amber) 100%);
   }
 
-  /* Golden hover shimmer for the three "path" cards (spec-independent —
-     this is Roy's own direct request, not from the motion PDF). A single
-     one-shot diagonal light sweep plays across the card on hover/focus,
-     plus a soft gold glow shadow; both fully reset when the pointer
-     leaves so re-hovering always replays the same clean sweep. */
+  /* Golden hover glow for the three "path" cards (spec-independent — this
+     is Roy's own direct request, not from the motion PDF). Originally also
+     played a one-shot diagonal light sweep across the card via a
+     `::after` pseudo-element (see the removed Phase-47-era comment this
+     replaced); Roy asked for that glossy diagonal sheen/glare removed
+     entirely (2026-09-15) since it read as an unwanted metallic reflection
+     rather than a deliberate effect. Removed the `::after` layer, its
+     `gold-sweep` keyframes (deleted below, where `gold-sheen` still lives
+     — that one belongs to the separate `.gold-banner` hero sweep and is
+     untouched), and the reduced-motion override that only existed to
+     silence that same layer. Kept exactly what's left below: the box-
+     shadow glow on hover/focus (a soft gold glow, not a moving light) and
+     every other hover treatment already living outside this file (the
+     lift/scale transform and the flip-to-back-face rotation are both set
+     directly in components/home/Paths.tsx's JSX, not here) — untouched. */
   .gold-card-hover {
     position: relative;
     isolation: isolate;
@@ -317,36 +327,6 @@
   .gold-card-hover:hover,
   .gold-card-hover:focus-within {
     box-shadow: 0 18px 44px -18px rgba(191, 160, 70, 0.55);
-  }
-  .gold-card-hover::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    background: linear-gradient(
-      120deg,
-      transparent 35%,
-      rgba(237, 226, 192, 0.55) 47%,
-      rgba(255, 250, 235, 0.85) 50%,
-      rgba(237, 226, 192, 0.55) 53%,
-      transparent 65%
-    );
-    background-size: 250% 250%;
-    background-position: -120% -120%;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  .gold-card-hover:hover::after,
-  .gold-card-hover:focus-within::after {
-    opacity: 1;
-    animation: gold-sweep 1.1s ease-out 1;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .gold-card-hover::after {
-      animation: none !important;
-      opacity: 0 !important;
-    }
   }
 }
 
@@ -457,15 +437,6 @@
   color: var(--muted-fg);
   pointer-events: none;
   height: 0;
-}
-
-@keyframes gold-sweep {
-  from {
-    background-position: -120% -120%;
-  }
-  to {
-    background-position: 120% 120%;
-  }
 }
 
 /* Phase 51 — continuous "news line" ticker on Home (components/motion/

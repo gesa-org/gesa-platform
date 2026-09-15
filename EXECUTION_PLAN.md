@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 213 added)
+Last updated: 2026-09-15 (Phase 214 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9383,6 +9383,34 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 213: Pathway card frames rebuilt as a real 3-plane shadowbox (FrameBox SVG)"
+git push
+```
+
+---
+
+## Phase 214: Removed the diagonal shimmer/glare sweep from the three pathway cards
+
+Roy asked for the hover-triggered glossy diagonal light-sweep on the three gold pathway cards ("I've been affected" / "I serve or support someone who serves" / "Open to everyone") removed entirely, while keeping every other hover effect (glow shadow, lift, flip) untouched.
+
+**Root cause / what it was:** `app/globals.css`'s `.gold-card-hover::after` — a pseudo-element with a diagonal `linear-gradient`, opacity toggled on `:hover`/`:focus-within`, animated via the `gold-sweep` `@keyframes` (a one-shot `background-position` slide). Pure CSS — no JS mouse-tracking listener existed for this effect (confirmed via a repo-wide search for `onMouseMove`/CSS-variable light-position logic; none found tied to these cards).
+
+**What shipped:**
+
+1. **`app/globals.css`** — removed the `.gold-card-hover::after` rule, its `:hover::after`/`:focus-within::after` opacity+animation rule, its `prefers-reduced-motion` override (which only existed to silence that same layer), and the now-unused `@keyframes gold-sweep` block. Left `.gold-card-hover`'s base rule and its `:hover`/`:focus-within` box-shadow (soft gold glow) untouched.
+2. **Not touched, confirmed still intact:** the box-shadow glow above, the `hover:-translate-y-1` lift and `group-hover:[transform:rotateY(180deg)]` flip (both set directly in `components/home/Paths.tsx`'s JSX, not this file), and the unrelated `gold-sheen` keyframes/`.gold-banner::before` sweep (a different effect, on the hero band behind these cards, not on the cards themselves) — left exactly as-is.
+3. **No dead code left behind:** confirmed `gold-sweep` has zero remaining references anywhere in the repo outside this phase's own explanatory comment; no JS listeners or CSS variables existed for this effect to clean up.
+
+**Files touched:** `app/globals.css` only.
+
+**Manual test scenarios:** hover/focus each of the three Home pathway cards — the soft gold glow shadow and the flip-to-back-face rotation should still play; no diagonal glare/sheen should sweep across the surface. Card layout, spacing, and gold/metallic badge colors are unchanged (no CSS touched besides the removed rule), so no visual shift is expected elsewhere.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 214: Remove diagonal shimmer/glare sweep from the three pathway cards"
 git push
 ```
 
