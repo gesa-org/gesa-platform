@@ -9,6 +9,15 @@ export const dynamic = "force-dynamic";
 // getAllTherapistViewSummaries()'s underlying RPC also independently checks
 // auth_role() (see the phase_206 migration), so a non-admin can't get data
 // back even by calling the RPC directly with a valid session.
+//
+// Phase 207 — "All-time" now reads from therapists.profile_views, the same
+// public counter shown on every therapist card, per the explicit
+// requirement that the CRM and the public site never show two different
+// numbers for the same thing. today/week/month still come from the
+// granular therapist_profile_views event table (getAllTherapistViewSummaries)
+// since those breakdowns were never part of the public surface — both
+// sources respect the same internal-user/self-view exclusions recorded at
+// write time (see app/api/analytics/therapist-view/route.ts).
 export default async function TherapistAnalyticsPage({
   searchParams,
 }: {
@@ -27,7 +36,7 @@ export default async function TherapistAnalyticsPage({
       today: s?.todayCount ?? 0,
       week: s?.weekCount ?? 0,
       month: s?.monthCount ?? 0,
-      allTime: s?.allTimeCount ?? 0,
+      allTime: t.profile_views ?? 0,
       lastViewedAt: s?.lastViewedAt ?? null,
     };
   });
@@ -45,7 +54,8 @@ export default async function TherapistAnalyticsPage({
         <h2 className="text-lg">Therapist Profile Analytics</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
           Privacy-conscious aggregate profile-view counts — never who viewed a profile, only how many unique
-          anonymous visitors did, at most once per therapist per day.
+          anonymous visitors did, at most once per therapist per browser session. "All-time" matches the count
+          shown publicly on the Our Professionals page.
         </p>
       </div>
       <TherapistAnalyticsTable initialRows={rows} initialSearch={focusTherapist?.name ?? ""} />

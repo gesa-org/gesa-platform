@@ -227,8 +227,13 @@ export async function getRandomMatchedTherapist(): Promise<PublicTherapistRow | 
 // Restored here so the row this const backs (both the list and the
 // single-record fetch below) actually matches the `TherapistAdminRow` type
 // it's cast to.
+// Phase 207 — profile_views added: the admin Therapist Analytics table
+// reads its "All time" column directly from this same public counter
+// (therapists.profile_views), per the instruction that the CRM display and
+// the public directory count must share one source, not two separately
+// computed numbers.
 const THERAPIST_ADMIN_LIST_COLUMNS =
-  "id, full_name, slug, bio, credentials, country, city, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, offers_online, offers_in_person, photo_url, price_note, profile_id, session_lengths, short_summary, specialties, support_pathways, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
+  "id, full_name, slug, bio, credentials, country, city, created_at, diary_link, diary_link_status, gender, is_active, is_verified, languages, offers_online, offers_in_person, photo_url, price_note, profile_id, profile_views, session_lengths, short_summary, specialties, support_pathways, time_zone, tracks, updated_at, verified_at, verified_by, years_experience, profile_status, volunteer_application_id";
 
 export async function getAllTherapistsAdmin(): Promise<Omit<Tables<"therapists">, "contact_email" | "contact_phone">[]> {
   const supabase = await createClient();

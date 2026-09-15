@@ -9108,4 +9108,55 @@ git push
 ```
 
 ---
+
+## Phase 207: Public profile-view counter (supersedes Phase 206 visibility)
+
+An explicit follow-up request, with a reference screenshot, reversed Phase 206's core "admin-only" premise: Roy asked for the eye-icon + view count to be shown **publicly** on every `/therapists` card, inline right after the country name — not gated to admins. Rather than build a second, competing tracking system, this phase extends Phase 206's existing architecture (per Roy's own "extend, don't duplicate" instruction): the granular `therapist_profile_views` event table and its RPCs are untouched and still power the CRM's today/week/month breakdown; a new denormalized `therapists.profile_views` counter was added as the single public + CRM "all-time" source of truth, kept in sync atomically in the same call that records each event.
+
+**What shipped:**
+
+1. **Migration `phase_207_public_profile_view_counter`** (Production): added `therapists.profile_views integer NOT NULL DEFAULT 0` (existing rows backfilled to 0 by the column default); recreated the `therapists_public` view (via `CREATE OR REPLACE VIEW`, preserving every existing column — confirmed via `pg_get_viewdef` before editing) to append `profile_views`, so it now travels on every public therapist row with no separate admin-gated fetch; renamed the old daily-dedup unique index to `therapist_profile_views_unique_session_visit` (semantics changed, see below); added a new function `record_therapist_profile_view(p_therapist_id, p_visitor_key, p_anonymous_id_hash, p_referrer)` that atomically inserts the granular event row (`ON CONFLICT DO NOTHING`) and, only when that insert actually happened, increments `therapists.profile_views` in the same statement — this can never drift from the event table's row count, and there's no read-then-write race window. `EXECUTE` revoked from `public`, granted only to `service_role` (this RPC is only ever called from the tracking API route's admin client, never from a public/authenticated client role).
+
+2. **Dedup changed from "once per calendar day" to "once per browser session"** — the explicit new requirement. `lib/analytics/hash.ts`'s `computeVisitorKey` dropped its date argument entirely (no date math needed anymore); the anonymous cookie (`gesa-anon-id`) in `app/api/analytics/therapist-view/route.ts` lost its 1-year `maxAge`, making it a native browser session cookie — closing the browser naturally starts a new session, a new anonymous id, and allows counting again. On top of that, `components/TherapistViewTracker.tsx` now also checks/writes a `sessionStorage` key (`gesa-viewed-therapists`) before ever firing the request, per the spec's explicit instruction to store viewed therapist ids in `sessionStorage` — this is a client-side fast-path that also means a visitor re-opening an already-viewed profile this session never even sends a request, with the session cookie as a second, independent backstop (e.g. two tabs sharing one cookie).
+
+3. **Internal-user / self-view exclusion** (new, wasn't needed under Phase 206's admin-only model since admins never generated public-facing counts before): `app/api/analytics/therapist-view/route.ts` now calls `getCurrentProfile()` and skips recording entirely for `admin`, `super_admin`, `reviewer`, or `finance` roles; for a signed-in `therapist`-role user, it looks up their own linked therapist record via `therapists.profile_id` and skips recording if it matches the profile being viewed (a therapist visiting their own public profile doesn't inflate their own count). A failed/skipped record always returns success (`{recorded: false}`) rather than an error — tracking must never surface as a visible failure on a public page.
+
+4. **Public inline counter** — `components/TherapistCard.tsx` now renders a `lucide-react` `Eye` icon + `t.profile_views.toLocaleString()` immediately after the country/`MapPin` line on every card, for every visitor (no role check), with `aria-label`/`title` of `"N profile views"` for accessibility — matching the reference screenshot and JSX example exactly. Phase 206's admin-only `TherapistViewBadge` (separate eye icon + popover, absolutely positioned over the photo) was removed from the card entirely to avoid showing two competing eye icons; its component file (`components/admin/therapists/TherapistViewBadge.tsx`) has been emptied to a no-op stub with a deprecation comment rather than deleted outright, because this session's sandboxed shell was unavailable to run a file-delete — safe for Roy to delete from the repo next time he's doing file cleanup, nothing imports it anymore.
+
+5. **Removed the now-unnecessary admin-only plumbing**: `app/therapists/page.tsx` no longer calls `getCurrentProfile()`/`getAllTherapistViewSummaries()` or builds a `viewStats` map — `profile_views` now arrives for free on every row from the normal `getActiveTherapists()` query (via the updated `therapists_public` view). `components/TherapistsDirectory.tsx` and `TherapistCard.tsx` both dropped their `viewStats` prop entirely.
+
+6. **CRM Dashboard (`/admin/therapist-analytics`) reconnected to the same source**: `app/admin/therapist-analytics/page.tsx`'s "All-time" column now reads `t.profile_views` (added to `THERAPIST_ADMIN_LIST_COLUMNS` in `lib/queries.ts`) instead of the granular table's own all-time aggregate — so the CRM and the public site can never disagree about a therapist's total view count. Today/week/month columns are unchanged (still from `getAllTherapistViewSummaries()`'s granular breakdown, which isn't part of the public surface and needed no change). Page copy updated to describe session-based dedup and note "All-time" matches the public count.
+
+**Data/schema changes:** `therapists.profile_views` column (new, backfilled to 0) + `therapists_public` view updated to include it + new `record_therapist_profile_view` RPC (service-role only). The `therapist_profile_views` event table, its RLS, and its three read RPCs from Phase 206 are unchanged and still in use for the CRM's per-period breakdown.
+
+**Tracking flow (end to end):** visitor opens `/therapists/[slug]` → `TherapistViewTracker` checks `sessionStorage` for that therapist id; if already present this session, does nothing → otherwise marks it in `sessionStorage` and POSTs to `/api/analytics/therapist-view` → the route rate-limits by IP, filters obvious bots, checks the signed-in user's role (skips recording for internal/self-view cases), validates the therapist is real/active, then calls `record_therapist_profile_view` via the service-role client, which atomically inserts the dedup event row (no-op if a browser-session cookie already recorded this visitor+therapist) and increments `therapists.profile_views` only on a genuine new insert → the route sets/refreshes the session cookie and returns `{recorded, profileViews}` → every subsequent page render of `/therapists` (and the CRM's analytics table) reads the resulting `profile_views` value directly off the therapist row.
+
+**Role/permission changes:** none widened — the public counter was always meant to be public per this explicit spec; the new internal-user exclusion is an additional restriction (fewer views get counted, not more access granted), and the new RPC is service-role-only, tighter than the RLS-gated read RPCs from Phase 206.
+
+**Testing checklist:**
+- Public visitor: open `/therapists`, confirm an eye icon + number appears next to every card's country (including "0" for a never-viewed therapist); open a profile, refresh it, navigate back — confirm the count increments by exactly 1 for that visit-session, not per refresh.
+- New session: clear cookies/sessionStorage (or open a private window) and reopen the same profile — confirm the count increments again (a genuinely new session).
+- Therapist self-view: sign in as a therapist, open your own public profile — confirm your own count does not increment; open a different therapist's profile — confirm that one does increment normally (since a therapist isn't in the internal-exclusion role list, only excluded from their own profile).
+- Admin/staff: sign in as admin/super_admin/reviewer/finance, open any profile — confirm no count increments for any of these roles.
+- CRM: open `/admin/therapist-analytics`, confirm "All time" for any given therapist exactly matches the number shown on their public card; confirm today/week/month still populate from real data and CSV export/search/sort still work.
+- Regression: `npx tsc --noEmit` and `npx jest` — `viewStats` prop removal is a pure subtraction (nothing else ever passed it), and `TherapistCard`/`TherapistsDirectory` render identically for every other existing caller (e.g. `/intake` pathway pages) aside from now always showing the public eye+count, which was the intended change everywhere this card is used.
+
+**Assumptions/follow-ups:**
+- `ANALYTICS_HASH_SALT` follow-up from Phase 206 still applies unchanged.
+- `components/admin/therapists/TherapistViewBadge.tsx` is dead code (emptied stub) pending a manual delete — see item 4 above.
+- Session-based dedup means a visitor who closes and reopens their browser is a "new session" and can increment a therapist's count again by revisiting the same profile — this is the explicitly requested behavior ("new session = new visit"), not a bug.
+
+Files touched: `lib/database.types.ts`, `lib/analytics/hash.ts`, `lib/queries.ts`, `app/api/analytics/therapist-view/route.ts`, `components/TherapistViewTracker.tsx`, `components/TherapistCard.tsx`, `components/TherapistsDirectory.tsx`, `app/therapists/page.tsx`, `app/admin/therapist-analytics/page.tsx`, `components/admin/therapists/TherapistViewBadge.tsx` (emptied stub).
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 207: Public profile-view counter (supersedes Phase 206 visibility)"
+git push
+```
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

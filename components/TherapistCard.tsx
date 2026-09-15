@@ -1,15 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { BadgeCheck, Eye, MapPin } from "lucide-react";
 import type { PublicTherapistRow } from "@/lib/database.types";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
 import BookSessionButton from "@/components/therapists/BookSessionButton";
-import TherapistViewBadge from "@/components/admin/therapists/TherapistViewBadge";
 
 export default function TherapistCard({
   t,
   pathKey = "directory",
-  viewStats,
 }: {
   t: PublicTherapistRow;
   // Phase 152 — passed through to BookSessionButton so a booking made from
@@ -19,12 +17,6 @@ export default function TherapistCard({
   // behavior) for every other caller of this card, e.g. the Our
   // Professionals page.
   pathKey?: string;
-  // Phase 206 — admin-only profile-view counts (today/week). Only ever
-  // populated by app/therapists/page.tsx when the requester is a signed-in
-  // admin/super_admin — undefined for every public visitor and for every
-  // other page that renders this card (e.g. the intake pathway pages),
-  // so the eye-icon badge below simply doesn't render for anyone else.
-  viewStats?: { today: number; week: number };
 }) {
   const initials = t.full_name
     .split(" ")
@@ -34,22 +26,6 @@ export default function TherapistCard({
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-accent">
-      {/* Phase 206 — deliberately a sibling of the card's <Link>, not
-          nested inside it: this renders a real <button> (for the popover),
-          and a button inside an anchor is invalid HTML and breaks keyboard/
-          screen-reader navigation. Absolutely positioned over the photo's
-          top-left corner instead (the verified badge already occupies
-          top-right) — the outer card div has no padding above the photo,
-          so this lands in the same visual spot either way. */}
-      {viewStats && (
-        <TherapistViewBadge
-          therapistId={t.id}
-          therapistName={t.full_name}
-          therapistPhotoUrl={t.photo_url}
-          today={viewStats.today}
-          week={viewStats.week}
-        />
-      )}
       <Link href={`/therapists/${t.slug}`} className="contents">
         <div className="relative aspect-square w-full flex-none overflow-hidden bg-gradient-to-br from-primary to-accent">
           {t.photo_url ? (
@@ -78,10 +54,24 @@ export default function TherapistCard({
               can tell where a therapist is based (matches the source data's
               own "Country" field). Omitted entirely rather than shown blank
               when a record doesn't have one yet. */}
+          {/* Phase 207 — public profile-view counter, shown right after
+              country per the explicit reference design. Always rendered
+              (defaulting to 0) since profile_views is a non-null column —
+              unlike Phase 206's admin-only badge, every visitor sees this. */}
           {t.country && (
-            <div className="mb-2 flex items-center gap-1 text-[12px] text-muted-fg">
-              <MapPin size={12} className="flex-none" aria-hidden="true" />
-              {t.country}
+            <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-fg">
+              <div className="flex items-center gap-1">
+                <MapPin size={12} className="flex-none" aria-hidden="true" />
+                {t.country}
+              </div>
+              <div
+                className="flex items-center gap-1"
+                aria-label={`${(t.profile_views ?? 0).toLocaleString()} profile views`}
+                title={`${(t.profile_views ?? 0).toLocaleString()} profile views`}
+              >
+                <Eye size={12} className="flex-none" aria-hidden="true" />
+                <span>{(t.profile_views ?? 0).toLocaleString()}</span>
+              </div>
             </div>
           )}
           <p className="mb-3 line-clamp-2 text-[13.5px] text-muted-fg">{t.short_summary}</p>

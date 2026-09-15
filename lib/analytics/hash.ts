@@ -26,21 +26,20 @@ export function hashAnonymousId(anonId: string): string {
   return sha256(`${anonId}:${SALT}`);
 }
 
-// The daily-dedup key: encodes visitor + therapist + UTC calendar day in
-// one irreversible hash, so the database's own unique index on
+// Phase 207 — the dedup key: encodes visitor + therapist in one
+// irreversible hash, so the database's own unique index on
 // (therapist_id, visitor_key) is what actually enforces "at most one
-// counted visit per therapist per visitor per day" — not just an
-// application-level check a race condition (e.g. two tabs opened at once)
-// could slip past.
-export function computeVisitorKey(anonId: string, therapistId: string, utcDateString: string): string {
-  return sha256(`${anonId}:${therapistId}:${utcDateString}:${SALT}`);
-}
-
-// YYYY-MM-DD in UTC — this app's established "which timezone" convention
-// for admin-facing timestamps (see BookingRequestsTable/InquiryDetailModal's
-// own `timeZone: "UTC"` precedent), used consistently here for both the
-// dedup key and the "today"/"this week" aggregate boundaries in the
-// matching SQL RPCs.
-export function utcDateString(date: Date = new Date()): string {
-  return date.toISOString().slice(0, 10);
+// counted visit per therapist per visitor" — not just an application-level
+// check a race condition (e.g. two tabs opened at once) could slip past.
+//
+// No date component as of Phase 207 (Phase 206 originally scoped this to
+// "once per calendar day"; superseded by an explicit new instruction for
+// "once per browser session" instead). The session granularity now comes
+// entirely from the anonymous cookie itself being a *session* cookie (no
+// Max-Age — cleared when the browser closes, see
+// app/api/analytics/therapist-view/route.ts): a new browser session gets a
+// new anonId, which naturally produces a new visitor_key and is allowed to
+// count again, with no date math needed here at all.
+export function computeVisitorKey(anonId: string, therapistId: string): string {
+  return sha256(`${anonId}:${therapistId}:${SALT}`);
 }

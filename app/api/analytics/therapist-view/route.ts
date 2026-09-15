@@ -1,25 +1,28 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { isLikelyBot } from "@/lib/analytics/botDetect";
 import { isRateLimited } from "@/lib/analytics/rateLimit";
-import { computeVisitorKey, hashAnonymousId, utcDateString } from "@/lib/analytics/hash";
+import { computeVisitorKey, hashAnonymousId } from "@/lib/analytics/hash";
 
-// Phase 206 — therapist profile-view analytics. Records at most one view
-// per (therapist, anonymous visitor, UTC calendar day). Called
-// fire-and-forget from components/TherapistViewTracker.tsx, mounted once on
-// app/therapists/[slug]/page.tsx — never from the /therapists directory
-// itself, so rendering therapist cards never counts as a "view" (only
-// opening a specific profile does, per the spec).
+// Phase 206/207 — therapist profile-view analytics, now a PUBLIC counter
+// (see components/TherapistCard.tsx and EXECUTION_PLAN.md's Phase 207 entry
+// for why this supersedes Phase 206's original admin-only visibility).
+// Records at most one view per (therapist, anonymous visitor, browser
+// session). Called fire-and-forget from components/TherapistViewTracker.tsx,
+// mounted once on app/therapists/[slug]/page.tsx — never from the
+// /therapists directory itself, so rendering therapist cards never counts
+// as a "view" (only opening a specific profile does).
 //
 // Anonymous visitor cookie: a random UUID, httpOnly (never readable by
 // client JS — this route is the only thing that ever needs it), first-
-// party, no PII of any kind. Generated here on first visit and echoed back
-// on every subsequent request via Set-Cookie; the raw value never leaves
-// this route or reaches the database — only its salted sha256 hash does
-// (see lib/analytics/hash.ts).
+// party, no PII of any kind, and — as of Phase 207 — a *session* cookie
+// (no Max-Age, so browsers clear it when closed), matching the new "once
+// per browser session, not once per day" dedup requirement. The raw value
+// never leaves this route or reaches the database — only its salted sha256
+// hash does (see lib/analytics/hash.ts).
 const COOKIE_NAME = "gesa-anon-id";
-const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365; // 1 year
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -37,17 +40,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "rate limited" }, { status: 429 });
   }
 
-  // Bot/crawler exclusion — respond 204 either way so this is
-  // indistinguishable from a normal successful (but deduped) request; no
-  // reason to leak bot-detection behavior to whatever sent the request.
+  // Bot/crawler exclusion — respond with the same shape either way so this
+  // is indistinguishable from a normal (but excluded) request; no reason to
+  // leak bot-detection behavior to whatever sent the request.
   const userAgent = request.headers.get("user-agent");
   if (isLikelyBot(userAgent)) {
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ recorded: false });
+  }
+
+  // Phase 207 — exclude internal users: admins/reviewers/CRM staff, and a
+  // signed-in therapist viewing their own profile. Uses the requester's own
+  // cookie-based session (not the service-role client) purely to read
+  // "who, if anyone, is signed in" — this never grants extra access, it
+  // only decides whether to skip counting.
+  const profile = await getCurrentProfile();
+  const admin = createAdminClient();
+
+  if (profile) {
+    const internalRoles = ["admin", "super_admin", "reviewer", "finance"];
+    if (internalRoles.includes(profile.role)) {
+      return NextResponse.json({ recorded: false });
+    }
+    if (profile.role === "therapist") {
+      const { data: ownTherapistRecord } = await admin
+        .from("therapists")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      if (ownTherapistRecord?.id === therapistId) {
+        return NextResponse.json({ recorded: false });
+      }
+    }
   }
 
   // Validate the therapist exists and is actually a real, currently-active
   // profile — prevents spamming arbitrary/fake UUIDs into the table.
-  const admin = createAdminClient();
   const { data: therapist } = await admin
     .from("therapists")
     .select("id")
@@ -66,36 +93,40 @@ export async function POST(request: Request) {
     ?.slice(COOKIE_NAME.length + 1);
   const anonId = existingAnonId || randomUUID();
 
-  const today = utcDateString();
-  const visitorKey = computeVisitorKey(anonId, therapistId, today);
+  const visitorKey = computeVisitorKey(anonId, therapistId);
   const anonymousIdHash = hashAnonymousId(anonId);
   const referrer = request.headers.get("referer") || null;
 
-  const { error: insertError } = await admin.from("therapist_profile_views").insert({
-    therapist_id: therapistId,
-    visitor_key: visitorKey,
-    anonymous_id_hash: anonymousIdHash,
-    referrer,
+  // Phase 207 — single atomic RPC: inserts the granular event row (a
+  // no-op on conflict) and, only when that insert actually happened,
+  // increments therapists.profile_views in the same call — see the
+  // phase_207 migration's own comment on why this can never drift.
+  const { data: rpcResult, error: rpcError } = await admin.rpc("record_therapist_profile_view", {
+    p_therapist_id: therapistId,
+    p_visitor_key: visitorKey,
+    p_anonymous_id_hash: anonymousIdHash,
+    p_referrer: referrer,
   });
 
-  // A unique-constraint violation (23505) means this exact visitor already
-  // viewed this therapist today — that's the dedup working as designed, not
-  // an error. Matches the existing /api/intake-booking precedent for
-  // treating a 23505 as a normal, expected outcome rather than a failure.
-  if (insertError && insertError.code !== "23505") {
-    console.error("Failed to record therapist profile view:", insertError.message);
+  let profileViews: number | undefined;
+  if (rpcError) {
+    console.error("Failed to record therapist profile view:", rpcError.message);
     // Still succeed from the caller's point of view — a tracking failure
     // must never surface as a visible error on a public profile page.
+  } else {
+    profileViews = rpcResult?.[0]?.profile_views;
   }
 
-  const response = new NextResponse(null, { status: 204 });
+  const response = NextResponse.json({ recorded: !rpcError, profileViews });
   if (!existingAnonId) {
+    // No `maxAge`/`expires` set — a session cookie, cleared when the
+    // browser closes, so a new browser session naturally gets a new anonId
+    // and is allowed to count again (see lib/analytics/hash.ts's comment).
     response.cookies.set(COOKIE_NAME, anonId, {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: COOKIE_MAX_AGE_SECONDS,
     });
   }
   return response;

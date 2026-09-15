@@ -309,6 +309,12 @@ export type TherapistRow = {
   // built (see EXECUTION_PLAN.md's Phase 196 entry).
   session_price_amount: number | null;
   session_price_currency: string;
+  // Phase 207 — fast, denormalized all-time profile-view counter, kept in
+  // sync with therapist_profile_views (the granular event table from Phase
+  // 206) by the record_therapist_profile_view RPC — see that migration's
+  // own comment for why this can never drift from the event table's row
+  // count. Public data as of Phase 207 (see therapists_public below).
+  profile_views: number;
 }
 
 // Phase 186 — see TherapistRow.profile_status's own comment.
@@ -359,6 +365,9 @@ export type PublicTherapistRow = Pick<
   // public, same as price_note already was.
   | "session_price_amount"
   | "session_price_currency"
+  // Phase 207 — public profile-view counter, shown next to country on
+  // every /therapists card. See TherapistRow.profile_views's own comment.
+  | "profile_views"
 > & {
   // Derived boolean, not the phone number itself — lets the UI offer/hide
   // the WhatsApp contact channel without ever sending a confidential
@@ -1100,6 +1109,15 @@ export type Database = {
       get_therapist_view_daily_breakdown: {
         Args: { p_therapist_id: string; p_days?: number };
         Returns: { day: string; view_count: number }[];
+      };
+      // Phase 207 — atomic "record a view" RPC (insert the granular event
+      // row + increment therapists.profile_views in one call, only when
+      // the insert wasn't a duplicate). Deliberately not callable by
+      // anon/authenticated — only the service-role client calls this (see
+      // app/api/analytics/therapist-view/route.ts).
+      record_therapist_profile_view: {
+        Args: { p_therapist_id: string; p_visitor_key: string; p_anonymous_id_hash: string | null; p_referrer: string | null };
+        Returns: { inserted: boolean; profile_views: number }[];
       };
     };
     Enums: {

@@ -70,7 +70,6 @@ export default function TherapistsDirectory({
   therapists,
   content = THERAPISTS_DIRECTORY_CONTENT_FALLBACK,
   pathKey,
-  viewStats,
 }: {
   therapists: PublicTherapistRow[];
   content?: TherapistsDirectoryContent;
@@ -80,12 +79,6 @@ export default function TherapistsDirectory({
   // TherapistCard falls back to its own "directory" default, unchanged for
   // every other existing caller of this component.
   pathKey?: string;
-  // Phase 206 — admin-only profile-view counts, keyed by therapist id.
-  // Only ever passed by app/therapists/page.tsx when the requester is a
-  // signed-in admin/super_admin (see that file) — every other caller of
-  // this directory (e.g. the intake pathway pages) leaves this undefined,
-  // so no card anywhere else grows an eye-icon badge.
-  viewStats?: Map<string, { today: number; week: number }>;
 }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -410,7 +403,7 @@ export default function TherapistsDirectory({
           <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
             {filtered.map((t) => (
               <StaggerItem key={t.id}>
-                <TherapistCard t={t} pathKey={pathKey} viewStats={viewStats?.get(t.id)} />
+                <TherapistCard t={t} pathKey={pathKey} />
               </StaggerItem>
             ))}
           </StaggerGroup>
