@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-15 (Phase 220 added)
+Last updated: 2026-09-16 (Phase 221 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9667,6 +9667,65 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 220: Warm ivory background for form modals site-wide"
+git push
+```
+
+---
+
+## Phase 221: "Find a professional" modal — Location replaced with Languages/Type of Treatment
+
+**Request:** on the "Find a professional" search modal (BrowseTherapistModal, used by both Charity Services and Professional Services), replace "Location (Country)" and "City/address (optional)" with a required "Languages" multi-select and an optional "Type of Treatment" multi-select (default "No preference"), sourced from the exact same centralized lists as the professional onboarding form's "Possible Therapy Languages"/"Additional Areas of Expertise" fields.
+
+**Conflict found and resolved before writing any code:** the request's own comprehensive ~74-language list ("do not create a separate or mismatched dataset") directly conflicted with reusing the onboarding form's existing language list verbatim — that list had only 23 entries, explicitly commented in code as "Roy's full 23-option 'maintain these options' list" (i.e. previously locked in place on purpose in Phase 195). Asked Roy directly (AskUserQuestion): confirmed the onboarding list should be *expanded* to the full ~74-item list rather than shrinking the new field to match the old 23 — both fields now share one expanded list.
+
+**What shipped:**
+
+1. **`lib/therapistOptions.ts`** (new) — the single centralized source:
+   - `LANGUAGE_OPTIONS` — 74 languages (alphabetized), superseding the old 23-item onboarding list. Full list below.
+   - `TREATMENT_OPTIONS` — the existing 30-item expertise list, moved here unchanged (already shared between onboarding's "Primary"/"Additional Areas of Expertise" fields).
+   - `OTHER_LANGUAGE_LABEL` ("Other language") / `OTHER_EXPERTISE_LABEL` ("Other") — the "Other" row labels both fields' comboboxes use.
+2. **`components/volunteer/VolunteerApplicationModal.tsx`** — its local `EXPERTISE_OPTIONS`/`LANGUAGE_OPTIONS`/`OTHER_*_LABEL` consts removed, now imports from `lib/therapistOptions.ts` (aliased so nothing else in the file needed renaming).
+3. **`components/find-support/BrowseTherapistModal.tsx`** — Location (Country)/City-address fields, the country `<datalist>`, and all "Use my current location" geolocation logic (`useMyLocation`, `geoPending`, `geoError`) removed outright, exactly as requested ("remove... from this modal only"). Two new fields added via the same reusable `MultiSelectCombobox` the onboarding form uses (searchable, chip-based, keyboard-navigable, ARIA-labeled out of the box):
+   - **Languages** — required, `LANGUAGE_OPTIONS`, with an "Other language" + free-text row.
+   - **Type of Treatment** — optional (helper text "leave blank for No preference"), `TREATMENT_OPTIONS`, with an "Other" + free-text row (the request's "include Other only if it already exists in the expertise field" — it does, so it's included).
+   - Results screen heading/filter chips/empty-state copy updated to reference languages and treatment type instead of location. `browseAllProfessionals()`'s URL params changed from `country`/`city` to `language`/`treatmentType` (low-risk either way — confirmed `TherapistsDirectory.tsx` doesn't read any URL query params today).
+   - `BookSessionButton`'s `bookingMetadata.country`/`cityOrAddress` (stored on `session_bookings`/`diary_scheduling_events` as `search_country`/`search_city_or_address`, for CRM analytics) are now passed empty rather than repurposed to carry language/treatment values, since the CRM columns are labeled "Country"/"City" and showing language data under those labels would mislead admins. Flagged as a follow-up below.
+4. **`lib/browseTherapistSearch.ts`** — `BrowseSearchCriteria` changed from `{sessionType, country, cityOrAddress}` to `{sessionType, languages, treatmentTypes}`. New matching rules (see below). `normalize()` now also strips a leading `"Other: "` prefix case-insensitively, so a therapist whose onboarding-stored value is `"Other: Yiddish"` still matches a search for `"Yiddish"`.
+5. **`tests/unit/browseTherapistSearch.test.ts`** — fully rewritten for the new criteria: required-field validation, session-format filtering (now independent of geography), language-overlap matching (case-insensitive, including the "Other: " prefix case), treatment-type matching (including the "No preference" no-op case), both filters combined, and result-count/no-results behavior.
+
+**Final Languages option source/list** (`lib/therapistOptions.ts`, `LANGUAGE_OPTIONS`, alphabetical): Afrikaans, Albanian, Amharic, Arabic, Armenian, ASL (American Sign Language), Auslan (Australian Sign Language), Azerbaijani, Bengali, Bosnian, BSL (British Sign Language), Bulgarian, Cantonese, Croatian, Czech, Danish, Dari, Dutch, English, Estonian, Farsi / Persian, Finnish, French, Georgian, German, Greek, Gujarati, Haitian Creole, Hebrew, Hindi, Hungarian, Icelandic, Igbo, Indonesian, International Sign, Irish, Italian, Japanese, Kazakh, Korean, Kurdish, Latvian, Lithuanian, Malay, Malayalam, Mandarin Chinese, Marathi, Mongolian, Nepali, Norwegian, Pashto, Polish, Portuguese, Punjabi, Romanian, Russian, Serbian, Sinhala, Slovak, Somali, Spanish, Swahili, Swedish, Tagalog / Filipino, Tamil, Telugu, Thai, Turkish, Ukrainian, Urdu, Uzbek, Vietnamese, Welsh, Yoruba, Zulu — plus "Other language" with a free-text field. This is now the one shared source for both this search field and the onboarding form's "Possible Therapy Languages" field.
+
+**Final Type of Treatment option source/list** (`lib/therapistOptions.ts`, `TREATMENT_OPTIONS`, unchanged from the existing onboarding list, alphabetical): Art Therapy, Breathing Exercises, CBT, Children and Adolescents, Coach (Life Coach), Counseling, EMDR, Emotional Support, Emotional Support for Couples, Family Support, Group Sessions, Guided Meditation, Helping The Helper, Herbal Medicine, Homeopathy, Medical Hypnosis, Mindful Self-Compassion, NLP, Pilates, Psychiatry, Psychoanalysis / Psychoanalyst, Psychology, Psychotherapy, Reiki, Social Work, Supervision, Support for Pregnant Women and Infants, ThetaHealing, Trauma Support, Tree of Life Medicine, Yoga — plus "Other" with a free-text field. Empty selection = "No preference" (no filter applied). This is the same source already shared by onboarding's "Primary"/"Additional Areas of Expertise" fields.
+
+**Matching rules used:**
+- Session format: therapist must have `offers_online`/`offers_in_person` true for the selected session type — no longer paired with any geography requirement.
+- Languages (required): a therapist matches if at least one of their `languages` values case-insensitively equals at least one selected language (or its typed "Other" text). A therapist with no languages on file never matches.
+- Type of Treatment (optional): skipped entirely when nothing is selected. Otherwise, a therapist matches if at least one of their `specialties` values case-insensitively equals at least one selected treatment type (or its typed "Other" text).
+- Both filters apply together (AND) when both are set.
+
+**Files touched:** `lib/therapistOptions.ts` (new), `components/volunteer/VolunteerApplicationModal.tsx`, `components/find-support/BrowseTherapistModal.tsx`, `lib/browseTherapistSearch.ts`, `tests/unit/browseTherapistSearch.test.ts`.
+
+**Data migration or normalization performed: none, and none is needed.** `therapists.languages`/`.specialties` are (and were already) free-form Postgres `text[]` columns — not foreign keys into any option list — so every existing therapist record's saved values are completely untouched by this change; nothing was renamed, dropped, or backfilled. The new `LANGUAGE_OPTIONS` list only changes what's *selectable* going forward, in both the onboarding form and this search. A therapist whose saved language/specialty value doesn't appear in the new list (e.g. old free-text "Other: ..." entries, or the retired "Nigerian" quick-pick) still displays normally everywhere and still matches a search for that exact (or, for "Other: " values, prefix-stripped) text — it just isn't offered as a pickable option in either combobox anymore. No Supabase migration was run.
+
+**Deliberately NOT touched (flagged as follow-ups):**
+- `components/TherapistsDirectory.tsx`'s own language/specialty filters — these already derive their options dynamically from live therapist data rather than a curated list, a different (and, for a "show me what's actually in the directory" filter, arguably more correct) approach than either centralized list. Left as-is since the request named the Find Support modal specifically, not the directory.
+- `components/match/constants.ts` — the AI Match Wizard's own, smaller/divergent `LANGUAGE_OPTIONS` (8 items) and `TREATMENT_TYPES` (9-item subset). This is a second, pre-existing source of the same drift the request asked to eliminate, but it's a separate flow (AI Support, not Browse Therapist/Charity/Professional Services) not named in this request — flagging it as a real follow-up candidate rather than changing a flow that wasn't asked for.
+- `bookingMetadata.country`/`cityOrAddress` (and the underlying `search_country`/`search_city_or_address` DB columns) — no longer populated by this search (see above); a `search_languages`/`search_treatment_types` migration would be needed to restore equivalent CRM analytics for Browse Therapist bookings, which wasn't part of this request.
+
+**Manual test scenarios:** open "Find a professional" from both Charity Services and Professional Services on `/find-your-therapist` → confirm Location/Country/City fields and "Use my current location" are gone, Languages (required, blocks submit until at least one is picked) and Type of Treatment (optional) appear in their place; select a language and search → results reflect the new heading/chips; select a language with no matching therapist → empty-state copy mentions languages/treatment, not country/city; select both a language and a treatment type → both filters apply together; leave Type of Treatment blank → treatment doesn't restrict results; pick "Other language"/"Other" and type free text → the typed value is what's searched and shown as a chip; keyboard-only run-through of both comboboxes (arrows, Enter, Escape, Backspace-to-remove-chip) and a screen-reader spot check of the ARIA roles already built into `MultiSelectCombobox`.
+
+**Assumptions/follow-ups:**
+- The three items listed above as "deliberately not touched."
+- No live browser available in this environment to screenshot desktop/mobile layouts — the new fields reuse `MultiSelectCombobox`, which is already responsive (used today in the onboarding modal on all breakpoints), but worth a visual spot-check after deploy.
+- Same deploy caveat as every other phase this session: no working shell, so `git push` and a real `npx jest`/`npx playwright test`/`tsc` run are still Roy's to do locally.
+
+```
+cd "path\to\your\project"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 221: Find a professional modal — Location replaced with Languages/Type of Treatment"
 git push
 ```
 

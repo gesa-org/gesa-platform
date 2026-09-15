@@ -11,6 +11,12 @@ import { useSiteContent } from "@/lib/content-client";
 import { GESA_PUBLIC_CONTACT_EMAIL } from "@/lib/contact";
 import type { MeetingDurationChoice } from "@/lib/database.types";
 import type { VolunteerApplicationModalContent } from "@/lib/content";
+import {
+  TREATMENT_OPTIONS as EXPERTISE_OPTIONS,
+  LANGUAGE_OPTIONS,
+  OTHER_EXPERTISE_LABEL,
+  OTHER_LANGUAGE_LABEL,
+} from "@/lib/therapistOptions";
 
 // Phase 189 — full rebuild of this modal per Roy's "Join Us as a Volunteer/
 // Caregiver" spec: five sections (Personal Information, Professional
@@ -47,74 +53,18 @@ export const VOLUNTEER_MODAL_CONTENT_FALLBACK: VolunteerApplicationModalContent 
 // (the old list spelled one option "Mindful Self Compassion", Roy's new
 // list spells it "Mindful Self-Compassion") would have made the auto-add
 // silently produce an option that didn't match anything in the new list.
-const EXPERTISE_OPTIONS = [
-  "Art Therapy",
-  "Breathing Exercises",
-  "CBT",
-  "Children and Adolescents",
-  "Coach (Life Coach)",
-  "Counseling",
-  "EMDR",
-  "Emotional Support",
-  "Emotional Support for Couples",
-  "Family Support",
-  "Group Sessions",
-  "Guided Meditation",
-  "Helping The Helper",
-  "Herbal Medicine",
-  "Homeopathy",
-  "Medical Hypnosis",
-  "Mindful Self-Compassion",
-  "NLP",
-  "Pilates",
-  "Psychiatry",
-  "Psychoanalysis / Psychoanalyst",
-  "Psychology",
-  "Psychotherapy",
-  "Reiki",
-  "Social Work",
-  "Supervision",
-  "Support for Pregnant Women and Infants",
-  "ThetaHealing",
-  "Trauma Support",
-  "Tree of Life Medicine",
-  "Yoga",
-];
-
-// Phase 195 — Roy's full 23-option "maintain these options" list for
-// Possible Therapy Languages, replacing the old 10-item quick-pick subset.
-const LANGUAGE_OPTIONS = [
-  "Arabic",
-  "Bulgarian",
-  "Czech",
-  "Danish",
-  "Dutch",
-  "English",
-  "Filipino (Tagalog)",
-  "French",
-  "German",
-  "Greek",
-  "Hebrew",
-  "Hindi",
-  "Hungarian",
-  "Italian",
-  "Latvian",
-  "Nigerian",
-  "Norwegian",
-  "Portuguese",
-  "Romanian",
-  "Russian",
-  "Slovak",
-  "Spanish",
-  "Swedish",
-];
-
-// Phase 195 — labels for the "Other" rows in each combobox. Kept as named
-// constants (not inline strings) since the submit handler and the
-// sessionStorage draft-restore logic below both need to recognize these
-// exact values too.
-const OTHER_EXPERTISE_LABEL = "Other";
-const OTHER_LANGUAGE_LABEL = "Other language";
+//
+// Phase 221 — EXPERTISE_OPTIONS/LANGUAGE_OPTIONS/OTHER_EXPERTISE_LABEL/
+// OTHER_LANGUAGE_LABEL moved to lib/therapistOptions.ts (imported above,
+// TREATMENT_OPTIONS aliased back to this file's original EXPERTISE_OPTIONS
+// name so nothing below needed renaming) so the Find Support page's new
+// "Languages"/"Type of Treatment" search fields can share the exact same
+// values, per Roy's "do not create a separate or mismatched dataset"
+// instruction. LANGUAGE_OPTIONS also grew from 23 to ~74 entries as part of
+// that move — Roy confirmed expanding this form's list (rather than
+// shrinking the new Find Support field to match the old 23) was the right
+// call when this conflict came up. See lib/therapistOptions.ts's own
+// comment for the full history.
 
 // Phase 195 — sessionStorage key for "preserve selections if the modal is
 // closed accidentally and reopened in the same session." VolunteerApplyButton

@@ -3,10 +3,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { X, Globe2, MapPin, Search, ArrowLeft, BadgeCheck, Locate } from "lucide-react";
+import { X, Globe2, MapPin, Search, ArrowLeft, BadgeCheck } from "lucide-react";
 import Button from "@/components/ui/Button";
 import BookSessionButton from "@/components/therapists/BookSessionButton";
-import { COUNTRY_NAMES } from "@/lib/countries";
+import MultiSelectCombobox from "@/components/ui/MultiSelectCombobox";
+import {
+  LANGUAGE_OPTIONS,
+  TREATMENT_OPTIONS,
+  OTHER_LANGUAGE_LABEL,
+  OTHER_EXPERTISE_LABEL,
+} from "@/lib/therapistOptions";
 import {
   searchTherapists,
   validateBrowseSearch,
@@ -15,6 +21,19 @@ import {
   type BrowseSearchResult,
 } from "@/lib/browseTherapistSearch";
 import type { PublicTherapistRow } from "@/lib/database.types";
+
+// Phase 221 — resolves a combobox's selected values into the actual strings
+// to search/match with: if the "Other" row is selected and its free-text
+// field has a value, that literal option label (e.g. "Other language") is
+// swapped for the typed text (e.g. "Yiddish") so matching runs against what
+// the user actually means, not the placeholder label. See
+// lib/browseTherapistSearch.ts's own normalize() comment for how this lines
+// up with how therapist records store their own "Other" picks.
+function effectiveSelections(selected: string[], otherLabel: string, otherText: string): string[] {
+  const trimmedOther = otherText.trim();
+  if (!trimmedOther || !selected.includes(otherLabel)) return selected;
+  return selected.map((v) => (v === otherLabel ? trimmedOther : v));
+}
 
 // Phase 151 — the guided search behind the Find Support page's "Browse
 // therapist" option (see components/find-support/ChoiceScreen.tsx). Two
@@ -49,14 +68,10 @@ function FormatBadge({ icon: Icon, label }: { icon: typeof Globe2; label: string
 function ResultCard({
   result,
   sessionType,
-  country,
-  cityOrAddress,
   serviceType,
 }: {
   result: BrowseSearchResult;
   sessionType: BrowseSessionType;
-  country: string;
-  cityOrAddress: string;
   // Phase 196 — see BrowseTherapistModal's own prop comment below.
   serviceType?: "charity" | "professional";
 }) {
@@ -125,13 +140,21 @@ function ResultCard({
         </div>
       </Link>
       <div className="flex flex-col gap-1.5 px-[18px] pb-3 pt-2">
+        {/* Phase 221 — bookingMetadata.country/cityOrAddress are no longer
+            collected by this search (see BrowseTherapistModal's own Phase
+            221 comment), so they're passed empty rather than repurposed to
+            carry language/treatment data — the CRM's search_country/
+            search_city_or_address columns would otherwise show misleading
+            values under their existing labels. Flagged in EXECUTION_PLAN.md
+            as a follow-up: a proper search_languages/search_treatment_types
+            migration would be needed to keep this analytics tag accurate. */}
         <BookSessionButton
           therapist={t}
           ctaLabel="Book a session"
           bookingMetadata={{
             sessionType,
-            country,
-            cityOrAddress: sessionType === "in_person" ? cityOrAddress || null : cityOrAddress || null,
+            country: "",
+            cityOrAddress: null,
           }}
           serviceType={serviceType}
         />
@@ -172,19 +195,23 @@ export default function BrowseTherapistModal({
 }) {
   const [step, setStep] = useState<"search" | "results">("search");
   const [sessionType, setSessionType] = useState<BrowseSessionType | null>(null);
-  const [country, setCountry] = useState("");
-  const [cityOrAddress, setCityOrAddress] = useState("");
+  // Phase 221 — Languages (required) and Type of Treatment (optional,
+  // "No preference" when empty) replace the old country/cityOrAddress
+  // fields. Each has its own "Other" free-text companion, same pattern as
+  // the onboarding form's identical fields (see MultiSelectCombobox).
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [otherLanguage, setOtherLanguage] = useState("");
+  const [treatmentTypes, setTreatmentTypes] = useState<string[]>([]);
+  const [otherTreatment, setOtherTreatment] = useState("");
   const [attempted, setAttempted] = useState(false);
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<BrowseSearchResult[] | null>(null);
-  const [geoPending, setGeoPending] = useState(false);
-  const [geoError, setGeoError] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const errors = useMemo(
-    () => (attempted ? validateBrowseSearch({ sessionType, country, cityOrAddress }) : {}),
-    [attempted, sessionType, country, cityOrAddress]
+    () => (attempted ? validateBrowseSearch({ sessionType, languages, treatmentTypes }) : {}),
+    [attempted, sessionType, languages, treatmentTypes]
   );
 
   // Reset to a fresh search every time this modal is freshly opened (not on
@@ -196,11 +223,12 @@ export default function BrowseTherapistModal({
     if (open) {
       setStep("search");
       setSessionType(null);
-      setCountry("");
-      setCityOrAddress("");
+      setLanguages([]);
+      setOtherLanguage("");
+      setTreatmentTypes([]);
+      setOtherTreatment("");
       setAttempted(false);
       setResults(null);
-      setGeoError(null);
     }
   }, [open]);
 
@@ -247,20 +275,32 @@ export default function BrowseTherapistModal({
 
   if (!open) return null;
 
+  // Phase 221 — the values actually used for validation/matching/display:
+  // any selected "Other" option is resolved to its typed free text (see
+  // effectiveSelections above this component).
+  const effectiveLanguages = effectiveSelections(languages, OTHER_LANGUAGE_LABEL, otherLanguage);
+  const effectiveTreatmentTypes = effectiveSelections(treatmentTypes, OTHER_EXPERTISE_LABEL, otherTreatment);
+
   function runSearch() {
     setAttempted(true);
-    const criteria = { sessionType, country, cityOrAddress };
+    const criteria = { sessionType, languages: effectiveLanguages, treatmentTypes: effectiveTreatmentTypes };
     const validation = validateBrowseSearch(criteria);
     if (Object.keys(validation).length > 0 || !sessionType) return;
     setSearching(true);
     // Phase 151 — this "search" runs against therapists already fetched by
     // the page (the same list Our Professionals uses), not a live network
     // request, so there's nothing to actually await. A short, deliberate
-    // delay keeps the "Finding therapists near you…" loading state the spec
-    // asked for from flashing by unreadably fast, rather than faking a
-    // network round-trip that doesn't exist.
+    // delay keeps the "Finding therapists…" loading state the spec asked
+    // for from flashing by unreadably fast, rather than faking a network
+    // round-trip that doesn't exist.
     searchTimeoutRef.current = setTimeout(() => {
-      setResults(searchTherapists(therapists, { sessionType, country, cityOrAddress }));
+      setResults(
+        searchTherapists(therapists, {
+          sessionType,
+          languages: effectiveLanguages,
+          treatmentTypes: effectiveTreatmentTypes,
+        })
+      );
       setSearching(false);
       setStep("results");
     }, 300);
@@ -274,39 +314,10 @@ export default function BrowseTherapistModal({
   function browseAllProfessionals() {
     const params = new URLSearchParams();
     if (sessionType) params.set("sessionType", sessionType);
-    if (country) params.set("country", country);
-    if (cityOrAddress) params.set("city", cityOrAddress);
+    effectiveLanguages.forEach((l) => params.append("language", l));
+    effectiveTreatmentTypes.forEach((t) => params.append("treatmentType", t));
     onClose();
     window.location.href = `/therapists?${params.toString()}`;
-  }
-
-  // Optional per the spec ("if geolocation is already supported") — this
-  // app has no geocoding/reverse-geocoding service anywhere (no mapping API
-  // key wired into any existing route), so a raw lat/lng coordinate can't be
-  // turned into a country/city name here. Rather than build a fake version
-  // of this feature (e.g. silently leaving Country blank while pretending
-  // location was captured), it degrades to a clear, honest error and manual
-  // entry always remains available — exactly the spec's own fallback.
-  function useMyLocation() {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGeoError("Location isn't available in this browser — please enter your country manually.");
-      return;
-    }
-    setGeoPending(true);
-    setGeoError(null);
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        setGeoPending(false);
-        setGeoError(
-          "We couldn't automatically match your location to a country — please select it from the list below."
-        );
-      },
-      () => {
-        setGeoPending(false);
-        setGeoError("Location access was denied — please enter your country manually.");
-      },
-      { timeout: 8000 }
-    );
   }
 
   const resultCountLabel =
@@ -386,7 +397,7 @@ export default function BrowseTherapistModal({
                       <span>
                         <span className="block text-[14.5px] font-semibold text-foreground">In-person</span>
                         <span className="block text-[12.5px] text-muted-fg">
-                          Find professionals available near your selected location.
+                          Meet face-to-face at a location arranged with your therapist.
                         </span>
                       </span>
                     </button>
@@ -394,65 +405,60 @@ export default function BrowseTherapistModal({
                   {errors.sessionType && <p className="mt-1.5 text-[12.5px] text-destructive">{errors.sessionType}</p>}
                 </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-semibold">Location</label>
-                  <div className="flex flex-col gap-3">
-                    <div>
-                      <label htmlFor="browse-country" className="mb-1 block text-[12.5px] font-medium text-muted-fg">
-                        Country <span className="text-destructive">*</span>
-                      </label>
-                      <input
-                        id="browse-country"
-                        list="browse-country-list"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        placeholder="Start typing your country…"
-                        className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                      />
-                      <datalist id="browse-country-list">
-                        {COUNTRY_NAMES.map((name) => (
-                          <option key={name} value={name} />
-                        ))}
-                      </datalist>
-                      {errors.country && <p className="mt-1 text-[12.5px] text-destructive">{errors.country}</p>}
-                    </div>
-
-                    <div>
-                      <label htmlFor="browse-city" className="mb-1 block text-[12.5px] font-medium text-muted-fg">
-                        City / address {sessionType === "in_person" ? <span className="text-destructive">*</span> : "(optional)"}
-                      </label>
-                      <input
-                        id="browse-city"
-                        value={cityOrAddress}
-                        onChange={(e) => setCityOrAddress(e.target.value)}
-                        placeholder="e.g. Tel Aviv"
-                        className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-                      />
-                      {errors.cityOrAddress && (
-                        <p className="mt-1 text-[12.5px] text-destructive">{errors.cityOrAddress}</p>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={useMyLocation}
-                      disabled={geoPending}
-                      className="inline-flex w-fit items-center gap-1.5 text-[12.5px] font-semibold text-primary hover:underline disabled:opacity-60"
-                    >
-                      <Locate size={13} /> {geoPending ? "Locating…" : "Use my current location"}
-                    </button>
-                    {geoError && <p className="text-[12.5px] text-muted-fg">{geoError}</p>}
-                  </div>
+                {/* Phase 221 — Location (Country) and City/address replaced
+                    with therapist-matching fields, per Roy's spec: Languages
+                    (required, matches against a therapist's own `languages`)
+                    and Type of Treatment (optional — an empty selection
+                    means "No preference" and applies no filter — matching
+                    against `specialties`). Both share the exact same option
+                    lists as the professional onboarding form's "Possible
+                    Therapy Languages"/"Additional Areas of Expertise" fields
+                    (lib/therapistOptions.ts) and reuse that same searchable,
+                    chip-based MultiSelectCombobox control. */}
+                <div className="flex flex-col gap-5">
+                  <MultiSelectCombobox
+                    id="browse-languages"
+                    label="Languages"
+                    required
+                    helperText="Select every language you'd be comfortable having your session in."
+                    placeholder="Search languages…"
+                    options={LANGUAGE_OPTIONS}
+                    value={languages}
+                    onChange={setLanguages}
+                    otherOptionLabel={OTHER_LANGUAGE_LABEL}
+                    otherFieldLabel="Please specify other language."
+                    otherFieldPlaceholder="e.g. Yiddish"
+                    otherValue={otherLanguage}
+                    onOtherValueChange={setOtherLanguage}
+                    error={errors.languages}
+                  />
+                  <MultiSelectCombobox
+                    id="browse-treatment"
+                    label="Type of Treatment"
+                    helperText="Optional — leave blank for No preference."
+                    placeholder="No preference…"
+                    options={TREATMENT_OPTIONS}
+                    value={treatmentTypes}
+                    onChange={setTreatmentTypes}
+                    otherOptionLabel={OTHER_EXPERTISE_LABEL}
+                    otherFieldLabel="Please specify other treatment type."
+                    otherFieldPlaceholder="e.g. Somatic Therapy"
+                    otherValue={otherTreatment}
+                    onOtherValueChange={setOtherTreatment}
+                  />
                 </div>
               </div>
 
               <div className="mt-7">
                 <Button
                   onClick={runSearch}
-                  disabled={searching || !isBrowseSearchValid({ sessionType, country, cityOrAddress })}
+                  disabled={
+                    searching ||
+                    !isBrowseSearchValid({ sessionType, languages: effectiveLanguages, treatmentTypes: effectiveTreatmentTypes })
+                  }
                   block
                 >
-                  <Search size={16} /> {searching ? "Finding therapists near you…" : "Start browsing therapists"}
+                  <Search size={16} /> {searching ? "Finding therapists…" : "Start browsing therapists"}
                 </Button>
               </div>
             </div>
@@ -469,9 +475,7 @@ export default function BrowseTherapistModal({
               </button>
 
               <h2 className="mb-1 text-[20px]">
-                {sessionType === "in_person" && cityOrAddress
-                  ? `Therapists near ${cityOrAddress}, ${country}`
-                  : `Therapists available in ${country}`}
+                Therapists who speak {effectiveLanguages.join(", ")}
               </h2>
               <p className="mb-3 text-[13.5px] text-muted-fg" aria-live="polite">
                 {resultCountLabel}
@@ -480,16 +484,35 @@ export default function BrowseTherapistModal({
                 <span className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-[12.5px] font-medium text-foreground">
                   {sessionType === "online" ? "Online" : "In-person"}
                 </span>
-                <span className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-[12.5px] font-medium text-foreground">
-                  {[cityOrAddress, country].filter(Boolean).join(", ")}
-                </span>
+                {effectiveLanguages.map((l) => (
+                  <span
+                    key={l}
+                    className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-[12.5px] font-medium text-foreground"
+                  >
+                    {l}
+                  </span>
+                ))}
+                {effectiveTreatmentTypes.length === 0 ? (
+                  <span className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-[12.5px] font-medium text-foreground">
+                    No preference (treatment)
+                  </span>
+                ) : (
+                  effectiveTreatmentTypes.map((t) => (
+                    <span
+                      key={t}
+                      className="rounded-full border border-border bg-secondary/50 px-3 py-1 text-[12.5px] font-medium text-foreground"
+                    >
+                      {t}
+                    </span>
+                  ))
+                )}
               </div>
 
               {results.length === 0 ? (
                 <div className="rounded-[var(--radius)] border border-border bg-secondary/50 p-6 text-center">
                   <h3 className="mb-1.5 text-[16px] font-semibold">No therapists were found for this search.</h3>
                   <p className="mb-5 text-[13.5px] text-muted-fg">
-                    Try changing the session type, country, city, or address.
+                    Try changing the session type, languages, or type of treatment.
                   </p>
                   <div className="flex flex-wrap justify-center gap-2.5">
                     <Button variant="outline" onClick={changeSearch}>
@@ -505,8 +528,6 @@ export default function BrowseTherapistModal({
                       key={r.therapist.id}
                       result={r}
                       sessionType={sessionType as BrowseSessionType}
-                      country={country}
-                      cityOrAddress={cityOrAddress}
                       serviceType={serviceType}
                     />
                   ))}
