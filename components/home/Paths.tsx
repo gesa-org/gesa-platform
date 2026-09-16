@@ -299,11 +299,11 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // framed-artwork photos (see the front-face render block below for the full
 // reasoning) — `undefined` means "not updated yet, keep the shadowbox."
 // Index 0 = WAR/crisis card (Phase 237 round 1), 1 = Veterans/center card
-// (Phase 237 round 2).
+// (Phase 237 round 2), 2 = Support/disaster card (Phase 237 round 3).
 const CARD_FRONT_IMAGE_OVERRIDES: (string | undefined)[] = [
   "/images/paths/crisis-framed-swirl.png",
   "/images/paths/veterans-framed-swirl.png",
-  undefined,
+  "/images/paths/support-framed-swirl.png",
 ];
 
 const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; top: string; side: string; mark: GesaMarkColors }[] = [
