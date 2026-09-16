@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import type { DonatePageContent } from "@/lib/content";
+import { useDonationGift } from "@/components/donate/useDonationGift";
 
 // Phase 98 — the interactive half of the new /donate page (see
 // components/donate/DonatePage.tsx for the static sections around it).
@@ -18,106 +18,47 @@ import type { DonatePageContent } from "@/lib/content";
 // failed, expired) is only known once Mollie's webhook reports back (see
 // app/api/webhooks/mollie/route.ts) — so there's no "submitted" state here
 // the way there was pre-Mollie; this component's job ends at the redirect.
-type Frequency = "once" | "monthly";
-
+//
+// Phase 233 — Roy asked every donation CTA site-wide (hero, this giving
+// section, the final "Make a Donation" band, etc.) to open "the exact same
+// donation form modal," reusing state/validation/submission rather than
+// duplicating it. Confirmed with Roy first: this giving section keeps its
+// current look exactly as-is (amount/frequency picker inline on the page,
+// contact-details modal on submit) — only the *other* CTAs change, each
+// opening a new self-contained popup (DonateModal.tsx, via
+// DonateCtaButton.tsx) built from the same amount-selection/validation/
+// submission code. To make that real code reuse rather than two parallel
+// copies, this component's state and handlers moved into a shared hook,
+// useDonationGift.ts — this file's own rendered markup and behavior are
+// unchanged (verified against tests/unit/DonateForm.test.tsx).
 export default function DonateForm({ content }: { content: DonatePageContent }) {
-  // content.amount1/2/3 are stored as strings (see the DonatePageContent
-  // comment in lib/content.ts) since they round-trip through the generic
-  // FlatFieldsEditor's plain-text inputs — parsed to real numbers here so
-  // the rest of this component can do real math with them.
-  const amountOptions = [Number(content.amount1), Number(content.amount2), Number(content.amount3)].filter(
-    (n) => Number.isFinite(n) && n > 0
-  );
-
-  const [frequency, setFrequency] = useState<Frequency>("once");
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(amountOptions[0] ?? null);
-  const [customAmount, setCustomAmount] = useState("");
-  const [showCustom, setShowCustom] = useState(false);
-
-  const [contactOpen, setContactOpen] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
-  const [pending, setPending] = useState(false);
-  // Two separate error states, not one shared string — the amount-selection
-  // form and the contact/payment modal form each render their own error
-  // paragraph, and a single shared string would render in both places at
-  // once whenever either step failed (caught by a test: "Found multiple
-  // elements with the text...").
-  const [amountError, setAmountError] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  function pickPreset(amount: number) {
-    setSelectedAmount(amount);
-    setShowCustom(false);
-    setCustomAmount("");
-  }
-
-  function pickCustom() {
-    setShowCustom(true);
-    setSelectedAmount(null);
-  }
-
-  const resolvedAmount = showCustom ? Number(customAmount) : selectedAmount;
-  const canOpenContact = !!resolvedAmount && resolvedAmount > 0;
-
-  function openContact(e: React.FormEvent) {
-    e.preventDefault();
-    if (!canOpenContact) {
-      setAmountError("Please choose or enter a gift amount.");
-      return;
-    }
-    setAmountError(null);
-    setSubmitError(null);
-    setContactOpen(true);
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!resolvedAmount || resolvedAmount <= 0) {
-      setSubmitError("Please choose or enter a gift amount.");
-      return;
-    }
-    setPending(true);
-    setSubmitError(null);
-
-    const amountChoice = showCustom ? "custom" : String(selectedAmount);
-
-    try {
-      const res = await fetch("/api/donations/create-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          email,
-          phone: phone || null,
-          frequency,
-          amount: resolvedAmount,
-          amountChoice,
-          message: message || null,
-        }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data?.checkoutUrl) {
-        setPending(false);
-        setSubmitError(data?.error || "Something went wrong starting your donation. Please try again.");
-        return;
-      }
-      // Full-page redirect to Mollie's hosted checkout — not a client-side
-      // route change, so `pending` deliberately stays true (no reset) while
-      // the browser navigates away.
-      window.location.href = data.checkoutUrl;
-    } catch {
-      setPending(false);
-      setSubmitError("Something went wrong starting your donation. Please try again.");
-    }
-  }
-
-  function closeContact() {
-    if (pending) return;
-    setContactOpen(false);
-  }
+  const {
+    amountOptions,
+    frequency,
+    setFrequency,
+    selectedAmount,
+    customAmount,
+    setCustomAmount,
+    showCustom,
+    pickPreset,
+    pickCustom,
+    resolvedAmount,
+    contactOpen,
+    fullName,
+    setFullName,
+    email,
+    setEmail,
+    phone,
+    setPhone,
+    message,
+    setMessage,
+    pending,
+    amountError,
+    submitError,
+    openContact,
+    handleSubmit,
+    closeContact,
+  } = useDonationGift(content);
 
   return (
     <div id="giving-box" className="mx-auto max-w-[560px] rounded-[var(--radius)] border border-border bg-card p-7 shadow-soft sm:p-9">
@@ -125,7 +66,7 @@ export default function DonateForm({ content }: { content: DonatePageContent }) 
 
       <form onSubmit={openContact} className="mt-6 flex flex-col items-center gap-5">
         <div className="inline-flex rounded-full border border-border bg-background p-1" role="radiogroup" aria-label="Gift frequency">
-          {(["once", "monthly"] as Frequency[]).map((f) => (
+          {(["once", "monthly"] as const).map((f) => (
             <button
               key={f}
               type="button"

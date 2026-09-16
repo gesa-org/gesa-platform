@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import DonatePage from "@/components/donate/DonatePage";
 
 // Phase 98 — DonatePage is an async Server Component (fetches its own
@@ -30,9 +30,26 @@ describe("DonatePage", () => {
     expect(screen.getAllByText("Make support possible").length).toBeGreaterThan(0);
   });
 
-  it("the hero CTA scrolls down to the giving box instead of linking away", async () => {
+  // Phase 233 — Roy asked every donation CTA (hero, the giving section's
+  // own "Donate Now", and the final "Make a Donation" band) to open the
+  // same donation modal instead of anchor-scrolling/redirecting. The hero
+  // CTA used to be `<a href="#giving-box">`; now it's a button that opens
+  // DonateModal — same amount-selection/validation/submission code as the
+  // giving section, via the shared useDonationGift hook (see
+  // DonateCtaButton.tsx / DonateModal.tsx).
+  it("the hero CTA opens the donation modal instead of linking/scrolling away", async () => {
     render(await DonatePage());
-    expect(screen.getAllByText("Make support possible")[0]).toHaveAttribute("href", "#giving-box");
+    const heroCta = screen.getAllByText("Make support possible")[0];
+    expect(heroCta.closest("a")).not.toBeInTheDocument();
+    expect(heroCta.closest("button")).toBeInTheDocument();
+
+    fireEvent.click(heroCta);
+    // DonateModal's own step-1 heading — proves the real, shared donation
+    // form opened, not a placeholder. The giving section further down the
+    // page renders the identical heading text inline, so this scopes the
+    // assertion to the opened dialog specifically rather than either copy.
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Your gift can help create possibility");
     expect(document.getElementById("giving-box")).toBeInTheDocument();
   });
 
@@ -79,6 +96,12 @@ describe("DonatePage", () => {
 
     // Final CTA — repurposed in Phase 224 from a volunteer-recruitment ask
     // to a donation ask; must be the last content section.
+    // Phase 233 — was a plain `<a href={content.movementCtaHref}>`; a live
+    // check found already-published content still had this field's stale
+    // pre-Phase-224 value (`/contact?subject=Volunteer`), so the real
+    // button was silently redirecting to Contact. Now always opens the
+    // same donation modal as the hero CTA, regardless of that field's
+    // value — see DonatePage.tsx's own Phase 233 comment on this section.
     expect(screen.getByText("Be part of the change")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -86,7 +109,15 @@ describe("DonatePage", () => {
       )
     ).toBeInTheDocument();
     const finalCta = screen.getByText("Make a Donation");
-    expect(finalCta).toHaveAttribute("href", "#giving-box");
+    expect(finalCta.closest("a")).not.toBeInTheDocument();
+    expect(finalCta.closest("button")).toBeInTheDocument();
+  });
+
+  it("the final CTA opens the same donation modal, not the Contact page", async () => {
+    render(await DonatePage());
+    fireEvent.click(screen.getByText("Make a Donation"));
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Your gift can help create possibility");
   });
 
   it("follows the required narrative flow order: hero -> why your support matters -> testimonials -> gallery -> donation form -> founder message -> final CTA", async () => {

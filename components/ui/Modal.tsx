@@ -2,10 +2,13 @@
 
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { MOTION_DURATION, MOTION_EASE } from "@/components/motion/config";
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 // Phase 220 — Roy sent a reference screenshot of the volunteer/caregiver
 // application modal and asked for a "warm ivory" background applied to it
@@ -35,6 +38,17 @@ export default function Modal({
   children: ReactNode;
 }) {
   const reducedMotion = useReducedMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Phase 233 — Roy asked for real keyboard/screen-reader modal behavior on
+  // the new donation modal specifically (focus moves in on open, returns to
+  // the trigger on close, Tab stays trapped inside while open) — added here,
+  // to the one shared Modal every modal site-wide renders through, rather
+  // than as bespoke logic in that one caller, so every existing modal
+  // (booking, intake, volunteer application, etc.) picks up the same fix at
+  // once instead of drifting further apart. Purely additive: no change to
+  // when a modal opens/closes, what it contains, or its visual appearance.
+  const triggerRef = useRef<HTMLElement | null>(null);
+
   // Rendered via a portal straight into document.body rather than in place.
   // Without this, a modal opened from inside any element that has a CSS
   // `transform` on it (e.g. a therapist card's `hover:-translate-y-1`) gets
@@ -56,6 +70,51 @@ export default function Modal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Focus management: remember whatever had focus right before this modal
+  // opened (almost always the button/link that triggered it), move focus
+  // into the panel once it's mounted, and hand focus back to that same
+  // element when the modal closes — so a keyboard/screen-reader user lands
+  // inside the dialog on open and isn't left stranded (focus on a now-gone
+  // element, or silently reset to <body>) on close.
+  useEffect(() => {
+    if (!open) return;
+    triggerRef.current = document.activeElement as HTMLElement | null;
+    const panel = panelRef.current;
+    const focusTarget = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? panel;
+    // Next tick — the panel's own children (and framer-motion's mount) need
+    // to exist in the DOM first.
+    const id = window.setTimeout(() => focusTarget?.focus(), 0);
+    return () => {
+      window.clearTimeout(id);
+      triggerRef.current?.focus?.();
+    };
+  }, [open]);
+
+  // Basic focus trap: while open, Tab/Shift+Tab cycles only through
+  // focusable elements inside the panel rather than escaping to whatever
+  // sits behind the backdrop.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   if (!mounted) return null;
 
   return createPortal(
@@ -70,7 +129,11 @@ export default function Modal({
           transition={{ duration: MOTION_DURATION.micro, ease: MOTION_EASE }}
         >
           <motion.div
-            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-modal-ivory p-7 shadow-lg"
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
+            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-modal-ivory p-7 shadow-lg outline-none"
             onClick={(e) => e.stopPropagation()}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

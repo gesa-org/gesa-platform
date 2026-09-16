@@ -10,6 +10,7 @@ import EditableImage from "@/components/ui-builder/public/EditableImage";
 import DottedGlobe from "@/components/donate/DottedGlobe";
 import ImpactGallery from "@/components/donate/ImpactGallery";
 import FounderMessage from "@/components/donate/FounderMessage";
+import DonateCtaButton from "@/components/donate/DonateCtaButton";
 
 // Phase 98 — Roy sent a reference image for a full donate page (hero,
 // giving box, "what your gift helps make possible" icon row, a dark
@@ -413,12 +414,17 @@ export default async function DonatePage({
               <p className="mt-3 font-semibold text-foreground">
                 <EditableText contentId="donate.hero.boldLine" label="Hero bold line" value={content.boldLine} as="span" />
               </p>
-              <a
-                href="#giving-box"
+              {/* Phase 233 — was `<a href="#giving-box">`, anchor-scrolling
+                  down to the inline giving section. Roy asked every
+                  donation CTA to open the same donation modal instead of
+                  scrolling/redirecting — see DonateCtaButton.tsx. Styling/
+                  label/placement all unchanged, only the click behavior. */}
+              <DonateCtaButton
+                content={content}
                 className="mt-7 inline-flex items-center justify-center rounded-full bg-espresso px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white shadow-soft transition-all hover:-translate-y-px hover:bg-espresso/90"
               >
                 <EditableText contentId="donate.hero.ctaLabel" label="Hero CTA label" value={content.heroCtaLabel} as="span" />
-              </a>
+              </DonateCtaButton>
             </Reveal>
           </div>
 
@@ -596,13 +602,24 @@ export default async function DonatePage({
       {/* Final CTA — Phase 224: repurposed from a volunteer-recruitment
           band ("Be part of the movement", opening VolunteerPrimaryCta's
           application modal) to a donation ask ("Be part of the change" /
-          "Make a Donation"), per the required flow's final beat. The
-          button is now a plain anchor to #giving-box (the same anchor the
-          hero CTA already uses) instead of VolunteerPrimaryCta, so it
-          scrolls straight back up to the giving box rather than opening a
-          modal — kept as the last content section before the footer, full-
-          width and photographic-feeling via the same --espresso dark
-          surface used site-wide for this contrast treatment. */}
+          "Make a Donation"), per the required flow's final beat.
+          Phase 233 — this was a plain `<a href={content.movementCtaHref}>`.
+          Roy flagged (and a live check confirmed) that already-published
+          `page_donate` content still had this field's stale pre-Phase-224
+          value, `/contact?subject=Volunteer` — a leftover from before this
+          band was repurposed — so the live button was redirecting to the
+          Contact page instead of the donation flow, even though this
+          file's own fallback had already been fixed to "#giving-box" in
+          Phase 224. Rather than depend on every already-published row
+          having the right href (and silently breaking again the same way
+          if it's ever cleared/reset), this now always opens the same
+          donation modal via DonateCtaButton, matching the hero CTA and the
+          giving section's own flow — no href involved at all.
+          `content.movementCtaHref`/its admin field are left in the data
+          model, unused, per the site's standing "don't delete a field just
+          because a section stopped reading it" precedent (see e.g. Phase
+          108/226's own notes) — kept in case a future redesign wants a
+          plain link here again. */}
       <section className="bg-espresso py-16 text-center text-[#c7d0de]">
         <div className="wrap max-w-[620px]">
           <h2 className="mb-3 font-serif text-[26px] font-semibold text-white">
@@ -611,12 +628,12 @@ export default async function DonatePage({
           <p className="mb-6 leading-relaxed">
             <EditableText contentId="donate.movement.subtitle" label="Final CTA subtitle" value={content.movementSubtitle} as="span" />
           </p>
-          <a
-            href={content.movementCtaHref}
+          <DonateCtaButton
+            content={content}
             className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-espresso transition-all hover:-translate-y-px hover:bg-white/90"
           >
             <EditableText contentId="donate.movement.ctaLabel" label="Final CTA button label" value={content.movementCtaLabel} as="span" />
-          </a>
+          </DonateCtaButton>
         </div>
       </section>
 
