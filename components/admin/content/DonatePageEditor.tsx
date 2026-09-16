@@ -51,15 +51,22 @@ export default function DonatePageEditor({ initial }: { initial: DonatePageConte
           ],
         },
         {
-          heading: "Movement band",
+          // Phase 224 — relabeled from "Movement band" to "Final CTA" and
+          // the CTA link's help text updated: this band was repurposed
+          // from a volunteer-recruitment ask (opening the volunteer
+          // application modal) to a donation ask that scrolls back up to
+          // the giving box, per Roy's required narrative flow. Field keys
+          // (movementHeading/movementSubtitle/movementCtaLabel/
+          // movementCtaHref) are unchanged — only these display labels.
+          heading: "Final CTA",
           fields: [
             { key: "movementHeading", label: "Heading" },
             { key: "movementSubtitle", label: "Subtitle", multiline: true },
-            { key: "movementCtaLabel", label: "CTA label" },
+            { key: "movementCtaLabel", label: "Button label" },
             {
               key: "movementCtaHref",
-              label: "CTA link",
-              help: "Leave as /contact?subject=Volunteer to open the real volunteer application form, or point it anywhere else for a plain link.",
+              label: "Button link",
+              help: "Leave as #giving-box to scroll back up to the donation form, or point it anywhere else for a plain link.",
             },
           ],
         },

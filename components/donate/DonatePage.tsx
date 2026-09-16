@@ -1,5 +1,4 @@
 import { Users, Globe, ShieldCheck, Quote } from "lucide-react";
-import VolunteerPrimaryCta from "@/components/volunteer/VolunteerPrimaryCta";
 import Reveal from "@/components/motion/Reveal";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import { getPageContent, type DonatePageContent } from "@/lib/content";
@@ -9,6 +8,8 @@ import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBri
 import EditableText from "@/components/ui-builder/public/EditableText";
 import EditableImage from "@/components/ui-builder/public/EditableImage";
 import DottedGlobe from "@/components/donate/DottedGlobe";
+import ImpactGallery from "@/components/donate/ImpactGallery";
+import FounderMessage from "@/components/donate/FounderMessage";
 
 // Phase 98 — Roy sent a reference image for a full donate page (hero,
 // giving box, "what your gift helps make possible" icon row, a dark
@@ -69,7 +70,12 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
   heroPhoto2ImageAlt: "A volunteer reading with a child outdoors as part of a community support programme",
   heroPhoto3Image: "/images/donate/avp-toolkit-training.jpg",
   heroPhoto3ImageAlt: "A clinical team reviewing a case together on a tablet",
-  givingHeading: "Choose how you would like to contribute",
+  // Phase 224 — heading renamed from "Choose how you would like to
+  // contribute" to match the donation section's new name in Roy's required
+  // narrative flow ("Your gift can help create possibility"). DonateForm's
+  // actual giving mechanics (recurring/one-time toggle, preset + custom
+  // amounts, Mollie submission) are untouched — only this heading string.
+  givingHeading: "Your gift can help create possibility",
   onceLabel: "Give once",
   monthlyLabel: "Give monthly",
   amount1: "25",
@@ -119,10 +125,63 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
   testimonial1Author: "Programme participant",
   testimonial2Quote: "What makes GESA different is the way it connects therapy with education and community.",
   testimonial2Author: "Name / Role",
-  movementHeading: "One choice can carry support across the world.",
-  movementSubtitle: "Your contribution becomes part of a global movement built by people who choose to give, participate and create meaningful change.",
-  movementCtaLabel: "Be part of the movement",
-  movementCtaHref: "/contact?subject=Volunteer",
+  // Phase 224 — "See the impact" horizontal photo gallery, inserted between
+  // testimonials and the donation form per Roy's required narrative flow.
+  // No 7 distinct authentic photos were supplied this phase (only the 3
+  // real GESA photos already used elsewhere on this page exist locally —
+  // see EXECUTION_PLAN.md Phase 224), so each of these 7 slots defaults to
+  // one of those 3 real photos, cycled, rather than a broken image or an
+  // invented stock photo. Roy can replace each slot individually via
+  // Admin > UI Builder > Page Content > Donate > "Impact gallery" once he
+  // has the 7 real photographs — the gallery's layout/aspect ratios are
+  // already built to take them as-is.
+  impactGalleryEyebrow: "See the impact",
+  impactGalleryHeading: "People. Places. Stories.",
+  impactGallerySubtitle: "Every contribution helps create real moments of care, learning, connection and hope across communities.",
+  galleryPhoto1Image: "/images/donate/one-on-one-conversation.jpg",
+  galleryPhoto1ImageAlt: "A support practitioner listening closely to someone during a one-on-one session",
+  galleryPhoto1Caption: "Care that meets people where they are",
+  galleryPhoto2Image: "/images/donate/avp-toolkit-training.jpg",
+  galleryPhoto2ImageAlt: "A facilitator leading a skills workshop for a group of participants",
+  galleryPhoto2Caption: "Learning together",
+  galleryPhoto3Image: "/images/donate/community-support-circle.jpg",
+  galleryPhoto3ImageAlt: "A community group gathered together outdoors in an open support circle",
+  galleryPhoto3Caption: "Community-led connection",
+  galleryPhoto4Image: "/images/donate/avp-toolkit-training.jpg",
+  galleryPhoto4ImageAlt: "Participants sharing materials during an education and skills session",
+  galleryPhoto4Caption: "Tools for everyday wellbeing",
+  galleryPhoto5Image: "/images/donate/community-support-circle.jpg",
+  galleryPhoto5ImageAlt: "A group taking part together in a shared activity",
+  galleryPhoto5Caption: "Shared moments of support",
+  galleryPhoto6Image: "/images/donate/one-on-one-conversation.jpg",
+  galleryPhoto6ImageAlt: "A volunteer organising materials ahead of a support session",
+  galleryPhoto6Caption: "Preparing care with intention",
+  galleryPhoto7Image: "/images/donate/community-support-circle.jpg",
+  galleryPhoto7ImageAlt: "The outdoor community setting where a GESA-supported gathering takes place",
+  galleryPhoto7Caption: "Rooted in local communities",
+  // Phase 224 — two-column founder/team message, directly after the
+  // donation form. No verified founder name/bio/consented photo was
+  // supplied, so this uses "The GESA team" rather than inventing one, per
+  // Roy's explicit instruction.
+  founderHeading: "Why we do this",
+  founderQuote: "We believe wellbeing should not be determined by where you live, the language you speak, or the resources available to you.",
+  founderBody: "GESA exists to help make meaningful emotional support, therapeutic care and learning opportunities more accessible across communities, languages and borders. We bring people, practitioners and practical tools together so support can reach further.",
+  founderSignature: "— The GESA team",
+  founderImage: "/images/donate/one-on-one-conversation.jpg",
+  founderImageAlt: "A GESA team member in conversation as part of a community support session",
+  founderLinkLabel: "Learn about GESA",
+  founderLinkHref: "/about",
+  // Phase 224 — final CTA repurposed from a volunteer-recruitment ask
+  // ("Be part of the movement", opening the volunteer application modal)
+  // to a donation ask, per Roy's required flow ending in DONATION/THANK
+  // YOU. The button now scrolls to the giving box (#giving-box, the same
+  // anchor the hero CTA already uses) instead of opening
+  // VolunteerPrimaryCta's modal — see the section below for the plain
+  // anchor swap.
+  movementHeading: "Be part of the change",
+  movementSubtitle: "Your generosity can help create a ripple of positive change — one person, one family and one community at a time.",
+  movementCtaLabel: "Make a Donation",
+  movementCtaHref: "#giving-box",
   trustBadge1Label: "Clear Impact",
   trustBadge2Label: "Secure Contribution",
   trustBadge3Label: "Global Reach",
@@ -239,6 +298,40 @@ export default async function DonatePage({
     },
   };
 
+  // Phase 224 — "See the impact" gallery photos. Varied widths (sm/lg
+  // breakpoints) give the strip an editorial, non-grid feel; the mobile
+  // (base) width is the same ~80vw for every item so exactly one photo
+  // reads as the main image with a visible sliver of the next, signalling
+  // horizontal scroll — see ImpactGallery.tsx's own comment.
+  const GALLERY_WIDTHS = [
+    "w-[78vw] max-w-[320px] sm:w-[300px] lg:w-[360px]",
+    "w-[78vw] max-w-[320px] sm:w-[240px] lg:w-[260px]",
+    "w-[78vw] max-w-[320px] sm:w-[280px] lg:w-[320px]",
+    "w-[78vw] max-w-[320px] sm:w-[220px] lg:w-[240px]",
+    "w-[78vw] max-w-[320px] sm:w-[300px] lg:w-[340px]",
+    "w-[78vw] max-w-[320px] sm:w-[240px] lg:w-[260px]",
+    "w-[78vw] max-w-[320px] sm:w-[280px] lg:w-[300px]",
+  ];
+  const galleryPhotos = [
+    { src: content.galleryPhoto1Image, alt: content.galleryPhoto1ImageAlt, caption: content.galleryPhoto1Caption, n: 1 },
+    { src: content.galleryPhoto2Image, alt: content.galleryPhoto2ImageAlt, caption: content.galleryPhoto2Caption, n: 2 },
+    { src: content.galleryPhoto3Image, alt: content.galleryPhoto3ImageAlt, caption: content.galleryPhoto3Caption, n: 3 },
+    { src: content.galleryPhoto4Image, alt: content.galleryPhoto4ImageAlt, caption: content.galleryPhoto4Caption, n: 4 },
+    { src: content.galleryPhoto5Image, alt: content.galleryPhoto5ImageAlt, caption: content.galleryPhoto5Caption, n: 5 },
+    { src: content.galleryPhoto6Image, alt: content.galleryPhoto6ImageAlt, caption: content.galleryPhoto6Caption, n: 6 },
+    { src: content.galleryPhoto7Image, alt: content.galleryPhoto7ImageAlt, caption: content.galleryPhoto7Caption, n: 7 },
+  ].map((photo, i) => ({
+    src: photo.src,
+    alt: photo.alt,
+    caption: photo.caption,
+    fallbackSrc: PHOTO_ONERROR_FALLBACK[i % PHOTO_ONERROR_FALLBACK.length].src,
+    fallbackAlt: PHOTO_ONERROR_FALLBACK[i % PHOTO_ONERROR_FALLBACK.length].alt,
+    imageContentId: `donate.impactGallery.photo${photo.n}Image`,
+    altContentId: `donate.impactGallery.photo${photo.n}ImageAlt`,
+    captionContentId: `donate.impactGallery.photo${photo.n}Caption`,
+    widthClassName: GALLERY_WIDTHS[i],
+  }));
+
   const page = (
     <div>
       {/* Hero — Phase 223: rebuilt to match Roy's "BG Donate Page.jpg"
@@ -352,9 +445,9 @@ export default async function DonatePage({
       {/* "Why your support matters" — Phase 200: 3 real photographs (not
           stock images) with a short category label and caption each, per
           Roy's reference doc ("Website ideas 14_9_26.pdf", Page 5, section
-          2 — "Use 3 strong photographs rather than lots of text"). Sits
-          between the hero and the giving box, same position the reference
-          doc's own page order puts it in. */}
+          2 — "Use 3 strong photographs rather than lots of text"). Phase
+          224: this is step 2 (STORY) of the required narrative flow —
+          position unchanged, directly after the hero. */}
       <section className="section border-t border-border bg-background">
         <div className="wrap">
           <Reveal type="fade-up">
@@ -394,22 +487,15 @@ export default async function DonatePage({
         </div>
       </section>
 
-      {/* Giving box — the interactive part, see DonateForm.tsx. Kept
-          exactly as-is (Mollie, not Stripe) per Roy's own clarification —
-          only the sections around it changed for Phase 200. */}
-      <section className="pb-16">
-        <div className="wrap">
-          <Reveal type="fade-up">
-            <DonateForm content={content} />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Testimonials — Phase 200. Roy's reference doc flags this as one of
-          the most important sections on the page. The two quotes shipped in
-          DONATE_PAGE_FALLBACK are the doc's own worked examples, not real
-          GESA testimonials yet — see that file's Phase 200 comment and
-          EXECUTION_PLAN.md before treating this section as publish-ready. */}
+      {/* Testimonials — Phase 200, moved up in Phase 224 to sit directly
+          after "Why your support matters" (step 3, HUMAN VOICE, of the
+          required narrative flow) instead of after the giving box. The two
+          quotes shipped in DONATE_PAGE_FALLBACK are the reference doc's own
+          worked examples, not real GESA testimonials yet — see that file's
+          Phase 200 comment and EXECUTION_PLAN.md before treating this
+          section as publish-ready; swapping in real, consented testimonials
+          later only ever means editing these two fields via Admin, nothing
+          structural. */}
       <section className="section border-t border-border bg-sage-soft/40">
         <div className="wrap max-w-[820px]">
           <Reveal type="fade-up">
@@ -433,7 +519,58 @@ export default async function DonatePage({
         </div>
       </section>
 
-      {/* "What your gift helps make possible" — three icon cards. */}
+      {/* "See the impact" — Phase 224, new. Step 4 (IMPACT) of the required
+          narrative flow, inserted directly after testimonials and directly
+          before the donation form. See ImpactGallery.tsx for the
+          horizontal-scroll/accessibility implementation. */}
+      <ImpactGallery
+        eyebrow={content.impactGalleryEyebrow}
+        eyebrowContentId="donate.impactGallery.eyebrow"
+        heading={content.impactGalleryHeading}
+        headingContentId="donate.impactGallery.heading"
+        subtitle={content.impactGallerySubtitle}
+        subtitleContentId="donate.impactGallery.subtitle"
+        photos={galleryPhotos}
+      />
+
+      {/* Giving box — the interactive part, see DonateForm.tsx. Kept
+          exactly as-is (Mollie, not Stripe, recurring/one-time toggle,
+          preset + custom amounts all untouched) per Roy's own
+          clarification — only its heading text and its position changed
+          across Phase 200/224. Phase 224 moved this to sit directly after
+          the new gallery (step 5, DONATION, of the required narrative
+          flow) instead of before testimonials. */}
+      <section className="pb-16">
+        <div className="wrap">
+          <Reveal type="fade-up">
+            <DonateForm content={content} />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Founder/team message — Phase 224, new. Directly after the donation
+          form, closing out the narrative flow's DONATION -> THANK YOU beat
+          with a human, grounding note of thanks/purpose rather than an
+          abrupt drop to the next section. See FounderMessage.tsx — "The
+          GESA team" signature is intentional (no verified founder identity
+          supplied), not a placeholder to fill in. */}
+      <FounderMessage
+        heading={content.founderHeading}
+        quote={content.founderQuote}
+        body={content.founderBody}
+        signature={content.founderSignature}
+        image={content.founderImage}
+        imageAlt={content.founderImageAlt}
+        imageFallback={PHOTO_ONERROR_FALLBACK[1]}
+        linkLabel={content.founderLinkLabel}
+        linkHref={content.founderLinkHref}
+      />
+
+      {/* "What your gift helps make possible" — three icon cards. Kept
+          (not requested for removal), positioned after the founder message
+          so the required 7-section flow's hard ordering constraints
+          (gallery directly after testimonials, donation directly after
+          gallery, final CTA last before the footer) are all satisfied. */}
       <section className="section border-t border-border bg-background">
         <div className="wrap">
           <h2 className="mb-9 text-center font-serif text-[26px] font-semibold text-foreground">{content.impactHeading}</h2>
@@ -456,22 +593,30 @@ export default async function DonatePage({
         </div>
       </section>
 
-      {/* Movement band — dark full-bleed section, matching the reference's
-          dark CTA block. Reuses --espresso, the site's one true dark
-          surface (otherwise only used by the Footer), same as the reference
-          image's contrast block. "Be part of the movement" opens the real
-          volunteer application modal by default (VolunteerPrimaryCta),
-          exactly like the About page's own movement CTA. */}
+      {/* Final CTA — Phase 224: repurposed from a volunteer-recruitment
+          band ("Be part of the movement", opening VolunteerPrimaryCta's
+          application modal) to a donation ask ("Be part of the change" /
+          "Make a Donation"), per the required flow's final beat. The
+          button is now a plain anchor to #giving-box (the same anchor the
+          hero CTA already uses) instead of VolunteerPrimaryCta, so it
+          scrolls straight back up to the giving box rather than opening a
+          modal — kept as the last content section before the footer, full-
+          width and photographic-feeling via the same --espresso dark
+          surface used site-wide for this contrast treatment. */}
       <section className="bg-espresso py-16 text-center text-[#c7d0de]">
         <div className="wrap max-w-[620px]">
-          <h2 className="mb-3 font-serif text-[26px] font-semibold text-white">{content.movementHeading}</h2>
-          <p className="mb-6 leading-relaxed">{content.movementSubtitle}</p>
-          <VolunteerPrimaryCta
+          <h2 className="mb-3 font-serif text-[26px] font-semibold text-white">
+            <EditableText contentId="donate.movement.heading" label="Final CTA heading" value={content.movementHeading} as="span" />
+          </h2>
+          <p className="mb-6 leading-relaxed">
+            <EditableText contentId="donate.movement.subtitle" label="Final CTA subtitle" value={content.movementSubtitle} as="span" />
+          </p>
+          <a
             href={content.movementCtaHref}
             className="inline-flex items-center justify-center rounded-full bg-white px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-espresso transition-all hover:-translate-y-px hover:bg-white/90"
           >
-            {content.movementCtaLabel}
-          </VolunteerPrimaryCta>
+            <EditableText contentId="donate.movement.ctaLabel" label="Final CTA button label" value={content.movementCtaLabel} as="span" />
+          </a>
         </div>
       </section>
 

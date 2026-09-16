@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-16 (Phase 223 added)
+Last updated: 2026-09-16 (Phase 224 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9804,6 +9804,53 @@ npx tsc --noEmit
 npx jest
 git add -A
 git commit -m "Phase 223: Donate hero rebuilt to match BG Donate Page.jpg reference mockup"
+git push
+```
+
+---
+
+## Phase 224: Donate page reordered to PHOTO -> STORY -> HUMAN VOICE -> IMPACT -> DONATION -> THANK YOU narrative flow, new "See the impact" gallery + founder message
+
+**Request:** Reorder `/donate` into a strict 7-section flow (Hero -> "Why your support matters" -> Testimonials -> new "See the impact" gallery -> donation form -> new founder/team message -> final CTA), insert a new horizontally-scrolling "See the impact" photo gallery between Testimonials and the donation form, move Testimonials to sit before the donation form instead of after, add a two-column founder/team message directly after the donation form, and turn the final band into a full-width donation CTA. Explicit constraints: keep the shared header/footer/global styles/donation functionality/recurring-vs-one-time toggle/accessibility/responsive behavior; no invented impact statistics, programme names, or founder identity; gallery must be keyboard/screen-reader accessible, lazy-loaded below the fold, swipeable on mobile, and respect `prefers-reduced-motion`.
+
+**What shipped:**
+
+1. **`lib/content.ts`** — `DonatePageContent` gained 24 new fields: `impactGalleryEyebrow`/`Heading`/`Subtitle` + 7×(`galleryPhotoNImage`/`ImageAlt`/`Caption`), and 8 founder-section fields (`founderHeading`, `founderQuote`, `founderBody`, `founderSignature`, `founderImage`/`ImageAlt`, `founderLinkLabel`/`Href`).
+2. **`lib/ui-builder/pageRegistry.ts`** — registered all of the above as real UI Builder fields (new "Impact gallery" and "Founder message" groups), same draft/publish-gated `image`/`altText`/`plainText` pattern as every other photo section on this page. Also relabeled the "Movement band" group to "Final CTA" (field keys unchanged) to match its new purpose.
+3. **`components/donate/ImpactGallery.tsx`** (new) — the "See the impact" section. A client component (needs a scroll-container ref for the desktop prev/next buttons; DonatePage.tsx itself stays an async Server Component and only passes resolved strings/contentIds in). Horizontally scrollable strip (`overflow-x-auto`, `snap-x snap-mandatory`), 7 photos at varied widths for an editorial (non-grid) feel, each with a short caption below it. Desktop-only prev/next buttons (`aria-label="Scroll gallery left/right"`) scroll the container by ~70% of its width; the scroll region itself is `tabIndex={0}` with `role="region"` and a descriptive `aria-label` so it's reachable and usable without the buttons too. `motion-safe:scroll-smooth` means all smooth-scroll animation (buttons and native swipe alike) is skipped under `prefers-reduced-motion: reduce` — no autoplay, no forced motion. Every photo has a specific, non-generic alt string (never "donation image"). Mobile keeps the same markup; the base (non-`sm`/`lg`) width is a consistent ~78vw so exactly one photo reads as "main" with a visible sliver of the next, signalling horizontal scroll.
+4. **`components/donate/FounderMessage.tsx`** (new) — the "Why we do this" section. Plain server-renderable two-column layout (photo + quote/body/signature/link). Signature is literally "— The GESA team" and the body copy is Roy's own supplied text verbatim — no founder name, biography, or invented testimonial, per his explicit instruction.
+5. **`components/ui-builder/public/EditableImage.tsx`** — added a passthrough `loading?: "lazy" | "eager"` prop (both the editor-preview and public `<img>` render paths), since the component previously had no way to mark an image lazy at all. Used by the gallery and founder photos (below the fold); left unset (browser default) on the hero/"Why your support matters" photos, unchanged from before.
+6. **`components/donate/DonatePage.tsx`** — reordered per the required flow: Hero -> "Why your support matters" -> Testimonials (moved up from after the giving box) -> `<ImpactGallery>` (new) -> giving box (`DonateForm`, untouched — recurring/one-time toggle, preset + custom amounts, Mollie submission all unchanged, only its heading text changed) -> `<FounderMessage>` (new) -> the existing "What your gift helps make possible" icon row (kept, not requested for removal, placed here so the required hard-ordering constraints — gallery directly after testimonials, donation directly after gallery, final CTA last before the footer — are all satisfiable) -> final CTA. `DONATE_PAGE_FALLBACK` gained the 24 new fields' default copy/photos (photos cycle through the same 3 real GESA photos already used elsewhere on the page, since no 7 distinct new photos were supplied — same reasoning as Phase 223's hero photos).
+7. **Final CTA repurposed** — heading changed from "One choice can carry support across the world." to "Be part of the change", subtitle to Roy's supplied ripple-effect copy, button label from "Be part of the movement" to "Make a Donation", and its href from `/contact?subject=Volunteer` to `#giving-box`. The button itself changed from `VolunteerPrimaryCta` (which opened the volunteer-application modal) to a plain anchor — same pattern the hero CTA already used — so it scrolls back up to the giving box instead of opening an unrelated modal. `VolunteerPrimaryCta`'s import was removed from this file since nothing here uses it anymore (About page's own volunteer CTA is untouched).
+8. **`components/admin/content/DonatePageEditor.tsx`** — relabeled the "Movement band" group to "Final CTA" and updated its CTA-link help text to describe the new `#giving-box` default instead of the old volunteer-form default. Field keys unchanged.
+
+**Pre-existing issue found and fixed in passing:** `tests/unit/DonatePage.test.tsx` asserted "Clear Impact"/"Secure Contribution"/"Global Reach" trust badges and a "Find local crisis services." crisis link — neither is actually rendered anywhere in `DonatePage.tsx` (those `trustBadge*`/`crisisText` fields exist on `DonatePageContent` and are rendered by `components/home/DonateBand.tsx` on the Home page, which happens to share the same content type). This looks like drift from an earlier, untracked change, invisible until now because `npx jest` hasn't been runnable this session (no working shell). Removed those two obsolete assertions rather than building unrequested sections to satisfy them; neither is part of Roy's required 7-section flow.
+
+**Files touched:** `lib/content.ts`, `lib/ui-builder/pageRegistry.ts`, `components/donate/ImpactGallery.tsx` (new), `components/donate/FounderMessage.tsx` (new), `components/ui-builder/public/EditableImage.tsx`, `components/donate/DonatePage.tsx`, `components/admin/content/DonatePageEditor.tsx`, `tests/unit/DonatePage.test.tsx`.
+
+**Tests updated:** `tests/unit/DonatePage.test.tsx` rewritten — asserts the hero, all 7 sections' key copy (including the gallery's captions/aria-labelled controls/region and the founder message's quote/signature/link), and a dedicated ordering test that checks each section's text appears strictly before the next via `container.textContent.indexOf(...)` comparisons.
+
+**Manual test scenarios:** visit `/donate` and confirm the section order top-to-bottom matches Hero -> Why your support matters -> Testimonials -> See the impact -> donation form -> Why we do this -> impact icons -> Be part of the change; on desktop, click the gallery's left/right chevrons and confirm the strip scrolls; tab to the gallery region with the keyboard and confirm arrow-key/native scroll works without the buttons; on a narrow viewport, confirm the gallery swipes with one photo prominent and a sliver of the next visible; with OS-level "reduce motion" enabled, confirm the gallery scroll no longer animates; click "Make a Donation" in the final band and confirm it scrolls to the giving box (not a modal); confirm the giving box's recurring/one-time toggle and preset/custom amounts still work exactly as before; click "Learn about GESA" in the founder section and confirm it opens `/about`.
+
+**Assumptions/follow-ups:**
+- The gallery's 7 photos default to the same 3 real GESA photos (cycled) used elsewhere on this page, not the mockup's photos or invented stock imagery — same blocker as Phase 223 (no working shell to source/crop new images this session). Roy can upload the real 7 photos individually via Admin > UI Builder > Page Content > Donate > "Impact gallery" whenever he has them; layout/aspect ratios are already built to take them as-is.
+- Trust badges and the crisis-resources line remain unrendered on `/donate` (see the pre-existing-issue note above) — flagged, not restructured, since neither is part of the required flow. If Roy wants them back on this page specifically, that's a separate, explicit ask.
+- Shell access came back partway through this phase. Ran `npx tsc --noEmit`: zero errors in any file this phase touched (`lib/content.ts`, `lib/ui-builder/pageRegistry.ts`, `components/donate/*`, `components/ui-builder/public/EditableImage.tsx`, `components/admin/content/DonatePageEditor.tsx`) — caught and fixed one real bug this way (an escaped-quote JSX attribute in `FounderMessage.tsx` that isn't valid TSX syntax). The handful of remaining `tsc` errors are all pre-existing, in files this phase never touched (`lib/email/resend.ts`, several unrelated test fixtures) — confirmed by grepping the output for this phase's filenames (no matches). Tried `npx jest`: it currently fails to run at all, even on test files this phase never touched (e.g. `FindYourTherapistPage.test.tsx` fails on an unrelated `jest.mock()` hoisting error; `DonatePage.test.tsx` fails because `transformIgnorePatterns` excludes `node_modules` entirely, so the ESM-only `sanitize-html` dependency can't be parsed) — this is a pre-existing Jest configuration issue, not something this phase introduced, but it does mean `tests/unit/DonatePage.test.tsx`'s new assertions are unverified by an actual run. Worth a dedicated follow-up phase to fix `jest.config.js`'s `transformIgnorePatterns`/mock-hoisting rules if Roy wants the test suite runnable again.
+- **Could not commit/push this phase's changes from this session**, unlike Phase 223 (which Roy committed/pushed himself locally — confirmed via `git log`: `a1f378e Phase 223...` is already on `origin/main`). A stale `.git/index.lock` file exists in the project's mounted directory and the sandbox cannot remove it — `rm`, `mv`, and git's own internal unlink all fail with "Operation not permitted" despite the file showing normal owner-writable permissions; `lsattr` reports the underlying mount doesn't even support querying filesystem attributes. This looks like a restriction of the network-mounted share this session runs on, not a real permissions problem — Roy should be able to delete that file from Windows directly (outside this sandboxed mount) in seconds. All of this phase's file edits are saved to disk regardless; only the git operations are blocked. Roy needs to, from a normal terminal on his own machine:
+```
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+del .git\index.lock
+git status
+```
+  Then continue with the usual commands below.
+
+```
+cd "C:\Users\Coolmax123\Downloads\GESA Therapists Profile"
+git status
+npx tsc --noEmit
+npx jest
+git add -A
+git commit -m "Phase 224: Donate page reordered to PHOTO->STORY->HUMAN VOICE->IMPACT->DONATION->THANK YOU flow; new See the impact gallery + founder message"
 git push
 ```
 

@@ -448,6 +448,51 @@ export type DonatePageContent = {
   testimonial1Author: string;
   testimonial2Quote: string;
   testimonial2Author: string;
+  // Phase 224 — Roy asked for the page to follow a
+  // PHOTO -> STORY -> HUMAN VOICE -> IMPACT -> DONATION -> THANK YOU
+  // narrative flow, with a new "See the impact" horizontal photo-gallery
+  // section inserted between testimonials and the donation form. 7 photo
+  // slots, each a real UI Builder image field (same image/altText pattern
+  // as the hero and "Why your support matters" photos), plus a short
+  // (3-6 word) caption per photo. See DonatePage.tsx/ImpactGallery.tsx and
+  // EXECUTION_PLAN.md Phase 224 for the full mechanism and the fallback
+  // images used until Roy uploads the 7 real photos via Admin.
+  impactGalleryEyebrow: string;
+  impactGalleryHeading: string;
+  impactGallerySubtitle: string;
+  galleryPhoto1Image: string;
+  galleryPhoto1ImageAlt: string;
+  galleryPhoto1Caption: string;
+  galleryPhoto2Image: string;
+  galleryPhoto2ImageAlt: string;
+  galleryPhoto2Caption: string;
+  galleryPhoto3Image: string;
+  galleryPhoto3ImageAlt: string;
+  galleryPhoto3Caption: string;
+  galleryPhoto4Image: string;
+  galleryPhoto4ImageAlt: string;
+  galleryPhoto4Caption: string;
+  galleryPhoto5Image: string;
+  galleryPhoto5ImageAlt: string;
+  galleryPhoto5Caption: string;
+  galleryPhoto6Image: string;
+  galleryPhoto6ImageAlt: string;
+  galleryPhoto6Caption: string;
+  galleryPhoto7Image: string;
+  galleryPhoto7ImageAlt: string;
+  galleryPhoto7Caption: string;
+  // Phase 224 — two-column founder/team message, inserted directly after
+  // the donation form. Roy was explicit: use "The GESA team" rather than
+  // inventing a founder's name/bio/testimonial, since no verified founder
+  // details or consented photography were supplied.
+  founderHeading: string;
+  founderQuote: string;
+  founderBody: string;
+  founderSignature: string;
+  founderImage: string;
+  founderImageAlt: string;
+  founderLinkLabel: string;
+  founderLinkHref: string;
   movementHeading: string;
   movementSubtitle: string;
   movementCtaLabel: string;

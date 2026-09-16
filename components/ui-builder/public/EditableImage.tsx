@@ -37,6 +37,7 @@ export default function EditableImage({
   className,
   fallbackSrc,
   fallbackAlt,
+  loading,
 }: {
   contentId: string;
   label: string;
@@ -54,6 +55,12 @@ export default function EditableImage({
    * fallback rather than showing a broken-image icon on the public site. */
   fallbackSrc?: string;
   fallbackAlt?: string;
+  /** Phase 224 — plain passthrough to the native `<img loading>` attribute.
+   * Callers below the fold (e.g. the "See the impact" gallery, the founder
+   * photo) pass `"lazy"`; omitted entirely (browser default) for anything
+   * likely to be above the fold, same as every hardcoded <img> on this site
+   * before this prop existed. */
+  loading?: "lazy" | "eager";
 }) {
   const preview = useEditorPreview();
   const [failed, setFailed] = useState(false);
@@ -63,7 +70,7 @@ export default function EditableImage({
 
   if (!preview.enabled) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={resolvedSrc} alt={resolvedAlt} className={className} onError={handleError} />;
+    return <img src={resolvedSrc} alt={resolvedAlt} className={className} onError={handleError} loading={loading} />;
   }
 
   const isSelected = preview.selectedContentId === contentId;
@@ -113,6 +120,7 @@ export default function EditableImage({
       data-gesa-alt-content-id={altContentId}
       data-gesa-label={label}
       onError={handleError}
+      loading={loading}
       {...editModeProps}
     />
   );
