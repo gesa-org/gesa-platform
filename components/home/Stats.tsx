@@ -9,8 +9,15 @@ import { getPageContent, type HomeStatsContent } from "@/lib/content";
 // only the label text comes from the Content Manager.
 const ICONS = [ShieldCheck, Globe, DollarSign, Users];
 
+// Phase 227 — Roy asked for a heading + subtitle above this badge row (one
+// shared line above the whole row, not per-icon), matching his reference
+// image: "Support without judgment" / "Every identity, background and
+// belief is respected." Both are plain editable text via HomeStatsEditor,
+// same component-scoped content this row's badge labels already use.
 export const HOME_STATS_CONTENT_FALLBACK: HomeStatsContent = {
   published: true,
+  heading: "Support without judgment",
+  subtitle: "Every identity, background and belief is respected.",
   badge1Label: "Verified Profiles",
   badge2Label: "Multilingual Support",
   badge3Label: "Clear Session Fees",
@@ -73,6 +80,10 @@ export default async function Stats() {
 
   return (
     <section className="border-y border-border bg-green-sage py-10">
+      <div className="mx-auto mb-8 max-w-[620px] px-6 text-center">
+        <h2 className="font-serif text-[24px] font-semibold text-primary sm:text-[26px]">{content.heading}</h2>
+        <p className="mt-2.5 text-[15px] leading-relaxed text-primary/80">{content.subtitle}</p>
+      </div>
       <StaggerGroup className="mx-auto flex max-w-[1160px] flex-wrap items-center justify-center gap-x-12 gap-y-6 px-6 sm:justify-between">
         {badges.map((b) => (
           <StaggerItem key={b.label} className="flex items-center gap-3.5">

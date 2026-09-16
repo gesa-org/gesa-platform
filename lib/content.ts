@@ -329,6 +329,8 @@ export type DonateBandContent = {
 // be admin-editable.
 export type HomeStatsContent = {
   published: boolean;
+  heading: string;
+  subtitle: string;
   badge1Label: string;
   badge2Label: string;
   badge3Label: string;

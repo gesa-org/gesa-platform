@@ -1,7 +1,7 @@
 # GESA Web App Platform — Execution Plan
 
 Owner: Roy (roy@ventvest.com) · Maintained by: Claude (Cowork)
-Last updated: 2026-09-16 (Phase 224 added)
+Last updated: 2026-09-16 (Phase 225 added)
 
 This document is the single source of truth for scope, phase status, and open
 decisions. It is updated after every phase — do not let it drift from reality.
@@ -9853,6 +9853,70 @@ git add -A
 git commit -m "Phase 224: Donate page reordered to PHOTO->STORY->HUMAN VOICE->IMPACT->DONATION->THANK YOU flow; new See the impact gallery + founder message"
 git push
 ```
+
+---
+
+## Phase 225: Enhanced the 7 "See the impact" gallery photos (quality pass, no code changes)
+
+**Request:** Upscale/enhance the 7 real photos Roy had since uploaded into the "See the impact" gallery (via Admin > UI Builder, replacing the Phase 224 placeholder defaults) — sharper, cleaner, "4K-ready," warm documentary look, no over-processing, no invented detail/faces, consistent across the set.
+
+**What was found:** the 7 images live on Supabase Storage (`site-content-images/ui-builder/...`), not in this repo — confirmed by pulling the live `/donate` page's actual `<img>` tags. All 7 are small: roughly 150-210px on the long edge. That's a real constraint on this request: a true 3840px/4K output from a ~200px source is an 18-25x linear upscale, which no classical method can do without inventing texture, and this sandbox has no internet access to fetch a trained super-resolution/generative model (confirmed — `curl`/`wget` to any external host fail at the connection level; only the already-open browser tab's own `fetch()`, same-context, could reach the images at all). So this phase does the honest version of the ask: real noise reduction + a careful two-stage Lanczos upscale to 1600px on the long edge (a size that holds up at typical gallery-card display widths without looking obviously soft or obviously fake) + a very restrained unsharp mask + mild CLAHE local-contrast + a small consistent warm color grade — tuned down twice after the first pass read as slightly gritty/over-processed on busier scenes (a food-bank warehouse photo, specifically) to keep the "not over-processed" requirement front and center.
+
+**How the images were retrieved:** the Supabase bucket didn't respond to this sandbox's own network access, but the already-open browser tab (on `gesa-platform.vercel.app`) could `fetch()` them same-origin-adjacent (public bucket, permissive CORS) — each image was fetched as bytes, base64-encoded in-browser, and decoded back to a file via the shell. Processed with Pillow + OpenCV (denoise → Lanczos upscale → unsharp mask → CLAHE → PIL color/contrast grade → a hair of closing blur to settle interpolation edges), exported as quality-92 progressive JPEGs.
+
+**What shipped:** 7 enhanced JPEGs, each named for its gallery caption, saved to `donate-gallery-enhanced/` in the project folder:
+`gallery-1-care-that-meets-people.jpg`, `gallery-2-learning-together.jpg`, `gallery-3-community-led-connection.jpg`, `gallery-4-tools-for-wellbeing.jpg`, `gallery-5-shared-moments-of-support.jpg`, `gallery-6-preparing-care-with-intention.jpg`, `gallery-7-rooted-in-local-communities.jpg`.
+
+**No code or content changes this phase** — this is an offline image-processing pass, not a deploy. To go live, each file needs to be uploaded over its matching slot via Admin > UI Builder > Page Content > Donate > "Impact gallery" (same upload flow as every image field on this page — see Phase 202/224's own notes on that mechanism).
+
+**Assumptions/follow-ups:**
+- Honest limit: these are real quality improvements (denoise, sharpen, clean upscale, consistent grade) but not true 4K photographic detail — that's not recoverable from ~200px sources without a generative model inventing texture, which Roy explicitly asked not to do. If he has the original, full-resolution camera files these thumbnails were cropped from, re-running this pass against those would get meaningfully closer to real 4K fidelity.
+- No git/deploy action needed for this phase (no code touched) — only the manual re-upload step above, whenever Roy wants these live.
+
+---
+
+## Phase 226: Technical Specification re-skinned into Roy's actual v1.7 template (not v5.0's own gold/ivory approximation)
+
+**Request:** Roy uploaded his real original template PDF (`GESA_Platform_Tech_Specification_.pdf`, v1.7, produced via LaTeX/pandoc) and asked that the current v5.0 technical specification content be rebuilt using that PDF's exact formatting/layout/tables — not v5.0's own gold/navy CSS approximation of it — so the document "starts from the beginning" (full version history) through the current, up-to-date state, making development trackable in one place.
+
+**What was found:** the uploaded v1.7 template and the existing v5.0 HTML (`GESA_Platform_Technical_Specification_v5.0.html`, already converted to PDF in earlier work) are visually different documents wearing the same content shape. The template is plain black/white Arial body text, "booktabs"-style data tables (thin top/header/bottom rules only, no shading — used for every reference table in the body), one exception reserved for the "Document Control — Version History" table (dark navy header row, banded rows), a Table of Contents titled "Tables of Version" (a quirk the template's own v1.4 changelog entry names deliberately) with blue links and dotted leaders, and a running header (VentVest logo + "GESA Platform — Technical Specification" + thin rule) repeated on every physical page, cover included. v5.0's own HTML instead used a gold/navy branded look that only approximated this, not matched it.
+
+**What shipped:** a Python re-skin script (`reskin_spec.py`) that takes v5.0's HTML content untouched — every paragraph, table, and list item preserved byte-for-byte — and replaces only the presentation layer to match the template:
+1. Full CSS rewrite: plain Arial body, booktabs tables by default, the Document Control table singled out with a `doccontrol` class for its navy-header/banded styling, a plain cover page (dropped the gold gradient bar and footer box), automatic page numbers via `@page { @bottom-center }`.
+2. TOC heading renamed "Table of Contents" -> "Tables of Version"; regenerated as a real nested list (every `h1.sec`/`h2.sub` heading, 70 total, walked in document order) with CSS `target-counter(attr(href), page)` page numbers, so every entry's printed page number is generated by the renderer itself, not hand-typed.
+3. A single CSS "running element" (`position: running(pageheader)` + `@page { @top-center: element(pageheader) }`) replaces the ~18 literal header `<div>`s the source repeated once per section — those only appeared at the top of each section's first page, so any table or list that overflowed onto a later page had no header at all. The running element repeats automatically on every physical page, cover included, matching the template.
+4. `break-inside: avoid` on every table row (and `break-after: avoid` on header rows), added after visual QA caught the Document Control table's "4.0" row rendering with blank Author/Description cells at the bottom of one page while its actual content appeared at the top of the next — a table-row pagination artifact, now fixed for every table in the document, not just that one row.
+5. Fixed a double-HTML-escaping bug caught during TOC QA: heading text already containing literal entities (e.g. "Tech Stack &amp; Architecture" in the source) was being escaped a second time when building TOC labels, rendering as "&amp;" on the page instead of "&". Now unescaped before re-escaping.
+
+**Files delivered:** `GESA_Platform_Technical_Specification_v5.0_reskinned.html` and `GESA_Platform_Technical_Specification_v5.0_reskinned.pdf` (51 pages), saved to the project folder.
+
+**QA performed:** rendered the PDF to page images (`pdftoppm`) and visually compared against the same treatment of the uploaded template, page by page — cover, Document Control/version-history table (all 6 rows, including the previously-split 4.0 row, intact with the header repeated), the "Tables of Version" TOC (real page numbers, dotted leaders, bold top-level entries, corrected ampersands), body tables (booktabs style, monospace inline code, callout boxes), and the closing page (italic `EXECUTION_PLAN.md` disclaimer). No weasyprint CSS warnings on the final render.
+
+**Assumptions/follow-ups:**
+- Content itself is unchanged from v5.0 — this phase is presentation-only. The Document Control table's own version history (v1.0 through 5.0) is preserved verbatim from the source, including its own entries describing this document's evolution; this Phase 226 entry should be added to that table as a new "5.1" row in a future content-touching phase, since this phase only reformats what was already there rather than adding a new version-history line to the document's own internal table.
+- The running header's bottom rule doesn't span the full page width (shrink-wraps to the logo+title text) — a minor cosmetic gap versus the template's own edge-to-edge rule; flagged, not fixed, since it doesn't affect readability or the document's structural fidelity.
+- No code/deploy action for this phase (documentation only, no git operations needed).
+
+---
+
+## Phase 227: Heading + subtitle added above the Home page's 4-icon badge row
+
+**Request:** Roy sent a reference screenshot of the Home page's "Verified Profiles / Multilingual Support / Clear Session Fees / Global Community" icon-badge row (`components/home/Stats.tsx`) with a heading ("Support without judgment") and subtitle ("Every identity, background and belief is respected.") sitting above it, and asked to add that text. Clarified first: one shared heading/subtitle above the row as a whole, not a separate caption above each of the 4 individual icons.
+
+**What shipped:**
+1. **`lib/content.ts`** — `HomeStatsContent` gained `heading: string` and `subtitle: string`.
+2. **`components/home/Stats.tsx`** — `HOME_STATS_CONTENT_FALLBACK` sets `heading: "Support without judgment"` and `subtitle: "Every identity, background and belief is respected."` (Roy's own reference copy). JSX now renders a centered heading + subtitle block above the badge row, inside the same `bg-green-sage` section.
+3. **`components/admin/content/HomeStatsEditor.tsx`** — added the two new fields ("Heading (above the badges)", "Subtitle (above the badges)") to the existing `FlatFieldsEditor` form, alongside the 4 badge-label fields it already edited. Both are plain editable text via Admin > Content > Home Stats, same `component_home_stats` content key the badges already use.
+
+**Tests updated:** `tests/unit/Stats.test.tsx` — added assertions for the new heading and subtitle text.
+
+**Files touched:** `lib/content.ts`, `components/home/Stats.tsx`, `components/admin/content/HomeStatsEditor.tsx`, `tests/unit/Stats.test.tsx`.
+
+**Manual test scenarios:** visit the Home page and confirm "Support without judgment" / "Every identity, background and belief is respected." appear centered above the 4 icon badges, inside the sage-green band; open Admin > Content > Home Stats and confirm the heading/subtitle are editable there and saving updates the live page.
+
+**Assumptions/follow-ups:**
+- `npx tsc --noEmit` run against this phase's 4 files: zero errors. Remaining `tsc` errors in the full run are all pre-existing, in unrelated test fixtures this phase never touched (confirmed by filename).
+- Not committed/pushed from this session — the `.git/index.lock` blocker from Phase 224 is still open (see that phase's note); same manual `del .git\index.lock` step needed before `git add`/`commit`/`push` will work here.
 
 ---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

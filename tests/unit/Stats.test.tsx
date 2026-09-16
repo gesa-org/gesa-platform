@@ -17,9 +17,14 @@ import Stats from "@/components/home/Stats";
 // own --green-sage token ("Green Sage," #9BA689), and the 4 icon badges'
 // circle color moved from --card to --sand-brown ("Sand Brown," #CBA560).
 // Assertions updated to match both.
+// Phase 227 — added a heading + subtitle above the badge row ("Support
+// without judgment" / "Every identity, background and belief is
+// respected."), one shared pair above the whole row, not per-icon.
 describe("Stats", () => {
-  it("renders the real badge labels and uses the green-sage background with sand-brown badges", async () => {
+  it("renders the heading/subtitle above the badges, the real badge labels, and uses the green-sage background with sand-brown badges", async () => {
     render(await Stats());
+    expect(screen.getByText("Support without judgment")).toBeInTheDocument();
+    expect(screen.getByText("Every identity, background and belief is respected.")).toBeInTheDocument();
     expect(screen.getByText("Verified Profiles")).toBeInTheDocument();
     expect(screen.getByText("Global Community")).toBeInTheDocument();
 
