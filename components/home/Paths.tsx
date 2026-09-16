@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, LifeBuoy, Award, Sparkles, Sparkle, ShieldCheck, HeartHandshake, Users, Sprout, Tags, Waves } from "lucide-react";
 import GoldWatermarks from "@/components/ui/GoldWatermarks";
@@ -670,24 +671,54 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             renders as a real, recolorable React component
                             rather than being redrawn as more inline SVG. */}
                         <div className="relative w-full flex-1 min-h-0">
-                          <FrameBox
-                            front={frontStyle.boxHex}
-                            top={frontStyle.top}
-                            side={frontStyle.side}
-                            recess={frontStyle.doorFrame}
-                            className="h-full w-full"
-                          />
-                          <div
-                            className="absolute flex items-center justify-center"
-                            style={{
-                              top: FRAME_BOX_RECESS_RECT.top,
-                              left: FRAME_BOX_RECESS_RECT.left,
-                              width: FRAME_BOX_RECESS_RECT.width,
-                              height: FRAME_BOX_RECESS_RECT.height,
-                            }}
-                          >
-                            <GesaMark colors={frontStyle.mark} className="h-[72%] w-[72%]" />
-                          </div>
+                          {i === 0 ? (
+                            // Phase 237 — Roy sent a new reference photo for
+                            // just this card (the "WAR" front face): a real
+                            // sage-green wood frame around a tan mat holding
+                            // a crescent-moon/wave mark, asked to replace
+                            // only this card's front artwork — the recessed
+                            // shadowbox treatment (FrameBox + GesaMark) other
+                            // two cards use, the flip effect, and this card's
+                            // own back face (title/description/CTA, driven by
+                            // the same `p`/CARD_CONTENT_KEYS[0] below) are all
+                            // untouched. The reference image already has its
+                            // own frame/mat baked in (unlike GesaMark, which
+                            // is a bare recolorable mark meant to sit inside
+                            // FrameBox's drawn recess), so it renders directly
+                            // here rather than being placed inside another
+                            // frame — object-contain keeps the whole framed
+                            // piece visible without cropping, same convention
+                            // Phase 42 used for the original uploaded card
+                            // artwork before Phase 121 switched to GesaMark.
+                            <Image
+                              src="/images/paths/crisis-framed-swirl.png"
+                              alt=""
+                              fill
+                              sizes="(max-width: 768px) 33vw, 220px"
+                              className="object-contain drop-shadow-lg"
+                            />
+                          ) : (
+                            <>
+                              <FrameBox
+                                front={frontStyle.boxHex}
+                                top={frontStyle.top}
+                                side={frontStyle.side}
+                                recess={frontStyle.doorFrame}
+                                className="h-full w-full"
+                              />
+                              <div
+                                className="absolute flex items-center justify-center"
+                                style={{
+                                  top: FRAME_BOX_RECESS_RECT.top,
+                                  left: FRAME_BOX_RECESS_RECT.left,
+                                  width: FRAME_BOX_RECESS_RECT.width,
+                                  height: FRAME_BOX_RECESS_RECT.height,
+                                }}
+                              >
+                                <GesaMark colors={frontStyle.mark} className="h-[72%] w-[72%]" />
+                              </div>
+                            </>
+                          )}
                         </div>
                         {/* Gold label pill — back below the frame (Phase 97's
                             original position), with the same visible gap the
