@@ -234,6 +234,20 @@ export type SiteContentRow = {
   value: Json;
 }
 
+// Phase 236 — append-only version/audit log for every site_content publish
+// action, backing the new "Website Pages" directory's last-updated-by and
+// version-history/restore feature. See the phase236_content_versions
+// migration.
+export type ContentVersionRow = {
+  id: string;
+  content_key: string;
+  action: "published" | "unpublished" | "restored";
+  snapshot: Json;
+  editor_id: string | null;
+  editor_email: string | null;
+  created_at: string;
+}
+
 export type SupportGroupRow = {
   capacity: number | null;
   created_at: string;
@@ -1028,6 +1042,12 @@ export type Database = {
         ];
       };
       site_content: { Row: SiteContentRow; Insert: Partial<SiteContentRow> & Pick<SiteContentRow, "key">; Update: Partial<SiteContentRow>; Relationships: [] };
+      content_versions: {
+        Row: ContentVersionRow;
+        Insert: Partial<ContentVersionRow> & Pick<ContentVersionRow, "content_key" | "action" | "snapshot">;
+        Update: Partial<ContentVersionRow>;
+        Relationships: [];
+      };
       support_groups: { Row: SupportGroupRow; Insert: Partial<SupportGroupRow> & Pick<SupportGroupRow, "title">; Update: Partial<SupportGroupRow>; Relationships: [] };
       testimonials: { Row: TestimonialRow; Insert: Partial<TestimonialRow> & Pick<TestimonialRow, "author" | "quote">; Update: Partial<TestimonialRow>; Relationships: [] };
       therapist_applications: {

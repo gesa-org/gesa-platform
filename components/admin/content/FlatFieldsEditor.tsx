@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { saveContent } from "@/lib/cms/saveContent";
 import Button from "@/components/ui/Button";
 
 type Field = { key: string; label: string; multiline?: boolean; help?: string };
@@ -41,9 +41,7 @@ export default function FlatFieldsEditor<T extends { published: boolean }>({
     e.preventDefault();
     setPending(true);
     setStatus("idle");
-    const supabase = createClient();
-    const value = { ...values, published };
-    const { error } = await supabase.from("site_content").upsert({ key: contentKey, value }, { onConflict: "key" });
+    const { error } = await saveContent(contentKey, { ...values, published });
     setPending(false);
     setStatus(error ? "error" : "saved");
   }

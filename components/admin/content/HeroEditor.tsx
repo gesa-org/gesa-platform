@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { saveContent } from "@/lib/cms/saveContent";
 import Button from "@/components/ui/Button";
 import ImageUploadField from "@/components/admin/content/ImageUploadField";
 import type { HeroContent } from "@/lib/content";
@@ -50,7 +50,6 @@ export default function HeroEditor({ contentKey, initial }: { contentKey: string
     e.preventDefault();
     setPending(true);
     setStatus("idle");
-    const supabase = createClient();
     const value: HeroContent = {
       published,
       eyebrow,
@@ -63,7 +62,7 @@ export default function HeroEditor({ contentKey, initial }: { contentKey: string
       ctaSecondaryHref,
       backgroundImage,
     };
-    const { error } = await supabase.from("site_content").upsert({ key: contentKey, value }, { onConflict: "key" });
+    const { error } = await saveContent(contentKey, value);
     setPending(false);
     setStatus(error ? "error" : "saved");
   }

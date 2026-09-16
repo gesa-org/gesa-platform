@@ -103,6 +103,39 @@ export async function getAllPartnersAdmin(): Promise<Tables<"partners">[]> {
   return data ?? [];
 }
 
+// Phase 236 — backs the new "Website Pages" directory's "Last updated" /
+// "Last updated by" columns: one row per content_key, its most recent
+// content_versions entry. Fetches everything in one query (ordered so the
+// first row seen per key is the newest) rather than N queries for N
+// directory rows.
+export async function getLatestContentVersions(): Promise<Map<string, Tables<"content_versions">>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("content_versions")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  const latest = new Map<string, Tables<"content_versions">>();
+  for (const row of data ?? []) {
+    if (!latest.has(row.content_key)) latest.set(row.content_key, row);
+  }
+  return latest;
+}
+
+// Full version history for one content key, newest first — backs the
+// directory's per-page "Version history" panel and its restore action.
+export async function getContentVersionHistory(contentKey: string, limit = 25): Promise<Tables<"content_versions">[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("content_versions")
+    .select("*")
+    .eq("content_key", contentKey)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function getTestimonials(): Promise<Tables<"testimonials">[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("testimonials").select("*").order("sort");

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { saveContent } from "@/lib/cms/saveContent";
 import Button from "@/components/ui/Button";
 import type { SimplePageContent } from "@/lib/content";
 
@@ -32,9 +32,8 @@ export default function SimplePageEditor({
     e.preventDefault();
     setPending(true);
     setStatus("idle");
-    const supabase = createClient();
     const value: SimplePageContent = { published, eyebrow, title, description };
-    const { error } = await supabase.from("site_content").upsert({ key: contentKey, value }, { onConflict: "key" });
+    const { error } = await saveContent(contentKey, value);
     setPending(false);
     setStatus(error ? "error" : "saved");
   }
