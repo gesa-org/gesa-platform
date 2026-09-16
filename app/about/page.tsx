@@ -143,7 +143,22 @@ export default async function AboutPage({
       </section>
 
       {sections.founders[0] && (
-        <section className="section bg-sand-brown">
+        // Phase 229 — Roy sent a reference swatch (a dark slate-blue
+        // gradient) and asked this Founder spotlight section to switch from
+        // its gold `bg-sand-brown` to that dark tone. Reused the existing
+        // `--primary` token ("Deep Slate", #2b3140) rather than a new hex —
+        // it's the same dark navy already used for DonateBand's default
+        // (non-ivory) band. Unlike a straight background swap, every text
+        // element in here that relied on the *light* gold background for
+        // contrast needed to flip too: `text-primary`/default-foreground
+        // text is the exact same dark-slate color as the new background, so
+        // left as-is it would have gone invisible. Recolored to
+        // `text-white`/`text-white/80`, matching DonateBand's own established
+        // convention for text on this same dark-navy background (see that
+        // component's heading/subtitle classes). The gold `.eyebrow` label
+        // color (`--clay`) was left untouched — gold reads fine against dark
+        // navy, same pairing DonateBand/Stats already use elsewhere.
+        <section className="section bg-primary">
           <div className="wrap max-w-[980px]">
             <Reveal type="horizontal" distance={100} duration={0.9}>
               <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-14">
@@ -151,17 +166,17 @@ export default async function AboutPage({
                   <span className="eyebrow">
                     <EditableText contentId="about.founders.eyebrow" label="Founder spotlight eyebrow" value={sections.foundersHeading} as="span" />
                   </span>
-                  <h2 className="my-2.5 text-[32px] sm:text-[36px]">Meet {sections.founders[0].name}</h2>
-                  <div className="mb-3 text-[15px] font-semibold text-primary">{sections.founders[0].roleTitle}</div>
-                  <p className="mb-5 text-[16px] leading-relaxed text-muted-fg">{sections.founders[0].shortBio}</p>
+                  <h2 className="my-2.5 text-[32px] text-white sm:text-[36px]">Meet {sections.founders[0].name}</h2>
+                  <div className="mb-3 text-[15px] font-semibold text-white">{sections.founders[0].roleTitle}</div>
+                  <p className="mb-5 text-[16px] leading-relaxed text-white/80">{sections.founders[0].shortBio}</p>
                   <Reveal type="horizontal" distance={60} duration={0.7} delay={0.35}>
-                    <div className="mb-4 font-signature text-[40px] leading-none text-primary">
+                    <div className="mb-4 font-signature text-[40px] leading-none text-white">
                       {sections.founders[0].name}
                     </div>
                   </Reveal>
                   <a
                     href={`mailto:${sections.founders[0].email}`}
-                    className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary"
+                    className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-white hover:text-white/80"
                   >
                     <Mail size={15} /> {sections.founders[0].email}
                   </a>
@@ -176,7 +191,13 @@ export default async function AboutPage({
                     />
                   </div>
                 ) : (
-                  <div className="flex h-[240px] w-[240px] flex-none items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white sm:h-[280px] sm:w-[280px]">
+                  // Phase 229 — this section's own background is now the
+                  // same `--primary` dark slate this fallback avatar already
+                  // used, so a founder with no photo would blend straight
+                  // into the section. Added a light ring so it stays visibly
+                  // distinct; the gradient/initials/photo-present path are
+                  // otherwise unchanged.
+                  <div className="flex h-[240px] w-[240px] flex-none items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-600 text-[48px] font-serif font-semibold text-white ring-2 ring-white/25 sm:h-[280px] sm:w-[280px]">
                     {initials(sections.founders[0].name)}
                   </div>
                 )}

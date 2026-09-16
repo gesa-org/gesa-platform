@@ -9943,4 +9943,26 @@ git push
 - Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
 
 ---
+
+## Phase 229: Founder spotlight section switched to dark slate blue
+
+**Request:** Roy sent a reference screenshot of the About page's Founder spotlight section (gold `bg-sand-brown` background, "OUR FOUNDER" / "Meet Ilana O'Malley") plus a plain dark navy/slate swatch, and asked the section to switch to that dark slate-blue.
+
+**What shipped:** `app/about/page.tsx`'s Founder spotlight section (`sections.founders[0]` block) — background changed `bg-sand-brown` -> `bg-primary` (the site's existing "Deep Slate" `--primary` token, #2b3140), the same dark navy DonateBand's default band already uses, rather than a new hardcoded color.
+
+Unlike the Phase 228 sage-green swap, this section's text couldn't just ride along unchanged: several elements used `text-primary`/the default dark-foreground color for contrast against the *old, light* gold background — the same dark slate as the *new* background, so left as-is they'd have gone invisible. Recolored to match DonateBand's own established convention for text on this dark-navy background:
+- Founder name heading, role title, signature, and the mailto link/icon: `text-primary`/default -> `text-white`.
+- Bio paragraph: `text-muted-fg` -> `text-white/80`.
+- The gold "OUR FOUNDER" eyebrow label was left untouched — `--clay` gold already reads well against dark navy (same pairing DonateBand/Stats use elsewhere).
+- The no-photo initials fallback avatar (unused today — Ilana has a real photo) already used this same `--primary` gradient; added a `ring-2 ring-white/25` so it wouldn't blend invisibly into the section's now-matching background if a future founder without a photo is added.
+
+**Files touched:** `app/about/page.tsx`.
+
+**Manual test scenarios:** visit `/about`, scroll to the Founder spotlight section, and confirm the background reads as dark slate-blue with the eyebrow, heading, role title, bio, signature, and email link all clearly legible in white/gold against it.
+
+**Assumptions/follow-ups:**
+- `npx tsc --noEmit` run against `app/about/page.tsx`: zero errors. No existing test (`tests/unit/AboutPage.test.tsx`) asserted this section's old classes, so nothing needed updating there.
+- Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227/228; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
