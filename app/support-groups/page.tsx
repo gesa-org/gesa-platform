@@ -49,7 +49,19 @@ export default async function SupportGroupsPage({
 
   const page = (
     <div>
-      <section id="support-groups-list" className="section wrap">
+      {/* Phase 240 — Roy asked for this section's background to pick up the
+          same deep-navy radial gradient used on the Home landing page,
+          replacing the plain light page background behind these cards.
+          Scoped to this section only (not the Testimonials section below,
+          which keeps its light card/text treatment) since every group card
+          here is already fully opaque (.charcoal-marble) with its own
+          white/gold text — nothing relies on the light background showing
+          through, so this is a safe, self-contained color swap. */}
+      <section
+        id="support-groups-list"
+        className="section wrap"
+        style={{ background: "radial-gradient(circle at 50% 20%, #152A3B 0%, #0B1623 55%, #07111B 100%)" }}
+      >
         <SupportGroupsInteractive groups={groups} content={directoryContent} />
       </section>
       <Testimonials testimonials={testimonials} />
