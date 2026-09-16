@@ -301,7 +301,7 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // Index 0 = WAR/crisis card (Phase 237 round 1), 1 = Veterans/center card
 // (Phase 237 round 2), 2 = Support/disaster card (Phase 237 round 3).
 const CARD_FRONT_IMAGE_OVERRIDES: (string | undefined)[] = [
-  "/images/paths/crisis-framed-swirl.png",
+  "/images/paths/crisis-framed-swirl-v2.png",
   "/images/paths/veterans-framed-swirl.png",
   "/images/paths/support-framed-swirl.png",
 ];
