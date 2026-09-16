@@ -9981,4 +9981,29 @@ Unlike the Phase 228 sage-green swap, this section's text couldn't just ride alo
 - Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227/228/229; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
 
 ---
+
+## Phase 231: Three sections switched to match the footer's "Help us grow" deep navy
+
+**Request:** Roy sent 3 reference screenshots — About's "A global vision. A human movement." movement band (light `bg-background`), its Founder spotlight section (dark `bg-primary`, set in Phase 229), and Community's "Choose your pathway" section (no background class, default light) — and asked all three to switch to the deep navy blue used by the footer's "Help us grow" card, "approximately #0B1F3A," with white/off-white text.
+
+**What was found:** the footer's "Help us grow" card (`components/footer/HelpUsGrowForm.tsx`) uses Tailwind's built-in `slate-600/700/900` gradient, not an existing site color token — so there was no custom property to reuse directly. `--primary` (#2B3140) and `--espresso` (#1D212B), the site's two existing dark tones, are both visibly grayer/lighter than Roy's navy reference and are already spoken for elsewhere (DonateBand's default band, the site footer).
+
+**What shipped:**
+1. **`app/globals.css`** — new `--navy-deep: #0b1f3a` token, same pattern as `--sand-brown`/`--green-sage`/`--home-gray`.
+2. **`tailwind.config.ts`** — mapped to `bg-navy-deep` (and other utilities) via a new `navy.deep` color key.
+3. **`app/about/page.tsx`**:
+   - Founder spotlight section: `bg-primary` -> `bg-navy-deep` (its Phase 229 white text already reads fine against this new, still-dark navy — no further text changes needed there).
+   - Movement band: `bg-background` -> `bg-navy-deep`. Unlike the Founder section, this band's text was tuned for its old *light* background, so it needed a real flip: heading and body copy -> `text-white`/`text-white/80`; the CTA button changed from a solid `bg-primary` fill (which would have had weak contrast on a similarly dark section) to the same outlined white-border pill style DonateBand already uses for CTAs on its own dark-navy band.
+4. **`components/support-groups/CommunityIntro.tsx`** — "Choose your pathway" section: added `bg-navy-deep`, and flipped its heading to `text-white`. The 3 pathway cards below it sit on their own light `bg-card` (via the shared `<Card>` component) regardless of the section's own background, so nothing inside the cards needed to change.
+
+**Files touched:** `app/globals.css`, `tailwind.config.ts`, `app/about/page.tsx`, `components/support-groups/CommunityIntro.tsx`.
+
+**Manual test scenarios:** visit `/about` and confirm both the movement band ("A global vision...") and the Founder spotlight section read as the same deep navy, with all text/button/eyebrow colors legible; visit `/support-groups` and confirm "Choose your pathway"'s section background is the same navy with its 3 cards still light and readable on top of it.
+
+**Assumptions/follow-ups:**
+- `npx tsc --noEmit` run against all 4 touched files: zero errors. No existing test asserted any of these sections' old background/text classes, so nothing needed updating.
+- `--navy-deep` isn't overridden in the site's accessibility color modes (light-contrast/high-contrast/monochrome in `app/globals.css`) — same precedent as `--sand-brown`/`--green-sage`/`--home-gray`, none of which are remapped there either.
+- Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227/228/229/230; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

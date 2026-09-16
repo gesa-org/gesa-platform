@@ -162,6 +162,19 @@
        them at once, no other file needed to change. */
     --home-gray: #b0bac3;
     --espresso: #1d212b; /* Deep Contrast — footer, strong-contrast areas (deep slate navy) */
+    /* Phase 231 — Roy sent 3 reference screenshots (About's "A global vision"
+       movement band, its Founder spotlight section, and Community's "Choose
+       your pathway" section) and asked all three to match the color/texture
+       of the footer's "Help us grow" card (components/footer/HelpUsGrowForm.
+       tsx) — a deep navy blue, "approximately #0B1F3A," with white/off-white
+       text. That form card uses Tailwind's built-in slate-600/700/900
+       gradient rather than a site token, so there's no existing custom
+       property to reuse; added this one instead of a fourth ad-hoc hex,
+       same pattern as --sand-brown/--green-sage/--home-gray above. Not
+       reusing --primary (#2B3140) or --espresso (#1D212B) — both are
+       visibly grayer/lighter than Roy's navy reference and are already
+       spoken for elsewhere (DonateBand's default band, the site footer). */
+    --navy-deep: #0b1f3a;
     --radius: 22px;
     --font-serif: "Cormorant Garamond", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
     --font-sans: "Nunito Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;

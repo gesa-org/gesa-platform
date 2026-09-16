@@ -158,7 +158,13 @@ export default async function AboutPage({
         // component's heading/subtitle classes). The gold `.eyebrow` label
         // color (`--clay`) was left untouched — gold reads fine against dark
         // navy, same pairing DonateBand/Stats already use elsewhere.
-        <section className="section bg-primary">
+        // Phase 231 — Roy asked this section (plus the movement band below
+        // and Community's "Choose your pathway" section) to match the
+        // footer's "Help us grow" card color specifically — a richer navy
+        // (~#0B1F3A) than `--primary`. `bg-primary` -> `bg-navy-deep`; every
+        // text color set above already reads fine against it (still dark),
+        // so no further changes needed here.
+        <section className="section bg-navy-deep">
           <div className="wrap max-w-[980px]">
             <Reveal type="horizontal" distance={100} duration={0.9}>
               <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-14">
@@ -207,17 +213,30 @@ export default async function AboutPage({
         </section>
       )}
 
-      <section className="section bg-background">
+      {/* Phase 231 — Roy sent a reference screenshot of this "A global
+          vision. A human movement." band and asked it (plus the Founder
+          spotlight below and Community's "Choose your pathway" section) to
+          switch to the same deep navy (~#0B1F3A) as the footer's "Help us
+          grow" card — see app/globals.css's --navy-deep comment. Unlike the
+          Founder-spotlight swap (Phase 229, already dark before this),
+          every text element here relied on the *light* `bg-background`
+          it's replacing, so all three needed a color flip: heading/body go
+          from unset-default/`text-muted-fg` (both dark) to `text-white`/
+          `text-white/80`. The button also flips — a solid `bg-primary` pill
+          would have had weak contrast sitting on a similarly dark navy
+          section — to the same outlined white-border treatment DonateBand
+          already uses for pill CTAs on its own dark-navy band. */}
+      <section className="section bg-navy-deep">
         <Reveal type="fade-up" as="div" className="wrap max-w-[640px] text-center">
-          <h2 className="mb-2.5 text-[28px] sm:text-[30px]">
+          <h2 className="mb-2.5 text-[28px] text-white sm:text-[30px]">
             <EditableText contentId="about.movement.heading" label="Movement band heading" value={sections.movementHeading} as="span" />
           </h2>
-          <div className="mb-6 text-muted-fg">
+          <div className="mb-6 text-white/80">
             <EditableText contentId="about.movement.body" label="Movement band body" value={sections.movementSubtitle} as="span" />
           </div>
           <VolunteerPrimaryCta
             href={sections.movementCtaHref}
-            className="inline-flex items-center rounded-full bg-primary px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-transform hover:-translate-y-px"
+            className="inline-flex items-center rounded-full border border-white/70 px-7 py-3.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-all hover:-translate-y-px hover:bg-white/10"
           >
             <EditableText contentId="about.movement.ctaLabel" label="Movement CTA label" value={sections.movementCtaLabel} as="span" />
           </VolunteerPrimaryCta>

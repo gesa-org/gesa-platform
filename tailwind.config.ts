@@ -64,6 +64,14 @@ const config: Config = {
         green: {
           sage: "var(--green-sage)",
         },
+        // Roy's "Help us grow"-matching deep navy (~#0B1F3A) swap for the
+        // About page's movement band + Founder spotlight and Community's
+        // "Choose your pathway" section — see app/globals.css's --navy-deep
+        // comment for why this is a new token rather than reusing --primary/
+        // --espresso.
+        navy: {
+          deep: "var(--navy-deep)",
+        },
         muted: {
           DEFAULT: "var(--muted)",
           fg: "var(--muted-fg)",

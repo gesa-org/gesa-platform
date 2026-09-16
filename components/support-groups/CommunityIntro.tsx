@@ -202,10 +202,19 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
         </Reveal>
       </section>
 
-      <section id="pathways" className="section">
+      {/* Phase 231 — Roy sent a reference screenshot of this "Choose your
+          pathway" section (plus About's movement band and Founder
+          spotlight) and asked it to switch to the same deep navy (~#0B1F3A)
+          as the footer's "Help us grow" card — see app/globals.css's
+          --navy-deep comment. The 3 cards below sit on their own light
+          `bg-card` (via the shared <Card> component) regardless of what the
+          section around them does, so only this section's own background
+          and the "Choose your pathway" heading (previously unset/dark
+          default) needed to change. */}
+      <section id="pathways" className="section bg-navy-deep">
         <div className="wrap">
           <Reveal type="fade-up" className="block">
-            <h2 className="text-center text-[30px] mb-8">Choose your pathway</h2>
+            <h2 className="text-center text-[30px] mb-8 text-white">Choose your pathway</h2>
           </Reveal>
           <StaggerGroup className="grid gap-5 sm:grid-cols-3">
             {cards.map((c, i) => (
