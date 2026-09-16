@@ -58,6 +58,15 @@ export default function DonatePageEditor({ initial }: { initial: DonatePageConte
           // the giving box, per Roy's required narrative flow. Field keys
           // (movementHeading/movementSubtitle/movementCtaLabel/
           // movementCtaHref) are unchanged — only these display labels.
+          // Phase 233 — this button now always opens the same donation
+          // modal every other donation CTA on this page uses (see
+          // DonatePage.tsx's own Phase 233 comment on this section — a
+          // stale published `movementCtaHref` value was silently sending
+          // real visitors to the Contact page instead of the donation
+          // flow). The link field itself is left in place, unused, per the
+          // site's standing "don't delete a field a section stopped
+          // reading" precedent — help text updated so it doesn't read as
+          // still controlling where this button goes.
           heading: "Final CTA",
           fields: [
             { key: "movementHeading", label: "Heading" },
@@ -65,8 +74,8 @@ export default function DonatePageEditor({ initial }: { initial: DonatePageConte
             { key: "movementCtaLabel", label: "Button label" },
             {
               key: "movementCtaHref",
-              label: "Button link",
-              help: "Leave as #giving-box to scroll back up to the donation form, or point it anywhere else for a plain link.",
+              label: "Button link (currently unused)",
+              help: "This button always opens the donation form modal now, regardless of this value — kept in case a future redesign needs a plain link here again.",
             },
           ],
         },
