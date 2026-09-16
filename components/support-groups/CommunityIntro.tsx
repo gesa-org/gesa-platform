@@ -186,7 +186,14 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
           Professionals' directory band. Moved onto the new --sand-brown
           token (app/globals.css) rather than another hardcoded hex, since
           this is now the third section sharing this exact color. */}
-      <section className="section bg-sand-brown">
+      {/* Phase 228 — Roy sent a reference screenshot of this section (plus
+          two on the About page) and asked all three to switch to "Sage
+          Green" — the same --green-sage token (#9BA689) already used on
+          Home's icon-badge row (components/home/Stats.tsx). `bg-sand-brown`
+          -> `bg-green-sage` here; About's Founder spotlight and Our
+          Professionals' directory band were NOT part of this request and
+          stay on --sand-brown. */}
+      <section className="section bg-green-sage">
         <Reveal type="fade-up" as="div" className="wrap max-w-[720px] text-center">
           <h2 className="mb-3 text-[30px]">{content.missionHeading}</h2>
           <div className="text-[15.5px] leading-relaxed text-muted-fg">

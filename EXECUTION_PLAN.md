@@ -9919,4 +9919,28 @@ git push
 - Not committed/pushed from this session — the `.git/index.lock` blocker from Phase 224 is still open (see that phase's note); same manual `del .git\index.lock` step needed before `git add`/`commit`/`push` will work here.
 
 ---
+
+## Phase 228: Three sections switched to "Sage Green" background
+
+**Request:** Roy sent 3 reference screenshots (a gold/tan "Why GESA exists" band, a blue-gray "Team & Advisors" band with Karin Horen's card, and a blue-gray "How GESA works" 4-card band) and asked all three to switch to "Sage Green."
+
+**What was located:** all 3 screenshots matched existing sections by their exact copy —
+1. "Why GESA exists" -> `components/support-groups/CommunityIntro.tsx`'s mission section, rendered on the Community (`/support-groups`) page. Was `bg-sand-brown`.
+2. "Built with people who choose to contribute" / Team & Advisors -> `app/about/page.tsx`'s Team & Advisors section (the `sections.founders.length > 1` block). Was `bg-muted`.
+3. "How GESA works" -> `app/about/page.tsx`'s `id="how-it-works"` 4-icon-card section. Was `bg-muted`.
+
+**What shipped:** all 3 sections' background class swapped to `bg-green-sage` — the existing `--green-sage` (#9BA689) token already used on Home's icon-badge row (`components/home/Stats.tsx`), rather than a new hardcoded color. No other styling, copy, layout, or functionality touched in any of the 3 sections — card backgrounds (`bg-card`), text colors, icons, and CTAs are all unaffected (each already reads fine against sage, same as the Home badges row).
+
+**Files touched:** `components/support-groups/CommunityIntro.tsx`, `app/about/page.tsx`.
+
+**Not touched (explicitly out of scope):** About's Founder spotlight section and the Our Professionals directory band also use `--sand-brown` but weren't part of Roy's 3 reference screenshots, so they're untouched — flagging in case he wants those moved to sage too as a quick follow-up.
+
+**Manual test scenarios:** visit `/support-groups` and confirm the "Why GESA exists" band is sage green (not gold/tan); visit `/about` and confirm both the "How GESA works" band and the "Team & Advisors" band are sage green (not blue-gray); confirm all three still show heading/body/card text and (for the icon cards) icon-badge colors clearly, matching Home's icon-badge row's proven look on the same background color.
+
+**Assumptions/follow-ups:**
+- `npx tsc --noEmit` run against both touched files: zero errors.
+- No existing test asserted the old `bg-sand-brown`/`bg-muted` classes on either section, so nothing needed updating in `tests/unit/AboutPage.test.tsx` or elsewhere.
+- Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.

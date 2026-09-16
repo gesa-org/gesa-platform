@@ -110,7 +110,13 @@ export default async function AboutPage({
       {/* Phase 145 — `id="how-it-works"` added so the Hero's primary CTA
           (an in-page anchor, since this Hero renders on the same page
           rather than linking out to it) has somewhere to scroll to. */}
-      <section id="how-it-works" className="section bg-muted">
+      {/* Phase 228 — Roy sent a reference screenshot of this section (plus
+          the Team & Advisors section below and CommunityIntro's "Why GESA
+          exists" section) and asked all three to switch to "Sage Green" —
+          the same --green-sage token (#9BA689) already used on Home's
+          icon-badge row (components/home/Stats.tsx). `bg-muted` ->
+          `bg-green-sage`. */}
+      <section id="how-it-works" className="section bg-green-sage">
         <div className="wrap">
           <Reveal type="fade-up" className="block">
             <h2 className="text-center text-[30px] mb-2">
@@ -198,7 +204,11 @@ export default async function AboutPage({
       </section>
 
       {sections.founders.length > 1 && (
-        <section className="section bg-muted">
+        // Phase 228 — Team & Advisors section switched to "Sage Green"
+        // (--green-sage) alongside "How GESA works" above and
+        // CommunityIntro's "Why GESA exists" section — see this page's
+        // "How GESA works" section comment above for the full context.
+        <section className="section bg-green-sage">
           <div className="wrap">
             <div className="grid items-center gap-[clamp(1.5rem,4vw,3rem)] md:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)]">
               <Reveal type="fade-up" as="div" className="text-start">
