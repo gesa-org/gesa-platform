@@ -563,6 +563,9 @@ const DONATE_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "donate.testimonials.author1", path: "testimonial1Author", label: "Testimonial 1 attribution", type: "plainText", group: "Testimonials", maxLength: 60, contentScope: "page" },
   { contentId: "donate.testimonials.quote2", path: "testimonial2Quote", label: "Testimonial 2 quote", type: "plainText", group: "Testimonials", maxLength: 240, contentScope: "page" },
   { contentId: "donate.testimonials.author2", path: "testimonial2Author", label: "Testimonial 2 attribution", type: "plainText", group: "Testimonials", maxLength: 60, contentScope: "page" },
+  // Phase 238 — third testimonial (real, permissioned copy from Roy).
+  { contentId: "donate.testimonials.quote3", path: "testimonial3Quote", label: "Testimonial 3 quote", type: "plainText", group: "Testimonials", maxLength: 240, contentScope: "page" },
+  { contentId: "donate.testimonials.author3", path: "testimonial3Author", label: "Testimonial 3 attribution", type: "plainText", group: "Testimonials", maxLength: 60, contentScope: "page" },
   // Phase 224 — "See the impact" horizontal photo gallery, inserted between
   // testimonials and the donation form. Same image/altText field pattern
   // as every other photo section on this page, plus a short plainText

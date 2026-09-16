@@ -126,6 +126,10 @@ export const DONATE_PAGE_FALLBACK: DonatePageContent = {
   testimonial1Author: "Programme participant",
   testimonial2Quote: "What makes GESA different is the way it connects therapy with education and community.",
   testimonial2Author: "Name / Role",
+  // Phase 238 — third testimonial, real approved copy from Roy (not a
+  // placeholder like the two above).
+  testimonial3Quote: "The support gave me hope when I didn't know where to turn. I felt heard, understood and not alone.",
+  testimonial3Author: "Programme participant",
   // Phase 224 — "See the impact" horizontal photo gallery, inserted between
   // testimonials and the donation form per Roy's required narrative flow.
   // No 7 distinct authentic photos were supplied this phase (only the 3
@@ -271,6 +275,7 @@ export default async function DonatePage({
   const testimonials = [
     { quote: content.testimonial1Quote, author: content.testimonial1Author, quoteId: "donate.testimonials.quote1", authorId: "donate.testimonials.author1" },
     { quote: content.testimonial2Quote, author: content.testimonial2Author, quoteId: "donate.testimonials.quote2", authorId: "donate.testimonials.author2" },
+    { quote: content.testimonial3Quote, author: content.testimonial3Author, quoteId: "donate.testimonials.quote3", authorId: "donate.testimonials.author3" },
   ];
 
   // Phase 223 — the 3 floating hero photos from Roy's "BG Donate Page.jpg"
@@ -509,7 +514,7 @@ export default async function DonatePage({
               <EditableText contentId="donate.testimonials.heading" label="Testimonials heading" value={content.testimonialsHeading} as="span" />
             </h2>
           </Reveal>
-          <StaggerGroup className="grid gap-6 sm:grid-cols-2">
+          <StaggerGroup className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t) => (
               <StaggerItem key={t.quoteId} className="rounded-[var(--radius)] border border-border bg-card p-7 shadow-soft">
                 <Quote className="mb-3 text-primary/40" size={22} />

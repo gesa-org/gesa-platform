@@ -450,6 +450,10 @@ export type DonatePageContent = {
   testimonial1Author: string;
   testimonial2Quote: string;
   testimonial2Author: string;
+  // Phase 238 — third testimonial, added by Roy with real, permissioned
+  // copy ("Programme participant") to sit alongside the first two.
+  testimonial3Quote: string;
+  testimonial3Author: string;
   // Phase 224 — Roy asked for the page to follow a
   // PHOTO -> STORY -> HUMAN VOICE -> IMPACT -> DONATION -> THANK YOU
   // narrative flow, with a new "See the impact" horizontal photo-gallery
