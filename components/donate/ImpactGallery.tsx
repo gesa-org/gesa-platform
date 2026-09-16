@@ -110,7 +110,7 @@ export default function ImpactGallery({
             role="region"
             aria-label="See the impact — photo gallery"
             tabIndex={0}
-            className="motion-safe:scroll-smooth flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="scrollbar-hide motion-safe:scroll-smooth flex snap-x snap-mandatory gap-5 overflow-x-auto pb-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             {photos.map((photo, i) => (
               <figure

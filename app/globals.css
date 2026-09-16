@@ -476,6 +476,20 @@
   height: 0;
 }
 
+/* Phase 239 — hides the native browser scrollbar on horizontally-scrollable
+   regions (e.g. the Donate page "See the impact" gallery) while leaving
+   scroll behavior itself untouched: mouse wheel, trackpad, touch swipe, and
+   the section's own prev/next buttons all still work exactly as before.
+   Roy asked to remove the visible scroll-track/thumb bar under the photos,
+   not the scrolling itself. */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge (Chromium) */
+}
+
 /* Phase 51 — continuous "news line" ticker on Home (components/motion/
    NewsTicker.tsx), replacing the old scroll-linked badge/card repeat.
    The component renders the item list twice back-to-back inside this
