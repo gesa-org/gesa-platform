@@ -9965,4 +9965,20 @@ Unlike the Phase 228 sage-green swap, this section's text couldn't just ride alo
 - Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227/228; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
 
 ---
+
+## Phase 230: Our Professionals directory band switched from Sand Brown to Warm Ivory
+
+**Request:** Roy sent a reference screenshot of the Our Professionals page's filter-sidebar + therapist-cards band (currently gold `bg-sand-brown`) and asked it to move to "Warm Ivory" instead.
+
+**What shipped:** `app/therapists/page.tsx`'s directory section — background changed `bg-sand-brown` -> `bg-modal-ivory`, reusing the existing `--modal-ivory` token (#F8F1DF, "Warm Ivory" — added in Phase 220 for form-modal backgrounds site-wide) rather than adding a new color. Its Tailwind class name (`bg-modal-ivory`) is a holdover from that original modal-only use case, but the color itself is exactly the "Warm Ivory" Roy asked for here. Both the old and new backgrounds are light, so — unlike Phase 229's dark-navy Founder-spotlight swap — no text-color flip was needed; filter labels, therapist cards, and photos all read the same against ivory as they did against gold.
+
+**Files touched:** `app/therapists/page.tsx`.
+
+**Manual test scenarios:** visit `/therapists` ("Our Professionals") and confirm the filter sidebar + therapist card grid band is now warm ivory instead of gold, with all filter labels, therapist names/specialties/photos, and the "Choose a date and time"/"Message" buttons still clearly legible.
+
+**Assumptions/follow-ups:**
+- `npx tsc --noEmit` run against `app/therapists/page.tsx`: zero errors. No existing test asserted this section's background class, so nothing needed updating.
+- Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227/228/229; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
