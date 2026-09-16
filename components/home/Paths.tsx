@@ -293,6 +293,19 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // `side` a further-darkened step past `doorFrame` (the deepest, most
 // shadowed plane, at the wall's inside corner) — sampled by eye against the
 // reference's own top/right shading on each of its three boxes.
+// Phase 237 — per-card override: when set, this card's front face renders
+// the given uploaded photo directly instead of the code-drawn FrameBox +
+// GesaMark shadowbox. Roy is replacing these one card at a time with real
+// framed-artwork photos (see the front-face render block below for the full
+// reasoning) — `undefined` means "not updated yet, keep the shadowbox."
+// Index 0 = WAR/crisis card (Phase 237 round 1), 1 = Veterans/center card
+// (Phase 237 round 2).
+const CARD_FRONT_IMAGE_OVERRIDES: (string | undefined)[] = [
+  "/images/paths/crisis-framed-swirl.png",
+  "/images/paths/veterans-framed-swirl.png",
+  undefined,
+];
+
 const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; top: string; side: string; mark: GesaMarkColors }[] = [
   {
     bg: "bg-[#aed0e9]",
@@ -671,17 +684,17 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             renders as a real, recolorable React component
                             rather than being redrawn as more inline SVG. */}
                         <div className="relative w-full flex-1 min-h-0">
-                          {i === 0 ? (
-                            // Phase 237 — Roy sent a new reference photo for
-                            // just this card (the "WAR" front face): a real
-                            // sage-green wood frame around a tan mat holding
-                            // a crescent-moon/wave mark, asked to replace
-                            // only this card's front artwork — the recessed
-                            // shadowbox treatment (FrameBox + GesaMark) other
-                            // two cards use, the flip effect, and this card's
-                            // own back face (title/description/CTA, driven by
-                            // the same `p`/CARD_CONTENT_KEYS[0] below) are all
-                            // untouched. The reference image already has its
+                          {CARD_FRONT_IMAGE_OVERRIDES[i] ? (
+                            // Phase 237 — Roy started sending, one card at a
+                            // time, a new reference photo for that card's
+                            // front face only: a real sage-green wood frame
+                            // around a tan mat holding a crescent-moon/wave
+                            // mark, asked to replace just that card's front
+                            // artwork — the recessed shadowbox treatment
+                            // (FrameBox + GesaMark) any not-yet-updated card
+                            // still uses, the flip effect, and every card's
+                            // own back face (title/description/CTA) are all
+                            // untouched. Each reference image already has its
                             // own frame/mat baked in (unlike GesaMark, which
                             // is a bare recolorable mark meant to sit inside
                             // FrameBox's drawn recess), so it renders directly
@@ -690,8 +703,10 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             // piece visible without cropping, same convention
                             // Phase 42 used for the original uploaded card
                             // artwork before Phase 121 switched to GesaMark.
+                            // See CARD_FRONT_IMAGE_OVERRIDES above for which
+                            // cards have been updated so far.
                             <Image
-                              src="/images/paths/crisis-framed-swirl.png"
+                              src={CARD_FRONT_IMAGE_OVERRIDES[i]!}
                               alt=""
                               fill
                               sizes="(max-width: 768px) 33vw, 220px"
