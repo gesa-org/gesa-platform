@@ -22,7 +22,8 @@ import LegalPagesManager from "@/components/admin/content/LegalPagesManager";
 import MediaLibrary from "@/components/admin/content/MediaLibrary";
 import PartnersManager from "@/components/admin/content/PartnersManager";
 import NotFoundEditor from "@/components/admin/content/NotFoundEditor";
-import type { MediaAssetRow, MediaAssetUsageRow } from "@/lib/database.types";
+import WebsitePagesDirectory from "@/components/admin/content/WebsitePagesDirectory";
+import type { MediaAssetRow, MediaAssetUsageRow, Tables } from "@/lib/database.types";
 import type {
   HomeContent,
   HeroContent,
@@ -42,7 +43,6 @@ import type {
   SimplePageContent,
   NotFoundPageContent,
 } from "@/lib/content";
-import type { Tables } from "@/lib/database.types";
 
 type Props = {
   home: HomeContent;
@@ -73,6 +73,9 @@ type Props = {
   mediaAssets: Array<MediaAssetRow & { publicUrl: string; usages: MediaAssetUsageRow[] }>;
   partners: Tables<"partners">[];
   notFound: NotFoundPageContent;
+  // Phase 236 — feed the new "Website Pages" directory tab.
+  publishedByKey: Record<string, boolean | undefined>;
+  latestVersions: Record<string, Tables<"content_versions"> | undefined>;
 };
 
 // Tabs that need more than a plain banner — each gets its own bespoke block
@@ -133,6 +136,13 @@ const DATA_AND_MEDIA_TABS = ["Legal Pages", "Media Library", "Trusted Partners"]
 // single "Pages" entry rather than being split across two groups).
 function useTabGroups(genericEntries: { key: string; label: string }[]) {
   return [
+    // Phase 236 — Roy asked for a single directory an admin lands on first:
+    // every route the site has, its live status, who last touched it, and
+    // one click into View Live / Edit / version history. This is its own
+    // group (not folded into "Pages") since it isn't itself a page's copy —
+    // it's the index over every group below it, including the ones that
+    // aren't "Pages" (Global Elements, Forms & Popups, Data & Media).
+    { heading: "Directory", tabs: ["Website Pages"] },
     {
       heading: "Pages",
       tabs: [...PAGE_FIXED_TABS, ...genericEntries.map((e) => e.label), ...PAGE_FIXED_TABS_END],
@@ -151,7 +161,11 @@ function useTabGroups(genericEntries: { key: string; label: string }[]) {
 export default function ContentManagerApp(props: Props) {
   const genericEntries = props.simplePageEntries.filter((e) => !COMPOSITE_SIMPLE_KEYS.has(e.key));
   const tabGroups = useTabGroups(genericEntries);
-  const [tab, setTab] = useState<string>("Header");
+  // Phase 236 — was "Header"; the new Website Pages directory is the more
+  // useful landing view (an admin can see everything's state before
+  // drilling into one editor), same reasoning as any CMS's page-list-first
+  // convention.
+  const [tab, setTab] = useState<string>("Website Pages");
 
   return (
     <div>
@@ -176,6 +190,14 @@ export default function ContentManagerApp(props: Props) {
           </div>
         ))}
       </div>
+
+      {tab === "Website Pages" && (
+        <WebsitePagesDirectory
+          publishedByKey={props.publishedByKey}
+          latestVersions={props.latestVersions}
+          onEditTab={setTab}
+        />
+      )}
 
       {tab === "Header" && <HeaderEditor initial={props.header} />}
 
