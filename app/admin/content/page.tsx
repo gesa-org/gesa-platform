@@ -1,4 +1,4 @@
-import { getFaqs, getAllLegalPages, getSiteContentMap, getAllPartnersAdmin } from "@/lib/queries";
+import { getFaqs, getAllLegalPages, getSiteContentMap, getAllPartnersAdmin, getLatestContentVersions } from "@/lib/queries";
 import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
@@ -73,13 +73,28 @@ function merge<T extends Record<string, unknown>>(row: unknown, fallback: T): T 
 }
 
 export default async function AdminContentPage() {
-  const [map, faqs, legalPages, mediaAssets, partners] = await Promise.all([
+  const [map, faqs, legalPages, mediaAssets, partners, latestVersionsMap] = await Promise.all([
     getSiteContentMap(KEYS),
     getFaqs(),
     getAllLegalPages(),
     getAllMediaAssetsForAdmin(),
     getAllPartnersAdmin(),
+    getLatestContentVersions(),
   ]);
+
+  // Phase 236 — Website Pages directory needs, per content key: is it
+  // currently published, and when/by whom was it last saved. Both are
+  // cheap to derive from data already fetched above rather than adding more
+  // queries — publishedByKey reads the same raw `value.published` every
+  // editor already reads; latestVersions is just that Map as a plain object
+  // (a Client Component prop can't be a Map).
+  const publishedByKey: Record<string, boolean | undefined> = {};
+  for (const key of KEYS) {
+    const raw = map.get(key);
+    publishedByKey[key] =
+      raw && typeof raw === "object" && "published" in raw ? Boolean((raw as { published?: unknown }).published) : undefined;
+  }
+  const latestVersions = Object.fromEntries(latestVersionsMap);
 
   // Phase 80 round 2 — every SIMPLE_PAGE_ENTRIES row (Our Therapists,
   // Support Groups, Find Your Therapist, Blog, FAQ banner, Contact — and
@@ -140,6 +155,8 @@ export default async function AdminContentPage() {
         mediaAssets={mediaAssets}
         partners={partners}
         notFound={merge<NotFoundPageContent>(map.get("page_not_found"), NOT_FOUND_CONTENT_FALLBACK)}
+        publishedByKey={publishedByKey}
+        latestVersions={latestVersions}
       />
     </div>
   );
