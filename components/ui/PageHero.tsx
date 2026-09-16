@@ -66,6 +66,24 @@ interface PageHeroProps {
 // when `gold` is true, to stay legible on a deep-navy banner background;
 // reverted alongside the rest of that phase once Roy said the new color
 // didn't work on the live site.
+//
+// Phase 232 — Roy sent 2 reference screenshots (Our Professionals' and
+// Find Support's gold-banner heroes, both showing a white title on the
+// light `--slate-banner` background) and asked the text to switch to black,
+// "same with the other text color" — i.e. matching the dark text every
+// non-gold PageHero page (Contact, FAQ, legal pages) already uses. That
+// white styling actually predates this file's Phase 159 revert note above:
+// this component's `gold ? "text-white" : ...` conditional was never
+// actually reverted alongside the rest of that phase (only Hero.tsx/Paths.tsx
+// were, per their own Phase 159 comments) — `--slate-banner` is a light
+// blue-gray, not the dark navy that reverted white-text change was tuned
+// for, so white-on-slate-banner has been low-contrast on every gold
+// PageHero page (Our Professionals, Find Support) since. Fixed by dropping
+// the `gold` branch entirely for both title and description — both pages
+// affected already have a dark `text-primary` eyebrow reading fine against
+// this same background, so the title (now unset, inheriting the site's
+// default dark heading color) and description (now `text-muted-fg`, the
+// same non-gold default) read the same way.
 export default function PageHero({
   icon: Icon,
   eyebrow,
@@ -95,15 +113,11 @@ export default function PageHero({
           </span>
         </StaggerItem>
         <StaggerItem>
-          <h1
-            className={`mx-auto mb-2.5 mt-1 max-w-[760px] text-[clamp(32px,4.5vw,44px)] ${gold ? "text-white" : ""}`}
-          >
-            {title}
-          </h1>
+          <h1 className="mx-auto mb-2.5 mt-1 max-w-[760px] text-[clamp(32px,4.5vw,44px)]">{title}</h1>
         </StaggerItem>
         {description && (
           <StaggerItem>
-            <div className={`mx-auto max-w-[620px] ${gold ? "text-white/80" : "text-muted-fg"}`}>{description}</div>
+            <div className="mx-auto max-w-[620px] text-muted-fg">{description}</div>
           </StaggerItem>
         )}
         {children}

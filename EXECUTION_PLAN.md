@@ -10006,4 +10006,23 @@ Unlike the Phase 228 sage-green swap, this section's text couldn't just ride alo
 - Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227/228/229/230; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
 
 ---
+
+## Phase 232: Fixed low-contrast white hero text on Our Professionals and Find Support
+
+**Request:** Roy sent 2 reference screenshots — Our Professionals' ("Verified volunteer therapists") and Find Support's ("Wherever you are, there is a pathway forward.") gold-banner hero titles, both rendering white — and asked the text to switch to black, "same with the other text color."
+
+**What was found:** both pages share one component, `components/ui/PageHero.tsx`, via its `gold` prop. Its title/description classes had a `gold ? "text-white"/"text-white/80" : ...` conditional — a leftover from Phase 159, which tried white text specifically for a deep-navy banner background and was supposed to be fully reverted once Roy said it didn't work live. That revert actually happened in `Hero.tsx`/`Paths.tsx` (both have their own "Phase 159 — reverted" comments) but was missed in this shared `PageHero.tsx`, so every page using `gold={true}` here — Our Professionals and Find Support, confirmed live via browser inspection (`h1` computed color `rgb(255,255,255)` on both, against the light `--slate-banner` background, not the dark navy the white text was tuned for) — has been low-contrast white-on-light-gray since.
+
+**What shipped:** `components/ui/PageHero.tsx` — dropped the `gold` branch entirely for both the title and description: title now renders with no color override (inherits the site's default dark heading color, same as every non-gold PageHero page), description now always uses `text-muted-fg` (previously only the non-gold default). The eyebrow chip was already dark (`text-primary`) in both cases and reads fine — untouched.
+
+**Files touched:** `components/ui/PageHero.tsx`.
+
+**Manual test scenarios:** visit `/therapists` ("Our Professionals") and `/find-your-therapist` ("Find Support") and confirm both hero titles/descriptions now read as dark text against the light slate-gray banner, matching every other PageHero page (Contact, FAQ, legal pages).
+
+**Assumptions/follow-ups:**
+- `npx tsc --noEmit` run against `components/ui/PageHero.tsx`: zero errors. No existing test asserted the old `text-white`/`text-white/80` classes, so nothing needed updating.
+- This is a shared-component fix, so it corrects both screenshots (and any future page that passes `gold`) from one change, rather than two separate per-page edits.
+- Not committed/pushed from this session — same `.git/index.lock` blocker as Phases 224/227–231; needs the same manual `del .git\index.lock` step before `git add`/`commit`/`push` will work here.
+
+---
 **Gate:** Per Roy's instruction, each phase stops here for review/approval before the next one starts.
