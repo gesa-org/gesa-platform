@@ -603,6 +603,13 @@ export type SessionBookingRow = {
 // here from the moment its PayPal order is created until capture succeeds
 // (-> confirmed) or the client cancels/payment fails (-> cancelled/failed).
 // Every prior value's meaning is unchanged.
+// Phase 235 — added "expired": the hourly public.expire_stale_submissions()
+// cron job (see EXECUTION_PLAN.md Phase 235) sets this on any row still
+// sitting at calendar_opened/slot_selected/pending_confirmation/
+// payment_pending more than an hour after it started — a genuinely
+// abandoned diary-link handoff, not a real booking. /api/diary-appointment/
+// confirm/route.ts rejects a confirm attempt against an expired row with a
+// clear "please start again" message rather than silently reviving it.
 export type DiarySchedulingStatus =
   | "calendar_opened"
   | "slot_selected"
@@ -610,7 +617,8 @@ export type DiarySchedulingStatus =
   | "payment_pending"
   | "confirmed"
   | "cancelled"
-  | "failed";
+  | "failed"
+  | "expired";
 export type SlotSource = "client_reported";
 
 // Phase 196 — tags a diary-link booking as one of the Community page's two

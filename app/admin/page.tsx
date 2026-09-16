@@ -168,7 +168,21 @@ export default async function AdminOverviewPage() {
   const newSupportRequests = supportRequests.filter(
     (r) => Date.now() - new Date(r.created_at).getTime() < 3 * 24 * 60 * 60 * 1000
   ).length;
-  const confirmedSessions = sessionBookings.filter((s) => s.status === "confirmed").length;
+  // Phase 235 — Roy required every CRM dashboard counter, activity item,
+  // trend point, and calendar entry to reflect only genuinely completed
+  // submissions, excluding cancelled/failed/abandoned ones. session_bookings
+  // is the one table here with a real "went away after being genuine" status
+  // (`cancelled`) — booking_requests/inquiries/registrations/volunteer
+  // applications don't have an abandoned-submission concept (every row in
+  // those tables already represents a real, completed public submission; see
+  // EXECUTION_PLAN.md Phase 235's audit), so they're intentionally left as
+  // full counts below. `confirmedSessionBookings` is the filtered array used
+  // everywhere a "how many real bookings" number is shown; the full
+  // `sessionBookings` array is kept only for the KPI tile's "X total
+  // submitted" sub-label, never for a headline count, a feed entry, a trend
+  // point, or a calendar dot.
+  const confirmedSessionBookings = sessionBookings.filter((s) => s.status === "confirmed");
+  const confirmedSessions = confirmedSessionBookings.length;
   const newVolunteerApplications = volunteerApplications.filter((a) => a.status === "new").length;
   const roleCounts = profiles.reduce<Record<string, number>>((acc, p) => {
     acc[p.role] = (acc[p.role] ?? 0) + 1;
@@ -181,8 +195,8 @@ export default async function AdminOverviewPage() {
   const kpiTiles = [
     {
       label: "Session bookings",
-      value: sessionBookings.length,
-      sub: `${confirmedSessions} confirmed`,
+      value: confirmedSessions,
+      sub: `${sessionBookings.length} total submitted`,
       href: "/admin/sessions",
     },
     {
@@ -210,7 +224,7 @@ export default async function AdminOverviewPage() {
   // item type actually has.
   const isNew = (iso: string) => Date.now() - new Date(iso).getTime() < 3 * 24 * 60 * 60 * 1000;
   const activity: ActivityItem[] = [
-    ...sessionBookings.map((s) => ({
+    ...confirmedSessionBookings.map((s) => ({
       type: "Session booking",
       href: "/admin/sessions",
       label: `Session with ${s.therapist?.full_name ?? "a professional"}`,
@@ -280,13 +294,13 @@ export default async function AdminOverviewPage() {
   const currentYearMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
 
   const calendarEvents: CalendarEvent[] = [
-    ...sessionBookings.map((s) => ({
+    ...confirmedSessionBookings.map((s) => ({
       kind: "session" as const,
       dateIso: s.session_date,
       time: s.session_time.slice(0, 5),
       personLabel: `${s.client_name} with ${s.therapist?.full_name ?? "a professional"}`,
       statusLabel: s.status,
-      dotClass: s.status === "confirmed" ? "bg-amber" : "bg-muted-fg",
+      dotClass: "bg-amber",
     })),
     ...supportRequests.map((r) => ({
       kind: "match" as const,

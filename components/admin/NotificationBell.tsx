@@ -152,11 +152,14 @@ export default function NotificationBell() {
           // Session bookings (Phase 20's real, conflict-free reservations) were
           // previously missing from this feed entirely — a booking could show
           // up in /admin/sessions with no corresponding notification here.
+          // Phase 235 — filtered to confirmed only: a cancelled booking isn't
+          // a "new" successful submission and shouldn't ping the bell as one.
           supabase
             .from("session_bookings")
             .select(
               "id, client_name, client_email, session_date, session_time, contact_channel, path, status, created_at, therapist:therapists(full_name)"
             )
+            .eq("status", "confirmed")
             .order("created_at", { ascending: false })
             .limit(8),
           // Phase 69 — previously missing from this feed entirely.

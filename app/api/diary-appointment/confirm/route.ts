@@ -58,6 +58,18 @@ export async function POST(request: Request) {
   if (event.status === "cancelled") {
     return NextResponse.json({ error: "This booking was cancelled and can't be confirmed." }, { status: 409 });
   }
+  // Phase 235 — a diary-link handoff left unconfirmed for over an hour is
+  // marked "expired" by the hourly public.expire_stale_submissions() cron
+  // job. Per Roy's one-hour-expiry requirement, an expired attempt can never
+  // be resumed/submitted from here — the client has to start the booking
+  // over from the beginning (a fresh intake creates a fresh event id, so
+  // there's no old data to accidentally resurrect).
+  if (event.status === "expired") {
+    return NextResponse.json(
+      { error: "This booking session has expired after being inactive for over an hour — please start again." },
+      { status: 410 }
+    );
+  }
   if (!event.selected_date || !event.selected_start_time) {
     return NextResponse.json({ error: "Please select a date and time before confirming." }, { status: 400 });
   }
