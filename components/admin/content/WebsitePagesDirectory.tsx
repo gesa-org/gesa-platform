@@ -137,7 +137,7 @@ export default function WebsitePagesDirectory({
           <span>
             <strong>{KNOWN_ORPHANED_CONTENT_KEYS.length} orphaned content record(s)</strong> exist in the database with
             no matching page or editor anymore ({KNOWN_ORPHANED_CONTENT_KEYS.join(", ")}) — leftovers from earlier
-            page redesigns. They're not read by any live route; safe to ignore, or ask to have them cleaned up.
+            page redesigns. They&apos;re not read by any live route; safe to ignore, or ask to have them cleaned up.
           </span>
         </div>
       )}
