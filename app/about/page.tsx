@@ -84,9 +84,30 @@ export default async function AboutPage({
   const sections = (resolved as unknown as { sections: typeof sectionsRaw }).sections;
   const donateContent = (resolved as unknown as { donate: typeof donateContentRaw }).donate;
 
+  // Phase 242 — Home's TERROR portal card ("I serve or support someone who
+  // serves") now links here as `/about?openMatch=terror` instead of the
+  // general `/intake?path=` listing, so it lands directly in AI Matching
+  // (the only place that flow exists — see Hero.tsx/HeroFindSupportCta.tsx's
+  // own Phase 242 comments). `openMatch`'s value is only ever used to look
+  // up a display label below; it never feeds the wizard's actual matching
+  // logic (WizardAnswers has no pathway field to set), so an unrecognized or
+  // missing value just means no auto-open/no label, never a crash.
+  const openMatchParam = typeof searchParams?.openMatch === "string" ? searchParams.openMatch : undefined;
+  const OPEN_MATCH_LABELS: Record<string, string> = {
+    terror: "Continuing your request for support related to serving or supporting someone who serves.",
+  };
+  const autoOpenMatch = Boolean(openMatchParam && OPEN_MATCH_LABELS[openMatchParam]);
+  const matchContextLabel = openMatchParam ? OPEN_MATCH_LABELS[openMatchParam] : undefined;
+
   const page = (
     <div className="reveal-page__main">
-      <Hero content={heroContent} clinicLocations={clinicLocations} therapists={therapists} />
+      <Hero
+        content={heroContent}
+        clinicLocations={clinicLocations}
+        therapists={therapists}
+        autoOpenMatch={autoOpenMatch}
+        matchContextLabel={matchContextLabel}
+      />
 
       {/* Phase 104 — Roy sent a screenshot of the "OUR STORY" mission
           section (eyebrow/heading/body, on the sage-soft wash) and asked to

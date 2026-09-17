@@ -19,6 +19,7 @@ export default function FindSupportModal({
   onClose,
   clinicLocations,
   onChooseBrowse,
+  contextLabel,
 }: {
   open: boolean;
   onClose: () => void;
@@ -28,6 +29,15 @@ export default function FindSupportModal({
   // this modal and opening BrowseTherapistModal in its place) — see that
   // file's own comment.
   onChooseBrowse: () => void;
+  // Phase 242 — optional short line shown above the choice screen/wizard so
+  // a visitor who arrived via a pathway-specific link (e.g. Home's TERROR
+  // card -> `/about?openMatch=terror`) can see that context was retained.
+  // Deliberately rendered here, one level above FindSupportFlow, rather than
+  // threaded into ChoiceScreen/MatchWizard themselves: it stays visible
+  // across every step of the flow without either of those components (or
+  // the wizard's own data model) needing to know about pathway context at
+  // all.
+  contextLabel?: string;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -135,6 +145,14 @@ export default function FindSupportModal({
           <X size={18} />
         </button>
         <div className="max-h-[80vh] overflow-y-auto pt-2">
+          {/* Phase 242 — see this component's `contextLabel` prop comment
+              above. Sits above FindSupportFlow so it stays visible whether
+              the choice screen or the wizard itself is currently showing. */}
+          {contextLabel && (
+            <div className="mx-auto mb-5 max-w-[680px] rounded-[var(--radius)] bg-accent-soft px-4 py-2.5 text-[13.5px] font-medium text-primary">
+              {contextLabel}
+            </div>
+          )}
           <FindSupportFlow clinicLocations={clinicLocations} onChooseBrowse={onChooseBrowse} />
         </div>
       </div>

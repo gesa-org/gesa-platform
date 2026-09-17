@@ -126,6 +126,8 @@ export default function Hero({
   content = HERO_CONTENT_FALLBACK,
   clinicLocations = [],
   therapists = [],
+  autoOpenMatch = false,
+  matchContextLabel,
 }: {
   content?: HeroContent;
   // Phase 146 — only needed so the primary CTA can hand it down to the
@@ -137,6 +139,15 @@ export default function Hero({
   // Phase 151 — same reasoning as clinicLocations above, for the new
   // Browse Therapist search modal (needs the active therapist roster).
   therapists?: PublicTherapistRow[];
+  // Phase 242 — plain passthrough to HeroFindSupportCta so app/about/
+  // page.tsx (the only current caller of either prop) can make this Hero's
+  // existing primary CTA open the AI Matching modal automatically on
+  // arrival, when a visitor lands here via a link that's meant to drop them
+  // straight into AI Matching (e.g. Home's TERROR portal card) rather than
+  // requiring the usual click. Both optional and default to "off", so every
+  // other caller/render of this Hero is unaffected.
+  autoOpenMatch?: boolean;
+  matchContextLabel?: string;
 }) {
   return (
     <section className="gold-banner relative overflow-hidden border-b border-border pt-16 pb-20">
@@ -197,6 +208,8 @@ export default function Hero({
                   href={content.ctaPrimaryHref}
                   clinicLocations={clinicLocations}
                   therapists={therapists}
+                  autoOpen={autoOpenMatch}
+                  contextLabel={matchContextLabel}
                   className="inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-600 px-7 py-4 rounded-full text-[15px] font-semibold transition-all shadow-lg hover:shadow-xl hover:-translate-y-[1px]"
                 >
                   <EditableText contentId="about.hero.cta1Label" label="Primary CTA label" value={content.ctaPrimaryLabel} as="span" /> <ArrowRight size={18} />

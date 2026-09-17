@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Tables, PublicTherapistRow } from "@/lib/database.types";
@@ -39,6 +39,8 @@ export default function HeroFindSupportCta({
   children,
   clinicLocations,
   therapists = [],
+  autoOpen = false,
+  contextLabel,
 }: {
   href: string;
   className?: string;
@@ -49,8 +51,33 @@ export default function HeroFindSupportCta({
   // roster to filter against). Defaults to [] rather than required, same
   // reasoning as `clinicLocations` above.
   therapists?: PublicTherapistRow[];
+  // Phase 242 — when true (and `href` is the recognized modal-trigger
+  // sentinel below), opens the AI Matching modal on mount instead of
+  // waiting for a click. Added so a link elsewhere on the site (Home's
+  // TERROR portal card, via `/about?openMatch=terror`) can drop a visitor
+  // straight into AI Matching rather than requiring them to click "Match
+  // Support" again once they arrive. Defaults to false, so every existing
+  // render of this component (a plain click-to-open button) is unaffected.
+  autoOpen?: boolean;
+  // Phase 242 — optional short line rendered inside the modal, above the
+  // choice screen/wizard, so a visitor who arrived via a pathway-specific
+  // link (see `autoOpen` above) can see that context carried through.
+  // Purely a passthrough to FindSupportModal — this component has no
+  // opinion on its content.
+  contextLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
+
+  // Phase 242 — fires once on mount; `isMatchModalTrigger` is checked again
+  // here (not just relied on from the branch below) so a stray `autoOpen`
+  // passed alongside a non-sentinel href is a harmless no-op rather than a
+  // dead `setOpen` call.
+  useEffect(() => {
+    if (autoOpen && isMatchModalTrigger(href)) {
+      setOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Phase 151 — sibling to `open` above rather than owned by FindSupportModal
   // itself: ChoiceScreen's "Browse therapist" card needs to close the AI/
   // Manual choice modal AND open this new one, and the two modals need to
@@ -76,6 +103,7 @@ export default function HeroFindSupportCta({
           onClose={() => setOpen(false)}
           clinicLocations={clinicLocations}
           onChooseBrowse={openBrowseSearch}
+          contextLabel={contextLabel}
         />
         <BrowseTherapistModal open={browseOpen} onClose={() => setBrowseOpen(false)} therapists={therapists} />
       </>

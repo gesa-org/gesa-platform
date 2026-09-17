@@ -40,7 +40,19 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   card2Description:
     "For the long shadow of service — adjustment, ongoing stress, trauma, and the strain on families. Unlimited free sessions for veterans and reservists; families receive a structured package of sessions.",
   card2CtaLabel: "Reach out now",
-  card2CtaLink: "/intake?path=veteran",
+  // Phase 242 — Roy asked for this card (TERROR / "I serve or support
+  // someone who serves") to go straight into the AI Matching flow instead
+  // of the general intake pathway listing. AI Matching only exists as a
+  // client-side modal (FindSupportModal, opened via HeroFindSupportCta's
+  // `#how-it-works` sentinel-href pattern), mounted only on the About page
+  // Hero — there is no standalone `/ai-matching` route or `/#ai-matching`
+  // anchor anywhere in this codebase. Rather than build a new route for a
+  // flow that already exists elsewhere, this now points at that existing
+  // entry point with a query flag (`openMatch=terror`) that app/about/
+  // page.tsx reads to auto-open the modal on arrival and pass a "Terror"
+  // context label into it — see that page and HeroFindSupportCta.tsx's own
+  // Phase 242 comments for the full mechanism. Cards 1 and 3 are untouched.
+  card2CtaLink: "/about?openMatch=terror",
   card3Title: "Seeking support",
   card3Description: "For anyone carrying anxiety, ongoing stress, or the weight of antisemitism. Start here — more is coming.",
   card3CtaLabel: "Reach out now",
@@ -813,6 +825,14 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             hover darkens to --amber, the same gold family. */}
                         <Link
                           href={p.ctaLink}
+                          // Phase 242 — explicit accessible label for the
+                          // TERROR card (i === 1) only, per Roy's request,
+                          // since its visible label ("Reach out now") no
+                          // longer describes where it actually goes now that
+                          // it opens AI Matching directly. Cards 1 and 3 are
+                          // untouched — their visible CTA text is still an
+                          // accurate accessible name on its own.
+                          aria-label={i === 1 ? "Start AI matching for support related to terror." : undefined}
                           className="relative z-10 mt-3.5 inline-flex w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-clay px-[18px] py-2 text-[12.5px] font-semibold text-espresso transition-colors hover:bg-amber hover:text-white"
                         >
                           <EditableText
