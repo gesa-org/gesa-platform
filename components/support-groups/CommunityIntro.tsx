@@ -249,18 +249,24 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
               precedent this comment used to sit under), so no data or
               schema change is needed here — only bringing back the JSX,
               rendered plainly beneath the card grid rather than as its own
-              separate `<section>`. Typography matches the same "heading on
-              --navy-deep" convention already used by About's movement band
-              (app/about/page.tsx) and DonateBand's dark variant: `text-white`
-              for the heading, `text-white/80` for the subtitle, both
-              centered in a narrow max-width column. */}
+              separate `<section>`. `mt-14` gives clear separation from the
+              cards above, and this section's own `.section` padding-bottom
+              (64px desktop / 44px mobile, globals.css) already gives clear
+              separation from DonateBand's "Be part of the change" band
+              directly below, so no extra bottom margin was needed.
+              Phase 244 round 2 — Roy asked for this specifically as plain
+              supporting text, not another heading (this section already has
+              one semantic <h2>, "Choose your pathway", above the cards), so
+              both lines render as <p> rather than the <h2>/<div> pairing
+              this used to have — same centered, `text-white`/`text-white/80`
+              look as before, just non-heading markup. */}
           <Reveal type="fade-up" className="mt-14 block text-center">
-            <h2 className="mx-auto max-w-[640px] text-[28px] text-white sm:text-[30px]">
+            <p className="mx-auto max-w-[640px] text-[19px] font-medium leading-snug text-white sm:text-[21px]">
               <EditableText contentId="supportGroups.intro.closingHeading" label="Closing band heading" value={content.closingHeading} as="span" />
-            </h2>
-            <div className="mx-auto mt-2.5 max-w-[640px] text-white/80">
+            </p>
+            <p className="mx-auto mt-2.5 max-w-[640px] text-[15px] text-white/80">
               <EditableText contentId="supportGroups.intro.closingSubtitle" label="Closing band subtitle" value={content.closingSubtitle} as="span" />
-            </div>
+            </p>
           </Reveal>
         </div>
       </section>
