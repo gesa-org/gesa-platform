@@ -629,7 +629,11 @@ const INTAKE_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "intake.hero.crisisTitle", path: "crisisHeroTitle", label: "Crisis path hero heading", type: "heading", group: "Hero", maxLength: 140, contentScope: "page" },
   { contentId: "intake.hero.defaultTitle", path: "defaultHeroTitle", label: "Default hero heading", type: "heading", group: "Hero", maxLength: 140, contentScope: "page" },
   { contentId: "intake.crisis.disclaimer", path: "crisisDisclaimer", label: "Crisis disclaimer", type: "plainText", group: "Crisis guidance", maxLength: 300, contentScope: "page" },
-  { contentId: "intake.crisis.moreHelplinesText", path: "moreHelplinesText", label: "“More helplines” text", type: "plainText", group: "Crisis guidance", maxLength: 100, contentScope: "page" },
+  // Phase 243 — label updated to match this field's new meaning (the lead-
+  // in question before the fixed "Find local crisis services." link, not a
+  // "more helplines at <url>" sentence anymore — see app/intake/page.tsx's
+  // own Phase 243 comment). Same contentId/path, no data migration needed.
+  { contentId: "intake.crisis.moreHelplinesText", path: "moreHelplinesText", label: "Crisis emergency prompt text", type: "plainText", group: "Crisis guidance", maxLength: 100, contentScope: "page" },
   { contentId: "intake.crisis.ongoingSupportPrompt", path: "ongoingSupportPrompt", label: "Ongoing-support prompt", type: "plainText", group: "Crisis guidance", maxLength: 200, contentScope: "page" },
   { contentId: "intake.matchList.intro", path: "matchListIntro", label: "Match list intro", type: "plainText", group: "Crisis guidance", maxLength: 200, contentScope: "page" },
 ];

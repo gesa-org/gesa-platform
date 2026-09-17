@@ -30,7 +30,7 @@ export default function IntakeFlowEditor({ initial }: { initial: IntakeFlowConte
           heading: "Crisis path copy",
           fields: [
             { key: "crisisDisclaimer", label: "Safety disclaimer", multiline: true },
-            { key: "moreHelplinesText", label: "\"More helplines at\" link text" },
+            { key: "moreHelplinesText", label: "Crisis emergency prompt text (before the fixed \"Find local crisis services.\" link)" },
             { key: "ongoingSupportPrompt", label: "Ongoing-support prompt" },
           ],
         },

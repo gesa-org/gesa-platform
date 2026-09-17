@@ -126,13 +126,38 @@ export default async function IntakePage({
           <div className="mt-1 rounded-xl bg-accent-soft px-3.5 py-3 text-sm text-primary-600">
             <EditableText contentId="intake.crisis.disclaimer" label="Crisis disclaimer" value={content.crisisDisclaimer} as="span" />
           </div>
-          <Link href="/" className="mx-auto mt-2 text-[12px]">
-            <Globe2 size={14} className="inline mr-1" />
-            <EditableText contentId="intake.crisis.moreHelplinesText" label="More helplines text" value={content.moreHelplinesText} as="span" />{" "}
-            <a href="https://findahelpline.com" target="_blank" rel="noreferrer" className="underline">
-              findahelpline.com
-            </a>
-          </Link>
+          {/* Phase 243 — Roy flagged this row as broken: it used to be an
+              entire <Link href="/"> (routing the whole line home) with a
+              second, nested <a href="https://findahelpline.com"> inside it —
+              invalid HTML (a link can't contain another link) and not what
+              anyone clicking "More helplines" expected. Rebuilt as plain,
+              non-interactive text (a <div>, no href) holding exactly one
+              real link: the crisis-services anchor itself, `noopener` added
+              alongside the existing `noreferrer` (opening a new tab without
+              `noopener` lets that tab's page reach back via
+              `window.opener`), plus explicit exact copy per Roy's request —
+              "Need immediate emergency support? Find local crisis
+              services." — replacing the old "More helplines at
+              findahelpline.com" wording. The lead-in question is still the
+              CMS-editable `moreHelplinesText` field (content/copy, unchanged
+              contentId); the link label/href are fixed per Roy's literal
+              spec rather than left open to admin editing, same treatment
+              DonateBand.tsx/DonatePage.tsx already give this identical
+              sentence elsewhere on the site. */}
+          <div className="mx-auto mt-2 flex items-center gap-1 text-[12px] text-muted-fg">
+            <Globe2 size={14} className="inline flex-none" aria-hidden="true" />
+            <span>
+              <EditableText contentId="intake.crisis.moreHelplinesText" label="Crisis emergency prompt text" value={content.moreHelplinesText} as="span" />{" "}
+              <a
+                href="https://findahelpline.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm"
+              >
+                Find local crisis services.
+              </a>
+            </span>
+          </div>
         </div>
       )}
 

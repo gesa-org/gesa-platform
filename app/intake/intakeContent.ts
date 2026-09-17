@@ -13,7 +13,14 @@ export const INTAKE_FLOW_CONTENT_FALLBACK: IntakeFlowContent = {
   crisisHeroTitle: "Help is available right now",
   defaultHeroTitle: "You're one step from support",
   crisisDisclaimer: "GESA is not an emergency service. If you are in immediate danger, call your local emergency number.",
-  moreHelplinesText: "More helplines at",
+  // Phase 243 — Roy asked for this line's lead-in text to become "Need
+  // immediate emergency support?" (the link itself, "Find local crisis
+  // services.", is now hardcoded in app/intake/page.tsx rather than pulled
+  // from content — see that file's own Phase 243 comment for why). Field
+  // name/contentId (`intake.crisis.moreHelplinesText`) intentionally left
+  // unchanged so this remains the same editable Content Manager field, just
+  // holding new copy.
+  moreHelplinesText: "Need immediate emergency support?",
   ongoingSupportPrompt: "You can also connect with a volunteer therapist for ongoing, free support.",
   matchListIntro: "Here are volunteer therapists who fit what you shared. Choose one to see their availability and book a free session.",
 };
