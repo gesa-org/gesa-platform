@@ -44,14 +44,48 @@ export default async function TherapistsPage({
   const content = resolved as unknown as typeof contentRaw;
   const directoryContent = (resolved as unknown as { directory: typeof directoryContentRaw }).directory;
 
+  // Phase 248 — Home's DISASTER portal card now links here as
+  // `/therapists?source=disaster` (components/home/Paths.tsx) instead of a
+  // bare `/therapists`, so a visitor arriving from that specific portal sees
+  // hero copy that sets the right expectation up front (paid, fee-shown
+  // sessions) instead of the general "verified volunteer therapists" framing
+  // the rest of the site's traffic sees. Purely a read of the URL's own
+  // query string on each request — no client state, cookie, or localStorage
+  // — so it can never persist past this one request: refreshing the same
+  // URL reproduces it (still in the query string), and navigating to a
+  // plain `/therapists` link (header, footer, anywhere else) has no
+  // `source` param at all and falls straight back to the normal CMS-driven
+  // copy below. Everything else on this page (directory, filters, cards,
+  // booking flow, DonateBand) is completely unaffected — this only swaps
+  // the three PageHero text props.
+  const isDisasterSource = searchParams?.source === "disaster";
+
   const page = (
     <div className="reveal-page__main">
       <PageHero
         gold
         icon={Users}
-        eyebrow={<EditableText contentId="therapists.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />}
-        title={<EditableText contentId="therapists.hero.heading" label="Hero heading" value={content.title} as="span" />}
-        description={<EditableText contentId="therapists.hero.description" label="Hero description" value={content.description} as="span" />}
+        eyebrow={
+          isDisasterSource ? (
+            <span>Our Verified Professionals</span>
+          ) : (
+            <EditableText contentId="therapists.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />
+          )
+        }
+        title={
+          isDisasterSource ? (
+            <span>Compare profiles, approaches and fees. Choose and book directly.</span>
+          ) : (
+            <EditableText contentId="therapists.hero.heading" label="Hero heading" value={content.title} as="span" />
+          )
+        }
+        description={
+          isDisasterSource ? (
+            <span>Paid sessions · Fees shown before booking</span>
+          ) : (
+            <EditableText contentId="therapists.hero.description" label="Hero description" value={content.description} as="span" />
+          )
+        }
       />
       {/* Phase 55 — Roy sent a reference screenshot showing this section on
           a warm cream background instead of the page's usual cool ivory

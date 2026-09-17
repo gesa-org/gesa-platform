@@ -70,7 +70,16 @@ export const HOME_CONTENT_FALLBACK: HomeContent = {
   // reintroduce the same mismatch — cards 1 and 2's `/intake?path=crisis`
   // and `/intake?path=veteran` are genuinely intake-flow destinations and
   // are untouched.
-  card3CtaLink: "/therapists",
+  // Phase 248 — Roy asked for this card's destination to carry a source
+  // marker so /therapists can show paid-session-appropriate hero copy for
+  // visitors arriving specifically from here (see app/therapists/page.tsx's
+  // own Phase 248 comment) rather than the general "verified volunteer
+  // therapists" framing every other entry point to this page sees. Still
+  // the same real, bookable directory this card always pointed at — just
+  // `?source=disaster` appended, following this project's existing
+  // `?path=`-style query-param convention (cards 1/2's `/intake?path=`
+  // links) rather than a new route.
+  card3CtaLink: "/therapists?source=disaster",
   // Phase 97 — front-face badge labels (see the HomeContent type comment
   // in lib/content.ts).
   // Phase 100 — Roy sent a new reference image for the front face (see the
