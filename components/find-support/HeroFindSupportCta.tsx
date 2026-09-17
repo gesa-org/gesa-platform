@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Tables, PublicTherapistRow } from "@/lib/database.types";
@@ -66,18 +66,29 @@ export default function HeroFindSupportCta({
   // opinion on its content.
   contextLabel?: string;
 }) {
-  const [open, setOpen] = useState(false);
-
-  // Phase 242 — fires once on mount; `isMatchModalTrigger` is checked again
-  // here (not just relied on from the branch below) so a stray `autoOpen`
-  // passed alongside a non-sentinel href is a harmless no-op rather than a
-  // dead `setOpen` call.
-  useEffect(() => {
-    if (autoOpen && isMatchModalTrigger(href)) {
-      setOpen(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Phase 243 (bug fix) — this used to always start `false` and rely on a
+  // post-mount `useEffect` to flip it to `true` for the `autoOpen` case.
+  // That guaranteed at least one real paint of the plain About Hero (its own
+  // static eyebrow/heading/subtitle/CTA text column on the left, plus the
+  // right-hand painting) — both the server-rendered HTML and the first
+  // client hydration pass had `open=false`, so the effect firing a moment
+  // later was a visible second render: the Hero's left column flashed on
+  // screen, then was replaced by the AI Support/Browse-therapist modal. That
+  // flash is the "static field on the left side" bug reported against the
+  // Home TERROR card's `/about?openMatch=terror` flow.
+  //
+  // Fixed by computing the initial value directly from `autoOpen`/`href` in
+  // the `useState` initializer instead of an effect. `autoOpen` and `href`
+  // are both resolved server-side (from the URL's `openMatch` query param,
+  // not from `window`/browser APIs), so this initializer produces the exact
+  // same result during SSR and during client hydration — no
+  // server/client mismatch — which means the very first HTML the browser
+  // paints already has the modal open. There is no longer an intermediate
+  // "closed" frame to flash for the auto-open case, and manual click-to-open
+  // (`autoOpen` false/omitted, the other two portal cards' shared About-page
+  // entry points, etc.) is unaffected since it still starts `false` exactly
+  // as before.
+  const [open, setOpen] = useState(() => autoOpen && isMatchModalTrigger(href));
   // Phase 151 — sibling to `open` above rather than owned by FindSupportModal
   // itself: ChoiceScreen's "Browse therapist" card needs to close the AI/
   // Manual choice modal AND open this new one, and the two modals need to
