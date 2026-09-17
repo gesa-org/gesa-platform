@@ -6,6 +6,7 @@ import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
 import { CRISIS_BUTTON_CONTENT_FALLBACK } from "@/components/CrisisButton";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/database.types";
 import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import { THERAPISTS_DIRECTORY_CONTENT_FALLBACK } from "@/components/TherapistsDirectory";
@@ -197,7 +198,14 @@ export async function getPageBaseContent(pageKey: string): Promise<Record<string
 export async function publishPageSources(
   pageKey: string,
   resolved: Record<string, unknown>,
-  publishedBy: string
+  publishedBy: string,
+  // Phase 247 — added so this function's own content_versions logging
+  // (below) can stamp `editor_email` the same way the classic Content
+  // Manager's saveContent() already does, without every call site having to
+  // look the profile up a second time. Optional + defaults to null so any
+  // existing/future caller that doesn't have it handy still works — the
+  // version row just records a null email in that case rather than failing.
+  publishedByEmail: string | null = null
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const def = getPageDefinition(pageKey);
   if (!def) {
@@ -221,11 +229,33 @@ export async function publishPageSources(
   const publishedAt = new Date().toISOString();
   for (const source of def.contentSources) {
     const value = source.namespace === "" ? resolved : (resolved[source.namespace] as Record<string, unknown> | undefined) ?? {};
+    const fullValue = { ...value, published: true, publishedAt, publishedBy };
     const { error } = await supabase.from("site_content").upsert(
-      { key: source.siteContentKey, value: { ...value, published: true, publishedAt, publishedBy } },
+      { key: source.siteContentKey, value: fullValue },
       { onConflict: "key" }
     );
     if (error) return { ok: false, error: "Could not publish — try again." };
+
+    // Phase 247 — Content Manager rebuild Phase 1: a publish from the UI
+    // Builder used to update site_content directly without ever writing a
+    // content_versions row, so "Last published"/"Edited by" only ever
+    // reflected the classic editors' saveContent() path (lib/cms/
+    // saveContent.ts) — a page published exclusively through the visual
+    // editor had no audit trail at all. Mirrors that function's own
+    // best-effort pattern exactly: a failed version-log insert must never
+    // make the publish itself look like it failed, since the site_content
+    // upsert above already succeeded.
+    try {
+      await supabase.from("content_versions").insert({
+        content_key: source.siteContentKey,
+        action: "published",
+        snapshot: fullValue as unknown as Json,
+        editor_id: publishedBy,
+        editor_email: publishedByEmail,
+      });
+    } catch {
+      // Swallowed intentionally — see comment above.
+    }
   }
   return { ok: true };
 }

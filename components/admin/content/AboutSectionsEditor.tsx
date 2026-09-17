@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import ImageUploadField from "@/components/admin/content/ImageUploadField";
+import ArchivedFieldsPanel from "@/components/admin/content/ArchivedFieldsPanel";
 import type { AboutSectionsContent } from "@/lib/content";
 
 type Point = AboutSectionsContent["howItWorksPoints"][number];
@@ -208,15 +209,18 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
             className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
           />
         </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-semibold">Intro (not currently shown on the page — kept for a future layout)</label>
-          <textarea
-            rows={2}
-            value={foundersIntro}
-            onChange={(e) => setFoundersIntro(e.target.value)}
-            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
-          />
-        </div>
+        <ArchivedFieldsPanel>
+          <div>
+            <label className="mb-1.5 block text-sm font-semibold">Intro</label>
+            <textarea
+              rows={2}
+              value={foundersIntro}
+              onChange={(e) => setFoundersIntro(e.target.value)}
+              className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+            />
+            <p className="mt-1 text-[12px] text-muted-fg">Not currently rendered on the About page — kept for a future layout.</p>
+          </div>
+        </ArchivedFieldsPanel>
         {founders.map((f, i) => (
           <div key={i} className="rounded-xl border border-border p-3.5">
             <div className="mb-2 flex items-center justify-between">

@@ -76,6 +76,11 @@ type Props = {
   // Phase 236 — feed the new "Website Pages" directory tab.
   publishedByKey: Record<string, boolean | undefined>;
   latestVersions: Record<string, Tables<"content_versions"> | undefined>;
+  // Phase 247 — pageKeys with a pending UI Builder draft, for the
+  // directory's "Draft changes" filter. Plain array across the server/
+  // client boundary (a Set isn't serializable as a prop); rebuilt into a
+  // Set right where it's used below.
+  draftPageKeys: string[];
 };
 
 // Tabs that need more than a plain banner — each gets its own bespoke block
@@ -96,17 +101,29 @@ const COMPOSITE_SIMPLE_KEYS = new Set(["page_therapists", "page_support_groups",
 // Same idea for "Our Therapists" → "Our Professionals" and "Support
 // Groups" → "Community" (Header.tsx's therapistsLabel/supportGroupsLabel).
 //
-// Phase 145 — the "About Us" tab (page_about_hero/page_about_sections) is
-// renamed "Find Support": that content now renders at /find-your-therapist,
-// not a separate About Us page/nav item (both removed — see
-// lib/navigation.ts and next.config.mjs's redirect). Still the same two
-// site_content keys/editors underneath, just relabeled to match what an
-// admin actually sees in the live nav and browser tab now.
+// Phase 145 — the "About Us" tab (page_about_hero/page_about_sections) was
+// renamed "Find Support" here, matching /find-your-therapist at the time.
+//
+// Phase 247 — Content Manager rebuild Phase 1: that mapping is stale.
+// Per lib/navigation.ts's Phase 215/219/222 history, page_about_hero/
+// page_about_sections has rendered at the real `/about` route (labeled
+// "About" in the live nav, not "Find Support") since Phase 215, while
+// `/find-your-therapist` (the nav's actual "Find Support" link) now renders
+// page_support_groups + component_community_intro — the content this tab
+// used to call "Community." Renamed both tabs to match reality instead of
+// each other's old label: this one → "About Page" (page_about_hero/
+// page_about_sections, /about — kept distinct from the "About" tab below,
+// which is page_home/"/"), and the old "Community" tab below → "Find
+// Support" (page_support_groups/component_community_intro,
+// /find-your-therapist — the page the live nav actually calls Find
+// Support). Same rename already made on the UI Builder side's equivalent
+// entry (lib/ui-builder/pageRegistry.ts's "support-groups" pageKey, Phase
+// 246) — this brings the classic Content Manager into agreement with it.
 const PAGE_FIXED_TABS = [
   "About", // page_home — the header nav labels "/" as "About" (Phase 88)
-  "Find Support", // page_about_hero / page_about_sections — now renders at /find-your-therapist (Phase 145)
+  "About Page", // page_about_hero / page_about_sections — renders at /about (Phase 247)
   "Our Professionals", // page_therapists
-  "Community", // page_support_groups
+  "Find Support", // page_support_groups / component_community_intro — renders at /find-your-therapist (Phase 247)
 ] as const;
 
 const PAGE_FIXED_TABS_END = ["Intake", "FAQ", "Not Found Page"] as const;
@@ -134,7 +151,20 @@ const DATA_AND_MEDIA_TABS = ["Legal Pages", "Media Library", "Trusted Partners"]
 // single page's copy — FAQ's *questions* would fit here too, but its own
 // tab already bundles the banner with the question list, so it stays a
 // single "Pages" entry rather than being split across two groups).
+// Phase 247 — Content Manager rebuild Phase 1: a real "Archived" area,
+// separate from the primary editing workflow, per Roy's request. Blog is
+// the one whole-tab case today (SimplePageEditor's own note already told
+// admins it's "disabled site-wide" — this just moves it out of the "Pages"
+// group entirely instead of leaving it mixed in with live pages). Keyed by
+// label (matching SIMPLE_PAGE_ENTRIES' own `label`, e.g. lib/content.ts's
+// "Blog (disabled)") rather than by `key`/site_content key, since that's
+// what `genericEntries` carries at this call site — extend this set if a
+// future page is retired the same way.
+const ARCHIVED_GENERIC_TAB_LABELS = new Set<string>(["Blog (disabled)"]);
+
 function useTabGroups(genericEntries: { key: string; label: string }[]) {
+  const archivedGenericEntries = genericEntries.filter((e) => ARCHIVED_GENERIC_TAB_LABELS.has(e.label));
+  const liveGenericEntries = genericEntries.filter((e) => !ARCHIVED_GENERIC_TAB_LABELS.has(e.label));
   return [
     // Phase 236 — Roy asked for a single directory an admin lands on first:
     // every route the site has, its live status, who last touched it, and
@@ -145,11 +175,17 @@ function useTabGroups(genericEntries: { key: string; label: string }[]) {
     { heading: "Directory", tabs: ["Website Pages"] },
     {
       heading: "Pages",
-      tabs: [...PAGE_FIXED_TABS, ...genericEntries.map((e) => e.label), ...PAGE_FIXED_TABS_END],
+      tabs: [...PAGE_FIXED_TABS, ...liveGenericEntries.map((e) => e.label), ...PAGE_FIXED_TABS_END],
     },
     { heading: "Global Elements", tabs: [...GLOBAL_ELEMENT_TABS] },
     { heading: "Forms & Popups", tabs: [...FORMS_AND_POPUPS_TABS] },
     { heading: "Data & Media", tabs: [...DATA_AND_MEDIA_TABS] },
+    // Phase 247 — only rendered when there's actually something archived,
+    // so this group doesn't appear as a permanent empty entry once nothing
+    // is retired.
+    ...(archivedGenericEntries.length > 0
+      ? [{ heading: "Archived", tabs: archivedGenericEntries.map((e) => e.label) }]
+      : []),
   ];
 }
 
@@ -196,6 +232,7 @@ export default function ContentManagerApp(props: Props) {
           publishedByKey={props.publishedByKey}
           latestVersions={props.latestVersions}
           onEditTab={setTab}
+          draftPageKeys={new Set(props.draftPageKeys)}
         />
       )}
 
@@ -214,7 +251,7 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Find Support" && (
+      {tab === "About Page" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Hero</h3>
@@ -240,7 +277,7 @@ export default function ContentManagerApp(props: Props) {
         </div>
       )}
 
-      {tab === "Community" && (
+      {tab === "Find Support" && (
         <div className="flex flex-col gap-8">
           <div>
             <h3 className="mb-3 text-[15px] font-semibold">Banner</h3>
@@ -254,6 +291,19 @@ export default function ContentManagerApp(props: Props) {
           </div>
           <div className="border-t border-border pt-6">
             <h3 className="mb-3 text-[15px] font-semibold">Registration flow</h3>
+            {/* Phase 247 — flagged rather than silently left: everything
+                else in this "Find Support" tab renders at /find-your-
+                therapist, but this specific section (the group directory/
+                registration flow) actually renders on /support-groups (the
+                nav's "Community" link) — see lib/ui-builder/pageRegistry.ts's
+                Phase 222/246 comments for the same pre-existing mismatch on
+                the UI Builder side. Not moved to its own tab in this pass —
+                flagged so an admin editing it isn't misled into thinking it
+                changes something on the Find Support page. */}
+            <p className="mb-3 text-[12px] text-muted-fg">
+              Renders on the <code>/support-groups</code> page (the nav&apos;s &quot;Community&quot; link), not on Find
+              Support itself.
+            </p>
             <SupportGroupsDirectoryEditor initial={props.supportGroupsDirectory} />
           </div>
         </div>

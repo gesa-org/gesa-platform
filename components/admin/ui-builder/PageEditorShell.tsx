@@ -418,10 +418,26 @@ export default function PageEditorShell() {
             </>
           ) : (
             <>
+              {/* Phase 247 — Content Manager rebuild Phase 1: reformatted
+                  from a plain "Page / Group / Label" line into the explicit
+                  "Website Pages → ... " breadcrumb Roy asked for, rooted at
+                  the same "Website Pages" directory tab that lists every
+                  page. Same three underlying pieces (page title, field
+                  group, field label) as before — display only. */}
               <p className="mb-1 text-[12px] text-muted-fg">
-                {selectedFieldPageTitle ?? pageDef?.title} / {selectedField.group} / {selectedField.label}
+                Website Pages → {selectedFieldPageTitle ?? pageDef?.title} → {selectedField.group} → {selectedField.label}
               </p>
-              <h3 className="mb-3 text-[15px] font-semibold">{selectedField.label}</h3>
+              <h3 className={selectedField.helperText ? "mb-1 text-[15px] font-semibold" : "mb-3 text-[15px] font-semibold"}>{selectedField.label}</h3>
+              {/* Phase 247 — a one-line helper explaining where this field
+                  actually shows up on the live page, e.g. "Centered below
+                  the Team & Advisors eyebrow on the About page." Optional —
+                  `helperText` is populated field-by-field as an editor works
+                  with a page, not backfilled everywhere at once; a field
+                  without one just shows no helper line, same as before this
+                  phase. */}
+              {selectedField.helperText && (
+                <p className="mb-3 text-[12px] text-muted-fg">{selectedField.helperText}</p>
+              )}
               {(() => {
                 if (selectedField.type === "image") {
                   return (

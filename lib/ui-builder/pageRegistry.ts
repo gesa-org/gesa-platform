@@ -293,6 +293,14 @@ export type EditableFieldDef = {
   /** Groups fields for the Layers panel (spec: "Hero", "Cards", "Footer"),
    * and doubles as the breadcrumb's middle segment. */
   group: string;
+  /** Phase 247 — Content Manager rebuild Phase 1: a short, plain-language
+   * line shown under the field's own label in the editor panel, describing
+   * where it actually shows up on the live page (e.g. "Centered below the
+   * Team & Advisors eyebrow on the About page.") — the "concise helper
+   * line" Roy's rebuild asked every field to have. Populated field-by-field
+   * rather than backfilled everywhere at once; omitted entirely = no helper
+   * line shown, same as before this field existed. */
+  helperText?: string;
   maxLength?: number;
   /** Phase 135 — "page" (default assumption, not stored per-field before
    * this phase) vs "global" content the spec's registry type calls for.
@@ -432,15 +440,75 @@ const ABOUT_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "about.movement.body", path: "sections.movementSubtitle", label: "Movement band body", type: "plainText", group: "Movement band", maxLength: 240, contentScope: "page" },
   { contentId: "about.movement.ctaLabel", path: "sections.movementCtaLabel", label: "Movement CTA label", type: "ctaLabel", group: "Movement band", maxLength: 40, contentScope: "page" },
   { contentId: "about.movement.ctaUrl", path: "sections.movementCtaHref", label: "Movement CTA URL", type: "url", group: "Movement band", contentScope: "page" },
-  { contentId: "about.team.eyebrow", path: "sections.teamEyebrow", label: "Team section eyebrow", type: "plainText", group: "Team & Advisors", maxLength: 60, contentScope: "page" },
+  // Phase 247 — Content Manager rebuild Phase 1: relabeled to the exact
+  // front-end wording (Eyebrow / Centered sub-label / Heading / Intro / CTA)
+  // per Roy's own worked example, instead of technical "Team section ___"
+  // names, and given a helperText line each — the reference pattern for
+  // helper text going forward. Live default values today: "Team &
+  // Advisors" (eyebrow), "Meet our team" (sub-label), "Built with people
+  // who choose to contribute" (heading).
+  {
+    contentId: "about.team.eyebrow",
+    path: "sections.teamEyebrow",
+    label: "Eyebrow",
+    type: "plainText",
+    group: "Team & Advisors",
+    maxLength: 60,
+    contentScope: "page",
+    helperText: "Small label above the Team & Advisors heading on the About page.",
+  },
   // Phase 245 — the centered sub-label rendered directly below the eyebrow
   // above (app/about/page.tsx). Distinct field/contentId from
   // `about.team.ctaLabel` below even though both default to "Meet our team".
-  { contentId: "about.team.subLabel", path: "sections.teamSubLabel", label: "Team sub-label (centered, below eyebrow)", type: "plainText", group: "Team & Advisors", maxLength: 60, contentScope: "page" },
-  { contentId: "about.team.heading", path: "sections.teamHeading", label: "Team section heading", type: "heading", group: "Team & Advisors", maxLength: 100, contentScope: "page" },
-  { contentId: "about.team.intro", path: "sections.teamIntro", label: "Team section intro", type: "plainText", group: "Team & Advisors", maxLength: 280, contentScope: "page" },
-  { contentId: "about.team.ctaLabel", path: "sections.teamCtaLabel", label: "Team CTA label", type: "ctaLabel", group: "Team & Advisors", maxLength: 40, contentScope: "page" },
-  { contentId: "about.team.ctaUrl", path: "sections.teamCtaHref", label: "Team CTA URL", type: "url", group: "Team & Advisors", contentScope: "page" },
+  {
+    contentId: "about.team.subLabel",
+    path: "sections.teamSubLabel",
+    label: "Centered sub-label",
+    type: "plainText",
+    group: "Team & Advisors",
+    maxLength: 60,
+    contentScope: "page",
+    helperText: "Centered below the Team & Advisors eyebrow on the About page.",
+  },
+  {
+    contentId: "about.team.heading",
+    path: "sections.teamHeading",
+    label: "Heading",
+    type: "heading",
+    group: "Team & Advisors",
+    maxLength: 100,
+    contentScope: "page",
+    helperText: "Main heading of the Team & Advisors section on the About page.",
+  },
+  {
+    contentId: "about.team.intro",
+    path: "sections.teamIntro",
+    label: "Intro",
+    type: "plainText",
+    group: "Team & Advisors",
+    maxLength: 280,
+    contentScope: "page",
+    helperText: "Short paragraph under the Team & Advisors heading, above the CTA button.",
+  },
+  {
+    contentId: "about.team.ctaLabel",
+    path: "sections.teamCtaLabel",
+    label: "CTA label",
+    type: "ctaLabel",
+    group: "Team & Advisors",
+    maxLength: 40,
+    contentScope: "page",
+    helperText: "Optional button below the Team & Advisors intro.",
+  },
+  {
+    contentId: "about.team.ctaUrl",
+    path: "sections.teamCtaHref",
+    label: "CTA URL",
+    type: "url",
+    group: "Team & Advisors",
+    contentScope: "page",
+    helperText: "Where the Team & Advisors CTA button links to.",
+  },
   // Donation/Support CTA — DonateBand.tsx (components/home/DonateBand.tsx),
   // the "Your gift keeps care free" band. This is a single component shared
   // identically across Home, Our Professionals, and Community too (see that

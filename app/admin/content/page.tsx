@@ -1,4 +1,4 @@
-import { getFaqs, getAllLegalPages, getSiteContentMap, getAllPartnersAdmin, getLatestContentVersions } from "@/lib/queries";
+import { getFaqs, getAllLegalPages, getSiteContentMap, getAllPartnersAdmin, getLatestContentVersions, getPageKeysWithPendingDrafts } from "@/lib/queries";
 import { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import { HERO_CONTENT_FALLBACK } from "@/components/Hero";
 import { FOOTER_CONTENT_FALLBACK } from "@/components/Footer";
@@ -73,13 +73,14 @@ function merge<T extends Record<string, unknown>>(row: unknown, fallback: T): T 
 }
 
 export default async function AdminContentPage() {
-  const [map, faqs, legalPages, mediaAssets, partners, latestVersionsMap] = await Promise.all([
+  const [map, faqs, legalPages, mediaAssets, partners, latestVersionsMap, draftPageKeysSet] = await Promise.all([
     getSiteContentMap(KEYS),
     getFaqs(),
     getAllLegalPages(),
     getAllMediaAssetsForAdmin(),
     getAllPartnersAdmin(),
     getLatestContentVersions(),
+    getPageKeysWithPendingDrafts(),
   ]);
 
   // Phase 236 — Website Pages directory needs, per content key: is it
@@ -157,6 +158,7 @@ export default async function AdminContentPage() {
         notFound={merge<NotFoundPageContent>(map.get("page_not_found"), NOT_FOUND_CONTENT_FALLBACK)}
         publishedByKey={publishedByKey}
         latestVersions={latestVersions}
+        draftPageKeys={Array.from(draftPageKeysSet)}
       />
     </div>
   );

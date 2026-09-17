@@ -67,7 +67,11 @@ export async function POST(request: Request) {
   const merged = applyDraftPatch(pageKey, currentPublished, sanitizedPatch);
   const publishedAt = new Date().toISOString();
 
-  const publishResult = await publishPageSources(pageKey, merged, me.id);
+  // Phase 247 — pass the signed-in admin's email through so
+  // publishPageSources' new content_versions logging can stamp
+  // `editor_email` the same way the classic Content Manager's saveContent()
+  // already does (see that function's own comment).
+  const publishResult = await publishPageSources(pageKey, merged, me.id, me.email);
   if (!publishResult.ok) {
     return NextResponse.json({ error: publishResult.error }, { status: 500 });
   }

@@ -122,6 +122,30 @@ export async function getLatestContentVersions(): Promise<Map<string, Tables<"co
   return latest;
 }
 
+// Phase 247 — Content Manager rebuild Phase 1: the "Draft changes" filter on
+// the Website Pages directory needs to know which pages have an unpublished
+// UI Builder draft sitting in `crm_ui_drafts` (scope `"page:<pageKey>"`,
+// `schema` the draft patch — see app/api/admin/ui-builder/page-content/
+// draft/route.ts). Classic Content Manager saves have no separate draft
+// stage (saveContent.ts writes site_content directly), so this is only ever
+// non-empty for pages edited through the visual editor. An empty `{}`
+// schema is written to represent "no draft yet" rather than no row at all in
+// some code paths, so this filters those out rather than trusting row
+// existence alone.
+export async function getPageKeysWithPendingDrafts(): Promise<Set<string>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("crm_ui_drafts").select("scope, schema").like("scope", "page:%");
+  if (error) throw error;
+  const keys = new Set<string>();
+  for (const row of data ?? []) {
+    const schema = row.schema as Record<string, unknown> | null;
+    if (schema && Object.keys(schema).length > 0) {
+      keys.add(row.scope.slice("page:".length));
+    }
+  }
+  return keys;
+}
+
 // Full version history for one content key, newest first — backs the
 // directory's per-page "Version history" panel and its restore action.
 export async function getContentVersionHistory(contentKey: string, limit = 25): Promise<Tables<"content_versions">[]> {

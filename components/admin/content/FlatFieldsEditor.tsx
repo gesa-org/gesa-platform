@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { saveContent } from "@/lib/cms/saveContent";
 import Button from "@/components/ui/Button";
+import ArchivedFieldsPanel from "@/components/admin/content/ArchivedFieldsPanel";
 
-type Field = { key: string; label: string; multiline?: boolean; help?: string };
+// Phase 247 — `archived` marks a field that's real, saved data but isn't
+// rendered anywhere on the live site right now (see ArchivedFieldsPanel's
+// own comment). Purely a display-grouping flag: it changes nothing about
+// how the field is saved/loaded, only where it appears in this form.
+type Field = { key: string; label: string; multiline?: boolean; help?: string; archived?: boolean };
 
 // Generic editor for any site_content shape that's just a flat map of
 // string fields plus `published` — covers Header, Footer, and the Our
@@ -79,13 +84,28 @@ export default function FlatFieldsEditor<T extends { published: boolean }>({
       </label>
 
       {groups
-        ? groups.map((g) => (
-            <div key={g.heading} className="flex flex-col gap-4 border-t border-border pt-5 first:border-t-0 first:pt-0">
-              <h3 className="text-[15px] font-semibold">{g.heading}</h3>
-              {g.fields.map(renderField)}
-            </div>
-          ))
-        : allFields.map(renderField)}
+        ? groups.map((g) => {
+            // Phase 247 — archived fields are pulled out of their nominal
+            // group here and rendered once, together, at the end of the
+            // form (see the ArchivedFieldsPanel block below) rather than
+            // inline where they'd sit among fields that actually render on
+            // the live site. A group with only archived fields renders no
+            // visible heading/fields here at all — it isn't dropped, its
+            // fields just move to that shared panel instead.
+            const liveFields = g.fields.filter((f) => !f.archived);
+            if (liveFields.length === 0) return null;
+            return (
+              <div key={g.heading} className="flex flex-col gap-4 border-t border-border pt-5 first:border-t-0 first:pt-0">
+                <h3 className="text-[15px] font-semibold">{g.heading}</h3>
+                {liveFields.map(renderField)}
+              </div>
+            );
+          })
+        : allFields.filter((f) => !f.archived).map(renderField)}
+
+      {allFields.some((f) => f.archived) && (
+        <ArchivedFieldsPanel>{allFields.filter((f) => f.archived).map(renderField)}</ArchivedFieldsPanel>
+      )}
 
       <div className="flex items-center gap-4 border-t border-border pt-4">
         <Button type="submit" disabled={pending}>

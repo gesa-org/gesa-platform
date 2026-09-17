@@ -13,7 +13,14 @@ import { createClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import type { Tables } from "@/lib/database.types";
 
-const GROUP_ORDER: PageDirectoryGroup[] = ["Main Pages", "Conversion & Contact", "Legal Pages", "Dynamic Content", "Global Content"];
+const GROUP_ORDER: PageDirectoryGroup[] = [
+  "Main Pages",
+  "Conversion & Contact",
+  "Forms & Popups",
+  "Legal Pages",
+  "Dynamic Content",
+  "Global Content",
+];
 
 const SITE_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL || "https://gesa-platform.vercel.app";
 
@@ -31,19 +38,32 @@ export default function WebsitePagesDirectory({
   publishedByKey,
   latestVersions,
   onEditTab,
+  draftPageKeys,
 }: {
   /** contentKey -> published flag, read straight off the raw site_content row. */
   publishedByKey: Record<string, boolean | undefined>;
   /** contentKey -> most recent content_versions row for it. */
   latestVersions: Record<string, VersionRow | undefined>;
   onEditTab: (tabLabel: string) => void;
+  /** Phase 247 — pageKeys (lib/ui-builder/pageRegistry.ts) with an
+   * unpublished UI Builder draft sitting in crm_ui_drafts right now — see
+   * lib/queries.ts's getPageKeysWithPendingDrafts(). Powers the "Draft
+   * changes" status filter below; entries with no `pageKey` (no visual-
+   * editor counterpart) can never match it. */
+  draftPageKeys: Set<string>;
 }) {
   const [query, setQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState<PageDirectoryGroup | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "unpublished" | "unmanaged">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "unpublished" | "draft" | "unmanaged" | "archived">("all");
   const [historyEntry, setHistoryEntry] = useState<PageDirectoryEntry | null>(null);
 
-  function statusFor(entry: PageDirectoryEntry): "published" | "unpublished" | "unmanaged" {
+  function statusFor(entry: PageDirectoryEntry): "published" | "unpublished" | "draft" | "unmanaged" | "archived" {
+    // Phase 247 — checked before published/unmanaged: an archived page can
+    // still have real, saved (even "published": true) content underneath
+    // it — being retired from the live site is a separate axis from
+    // whether its own data is published, so this takes priority.
+    if (entry.archived) return "archived";
+    if (entry.pageKey && draftPageKeys.has(entry.pageKey)) return "draft";
     if (entry.unmanaged || entry.contentKeys.length === 0) return "unmanaged";
     const primary = entry.contentKeys[0];
     const published = publishedByKey[primary];
@@ -65,7 +85,7 @@ export default function WebsitePagesDirectory({
       );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, groupFilter, statusFilter, publishedByKey]);
+  }, [query, groupFilter, statusFilter, publishedByKey, draftPageKeys]);
 
   const grouped = GROUP_ORDER.map((g) => ({ group: g, entries: filtered.filter((e) => e.group === g) })).filter(
     (g) => g.entries.length > 0
@@ -124,6 +144,8 @@ export default function WebsitePagesDirectory({
           <option value="all">All statuses</option>
           <option value="published">Published</option>
           <option value="unpublished">Unpublished</option>
+          <option value="draft">Draft changes</option>
+          <option value="archived">Archived</option>
           <option value="unmanaged">Not yet managed</option>
         </select>
         <span className="text-[12.5px] text-muted-fg">
@@ -179,10 +201,22 @@ export default function WebsitePagesDirectory({
                               ? "bg-accent-soft text-primary"
                               : status === "unpublished"
                                 ? "bg-clay-soft text-primary"
-                                : "bg-destructive/10 text-destructive"
+                                : status === "draft"
+                                  ? "bg-sand-brown/30 text-primary"
+                                  : status === "archived"
+                                    ? "bg-secondary text-muted-fg"
+                                    : "bg-destructive/10 text-destructive"
                           }`}
                         >
-                          {status === "published" ? "Published" : status === "unpublished" ? "Unpublished" : "Not yet managed"}
+                          {status === "published"
+                            ? "Published"
+                            : status === "unpublished"
+                              ? "Unpublished"
+                              : status === "draft"
+                                ? "Draft changes"
+                                : status === "archived"
+                                  ? "Archived"
+                                  : "Not yet managed"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-fg">
