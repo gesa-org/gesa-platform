@@ -236,16 +236,34 @@ export default function CommunityIntro({ content }: { content: CommunityIntroCon
               </StaggerItem>
             ))}
           </StaggerGroup>
+
+          {/* Phase 244 — Roy sent a reference screenshot of this exact
+              "Choose your pathway" section with the "One global vision.
+              Many ways forward." / "Choose the pathway that reflects what
+              you need today." copy sitting directly below the three cards,
+              still inside the same dark-navy band (no visible seam,
+              matching the screenshot's continuous background) — effectively
+              asking for the Phase 108 removal to be undone. `closingHeading`/
+              `closingSubtitle` were deliberately left in the content model/
+              admin editor when that phase removed their render (see the
+              precedent this comment used to sit under), so no data or
+              schema change is needed here — only bringing back the JSX,
+              rendered plainly beneath the card grid rather than as its own
+              separate `<section>`. Typography matches the same "heading on
+              --navy-deep" convention already used by About's movement band
+              (app/about/page.tsx) and DonateBand's dark variant: `text-white`
+              for the heading, `text-white/80` for the subtitle, both
+              centered in a narrow max-width column. */}
+          <Reveal type="fade-up" className="mt-14 block text-center">
+            <h2 className="mx-auto max-w-[640px] text-[28px] text-white sm:text-[30px]">
+              <EditableText contentId="supportGroups.intro.closingHeading" label="Closing band heading" value={content.closingHeading} as="span" />
+            </h2>
+            <div className="mx-auto mt-2.5 max-w-[640px] text-white/80">
+              <EditableText contentId="supportGroups.intro.closingSubtitle" label="Closing band subtitle" value={content.closingSubtitle} as="span" />
+            </div>
+          </Reveal>
         </div>
       </section>
-
-      {/* Phase 108 — Roy asked to remove the "One global vision. Many ways
-          forward." closing band added in Phase 107. `closingHeading`/
-          `closingSubtitle` and their Content Manager fields are left
-          untouched in the content model and admin editor — same "don't
-          delete data just because a section stopped rendering it"
-          precedent as the About page's Phase 77/85 removals — just no
-          longer rendered here. */}
     </>
   );
 }
