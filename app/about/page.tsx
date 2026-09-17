@@ -273,9 +273,31 @@ export default async function AboutPage({
           <div className="wrap">
             <div className="grid items-center gap-[clamp(1.5rem,4vw,3rem)] md:grid-cols-[minmax(0,1fr)_minmax(220px,0.7fr)]">
               <Reveal type="fade-up" as="div" className="text-start">
-                <span className="eyebrow">
+                {/* Phase 245 — Roy asked for the "TEAM & ADVISORS" eyebrow to
+                    switch from its usual gold (`.eyebrow`'s shared
+                    `color: var(--clay)`, used site-wide) to literal black,
+                    for this instance only — `text-[#000000]` is a Tailwind
+                    utility, which (per this file's own `@layer utilities`
+                    ordering in globals.css) loads after `.eyebrow`'s
+                    `@layer components` rule and overrides just this one
+                    span, leaving every other eyebrow on the site untouched. */}
+                <span className="eyebrow text-[#000000]">
                   <EditableText contentId="about.team.eyebrow" label="Team section eyebrow" value={sections.teamEyebrow} as="span" />
                 </span>
+                {/* Phase 245 — new centered sub-label sitting between the
+                    eyebrow and the heading, per Roy's request: additive, not
+                    a replacement for the eyebrow/heading/intro/CTA below (the
+                    CTA button further down happens to share this same "Meet
+                    our team" copy today, but is a separate field —
+                    `teamCtaLabel` — so editing one doesn't silently change
+                    the other). `text-center` is set directly on this block
+                    rather than on the column, so it centers on its own
+                    without touching the left-aligned (`text-start`) heading/
+                    intro/CTA around it — same "override just this element"
+                    approach as the eyebrow color change above. */}
+                <p className="eyebrow block text-center text-[#000000]">
+                  <EditableText contentId="about.team.subLabel" label="Team sub-label" value={sections.teamSubLabel} as="span" />
+                </p>
                 <h2 className="mb-3 text-[clamp(1.75rem,2.6vw,2.25rem)] leading-[1.15]">
                   <EditableText contentId="about.team.heading" label="Team section heading" value={sections.teamHeading} as="span" />
                 </h2>

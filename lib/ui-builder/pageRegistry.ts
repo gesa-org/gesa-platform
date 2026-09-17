@@ -408,6 +408,10 @@ const ABOUT_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "about.movement.ctaLabel", path: "sections.movementCtaLabel", label: "Movement CTA label", type: "ctaLabel", group: "Movement band", maxLength: 40, contentScope: "page" },
   { contentId: "about.movement.ctaUrl", path: "sections.movementCtaHref", label: "Movement CTA URL", type: "url", group: "Movement band", contentScope: "page" },
   { contentId: "about.team.eyebrow", path: "sections.teamEyebrow", label: "Team section eyebrow", type: "plainText", group: "Team & Advisors", maxLength: 60, contentScope: "page" },
+  // Phase 245 — the centered sub-label rendered directly below the eyebrow
+  // above (app/about/page.tsx). Distinct field/contentId from
+  // `about.team.ctaLabel` below even though both default to "Meet our team".
+  { contentId: "about.team.subLabel", path: "sections.teamSubLabel", label: "Team sub-label (centered, below eyebrow)", type: "plainText", group: "Team & Advisors", maxLength: 60, contentScope: "page" },
   { contentId: "about.team.heading", path: "sections.teamHeading", label: "Team section heading", type: "heading", group: "Team & Advisors", maxLength: 100, contentScope: "page" },
   { contentId: "about.team.intro", path: "sections.teamIntro", label: "Team section intro", type: "plainText", group: "Team & Advisors", maxLength: 280, contentScope: "page" },
   { contentId: "about.team.ctaLabel", path: "sections.teamCtaLabel", label: "Team CTA label", type: "ctaLabel", group: "Team & Advisors", maxLength: 40, contentScope: "page" },

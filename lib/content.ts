@@ -148,6 +148,13 @@ export type AboutSectionsContent = {
   // Phase 84 — new "Team & Advisors" grid, listing founders[1] onward
   // (Karin, today) plus anyone else added to the founders list later.
   teamEyebrow: string;
+  // Phase 245 — a short, centered sub-label rendered directly below
+  // `teamEyebrow` (see app/about/page.tsx's own Phase 245 comment). Separate
+  // field from `teamCtaLabel` even though both happen to read "Meet our
+  // team" today — one is a static label near the top of the section, the
+  // other is the actual button further down, and an admin editing one
+  // shouldn't accidentally change the other.
+  teamSubLabel: string;
   teamHeading: string;
   teamIntro: string;
   teamCtaLabel: string;
@@ -753,6 +760,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
   movementCtaLabel: "Be part of the movement",
   movementCtaHref: "/contact?subject=Volunteer",
   teamEyebrow: "Team & Advisors",
+  teamSubLabel: "Meet our team",
   teamHeading: "Built with people who choose to contribute",
   teamIntro: "GESA grows through the expertise, time and commitment of volunteers, team members and advisors around the world.",
   teamCtaLabel: "Meet our team",

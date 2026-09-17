@@ -30,6 +30,7 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
   const [movementCtaLabel, setMovementCtaLabel] = useState(initial.movementCtaLabel);
   const [movementCtaHref, setMovementCtaHref] = useState(initial.movementCtaHref);
   const [teamEyebrow, setTeamEyebrow] = useState(initial.teamEyebrow);
+  const [teamSubLabel, setTeamSubLabel] = useState(initial.teamSubLabel);
   const [teamHeading, setTeamHeading] = useState(initial.teamHeading);
   const [teamIntro, setTeamIntro] = useState(initial.teamIntro);
   const [teamCtaLabel, setTeamCtaLabel] = useState(initial.teamCtaLabel);
@@ -74,6 +75,7 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
       movementCtaLabel,
       movementCtaHref,
       teamEyebrow,
+      teamSubLabel,
       teamHeading,
       teamIntro,
       teamCtaLabel,
@@ -324,6 +326,14 @@ export default function AboutSectionsEditor({ initial }: { initial: AboutSection
           <input
             value={teamEyebrow}
             onChange={(e) => setTeamEyebrow(e.target.value)}
+            className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold">Sub-label (centered, below eyebrow)</label>
+          <input
+            value={teamSubLabel}
+            onChange={(e) => setTeamSubLabel(e.target.value)}
             className="w-full rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
           />
         </div>
