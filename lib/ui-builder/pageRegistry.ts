@@ -157,10 +157,35 @@ export const PAGE_DEFINITIONS: PageDefinition[] = [
   // comment). This only affects this entry's "View live page" link in the
   // admin UI Builder; publishing/resolving/previewing each source's content
   // still works correctly regardless of which page it renders on.
+  //
+  // Phase 246 — Roy asked to "restore Find Support as an editable entry
+  // under UI Builder → Page Content → Core Pages," mapped to the live
+  // public route `/find-your-therapist`. That route (app/find-your-
+  // therapist/page.tsx) IS this exact pageKey — this entry was just still
+  // labeled "Community" from when it held the Community page's full content
+  // (Phase 219), even though most of that content moved back to
+  // `/support-groups` in Phase 222. `title` only, changed to "Find Support"
+  // — `pageKey`/`route`/`contentSources` are unchanged, so every existing
+  // draft, publish, and version-history row keyed to "support-groups"
+  // keeps working exactly as before; this only fixes the label shown in the
+  // Page Content list. Its 3 content sources already cover every editable
+  // piece of the live page: `page_support_groups` (PageHero's eyebrow/
+  // heading/description — the hero headings), `component_community_intro`
+  // (namespace "intro" — the "Support after a crisis" / "Find independent
+  // support" / "Grow in community" pathway cards, i.e. the support-path
+  // labels and crisis guidance copy, plus the mission blurb and closing
+  // band, i.e. the supporting page text), and `component_support_groups_
+  // directory` (namespace "directory" — the group-registration flow's
+  // labels/messages, the closest existing fields to "filters"/"availability
+  // copy"). That last source is a known, pre-existing exception (see the
+  // Phase 222 comment above): it renders on `/support-groups`, not here —
+  // left as-is since Roy didn't ask for that mismatch fixed, only for this
+  // entry to exist correctly labeled. `/intake` ("Find Support / Intake"
+  // below) is a fully separate pageKey/route, untouched by this rename.
   {
     pageKey: "support-groups",
     route: "/find-your-therapist",
-    title: "Community",
+    title: "Find Support",
     group: "core",
     supportsVisualEditor: true,
     contentSources: [
