@@ -8,6 +8,8 @@ import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBri
 import EditableText from "@/components/ui-builder/public/EditableText";
 import EditableImage from "@/components/ui-builder/public/EditableImage";
 import DottedGlobe from "@/components/donate/DottedGlobe";
+import DonateHeroBackground from "@/components/donate/DonateHeroBackground";
+import ParallaxLayer from "@/components/motion/ParallaxLayer";
 import ImpactGallery from "@/components/donate/ImpactGallery";
 import FounderMessage from "@/components/donate/FounderMessage";
 import DonateCtaButton from "@/components/donate/DonateCtaButton";
@@ -364,12 +366,22 @@ export default async function DonatePage({
           DONATE_PAGE_FALLBACK comment for why they default to the 3
           existing donate photos in the meantime. */}
       <section className="donate-hero-warm relative isolate overflow-hidden py-16 lg:py-24">
+        {/* Phase 241 — immersive multi-layer parallax background, reusing
+            the same 2 of the 3 hero photos rendered sharply in the
+            foreground collage below (heroPhotos.photo3 far, photo1 mid) so
+            no new image assets/CMS fields were needed. Purely decorative
+            (aria-hidden, pointer-events-none) and sits at z-0, well behind
+            the z-10 content column — see DonateHeroBackground.tsx for the
+            full depth/accessibility/reduced-motion contract. */}
+        <DonateHeroBackground farSrc={heroPhotos.photo3.src} midSrc={heroPhotos.photo1.src} />
         <div className="wrap relative z-10 lg:flex lg:items-center lg:gap-6">
           {/* Left photo stack — video call (captioned) + volunteer/child,
               hidden below lg since a floating collage doesn't degrade
               gracefully to a narrow viewport; mobile keeps the plain
-              centered text hero. */}
-          <div className="relative hidden h-[420px] w-[26%] shrink-0 lg:block">
+              centered text hero. Phase 241: wrapped in ParallaxLayer as the
+              hero's "foreground fragment" depth plane — smallest movement of
+              the three layers, per the brief. */}
+          <ParallaxLayer speed={6} className="relative hidden h-[420px] w-[26%] shrink-0 lg:block">
             <span className="absolute -top-6 left-1 text-[12px] font-medium text-muted-fg">
               <EditableText
                 contentId="donate.hero.photo1Caption"
@@ -402,21 +414,29 @@ export default async function DonatePage({
                 className="h-full w-full object-cover"
               />
             </div>
-          </div>
+          </ParallaxLayer>
 
-          {/* Center text column */}
+          {/* Center text column. Phase 241: text/CTA now sit over the new
+              photo background + dark overlay instead of the plain warm
+              gradient, so heading/description/bold-line switched from
+              dark-on-light to white/off-white for contrast — the eyebrow
+              (`.eyebrow`, gold `--clay`) and the CTA's dark `--espresso` pill
+              already read clearly against a dark background and are
+              unchanged. A max 6px "at rest" translate is intentionally NOT
+              tied to scroll (per the brief: the text block itself should
+              feel stable, not drift with the parallax layers). */}
           <div className="relative z-10 mx-auto max-w-[520px] text-center lg:mx-0 lg:flex-1">
             <Reveal type="fade-up">
               <span className="eyebrow">
                 <EditableText contentId="donate.hero.eyebrow" label="Hero eyebrow" value={content.eyebrow} as="span" />
               </span>
-              <h1 className="mt-3 font-serif text-[38px] font-semibold leading-tight text-foreground sm:text-[44px]">
+              <h1 className="mt-3 font-serif text-[38px] font-semibold leading-tight text-white sm:text-[44px]">
                 <EditableText contentId="donate.hero.heading" label="Hero heading" value={content.title} as="span" />
               </h1>
-              <div className="mx-auto mt-5 max-w-[520px] text-[16px] leading-relaxed text-muted-fg">
+              <div className="mx-auto mt-5 max-w-[520px] text-[16px] leading-relaxed text-white/80">
                 <EditableText contentId="donate.hero.description" label="Hero description" value={content.subtitle} as="span" />
               </div>
-              <p className="mt-3 font-semibold text-foreground">
+              <p className="mt-3 font-semibold text-white">
                 <EditableText contentId="donate.hero.boldLine" label="Hero bold line" value={content.boldLine} as="span" />
               </p>
               {/* Phase 233 — was `<a href="#giving-box">`, anchor-scrolling
@@ -434,8 +454,10 @@ export default async function DonatePage({
           </div>
 
           {/* Right side — dotted globe behind the clinical-team photo,
-              bleeding off the section's right edge. */}
-          <div className="relative hidden h-[420px] w-[30%] shrink-0 lg:block">
+              bleeding off the section's right edge. Phase 241: also wrapped
+              in ParallaxLayer, same small "foreground fragment" strength as
+              the left collage above. */}
+          <ParallaxLayer speed={6} className="relative hidden h-[420px] w-[30%] shrink-0 lg:block">
             <DottedGlobe className="pointer-events-none absolute -right-[18%] top-1/2 h-[130%] w-[130%] -translate-y-1/2 text-[color:var(--sand-brown)] opacity-40" />
             <div className="absolute bottom-0 right-0 aspect-[16/11] w-[88%] overflow-hidden rounded-[var(--radius)] shadow-soft">
               <EditableImage
@@ -449,7 +471,7 @@ export default async function DonatePage({
                 className="h-full w-full object-cover"
               />
             </div>
-          </div>
+          </ParallaxLayer>
         </div>
       </section>
 
