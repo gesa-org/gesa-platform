@@ -228,6 +228,15 @@
     pointer-events: none;
   }
 
+  /* Landing-page banners share this sheen through `.gold-banner`. On phones
+     it keeps the identical layer, direction, opacity, and keyframes but
+     takes twice as long (7s -> 14s), yielding a calm 50%-speed sweep. */
+  @media (max-width: 767px) {
+    .gold-banner::before {
+      animation-duration: 14s;
+    }
+  }
+
   /* Phase 223 — Donate hero's new background, sampled from Roy's
      "BG Donate Page.jpg" reference mockup: a warm ivory-to-tan wash, not
      the flat slate-grey `.gold-banner` above (that token got repurposed to

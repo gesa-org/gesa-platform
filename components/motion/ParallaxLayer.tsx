@@ -2,6 +2,8 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, type ReactNode } from "react";
+import { scaleParallaxScale, scaleParallaxTravel } from "@/components/motion/config";
+import { useMobileParallaxFactor } from "@/components/motion/useMobileParallaxFactor";
 import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 46 — background-layer parallax for the decorative glow/blob
@@ -64,9 +66,14 @@ export default function ParallaxLayer({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useSafeReducedMotion();
+  const mobileFactor = useMobileParallaxFactor();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [-speed, speed]);
-  const scale = useTransform(scrollYProgress, [0, 1], scaleRange ?? [1, 1]);
+  const adjustedSpeed = scaleParallaxTravel(speed, mobileFactor);
+  const adjustedScaleRange: [number, number] = scaleRange
+    ? [scaleParallaxScale(scaleRange[0], mobileFactor), scaleParallaxScale(scaleRange[1], mobileFactor)]
+    : [1, 1];
+  const y = useTransform(scrollYProgress, [0, 1], [-adjustedSpeed, adjustedSpeed]);
+  const scale = useTransform(scrollYProgress, [0, 1], adjustedScaleRange);
 
   if (reducedMotion) {
     return (

@@ -2,6 +2,8 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, type ReactNode } from "react";
+import { scaleParallaxScale, scaleParallaxTravel } from "@/components/motion/config";
+import { useMobileParallaxFactor } from "@/components/motion/useMobileParallaxFactor";
 import { useSafeReducedMotion } from "@/components/motion/useSafeReducedMotion";
 
 // Phase 45 — cinematic scroll-linked media effect, spec section 4. Wraps
@@ -27,10 +29,13 @@ export default function ParallaxMedia({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useSafeReducedMotion();
+  const mobileFactor = useMobileParallaxFactor();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
 
-  const y = useTransform(scrollYProgress, [0, 1], [intensity, -intensity]);
-  const s = useTransform(scrollYProgress, [0, 1], [scale, 1]);
+  const adjustedIntensity = scaleParallaxTravel(intensity, mobileFactor);
+  const adjustedScale = scaleParallaxScale(scale, mobileFactor);
+  const y = useTransform(scrollYProgress, [0, 1], [adjustedIntensity, -adjustedIntensity]);
+  const s = useTransform(scrollYProgress, [0, 1], [adjustedScale, 1]);
 
   if (reducedMotion) {
     // Spec section 14 — remove parallax entirely under reduced motion,

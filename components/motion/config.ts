@@ -50,3 +50,21 @@ export const MOTION_RESPONSIVE_SCALE = {
   tablet: 0.6,
   mobile: 0.35,
 } as const;
+
+// Shared landing-page background motion stays intentionally restrained on
+// phones. The breakpoint matches Tailwind's `md` boundary exactly: desktop
+// and tablet retain their current parallax, while viewports through 767px
+// travel half as far for the same scroll distance.
+export const MOBILE_PARALLAX_MEDIA_QUERY = "(max-width: 767px)";
+export const MOBILE_PARALLAX_SPEED_FACTOR = 0.5;
+
+export function scaleParallaxTravel(value: number, factor: number) {
+  return value * factor;
+}
+
+// Scale values are offsets from 1, not distances from zero. Halving the
+// offset keeps a 1.08 -> 1.02 background's direction and resting design
+// while making its mobile movement half as pronounced.
+export function scaleParallaxScale(value: number, factor: number) {
+  return 1 + (value - 1) * factor;
+}
