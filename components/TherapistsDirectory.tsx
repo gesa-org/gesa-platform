@@ -8,6 +8,9 @@ import EditableText from "@/components/ui-builder/public/EditableText";
 import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { PublicTherapistRow } from "@/lib/database.types";
 import type { TherapistsDirectoryContent } from "@/lib/content";
+import { shuffleArray } from "@/lib/shuffleArray";
+
+const THERAPIST_SHUFFLE_INTERVAL_MS = 60_000;
 
 export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent = {
   published: true,
@@ -70,6 +73,7 @@ export default function TherapistsDirectory({
   therapists,
   content = THERAPISTS_DIRECTORY_CONTENT_FALLBACK,
   pathKey,
+  enablePeriodicShuffle = false,
 }: {
   therapists: PublicTherapistRow[];
   content?: TherapistsDirectoryContent;
@@ -79,6 +83,8 @@ export default function TherapistsDirectory({
   // TherapistCard falls back to its own "directory" default, unchanged for
   // every other existing caller of this component.
   pathKey?: string;
+  /** Enabled on the public directory only; intake flows keep their current order. */
+  enablePeriodicShuffle?: boolean;
 }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -91,6 +97,15 @@ export default function TherapistsDirectory({
   // field here.
   const [sessionFormat, setSessionFormat] = useState<"" | "online" | "in_person">("");
   const resultsRef = useRef<HTMLDivElement>(null);
+  const filterPanelRef = useRef<HTMLElement>(null);
+  const filterInteractionRef = useRef(false);
+  const interactionReleaseTimerRef = useRef<number | null>(null);
+  const filtersOpenRef = useRef(false);
+  const filteredIdsRef = useRef<Set<string>>(new Set());
+  const focusedCardElementRef = useRef<HTMLElement | null>(null);
+  const shuffleRequestRef = useRef<() => void>(() => {});
+  const [shuffleReady, setShuffleReady] = useState(false);
+  const [shuffleRevision, setShuffleRevision] = useState(0);
 
   // Phase 199 (mobile pass) — below `lg` the filter sidebar used to just
   // render inline, full-width, above the results grid: on a phone that
@@ -115,6 +130,19 @@ export default function TherapistsDirectory({
     };
   }, [filtersOpen]);
 
+  useEffect(() => {
+    filtersOpenRef.current = filtersOpen;
+  }, [filtersOpen]);
+
+  useEffect(
+    () => () => {
+      if (interactionReleaseTimerRef.current !== null) {
+        window.clearTimeout(interactionReleaseTimerRef.current);
+      }
+    },
+    []
+  );
+
   // Phase 185 — `?? []` guards added throughout this block: a null
   // specialties/languages/session_lengths column on any one therapist row
   // used to throw here (crashing the whole directory, not just that row)
@@ -131,15 +159,86 @@ export default function TherapistsDirectory({
     );
   }, [therapists]);
 
-  const filtered = therapists.filter(
-    (t) =>
-      (!name || t.full_name.toLowerCase().includes(name.toLowerCase())) &&
-      (!role || (t.specialties ?? []).includes(role)) &&
-      (!lang || (t.languages ?? []).includes(lang)) &&
-      (!duration || (t.session_lengths ?? []).includes(duration as PublicTherapistRow["session_lengths"][number])) &&
-      (!gender || t.gender === gender) &&
-      (!sessionFormat || (sessionFormat === "online" ? t.offers_online : t.offers_in_person))
+  // Filtering always runs against the canonical API result. Shuffling is a
+  // later presentation step, so it can never introduce a non-matching card.
+  const filtered = useMemo(
+    () =>
+      therapists.filter(
+        (t) =>
+          (!name || t.full_name.toLowerCase().includes(name.toLowerCase())) &&
+          (!role || (t.specialties ?? []).includes(role)) &&
+          (!lang || (t.languages ?? []).includes(lang)) &&
+          (!duration || (t.session_lengths ?? []).includes(duration as PublicTherapistRow["session_lengths"][number])) &&
+          (!gender || t.gender === gender) &&
+          (!sessionFormat || (sessionFormat === "online" ? t.offers_online : t.offers_in_person))
+      ),
+    [therapists, name, role, lang, duration, gender, sessionFormat]
   );
+
+  useEffect(() => {
+    filteredIdsRef.current = new Set(filtered.map((therapist) => therapist.id));
+  }, [filtered]);
+
+  useEffect(() => {
+    setShuffleReady(enablePeriodicShuffle);
+  }, [enablePeriodicShuffle]);
+
+  const displayedTherapists = useMemo(
+    () => (enablePeriodicShuffle && shuffleReady ? shuffleArray(filtered) : filtered),
+    [enablePeriodicShuffle, filtered, shuffleReady, shuffleRevision]
+  );
+
+  // Capture the exact focused control before a timer-driven reorder. Stable
+  // therapist keys preserve its DOM node; this fallback restores it without
+  // scrolling if the browser drops focus during the layout update.
+  shuffleRequestRef.current = () => {
+    const activeElement = document.activeElement;
+    const card = activeElement instanceof HTMLElement ? activeElement.closest<HTMLElement>("[data-therapist-id]") : null;
+    const therapistId = card?.dataset.therapistId;
+
+    focusedCardElementRef.current = therapistId && filteredIdsRef.current.has(therapistId) && activeElement instanceof HTMLElement
+      ? activeElement
+      : null;
+    setShuffleRevision((revision) => revision + 1);
+  };
+
+  useEffect(() => {
+    const focusedElement = focusedCardElementRef.current;
+    focusedCardElementRef.current = null;
+    if (focusedElement && document.contains(focusedElement)) {
+      focusedElement.focus({ preventScroll: true });
+    }
+  }, [shuffleRevision]);
+
+  // One interval for this mounted directory. It deliberately skips hidden
+  // tabs, focused filter controls, the mobile filter sheet, and any active
+  // modal so a visitor is never interrupted mid-search or booking flow.
+  useEffect(() => {
+    if (!enablePeriodicShuffle) return;
+
+    const intervalId = window.setInterval(() => {
+      const tabIsHidden = document.hidden || document.visibilityState === "hidden";
+      const modalIsOpen = Boolean(document.querySelector('[aria-modal="true"]'));
+      if (tabIsHidden || filtersOpenRef.current || filterInteractionRef.current || modalIsOpen) return;
+      shuffleRequestRef.current();
+    }, THERAPIST_SHUFFLE_INTERVAL_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [enablePeriodicShuffle]);
+
+  function beginFilterInteraction() {
+    filterInteractionRef.current = true;
+  }
+
+  function endFilterInteraction() {
+    if (interactionReleaseTimerRef.current !== null) {
+      window.clearTimeout(interactionReleaseTimerRef.current);
+    }
+    interactionReleaseTimerRef.current = window.setTimeout(() => {
+      filterInteractionRef.current = Boolean(filterPanelRef.current?.contains(document.activeElement));
+      interactionReleaseTimerRef.current = null;
+    });
+  }
 
   // Phase 180 — Roy asked for incremental "Load more" pagination to be
   // removed entirely: it was unreliable, and the persistent "Showing X of Y"
@@ -198,6 +297,9 @@ export default function TherapistsDirectory({
       </div>
 
       <aside
+        ref={filterPanelRef}
+        onFocusCapture={beginFilterInteraction}
+        onBlurCapture={endFilterInteraction}
         className={`${
           filtersOpen
             ? "fixed inset-0 z-[120] flex flex-col bg-[#eef1f6]"
@@ -399,10 +501,10 @@ export default function TherapistsDirectory({
         <div className="mb-3.5 text-sm text-muted-fg" aria-live="polite">
           {countMessage}
         </div>
-        {filtered.length ? (
+        {displayedTherapists.length ? (
           <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
-            {filtered.map((t) => (
-              <StaggerItem key={t.id}>
+            {displayedTherapists.map((t) => (
+              <StaggerItem key={t.id} layout={enablePeriodicShuffle}>
                 <TherapistCard t={t} pathKey={pathKey} />
               </StaggerItem>
             ))}

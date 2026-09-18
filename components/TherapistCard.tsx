@@ -25,7 +25,10 @@ export default function TherapistCard({
     .join("");
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-accent">
+    <div
+      data-therapist-id={t.id}
+      className="relative flex flex-col overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-accent"
+    >
       <Link href={`/therapists/${t.slug}`} className="contents">
         <div className="relative aspect-square w-full flex-none overflow-hidden bg-gradient-to-br from-primary to-accent">
           {t.photo_url ? (

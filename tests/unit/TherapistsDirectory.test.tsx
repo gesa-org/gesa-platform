@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TherapistsDirectory from "@/components/TherapistsDirectory";
 import type { PublicTherapistRow } from "@/lib/database.types";
@@ -54,6 +54,7 @@ function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistR
     // browseTherapistSearch.test.ts's makeTherapist().
     session_price_amount: null,
     session_price_currency: "USD",
+    profile_views: 0,
     ...overrides,
   };
 }
@@ -134,6 +135,121 @@ describe("TherapistsDirectory", () => {
       expect(screen.getByText("Showing 34 of 34 active therapists")).toBeInTheDocument();
       expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(34);
       expect(screen.queryByRole("button", { name: /load more/i })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("periodic display shuffling", () => {
+    const shuffledTherapists = [
+      makeTherapist({ id: "1", full_name: "Jane Doe" }),
+      makeTherapist({ id: "2", full_name: "Amir Cohen" }),
+      makeTherapist({ id: "3", full_name: "Zoë Stone" }),
+    ];
+
+    function setDocumentVisibility(visibility: "visible" | "hidden") {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: visibility });
+      Object.defineProperty(document, "hidden", { configurable: true, value: visibility === "hidden" });
+    }
+
+    function displayedNames() {
+      return screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent);
+    }
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      setDocumentVisibility("visible");
+    });
+
+    afterEach(() => {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+      setDocumentVisibility("visible");
+    });
+
+    it("shuffles the initial directory display while retaining stable therapist identities", () => {
+      jest.spyOn(Math, "random").mockReturnValue(0);
+      render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+
+      expect(displayedNames()).toEqual(["Amir Cohen", "Zoë Stone", "Jane Doe"]);
+      expect(screen.getByRole("heading", { name: "Jane Doe" }).closest("[data-therapist-id]")).toHaveAttribute(
+        "data-therapist-id",
+        "1"
+      );
+    });
+
+    it("reshuffles the same eligible set after 60 seconds", () => {
+      jest
+        .spyOn(Math, "random")
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0.99)
+        .mockReturnValueOnce(0.99);
+      render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+
+      expect(displayedNames()).toEqual(["Amir Cohen", "Zoë Stone", "Jane Doe"]);
+      act(() => jest.advanceTimersByTime(60_000));
+      expect(displayedNames()).toEqual(["Jane Doe", "Amir Cohen", "Zoë Stone"]);
+    });
+
+    it("keeps search results correct after a fresh shuffled render", () => {
+      jest.spyOn(Math, "random").mockReturnValue(0);
+      render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+
+      fireEvent.change(screen.getByPlaceholderText("Find therapist…"), { target: { value: "amir" } });
+      expect(displayedNames()).toEqual(["Amir Cohen"]);
+      expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument();
+      expect(screen.queryByText("Zoë Stone")).not.toBeInTheDocument();
+    });
+
+    it("does not shuffle while the tab is hidden, then resumes on the next visible interval", () => {
+      const random = jest.spyOn(Math, "random").mockReturnValue(0);
+      render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+      random.mockClear();
+
+      setDocumentVisibility("hidden");
+      act(() => jest.advanceTimersByTime(60_000));
+      expect(random).not.toHaveBeenCalled();
+
+      setDocumentVisibility("visible");
+      act(() => jest.advanceTimersByTime(60_000));
+      expect(random).toHaveBeenCalled();
+    });
+
+    it("does not auto-shuffle while a visitor is focused in the search control", () => {
+      const random = jest.spyOn(Math, "random").mockReturnValue(0);
+      render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+      random.mockClear();
+
+      screen.getByPlaceholderText("Find therapist…").focus();
+      act(() => jest.advanceTimersByTime(60_000));
+      expect(random).not.toHaveBeenCalled();
+    });
+
+    it("cleans up its interval on unmount", () => {
+      const clearInterval = jest.spyOn(window, "clearInterval");
+      const { unmount } = render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+
+      unmount();
+      expect(clearInterval).toHaveBeenCalled();
+    });
+
+    it("keeps a focused card control on the same stable card after reordering", () => {
+      jest
+        .spyOn(Math, "random")
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0)
+        .mockReturnValueOnce(0.99)
+        .mockReturnValueOnce(0.99);
+      render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
+
+      const janeCard = screen.getByRole("heading", { name: "Jane Doe" }).closest("[data-therapist-id]");
+      expect(janeCard).not.toBeNull();
+      const messageButton = within(janeCard as HTMLElement).getByRole("button", { name: "Message" });
+      messageButton.focus();
+
+      act(() => jest.advanceTimersByTime(60_000));
+      expect(document.activeElement).toBe(messageButton);
+      expect(screen.getByRole("heading", { name: "Jane Doe" }).closest("[data-therapist-id]")).toBe(janeCard);
     });
   });
 });

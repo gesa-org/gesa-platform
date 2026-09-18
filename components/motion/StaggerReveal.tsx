@@ -55,14 +55,18 @@ export function StaggerItem({
   children,
   className,
   distance = MOTION_DISTANCE.md,
+  layout = false,
 }: {
   children: ReactNode;
   className?: string;
   distance?: number;
+  /** Animate position-only layout changes without resizing card contents. */
+  layout?: boolean;
 }) {
   const reducedMotion = useSafeReducedMotion();
   return (
     <motion.div
+      layout={layout && !reducedMotion ? "position" : false}
       variants={{
         hidden: reducedMotion ? { opacity: 0 } : { opacity: 0, y: distance, scale: 0.97 },
         visible: { opacity: 1, y: 0, scale: 1 },
@@ -70,6 +74,7 @@ export function StaggerItem({
       transition={{
         duration: reducedMotion ? MOTION_DURATION.micro : MOTION_DURATION.reveal,
         ease: MOTION_EASE,
+        layout: { duration: MOTION_DURATION.micro, ease: MOTION_EASE },
       }}
       className={className}
     >
