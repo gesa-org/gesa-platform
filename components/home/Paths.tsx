@@ -324,13 +324,13 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 const CARD_FRONT_IMAGE_OVERRIDES: (string | undefined)[] = [
   "/images/paths/war-framed-swirl-v3.png",
   "/images/paths/war-framed-swirl-v3.png",
-  "/images/paths/support-framed-swirl.png",
+  "/images/paths/support-framed-swirl-v2.png",
 ];
 
-// The first two portal fronts use fixed approved treatments. This prevents
-// older CMS labels ("WAR" / "TERROR") from changing their visual design;
-// both cards retain their normal flipped content and destinations.
-const CARD_FRONT_LABEL_OVERRIDES: (string | undefined)[] = ["CRISIS", "VETARANS"];
+// The portal fronts use fixed approved treatments. This prevents older CMS
+// labels ("WAR" / "TERROR" / "DISASTER") from changing their visual design;
+// every card retains its normal flipped content and destination.
+const CARD_FRONT_LABEL_OVERRIDES: (string | undefined)[] = ["CRISIS", "VETARANS", "SUPPORT"];
 
 const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; top: string; side: string; mark: GesaMarkColors }[] = [
   {
@@ -675,7 +675,8 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     const cardKey = CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1];
                     const frontLabel = CARD_FRONT_LABEL_OVERRIDES[i] ?? p.frontLabel;
-                    const isReferenceFrontCard = i === 0 || i === 1;
+                    const isReferenceFrontCard = CARD_FRONT_LABEL_OVERRIDES[i] !== undefined;
+                    const isSupportCard = i === 2;
                     return (
                       /* Phase 210 — Roy sent a new reference image (a
                          recessed colored "shadow box" holding the GesaMark
@@ -711,7 +712,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             where its own recess sits) so the swirl still
                             renders as a real, recolorable React component
                             rather than being redrawn as more inline SVG. */}
-                        <div className="relative w-full flex-1 min-h-0">
+                        <div className={`relative w-full flex-1 min-h-0${isSupportCard ? " mx-auto max-w-[176px] overflow-hidden" : ""}`}>
                           {CARD_FRONT_IMAGE_OVERRIDES[i] ? (
                             // Phase 237 — Roy started sending, one card at a
                             // time, a new reference photo for that card's
@@ -738,7 +739,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                               alt=""
                               fill
                               sizes="(max-width: 768px) 33vw, 220px"
-                              className="object-contain drop-shadow-lg"
+                              className={`object-contain drop-shadow-lg${isSupportCard ? " scale-[1.15]" : ""}`}
                             />
                           ) : (
                             <>
