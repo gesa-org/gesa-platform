@@ -323,14 +323,14 @@ const PATH_FRONT_BADGE_ICONS = [Sprout, Tags, Waves];
 // (Phase 237 round 2), 2 = Support/disaster card (Phase 237 round 3).
 const CARD_FRONT_IMAGE_OVERRIDES: (string | undefined)[] = [
   "/images/paths/war-framed-swirl-v3.png",
-  "/images/paths/veterans-framed-swirl.png",
+  "/images/paths/war-framed-swirl-v3.png",
   "/images/paths/support-framed-swirl.png",
 ];
 
-// The Crisis portal's front face is a fixed visual treatment. This prevents
-// an older CMS value ("WAR") from changing the label in the approved design;
-// the card's flipped face and destination still use their normal content.
-const CARD_FRONT_LABEL_OVERRIDES: (string | undefined)[] = ["CRISIS"];
+// The first two portal fronts use fixed approved treatments. This prevents
+// older CMS labels ("WAR" / "TERROR") from changing their visual design;
+// both cards retain their normal flipped content and destinations.
+const CARD_FRONT_LABEL_OVERRIDES: (string | undefined)[] = ["CRISIS", "VETARANS"];
 
 const PATH_FRONT_STYLES: { bg: string; boxHex: string; frame: string; door: string; doorFrame: string; top: string; side: string; mark: GesaMarkColors }[] = [
   {
@@ -675,7 +675,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     const cardKey = CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1];
                     const frontLabel = CARD_FRONT_LABEL_OVERRIDES[i] ?? p.frontLabel;
-                    const isCrisisCard = i === 0;
+                    const isReferenceFrontCard = i === 0 || i === 1;
                     return (
                       /* Phase 210 — Roy sent a new reference image (a
                          recessed colored "shadow box" holding the GesaMark
@@ -689,7 +689,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          comment in HOME_CONTENT_FALLBACK above). Same flex
                          column as before, now just frame then badge, one
                          gap-3 between them. */
-                      <div className={`absolute inset-0 flex flex-col items-center justify-center [backface-visibility:hidden]${isCrisisCard ? " gap-2" : " gap-3"}`}>
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center [backface-visibility:hidden]${isReferenceFrontCard ? " gap-2" : " gap-3"}`}>
                         {/* Recessed wall niche — Phase 213. Roy sent "New
                             Design Frames.png" again and said Phase 212's flat
                             two-tone box still wasn't a real "3D" copy — it
@@ -770,7 +770,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             title (PATH_BADGE_ICONS / p.title) since they show
                             at different flip states. */}
                         <div
-                          className={`flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md${isCrisisCard ? " w-[164px] justify-center" : ""}`}
+                          className={`flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md${isReferenceFrontCard ? " w-[164px] justify-center" : ""}`}
                           style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}
                         >
                           <FrontIcon size={14} className="text-espresso" aria-hidden="true" />

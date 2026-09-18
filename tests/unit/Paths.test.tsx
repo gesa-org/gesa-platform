@@ -73,7 +73,7 @@ describe("Paths (Home)", () => {
     render(<Paths />);
 
     expect(screen.getByText("CRISIS")).toBeInTheDocument();
-    expect(screen.getByText("Veterans")).toBeInTheDocument();
+    expect(screen.getByText("VETARANS")).toBeInTheDocument();
     expect(screen.getByText("Support")).toBeInTheDocument();
 
     // Back face content from the earlier test is still present, unchanged.
@@ -82,13 +82,17 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("Seeking support")).toBeInTheDocument();
   });
 
-  it("keeps the approved CRISIS label when older CMS content says WAR", () => {
-    render(<Paths content={{ ...HOME_CONTENT_FALLBACK, card1FrontLabel: "WAR" }} />);
+  it("keeps the approved portal labels when older CMS content says WAR or TERROR", () => {
+    render(<Paths content={{ ...HOME_CONTENT_FALLBACK, card1FrontLabel: "WAR", card2FrontLabel: "TERROR" }} />);
 
     const crisisLabel = screen.getByText("CRISIS");
+    const veteransLabel = screen.getByText("VETARANS");
     expect(crisisLabel).toBeInTheDocument();
+    expect(veteransLabel).toBeInTheDocument();
     expect(screen.queryByText("WAR")).not.toBeInTheDocument();
+    expect(screen.queryByText("TERROR")).not.toBeInTheDocument();
     expect(crisisLabel.closest("div")).toHaveClass("w-[164px]", "justify-center");
+    expect(veteransLabel.closest("div")).toHaveClass("w-[164px]", "justify-center");
     expect(Array.from(document.querySelectorAll("[class]")).some((element) => element.getAttribute("class")?.includes("bg-[#f6f6f4]") ?? false)).toBe(false);
   });
 });
