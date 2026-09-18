@@ -116,14 +116,14 @@ export default function FindSupportModal({
       aria-modal="true"
       aria-label="AI Matching Support"
     >
-      {/* Phase 220 — warm ivory modal background, matching every other form
+      {/* Shared Sand Grey modal background, matching every other form
           modal site-wide (see components/ui/Modal.tsx's own Phase 220
-          comment and app/globals.css's --modal-ivory). This modal renders
+          comment and app/globals.css's --sand-grey). This modal renders
           its own panel div instead of going through the shared Modal.tsx,
           so it needed the same class swap applied directly here. */}
       <div
         ref={panelRef}
-        className="relative w-full max-w-[720px] rounded-2xl bg-modal-ivory p-6 shadow-2xl sm:p-8"
+        className="relative w-full max-w-[720px] rounded-2xl bg-sand-grey p-6 shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Phase 199 (mobile/a11y pass) — this is now the modal's only

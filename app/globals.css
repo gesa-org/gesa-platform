@@ -43,18 +43,11 @@
     --background: #eef1f6; /* Powder Ivory — pale blue-white, primary breathing space */
     --foreground: #2b3140; /* Deep Slate — dark blue-charcoal text */
     --card: #e3e8ef; /* Soft Mist — card/surface color */
-    /* Roy sent a reference screenshot of the volunteer/caregiver
-       application modal and asked for a "warm ivory" background applied to
-       it and every other form modal site-wide (booking, intake, support-
-       group registration, AI Matching/Browse Therapist, admin add/invite,
-       etc.) — all of which shared the pale blue-gray --card above via the
-       common Modal.tsx panel. A dedicated token instead of retuning --card
-       itself, same pattern as --sand-brown/--green-sage/--slate-banner
-       above: --card is still used site-wide for non-modal surfaces (the
-       home Stats row, therapist/testimonial cards, etc.) that weren't part
-       of this request. See components/ui/Modal.tsx and the individual
-       modals that set their own background class. */
-    --modal-ivory: #f8f1df;
+    /* Sand Grey is the shared, warm-neutral surface for the Our
+       Professionals directory and public form/booking panels. Keeping it
+       as a dedicated token means those surfaces change together without
+       recoloring unrelated cards that intentionally use --card. */
+    --sand-grey: #c9c5bc;
     --primary: #2b3140; /* Deep Slate */
     --primary-600: #1d212b; /* darker slate — primary hover/active */
     --primary-fg: #eef1f6; /* Powder Ivory text on primary */
@@ -835,7 +828,7 @@ html[data-a11y-color-mode="light-contrast"] {
   --accent-soft: #eef1f6;
   --sage-soft: #eef1f6;
   --clay-soft: #eef1f6;
-  --modal-ivory: #ffffff;
+  --sand-grey: #ffffff;
 }
 
 html[data-a11y-color-mode="high-contrast"] {
@@ -858,7 +851,7 @@ html[data-a11y-color-mode="high-contrast"] {
   --amber-soft: #1a1a1a;
   --espresso: #000000;
   --destructive: #ff6b57;
-  --modal-ivory: #000000;
+  --sand-grey: #000000;
 }
 html[data-a11y-color-mode="high-contrast"] a {
   color: #ffd400 !important;
@@ -885,7 +878,7 @@ html[data-a11y-color-mode="monochrome"] {
   --amber-soft: #dddddd;
   --espresso: #111111;
   --destructive: #444444;
-  --modal-ivory: #f2f2f2;
+  --sand-grey: #f2f2f2;
 }
 html[data-a11y-color-mode="monochrome"] :is(img, svg) {
   filter: grayscale(1);

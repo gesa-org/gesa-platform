@@ -331,15 +331,15 @@ export default function BrowseTherapistModal({
       aria-modal="true"
       aria-label="Find a therapist"
     >
-      {/* Phase 220 — warm ivory modal background, matching every other form
+      {/* Shared Sand Grey modal background, matching every other form
           modal site-wide (see components/ui/Modal.tsx's own Phase 220
-          comment and app/globals.css's --modal-ivory). This is the booking
+          comment and app/globals.css's --sand-grey). This is the booking
           dialog's own panel; the therapist result cards above in this same
           file (`bg-card` on the grid) are page content, not modal chrome,
           so they're deliberately left unchanged. */}
       <div
         ref={dialogRef}
-        className="relative w-full max-w-[880px] rounded-2xl bg-modal-ivory p-6 shadow-2xl sm:p-8"
+        className="relative w-full max-w-[880px] rounded-2xl bg-sand-grey p-6 shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button

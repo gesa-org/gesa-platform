@@ -102,17 +102,11 @@ export default async function TherapistsPage({
           Swapped from the pale-gold `bg-clay-soft` wash to the new "Sand
           Brown" (#CBA560) token — see --sand-brown in app/globals.css and
           the matching comment on About's founder section.
-          Phase 230 — Roy sent a reference screenshot of this directory band
-          and asked it to move off "Sand Brown" onto "Warm Ivory" instead.
-          Reused the existing `--modal-ivory` token (#F8F1DF, "Warm Ivory" —
-          added in Phase 220 for form-modal backgrounds site-wide) rather
-          than a new color; its Tailwind class is named for its original
-          use case (`bg-modal-ivory`) but the color itself is exactly what
-          Roy asked for here. Both are light backgrounds, so no text-color
+          The shared Sand Grey surface keeps the directory consistent with
+          public form panels. Both are light backgrounds, so no text-color
           flip was needed the way the dark-navy Founder-spotlight swap
-          required (Phase 229) — filter labels, cards, and photos all read
-          the same on ivory as they did on gold. */}
-      <section className="section pt-0 bg-modal-ivory">
+          required — filter labels, cards, and photos remain legible. */}
+      <section className="section pt-0 bg-sand-grey">
         <div className="wrap">
           <TherapistsDirectory therapists={therapists} content={directoryContent} />
         </div>

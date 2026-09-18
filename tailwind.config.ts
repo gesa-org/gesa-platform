@@ -43,20 +43,16 @@ const config: Config = {
           DEFAULT: "var(--clay)",
           soft: "var(--clay-soft)",
         },
-        // Roy's "warm ivory" request for the form-modal background (Join as
-        // a Volunteer/Professional, booking, intake, AI Matching/Browse
-        // Therapist, admin add/invite, etc.) — see app/globals.css's
-        // --modal-ivory comment for why this is a dedicated token rather
-        // than a retune of --card.
-        modal: {
-          ivory: "var(--modal-ivory)",
-        },
+        // Sand Grey is the shared public directory and form-panel surface.
+        // It remains separate from --card so card treatments stay unchanged.
+        // The existing Sand Brown token serves different section bands.
         // Roy's "Sand Brown" (#CBA560) swap for the Founder spotlight, "Why
         // GESA exists," and Our Professionals' directory band section
         // backgrounds — see app/globals.css's --sand-brown comment for why
         // this is a new token rather than a retune of --clay-soft.
         sand: {
           brown: "var(--sand-brown)",
+          grey: "var(--sand-grey)",
         },
         // Roy's "Green Sage" (#9BA689) swap for the Home Stats row band —
         // see app/globals.css's --green-sage comment for why this is a new

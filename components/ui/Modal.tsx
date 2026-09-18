@@ -11,12 +11,12 @@ const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 // Phase 220 — Roy sent a reference screenshot of the volunteer/caregiver
-// application modal and asked for a "warm ivory" background applied to it
+// application modal and asked for a shared Sand Grey background applied to it
 // and every other form modal site-wide. This shared panel is what every
 // modal that doesn't set its own background class renders through, so this
 // one line recolors most of them at once; a handful of modals set their own
 // className instead (see those files' own Phase 220 comments) and were
-// updated to match. See app/globals.css's --modal-ivory comment.
+// updated to match. See app/globals.css's --sand-grey comment.
 //
 // Phase 46 — this is the single most-reused interactive surface on the
 // site (booking, intake, and support-group registration all go through
@@ -133,7 +133,7 @@ export default function Modal({
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
-            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-modal-ivory p-7 shadow-lg outline-none"
+            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-sand-grey p-7 shadow-lg outline-none"
             onClick={(e) => e.stopPropagation()}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
