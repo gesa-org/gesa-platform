@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Paths from "@/components/home/Paths";
+import Paths, { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 
 // Phase 70 removed the Home page's gold-band hero text (eyebrow/headline/
 // subtitle/trust badges) and the decorative "gallery wall" of the three
@@ -37,7 +37,8 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("In crisis right now")).toBeInTheDocument();
     expect(screen.getByText("Veterans, reservists & families")).toBeInTheDocument();
     expect(screen.getByText("Seeking support")).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /reach out now/i })).toHaveLength(3);
+    expect(screen.getAllByRole("link", { name: /reach out now/i })).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Start AI matching for support related to terror." })).toBeInTheDocument();
   });
 
   // Phase 72 — each card is now a real 3D flip: the front face shows the
@@ -47,18 +48,11 @@ describe("Paths (Home)", () => {
   // can't assert visual visibility directly — instead it confirms both
   // faces are actually in the DOM, and that the flip wrapper carries the
   // hover/focus rotate classes that drive the effect.
-  // Phase 100 — the front face's painting (asserted here via its "artwork"
-  // alt text through Phase 97/99) was replaced by the GesaMark graphic, an
-  // inline SVG with no alt text of its own.
-  // Phase 209 — GesaMark was briefly replaced by DoorMark (an ajar-door SVG).
-  // Phase 210 — Roy's newest reference image reverted the front face back to
-  // GesaMark (viewBox "0 0 200 220") inside a colored shadow-box, so this
-  // again asserts that mark renders (three <svg> front faces).
-  it("renders both the front (GesaMark) and back (text/CTA) faces of each flip card", () => {
+  it("renders the framed front artwork and back content for each flip card", () => {
     render(<Paths />);
 
-    const frontMarks = document.querySelectorAll('.gold-card-hover svg[viewBox="0 0 200 220"]');
-    expect(frontMarks.length).toBe(3);
+    expect(document.querySelectorAll(".gold-card-hover img")).toHaveLength(3);
+    expect(document.querySelector('img[src*="war-framed-swirl-v3.png"]')).toBeInTheDocument();
 
     const flipWrapper = screen.getByText("In crisis right now").closest('[class*="transform-style"]') as HTMLElement;
     // Tailwind arbitrary-property classes render literally in the DOM —
@@ -78,7 +72,7 @@ describe("Paths (Home)", () => {
   it("renders the new front-face badge labels without changing the back face", () => {
     render(<Paths />);
 
-    expect(screen.getByText("Crisis")).toBeInTheDocument();
+    expect(screen.getByText("CRISIS")).toBeInTheDocument();
     expect(screen.getByText("Veterans")).toBeInTheDocument();
     expect(screen.getByText("Support")).toBeInTheDocument();
 
@@ -86,5 +80,12 @@ describe("Paths (Home)", () => {
     expect(screen.getByText("In crisis right now")).toBeInTheDocument();
     expect(screen.getByText("Veterans, reservists & families")).toBeInTheDocument();
     expect(screen.getByText("Seeking support")).toBeInTheDocument();
+  });
+
+  it("keeps the approved CRISIS label when older CMS content says WAR", () => {
+    render(<Paths content={{ ...HOME_CONTENT_FALLBACK, card1FrontLabel: "WAR" }} />);
+
+    expect(screen.getByText("CRISIS")).toBeInTheDocument();
+    expect(screen.queryByText("WAR")).not.toBeInTheDocument();
   });
 });
