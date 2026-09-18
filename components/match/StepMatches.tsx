@@ -56,7 +56,7 @@ export default function StepMatches({
       <h2 className="mb-1.5 flex items-center gap-2 text-[22px]">
         <Sparkle size={19} className="text-primary" /> Your matches
       </h2>
-      <p className="mb-3 text-muted-fg">Based on what you shared, here are the therapists we think could be a good fit.</p>
+      <p className="mb-3 text-muted-fg">Based on what you shared, here are the professionals we think could be a good fit.</p>
       <p className="mb-4 text-[12.5px] text-muted-fg">
         These suggestions come from an automated match, not a clinical assessment — you choose who, if anyone, to
         reach out to.
@@ -90,7 +90,7 @@ export default function StepMatches({
           <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-border bg-secondary/50 p-4 text-[13.5px] text-muted-fg">
             <Info size={16} className="mt-0.5 flex-none text-primary" />
             <span>
-              We don&apos;t currently have an active, verified therapist matching your preferred gender (
+              We don&apos;t currently have an active, verified professional matching your preferred gender (
               {GENDER_LABELS[answers.genderPreference] ?? answers.genderPreference}) available — the matches below are
               our closest fit on treatment type and focus areas instead.{" "}
               <a href="/contact" className="font-semibold text-primary">
@@ -125,7 +125,7 @@ export default function StepMatches({
           <a href="/contact" className="font-semibold text-primary">
             contact our team
           </a>{" "}
-          and we&apos;ll help you find the right therapist directly.
+          and we&apos;ll help you find the right professional directly.
         </div>
       )}
 
@@ -177,7 +177,7 @@ export default function StepMatches({
                         pathKey="ai-support"
                         supportRequestId={supportRequestId}
                         onFirstInteract={() => onTherapistSelected(match)}
-                        ctaLabel="Choose therapist"
+                        ctaLabel="Choose professional"
                       />
                     </div>
                   </div>

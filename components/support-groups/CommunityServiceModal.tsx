@@ -45,7 +45,7 @@ export default function CommunityServiceModal({
       heading={serviceType === "charity" ? "Find a professional — Charity Services" : "Find a professional — Professional Services"}
       subheading={
         serviceType === "charity"
-          ? "Charity Services provide up to 6 free sessions with a GESA professional. If you wish to continue after the sixth session, payment arrangements must be discussed directly with your therapist."
+          ? "Charity Services provide up to 6 free sessions with a GESA professional. If you wish to continue after the sixth session, payment arrangements must be discussed directly with your professional."
           : "Professional Services are paid sessions. Complete your details, select your appointment, and proceed to secure payment to confirm your booking."
       }
     />

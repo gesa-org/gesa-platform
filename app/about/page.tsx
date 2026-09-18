@@ -25,7 +25,7 @@ import EditableText from "@/components/ui-builder/public/EditableText";
 export const metadata = {
   title: "About — GESA",
   description:
-    "Get matched with a verified volunteer therapist — free, confidential, and no account required. Learn how GESA's AI matching and community support work.",
+    "Get matched with a verified volunteer professional — free, confidential, and no account required. Learn how GESA's AI matching and community support work.",
 };
 
 // Fixed icon-per-position for the "How GESA works" cards — icon choice

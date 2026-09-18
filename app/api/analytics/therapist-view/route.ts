@@ -6,9 +6,8 @@ import { isLikelyBot } from "@/lib/analytics/botDetect";
 import { isRateLimited } from "@/lib/analytics/rateLimit";
 import { computeVisitorKey, hashAnonymousId } from "@/lib/analytics/hash";
 
-// Phase 206/207 — therapist profile-view analytics, now a PUBLIC counter
-// (see components/TherapistCard.tsx and EXECUTION_PLAN.md's Phase 207 entry
-// for why this supersedes Phase 206's original admin-only visibility).
+// Profile-view analytics. Totals are deliberately returned only through the
+// owner-only /api/analytics/my-profile-views endpoint.
 // Records at most one view per (therapist, anonymous visitor, browser
 // session). Called fire-and-forget from components/TherapistViewTracker.tsx,
 // mounted once on app/therapists/[slug]/page.tsx — never from the
@@ -101,23 +100,20 @@ export async function POST(request: Request) {
   // no-op on conflict) and, only when that insert actually happened,
   // increments therapists.profile_views in the same call — see the
   // phase_207 migration's own comment on why this can never drift.
-  const { data: rpcResult, error: rpcError } = await admin.rpc("record_therapist_profile_view", {
+  const { error: rpcError } = await admin.rpc("record_therapist_profile_view", {
     p_therapist_id: therapistId,
     p_visitor_key: visitorKey,
     p_anonymous_id_hash: anonymousIdHash,
     p_referrer: referrer,
   });
 
-  let profileViews: number | undefined;
   if (rpcError) {
     console.error("Failed to record therapist profile view:", rpcError.message);
     // Still succeed from the caller's point of view — a tracking failure
     // must never surface as a visible error on a public profile page.
-  } else {
-    profileViews = rpcResult?.[0]?.profile_views;
   }
 
-  const response = NextResponse.json({ recorded: !rpcError, profileViews });
+  const response = NextResponse.json({ recorded: !rpcError });
   if (!existingAnonId) {
     // No `maxAge`/`expires` set — a session cookie, cleared when the
     // browser closes, so a new browser session naturally gets a new anonId

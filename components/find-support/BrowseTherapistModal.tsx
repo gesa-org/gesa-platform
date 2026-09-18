@@ -321,7 +321,7 @@ export default function BrowseTherapistModal({
   }
 
   const resultCountLabel =
-    results !== null ? `${results.length} therapist${results.length === 1 ? "" : "s"} found` : "";
+    results !== null ? `${results.length} professional${results.length === 1 ? "" : "s"} found` : "";
 
   return (
     <div
@@ -329,7 +329,7 @@ export default function BrowseTherapistModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Find a therapist"
+      aria-label="Find Volunteers"
     >
       {/* Shared Sand Grey modal background, matching every other form
           modal site-wide (see components/ui/Modal.tsx's own Phase 220
@@ -354,7 +354,7 @@ export default function BrowseTherapistModal({
         <div className="max-h-[80vh] overflow-y-auto pt-2">
           {step === "search" && (
             <div className="mx-auto max-w-[680px]">
-              <h2 className="mb-1.5 text-[22px]">{heading ?? "Find a therapist"}</h2>
+              <h2 className="mb-1.5 text-[22px]">{heading ?? "Find Volunteers"}</h2>
               <p className="mb-6 text-muted-fg">
                 {subheading ?? "Choose how and where you would like to receive support."}
               </p>
@@ -397,7 +397,7 @@ export default function BrowseTherapistModal({
                       <span>
                         <span className="block text-[14.5px] font-semibold text-foreground">In-person</span>
                         <span className="block text-[12.5px] text-muted-fg">
-                          Meet face-to-face at a location arranged with your therapist.
+                          Meet face-to-face at a location arranged with your professional.
                         </span>
                       </span>
                     </button>
@@ -458,7 +458,7 @@ export default function BrowseTherapistModal({
                   }
                   block
                 >
-                  <Search size={16} /> {searching ? "Finding therapists…" : "Start browsing therapists"}
+                  <Search size={16} /> {searching ? "Finding professionals…" : "Start browsing professionals"}
                 </Button>
               </div>
             </div>
@@ -475,7 +475,7 @@ export default function BrowseTherapistModal({
               </button>
 
               <h2 className="mb-1 text-[20px]">
-                Therapists who speak {effectiveLanguages.join(", ")}
+                Professionals who speak {effectiveLanguages.join(", ")}
               </h2>
               <p className="mb-3 text-[13.5px] text-muted-fg" aria-live="polite">
                 {resultCountLabel}
@@ -510,7 +510,7 @@ export default function BrowseTherapistModal({
 
               {results.length === 0 ? (
                 <div className="rounded-[var(--radius)] border border-border bg-secondary/50 p-6 text-center">
-                  <h3 className="mb-1.5 text-[16px] font-semibold">No therapists were found for this search.</h3>
+                  <h3 className="mb-1.5 text-[16px] font-semibold">No professionals were found for this search.</h3>
                   <p className="mb-5 text-[13.5px] text-muted-fg">
                     Try changing the session type, languages, or type of treatment.
                   </p>

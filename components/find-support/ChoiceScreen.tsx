@@ -117,7 +117,7 @@ export default function ChoiceScreen({
               Phase 151 — this card now opens the guided Browse Therapist
               search modal (`chooseBrowse`) instead of redirecting straight
               to /therapists. */}
-          <span className="text-[17px] font-semibold">Browse therapist</span>
+          <span className="text-[17px] font-semibold">Browse professional</span>
           <span className="text-[13.5px] text-muted-fg">
             Browse our professionals and choose the person you feel is right for you.
           </span>

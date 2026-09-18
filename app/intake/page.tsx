@@ -186,7 +186,7 @@ export default async function IntakePage({
           // admin opts specific professionals in. This is the honest,
           // no-results state for that case, not an error.
           <div className="rounded-[var(--radius)] border border-border bg-card p-7 text-center text-muted-fg">
-            <p className="mb-1.5 font-semibold text-foreground">No therapists were found for this pathway.</p>
+            <p className="mb-1.5 font-semibold text-foreground">No professionals were found for this pathway.</p>
             <p className="mb-5 text-[13.5px]">
               We don&apos;t have a verified professional assigned to this pathway yet — please check back soon, browse
               every professional, or reach out and we&apos;ll help you directly.

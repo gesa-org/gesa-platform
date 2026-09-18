@@ -21,6 +21,6 @@ export const INTAKE_FLOW_CONTENT_FALLBACK: IntakeFlowContent = {
   // unchanged so this remains the same editable Content Manager field, just
   // holding new copy.
   moreHelplinesText: "Need immediate emergency support?",
-  ongoingSupportPrompt: "You can also connect with a volunteer therapist for ongoing, free support.",
-  matchListIntro: "Here are volunteer therapists who fit what you shared. Choose one to see their availability and book a free session.",
+  ongoingSupportPrompt: "You can also connect with a volunteer professional for ongoing, free support.",
+  matchListIntro: "Here are volunteer professionals who fit what you shared. Choose one to see their availability and book a free session.",
 };

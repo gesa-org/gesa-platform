@@ -440,9 +440,6 @@ export type PublicTherapistRow = Pick<
   // public, same as price_note already was.
   | "session_price_amount"
   | "session_price_currency"
-  // Phase 207 — public profile-view counter, shown next to country on
-  // every /therapists card. See TherapistRow.profile_views's own comment.
-  | "profile_views"
 > & {
   // Derived boolean, not the phone number itself — lets the UI offer/hide
   // the WhatsApp contact channel without ever sending a confidential

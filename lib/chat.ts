@@ -42,7 +42,7 @@ export async function getMyThreads(): Promise<ThreadSummary[]> {
     const isTherapistSide = t.therapists?.profile_id === userData.user!.id;
     const other = isTherapistSide
       ? { name: t.clients?.full_name ?? "Client", photo: null as string | null }
-      : { name: t.therapists?.full_name ?? "Therapist", photo: t.therapists?.photo_url ?? null };
+      : { name: t.therapists?.full_name ?? "Professional", photo: t.therapists?.photo_url ?? null };
     const last = lastMessages.get(t.id);
     return {
       id: t.id,
@@ -82,7 +82,7 @@ export async function getThreadWithMessages(threadId: string) {
   const isTherapistSide = thread.therapists?.profile_id === userData.user?.id;
   const otherName = isTherapistSide
     ? thread.clients?.full_name ?? "Client"
-    : thread.therapists?.full_name ?? "Therapist";
+    : thread.therapists?.full_name ?? "Professional";
 
   const detail: ThreadDetail = { id: thread.id, otherName };
 

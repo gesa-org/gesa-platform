@@ -8,7 +8,7 @@ export default function TherapistsDirectoryEditor({ initial }: { initial: Therap
     <FlatFieldsEditor<TherapistsDirectoryContent>
       contentKey="component_therapists_directory"
       initial={initial}
-      note="The filter sidebar's option lists (specialties, languages, session lengths) come from real therapist records and aren't editable text — only the fixed labels around them are, below."
+      note="The filter sidebar's option lists (specialties, languages, session lengths) come from real professional records and aren't editable text — only the fixed labels around them are, below."
       groups={[
         {
           heading: "Search & filter labels",
@@ -30,7 +30,7 @@ export default function TherapistsDirectoryEditor({ initial }: { initial: Therap
         {
           heading: "Buttons & messages",
           fields: [
-            { key: "joinAsTherapistLabel", label: "\"Join us as a therapist\" button" },
+            { key: "joinAsTherapistLabel", label: "\"Join us as a professional\" button" },
             { key: "applyFiltersLabel", label: "Mobile \"Apply filters\" button" },
             { key: "noResultsMessage", label: "No results message", multiline: true },
           ],

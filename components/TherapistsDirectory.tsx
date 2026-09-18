@@ -9,14 +9,15 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/StaggerReveal";
 import type { PublicTherapistRow } from "@/lib/database.types";
 import type { TherapistsDirectoryContent } from "@/lib/content";
 import { shuffleArray } from "@/lib/shuffleArray";
+import { getDirectorySpecialtyLabel, isRetiredDirectorySpecialty } from "@/lib/therapistOptions";
 
 const THERAPIST_SHUFFLE_INTERVAL_MS = 60_000;
 
 export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent = {
   published: true,
   searchLabel: "Search by name",
-  searchPlaceholder: "Find therapist…",
-  definitionLabel: "Definition of a therapist",
+  searchPlaceholder: "Find Volunteers…",
+  definitionLabel: "Definition of a volunteer",
   anyOptionLabel: "Any",
   languageLabel: "Language",
   anyLanguageLabel: "Any language",
@@ -26,10 +27,10 @@ export const THERAPISTS_DIRECTORY_CONTENT_FALLBACK: TherapistsDirectoryContent =
   femaleLabel: "Female",
   nonbinaryLabel: "Non-binary",
   noPreferenceLabel: "No preference",
-  joinAsTherapistLabel: "Join us as a therapist",
+  joinAsTherapistLabel: "Join us as a professional",
   applyFiltersLabel: "Apply filters",
   noResultsMessage:
-    "No therapists match your search right now. Try clearing a filter, or contact us and we'll help you find the right person.",
+    "No professionals match your search right now. Try clearing a filter, or contact us and we'll help you find the right person.",
 };
 
 function unique(values: string[]) {
@@ -74,6 +75,7 @@ export default function TherapistsDirectory({
   content = THERAPISTS_DIRECTORY_CONTENT_FALLBACK,
   pathKey,
   enablePeriodicShuffle = false,
+  enableOwnerViewCounts = false,
 }: {
   therapists: PublicTherapistRow[];
   content?: TherapistsDirectoryContent;
@@ -85,6 +87,8 @@ export default function TherapistsDirectory({
   pathKey?: string;
   /** Enabled on the public directory only; intake flows keep their current order. */
   enablePeriodicShuffle?: boolean;
+  /** The public directory opts in; reused pathway directories remain unchanged. */
+  enableOwnerViewCounts?: boolean;
 }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -106,6 +110,7 @@ export default function TherapistsDirectory({
   const shuffleRequestRef = useRef<() => void>(() => {});
   const [shuffleReady, setShuffleReady] = useState(false);
   const [shuffleRevision, setShuffleRevision] = useState(0);
+  const [ownedProfileViews, setOwnedProfileViews] = useState<{ therapistId: string; profileViews: number } | null>(null);
 
   // Phase 199 (mobile pass) — below `lg` the filter sidebar used to just
   // render inline, full-width, above the results grid: on a phone that
@@ -150,7 +155,10 @@ export default function TherapistsDirectory({
   // list. No active row has a null value today (verified directly against
   // Production), but this was a real, previously-unguarded crash risk —
   // see TherapistCard.tsx's own Phase 185 comment for the sibling fix.
-  const roles = useMemo(() => unique(therapists.flatMap((t) => t.specialties ?? [])), [therapists]);
+  const roles = useMemo(
+    () => unique(therapists.flatMap((t) => t.specialties ?? []).filter((specialty) => !isRetiredDirectorySpecialty(specialty))),
+    [therapists]
+  );
   const langs = useMemo(() => unique(therapists.flatMap((t) => t.languages ?? [])), [therapists]);
   const durations = useMemo(() => {
     const fromData = therapists.flatMap((t) => t.session_lengths ?? []);
@@ -182,6 +190,22 @@ export default function TherapistsDirectory({
   useEffect(() => {
     setShuffleReady(enablePeriodicShuffle);
   }, [enablePeriodicShuffle]);
+
+  useEffect(() => {
+    if (!enableOwnerViewCounts) return;
+    let cancelled = false;
+    fetch("/api/analytics/my-profile-views", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { therapistId?: string; profileViews?: number } | null) => {
+        if (!cancelled && data?.therapistId && typeof data.profileViews === "number") {
+          setOwnedProfileViews({ therapistId: data.therapistId, profileViews: data.profileViews });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [enableOwnerViewCounts]);
 
   const displayedTherapists = useMemo(
     () => (enablePeriodicShuffle && shuffleReady ? shuffleArray(filtered) : filtered),
@@ -251,9 +275,9 @@ export default function TherapistsDirectory({
   const activeFilterCount = [name, role, lang, duration, gender, sessionFormat].filter(Boolean).length;
   const countMessage = filtered.length
     ? hasActiveFilters
-      ? `Showing ${filtered.length} of ${therapists.length} active therapists`
-      : `Showing all ${therapists.length} active therapists`
-    : "No therapists match your current filters.";
+      ? `Showing ${filtered.length} of ${therapists.length} active professionals`
+      : `Showing all ${therapists.length} active professionals`
+    : "No professionals match your current filters.";
 
   function clearAllFilters() {
     setName("");
@@ -336,7 +360,7 @@ export default function TherapistsDirectory({
           />
         </div>
 
-        {/* Definition of a therapist — was a plain <select>, now a vertical
+        {/* Definition of a volunteer — was a plain <select>, now a vertical
             list of radio-style pills. The option list itself is unchanged
             (still every distinct specialty tag in the real therapist data,
             same filtering logic) — only scrollable with a capped height,
@@ -356,7 +380,7 @@ export default function TherapistsDirectory({
               onClick={() => setRole(r)}
               className={optionClass(role === r, "flex items-center gap-2.5 text-left")}
             >
-              <RadioDot selected={role === r} /> {r}
+              <RadioDot selected={role === r} /> {getDirectorySpecialtyLabel(r)}
             </button>
           ))}
         </div>
@@ -505,7 +529,11 @@ export default function TherapistsDirectory({
           <StaggerGroup className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3" staggerDelay={0.06}>
             {displayedTherapists.map((t) => (
               <StaggerItem key={t.id} layout={enablePeriodicShuffle}>
-                <TherapistCard t={t} pathKey={pathKey} />
+                <TherapistCard
+                  t={t}
+                  pathKey={pathKey}
+                  viewCount={ownedProfileViews?.therapistId === t.id ? ownedProfileViews.profileViews : undefined}
+                />
               </StaggerItem>
             ))}
           </StaggerGroup>

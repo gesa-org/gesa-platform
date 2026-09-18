@@ -21,16 +21,16 @@ const CARD_CONTENT_KEYS = ["crisis-card", "veterans-card", "support-card"];
 export const HOME_CONTENT_FALLBACK: HomeContent = {
   published: true,
   eyebrow: "A global volunteer support alliance",
-  title: "Two clicks to a therapist who understands",
+  title: "Two clicks to a professional who understands",
   highlight: "",
   subtitle:
-    "GESA (Global Emotional Support Alliance) connects you with a verified volunteer therapist for a free, confidential session — no forms, no accounts, no questions upfront. Choose the path below that fits you and confirm.",
+    "GESA (Global Emotional Support Alliance) connects you with a verified volunteer professional for a free, confidential session — no forms, no accounts, no questions upfront. Choose the path below that fits you and confirm.",
   badge1Label: "Verified Professionals",
   badge2Label: "100% Free Sessions",
   badge3Label: "Global Community",
-  footerNote: "Free, confidential sessions · verified volunteer therapists · secure communication",
+  footerNote: "Free, confidential sessions · verified volunteer professionals · secure communication",
   purposeTicker:
-    "Because no one should face emotional pain alone\nVerified volunteer therapists, giving their time freely\nUp to six free sessions — cost is never why someone goes without care\nA global community of care, across borders and languages\nConfidential, dignified support, always free at the point of need",
+    "Because no one should face emotional pain alone\nVerified volunteer professionals, giving their time freely\nUp to six free sessions — cost is never why someone goes without care\nA global community of care, across borders and languages\nConfidential, dignified support, always free at the point of need",
   card1Title: "In crisis right now",
   card1Description:
     "For anyone shaken by war, terror, or disaster. Fast, gentle help when you can't wait — approximately six free sessions to start.",

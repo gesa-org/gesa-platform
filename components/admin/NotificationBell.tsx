@@ -58,7 +58,7 @@ const PATH_LABEL: Record<string, string> = {
   veteran: "Veterans, reservists & families",
   general: "Seeking support",
   helpers: "Helping the helpers",
-  directory: "Our Therapists directory",
+  directory: "Our Professionals directory",
 };
 
 const KIND_STYLE: Record<NotificationKind, { icon: typeof Mail; bg: string; fg: string }> = {

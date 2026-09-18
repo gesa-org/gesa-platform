@@ -78,7 +78,7 @@ export default function DiaryEmbed({
         )}
         <iframe
           src={embedUrl}
-          title="Therapist diary calendar"
+          title="Professional diary calendar"
           onLoad={() => setLoaded(true)}
           className="h-full w-full border-0"
           // Conservative on purpose — only what a read-only calendar view

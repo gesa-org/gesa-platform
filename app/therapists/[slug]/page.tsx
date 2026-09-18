@@ -6,6 +6,7 @@ import { getTherapistBySlug } from "@/lib/queries";
 import MessageTherapistButton from "@/components/chat/MessageTherapistButton";
 import BookSessionButton from "@/components/therapists/BookSessionButton";
 import TherapistViewTracker from "@/components/TherapistViewTracker";
+import { ProfessionalViewCount } from "@/components/ProfessionalViewCount";
 
 export const revalidate = 60;
 
@@ -18,10 +19,10 @@ const GENDER_LABEL: Record<string, string> = {
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const therapist = await getTherapistBySlug(params.slug);
-  if (!therapist) return { title: "Therapist — GESA" };
+  if (!therapist) return { title: "Professional — GESA" };
   return {
     title: `${therapist.full_name} — GESA`,
-    description: therapist.short_summary || `Meet ${therapist.full_name}, a verified volunteer therapist with GESA.`,
+    description: therapist.short_summary || `Meet ${therapist.full_name}, a verified volunteer professional with GESA.`,
   };
 }
 
@@ -43,7 +44,7 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
           nothing; purely a fire-and-forget tracking side effect. */}
       <TherapistViewTracker therapistId={therapist.id} />
       <Link href="/therapists" className="mb-6 inline-flex items-center gap-1.5 text-[14px] font-semibold text-primary">
-        <ArrowLeft size={15} /> Back to all therapists
+        <ArrowLeft size={15} /> Back to all professionals
       </Link>
 
       <div className="grid gap-8 sm:grid-cols-[220px_1fr]">
@@ -70,6 +71,7 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
 
         <div>
           <h1 className="text-[30px]">{therapist.full_name}</h1>
+          <ProfessionalViewCount therapistId={therapist.id} />
           {therapist.credentials && <div className="mt-1 text-[15px] font-medium text-primary">{therapist.credentials}</div>}
           {therapist.short_summary && <p className="mt-2 text-[15.5px] text-muted-fg">{therapist.short_summary}</p>}
 

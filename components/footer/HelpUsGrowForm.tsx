@@ -20,7 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 // while keeping all of this project's own text as-is — so only the
 // structure/visual treatment changed here, not the heading, subtitle,
 // placeholders, checkbox copy, subject options, or button label below.
-const SUBJECT_OPTIONS = ["Donate", "Volunteer as a therapist", "Partnership", "General inquiry"];
+const SUBJECT_OPTIONS = ["Donate", "Volunteer as a professional", "Partnership", "General inquiry"];
 
 const fieldClass =
   "w-full rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none";

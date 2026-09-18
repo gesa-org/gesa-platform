@@ -18,7 +18,7 @@ import { designTokensToCssText } from "@/lib/ui-builder/tokensToCss";
 
 export const metadata: Metadata = {
   title: "GESA (Global Emotional Support Alliance)",
-  description: "Global Emotional Support Alliance platform for therapists and patients.",
+  description: "Global Emotional Support Alliance platform for professionals and clients.",
 };
 
 // Phase 35 — fetched here (a Server Component, on every request) rather

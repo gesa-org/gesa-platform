@@ -25,7 +25,7 @@ describe("Footer", () => {
 
     expect(screen.getByText("Our Trusted Partners")).toBeInTheDocument();
     expect(screen.getByText("Global Mental Health Alliance")).toBeInTheDocument();
-    expect(screen.getByText("Validated Therapist Network")).toBeInTheDocument();
+    expect(screen.getByText("Validated Professional Network")).toBeInTheDocument();
     expect(screen.getByText("Crisis Support International")).toBeInTheDocument();
 
     expect(screen.getByText("GESA is a registered 501(c)(3) non-profit in the United States.")).toBeInTheDocument();

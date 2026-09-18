@@ -54,7 +54,6 @@ function makeTherapist(overrides: Partial<PublicTherapistRow>): PublicTherapistR
     // browseTherapistSearch.test.ts's makeTherapist().
     session_price_amount: null,
     session_price_currency: "USD",
-    profile_views: 0,
     ...overrides,
   };
 }
@@ -65,22 +64,22 @@ const therapists = [
 ];
 
 describe("TherapistsDirectory", () => {
-  it("shows all therapists with no filters applied", () => {
+  it("shows all professionals with no filters applied", () => {
     render(<TherapistsDirectory therapists={therapists} />);
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
     expect(screen.getByText("Amir Cohen")).toBeInTheDocument();
-    // Phase 180 — unfiltered count reads "Showing all N active therapists",
+    // Phase 180 — unfiltered count reads "Showing all N active professionals",
     // not "Showing N of N" — there's no separate "total" to compare against
     // until a filter/search is actually applied.
-    expect(screen.getByText("Showing all 2 active therapists")).toBeInTheDocument();
+    expect(screen.getByText("Showing all 2 active professionals")).toBeInTheDocument();
   });
 
   it("filters by name search", async () => {
     render(<TherapistsDirectory therapists={therapists} />);
-    await userEvent.type(screen.getByPlaceholderText("Find therapist…"), "amir");
+    await userEvent.type(screen.getByPlaceholderText("Find Volunteers…"), "amir");
     expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument();
     expect(screen.getByText("Amir Cohen")).toBeInTheDocument();
-    expect(screen.getByText("Showing 1 of 2 active therapists")).toBeInTheDocument();
+    expect(screen.getByText("Showing 1 of 2 active professionals")).toBeInTheDocument();
   });
 
   it("filters by language", async () => {
@@ -88,19 +87,49 @@ describe("TherapistsDirectory", () => {
     await userEvent.selectOptions(screen.getByRole("combobox"), "Hebrew");
     expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument();
     expect(screen.getByText("Amir Cohen")).toBeInTheDocument();
-    expect(screen.getByText("Showing 1 of 2 active therapists")).toBeInTheDocument();
+    expect(screen.getByText("Showing 1 of 2 active professionals")).toBeInTheDocument();
   });
 
-  it("shows an empty state when no therapist matches the filters", async () => {
+  it("shows an empty state when no professional matches the filters", async () => {
     render(<TherapistsDirectory therapists={therapists} />);
-    await userEvent.type(screen.getByPlaceholderText("Find therapist…"), "nonexistent-name");
+    await userEvent.type(screen.getByPlaceholderText("Find Volunteers…"), "nonexistent-name");
     // Phase 180 — the count line itself now states the no-match message
     // directly (Roy's spec), separate from the larger empty-state box
     // (content.noResultsMessage) rendered below it.
-    expect(screen.getByText("No therapists match your current filters.")).toBeInTheDocument();
+    expect(screen.getByText("No professionals match your current filters.")).toBeInTheDocument();
     expect(
-      screen.getByText(/No therapists match your search right now/i)
+      screen.getByText(/No professionals match your search right now/i)
     ).toBeInTheDocument();
+  });
+
+  it("removes retired specialties from the directory filters and uses the new specialty labels", () => {
+    render(
+      <TherapistsDirectory
+        therapists={[
+          ...therapists,
+          makeTherapist({ id: "3", full_name: "Nora Lee", specialties: ["Art Therapy"] }),
+          makeTherapist({ id: "4", full_name: "Sam Ray", specialties: ["Breathing Exercises"] }),
+        ]}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /CBT/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Art Practitioner/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Breath Work/ })).toBeInTheDocument();
+  });
+
+  it("renders a view count only for the authenticated professional's own card", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ therapistId: "1", profileViews: 7 }),
+    } as Response);
+    Object.defineProperty(global, "fetch", { configurable: true, value: fetchMock });
+
+    render(<TherapistsDirectory therapists={therapists} enableOwnerViewCounts />);
+
+    expect(await screen.findByLabelText("7 profile views")).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/profile views/)).toHaveLength(1);
+    fetchMock.mockReset();
   });
 
   // Phase 180 — Roy asked for "Load more" pagination to be removed entirely:
@@ -119,7 +148,7 @@ describe("TherapistsDirectory", () => {
     it("renders all 34 therapists at once, with an accurate count and no Load more button", () => {
       render(<TherapistsDirectory therapists={many} />);
 
-      expect(screen.getByText("Showing all 34 active therapists")).toBeInTheDocument();
+      expect(screen.getByText("Showing all 34 active professionals")).toBeInTheDocument();
       const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
       expect(headings).toHaveLength(34);
       expect(new Set(headings).size).toBe(34); // no duplicate cards
@@ -130,9 +159,9 @@ describe("TherapistsDirectory", () => {
 
     it("keeps the full matching set visible (no cap) once a filter narrows the list", async () => {
       render(<TherapistsDirectory therapists={many} />);
-      await userEvent.type(screen.getByPlaceholderText("Find therapist…"), "Therapist");
+      await userEvent.type(screen.getByPlaceholderText("Find Volunteers…"), "Therapist");
 
-      expect(screen.getByText("Showing 34 of 34 active therapists")).toBeInTheDocument();
+      expect(screen.getByText("Showing 34 of 34 active professionals")).toBeInTheDocument();
       expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(34);
       expect(screen.queryByRole("button", { name: /load more/i })).not.toBeInTheDocument();
     });
@@ -195,7 +224,7 @@ describe("TherapistsDirectory", () => {
       jest.spyOn(Math, "random").mockReturnValue(0);
       render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
 
-      fireEvent.change(screen.getByPlaceholderText("Find therapist…"), { target: { value: "amir" } });
+      fireEvent.change(screen.getByPlaceholderText("Find Volunteers…"), { target: { value: "amir" } });
       expect(displayedNames()).toEqual(["Amir Cohen"]);
       expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument();
       expect(screen.queryByText("Zoë Stone")).not.toBeInTheDocument();
@@ -220,7 +249,7 @@ describe("TherapistsDirectory", () => {
       render(<TherapistsDirectory therapists={shuffledTherapists} enablePeriodicShuffle />);
       random.mockClear();
 
-      screen.getByPlaceholderText("Find therapist…").focus();
+      screen.getByPlaceholderText("Find Volunteers…").focus();
       act(() => jest.advanceTimersByTime(60_000));
       expect(random).not.toHaveBeenCalled();
     });

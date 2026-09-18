@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const clientEmail = (body?.clientEmail as string | undefined)?.trim() || null;
   const clientPhone = (body?.clientPhone as string | undefined)?.trim() || null;
   const timeZone = (body?.timeZone as string | undefined) || null;
-  const therapistName = (body?.therapistName as string | undefined) || "your matched therapist";
+  const therapistName = (body?.therapistName as string | undefined) || "your matched professional";
   // Phase 128 — set when this handoff follows the new intake step (see
   // /api/booking-intake and BookSessionButton.tsx). Links this event back
   // to that submission, and flips its status from "intake_completed" to

@@ -81,4 +81,12 @@ describe("TherapistEditForm", () => {
     expect(screen.getByRole("checkbox", { name: "In-person" })).toBeChecked();
     expect(screen.getByDisplayValue("Tel Aviv")).toBeInTheDocument();
   });
+
+  it("flags retired specialty tags for manual review without changing the record", () => {
+    const therapist = { ...BROKEN_THERAPIST, specialties: ["CBT", "Emotional Support"] } as unknown as TherapistAdminRow;
+    render(<TherapistEditForm therapist={therapist} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("CBT is no longer directory filters");
+    expect(screen.getByDisplayValue("CBT, Emotional Support")).toBeInTheDocument();
+  });
 });

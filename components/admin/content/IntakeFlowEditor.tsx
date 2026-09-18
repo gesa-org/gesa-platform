@@ -36,7 +36,7 @@ export default function IntakeFlowEditor({ initial }: { initial: IntakeFlowConte
         },
         {
           heading: "Match list",
-          fields: [{ key: "matchListIntro", label: "Intro line above matched therapists", multiline: true }],
+          fields: [{ key: "matchListIntro", label: "Intro line above matched professionals", multiline: true }],
         },
       ]}
     />

@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const ROLE_LABEL: Record<string, string> = {
   admin: "Administrator",
   reviewer: "Reviewer",
-  therapist: "Therapist",
+  therapist: "Professional",
   client: "Client",
   finance: "Finance",
 };

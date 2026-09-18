@@ -110,14 +110,30 @@ export const LANGUAGE_OPTIONS = [
 // Treatment" field. Unchanged by this phase — this is already the single
 // source those two onboarding fields shared, so it's simply moved here and
 // re-exported rather than redefined.
+export const RETIRED_DIRECTORY_SPECIALTIES = ["Psychology", "Counseling", "CBT", "EMDR", "Psychotherapy"] as const;
+
+export const DIRECTORY_SPECIALTY_LABELS = {
+  "Art Therapy": "Art Practitioner",
+  "Breathing Exercises": "Breath Work",
+} as const;
+
+export function getDirectorySpecialtyLabel(specialty: string): string {
+  return DIRECTORY_SPECIALTY_LABELS[specialty as keyof typeof DIRECTORY_SPECIALTY_LABELS] ?? specialty;
+}
+
+export function isRetiredDirectorySpecialty(specialty: string): boolean {
+  return (RETIRED_DIRECTORY_SPECIALTIES as readonly string[]).includes(specialty);
+}
+
+export function getRetiredDirectorySpecialties(specialties: readonly string[]): string[] {
+  return specialties.filter(isRetiredDirectorySpecialty);
+}
+
 export const TREATMENT_OPTIONS = [
-  "Art Therapy",
-  "Breathing Exercises",
-  "CBT",
+  "Art Practitioner",
+  "Breath Work",
   "Children and Adolescents",
   "Coach (Life Coach)",
-  "Counseling",
-  "EMDR",
   "Emotional Support",
   "Emotional Support for Couples",
   "Family Support",
@@ -132,8 +148,6 @@ export const TREATMENT_OPTIONS = [
   "Pilates",
   "Psychiatry",
   "Psychoanalysis / Psychoanalyst",
-  "Psychology",
-  "Psychotherapy",
   "Reiki",
   "Social Work",
   "Supervision",

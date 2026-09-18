@@ -47,7 +47,7 @@ const NAV = [
   // therapist profiles get visited, today/week/month/all-time). Separate
   // nav item from "Our Professionals" above since it's a read-only
   // analytics view over a different table, not a therapist-record editor.
-  { href: "/admin/therapist-analytics", label: "Therapist Analytics" },
+  { href: "/admin/therapist-analytics", label: "Professional Analytics" },
   { href: "/admin/users", label: "Users" },
   // Phase 187 — separate from "Users" above: invitation-only onboarding for
   // Administrator/Super Admin accounts specifically (invite, resend, revoke,

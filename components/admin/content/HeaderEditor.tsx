@@ -17,7 +17,7 @@ export default function HeaderEditor({ initial }: { initial: HeaderContent }) {
           fields: [
             { key: "homeLabel", label: "Home" },
             { key: "aboutLabel", label: "Find Support" },
-            { key: "therapistsLabel", label: "Our Therapists" },
+            { key: "therapistsLabel", label: "Our Professionals" },
             { key: "supportGroupsLabel", label: "Support Groups" },
           ],
         },

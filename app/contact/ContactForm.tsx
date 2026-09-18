@@ -113,7 +113,7 @@ export default function ContactForm() {
         >
           <option value="">General inquiry</option>
           <option value="Donation">Donation</option>
-          <option value="Volunteer">Volunteer as a therapist</option>
+          <option value="Volunteer">Volunteer as a professional</option>
           <option value="Support">I need support</option>
         </select>
       </div>

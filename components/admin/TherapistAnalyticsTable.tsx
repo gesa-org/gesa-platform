@@ -86,7 +86,7 @@ export default function TherapistAnalyticsTable({
   }, [initialRows, search, range, sort, showZero]);
 
   function exportCsv() {
-    const header = ["Therapist", "Today", "This week", "This month", "All time", "Last viewed (UTC)"];
+    const header = ["Professional", "Today", "This week", "This month", "All time", "Last viewed (UTC)"];
     const lines = filtered.map((r) =>
       [
         r.name,
@@ -117,8 +117,8 @@ export default function TherapistAnalyticsTable({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by therapist name…"
-            aria-label="Search by therapist name"
+            placeholder="Search by professional name…"
+            aria-label="Search by professional name"
             className="w-full rounded-full border border-border bg-card py-2.5 pl-10 pr-4 text-[14px] focus:border-primary focus:outline-none"
           />
         </div>
@@ -165,7 +165,7 @@ export default function TherapistAnalyticsTable({
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-8 text-center text-[13.5px] text-muted-fg">
-          {initialRows.length === 0 ? "No profile views yet." : "No therapists match your search/filters."}
+          {initialRows.length === 0 ? "No profile views yet." : "No professionals match your search/filters."}
         </div>
       ) : (
         <div className="overflow-hidden rounded-[var(--radius)] border border-border">
@@ -173,7 +173,7 @@ export default function TherapistAnalyticsTable({
             <table className="w-full text-left text-[14px]">
               <thead className="bg-secondary/60 text-[12.5px] uppercase tracking-wide text-muted-fg">
                 <tr>
-                  <th className="px-5 py-3">Therapist</th>
+                  <th className="px-5 py-3">Professional</th>
                   <th className="px-5 py-3">Today</th>
                   <th className="px-5 py-3">This week</th>
                   <th className="px-5 py-3">This month</th>

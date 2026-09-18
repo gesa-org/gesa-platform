@@ -16,9 +16,9 @@ describe("Paths (Home)", () => {
     render(<Paths />);
 
     expect(screen.getByText("A global volunteer support alliance")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: "Two clicks to a therapist who understands" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Two clicks to a professional who understands" })).toBeInTheDocument();
     expect(
-      screen.getByText(/GESA \(Global Emotional Support Alliance\) connects you with a verified volunteer therapist/)
+      screen.getByText(/GESA \(Global Emotional Support Alliance\) connects you with a verified volunteer professional/)
     ).toBeInTheDocument();
     expect(screen.getByText("Verified Professionals")).toBeInTheDocument();
     expect(screen.getByText("100% Free Sessions")).toBeInTheDocument();

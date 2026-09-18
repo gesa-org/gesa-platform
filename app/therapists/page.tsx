@@ -108,7 +108,7 @@ export default async function TherapistsPage({
           required — filter labels, cards, and photos remain legible. */}
       <section className="section pt-0 bg-sand-grey">
         <div className="wrap">
-          <TherapistsDirectory therapists={therapists} content={directoryContent} enablePeriodicShuffle />
+          <TherapistsDirectory therapists={therapists} content={directoryContent} enablePeriodicShuffle enableOwnerViewCounts />
         </div>
       </section>
 

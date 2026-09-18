@@ -87,7 +87,7 @@ export default function StepPreferences({
         </div>
       </fieldset>
 
-      <label className="mb-1.5 block text-sm font-semibold">Therapist gender preference</label>
+      <label className="mb-1.5 block text-sm font-semibold">Professional gender preference</label>
       <div className="mb-2 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {GENDER_OPTIONS.map((g) => (
           <button

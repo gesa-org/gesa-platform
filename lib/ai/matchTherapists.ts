@@ -177,6 +177,6 @@ function ruleBasedMatch(input: MatchInput, candidates: CandidateTherapist[]): Th
     reasoning:
       score > 0
         ? `Matched based on shared focus areas: ${therapist.specialties.slice(0, 2).join(", ") || "general support"}.`
-        : "One of our verified volunteer therapists with availability for new clients.",
+        : "One of our verified volunteer professionals with availability for new clients.",
   }));
 }

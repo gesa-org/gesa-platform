@@ -651,9 +651,9 @@ export type IntakeFlowContent = {
 export const THERAPISTS_CONTENT_FALLBACK: SimplePageContent = {
   published: true,
   eyebrow: "Our Specialists",
-  title: "Verified volunteer therapists",
+  title: "Verified volunteer professionals",
   description:
-    "Browse our network of verified volunteer therapists. Search and filter to find the right fit, then open a profile to read more and book.",
+    "Browse our network of verified volunteer professionals. Search and filter to find the right fit, then open a profile to read more and book.",
 };
 
 // Phase 107 — Roy sent new hero copy for this page as part of a wireframe
@@ -672,7 +672,7 @@ export const BLOG_CONTENT_FALLBACK: SimplePageContent = {
   published: true,
   eyebrow: "Blog",
   title: "In the Press & Resources",
-  description: "Updates from GESA, and resources from our network of volunteer therapists.",
+  description: "Updates from GESA, and resources from our network of volunteer professionals.",
 };
 
 export const FAQ_CONTENT_FALLBACK: SimplePageContent = {
@@ -702,7 +702,7 @@ export const FIND_YOUR_THERAPIST_CONTENT_FALLBACK: SimplePageContent = {
   eyebrow: "Find Support",
   title: "A guided match, just for you",
   description:
-    "Answer a few quick questions and we'll match you with a verified volunteer therapist suited to your needs — free, confidential, and no account required.",
+    "Answer a few quick questions and we'll match you with a verified volunteer professional suited to your needs — free, confidential, and no account required.",
 };
 
 export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
@@ -710,12 +710,12 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
   missionHeading: "Why GESA exists",
   missionParagraphs: [
     "Millions of people carry pain that has nowhere to go — after displacement, loss, or the quiet exhaustion of staying strong for others. GESA exists to meet that pain with warmth, dignity, and real professional care.",
-    "We bring skilled therapists to the people who need them most, across borders and languages, and we keep it free at the point of need so that ability to pay is never the reason someone goes without support.",
+    "We bring skilled professionals to the people who need them most, across borders and languages, and we keep it free at the point of need so that ability to pay is never the reason someone goes without support.",
   ],
   howItWorksHeading: "How GESA works",
   howItWorksPoints: [
     {
-      title: "Verified volunteer therapists",
+        title: "Verified volunteer professionals",
       body: "A global community of credential-checked professionals who donate their time.",
     },
     {
@@ -724,7 +724,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
     },
     {
       title: "Thoughtful matching",
-      body: "We pair each person with a therapist who fits their needs, language, and preferences.",
+        body: "We pair each person with a professional who fits their needs, language, and preferences.",
     },
     {
       title: "Global reach, 20+ languages",
@@ -751,7 +751,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
       roleTitle: "Co-Founder, GESA",
       email: "karin@gesa.org",
       shortBio:
-        "Karin co-founded GESA to connect skilled, compassionate therapists with people carrying the weight of war, displacement, and antisemitism. She leads the community and partnerships that keep six sessions free for everyone who reaches out.",
+        "Karin co-founded GESA to connect skilled, compassionate professionals with people carrying the weight of war, displacement, and antisemitism. She leads the community and partnerships that keep six sessions free for everyone who reaches out.",
       photoUrl: "",
     },
   ],
@@ -767,10 +767,10 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
   teamCtaHref: "/contact",
   volunteerHeading: "Join us as a caregiver",
   volunteerBody:
-    "Are you a licensed therapist with a few hours a month to give? Your time becomes someone's turning point. Join a global network making care free and human.",
-  volunteerPrimaryLabel: "Become a volunteer therapist",
+    "Are you a licensed professional with a few hours a month to give? Your time becomes someone's turning point. Join a global network making care free and human.",
+  volunteerPrimaryLabel: "Become a volunteer professional",
   volunteerPrimaryHref: "/contact?subject=Volunteer",
-  volunteerSecondaryLabel: "Find a therapist",
+  volunteerSecondaryLabel: "Find a Volunteer",
   volunteerSecondaryHref: "/find-your-therapist",
   legalBlurb:
     "GESA is a registered nonprofit connecting volunteer emotional-support specialists worldwide with Israelis facing war-related distress and Jewish communities abroad experiencing antisemitism.",
@@ -793,7 +793,7 @@ export const ABOUT_SECTIONS_FALLBACK: AboutSectionsContent = {
 // eyebrow/title/description still need their own bespoke type + editor
 // (see HomeContent/FooterContent/etc. above), same as always.
 export const SIMPLE_PAGE_ENTRIES: { key: string; label: string; hasDescription: boolean; fallback: SimplePageContent }[] = [
-  { key: "page_therapists", label: "Our Therapists", hasDescription: true, fallback: THERAPISTS_CONTENT_FALLBACK },
+  { key: "page_therapists", label: "Our Professionals", hasDescription: true, fallback: THERAPISTS_CONTENT_FALLBACK },
   { key: "page_support_groups", label: "Support Groups", hasDescription: true, fallback: SUPPORT_GROUPS_CONTENT_FALLBACK },
   // Phase 145 — the "page_find_your_therapist" entry that used to live here
   // (Phase 105's "Find a Therapist" tab) is removed: /find-your-therapist no

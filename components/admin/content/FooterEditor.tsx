@@ -26,7 +26,7 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
             },
             {
               key: "exploreTherapistsLabel",
-              label: "Our Therapists link label",
+              label: "Our Professionals link label",
               help: "Phase 117: the Explore column now always mirrors the top navigation — edit the Header tab instead.",
               archived: true,
             },
@@ -46,7 +46,7 @@ export default function FooterEditor({ initial }: { initial: FooterContent }) {
           heading: "Support column",
           fields: [
             { key: "supportHeading", label: "Column heading" },
-            { key: "supportFindTherapistLabel", label: "Find a Therapist link label" },
+            { key: "supportFindTherapistLabel", label: "Find a Volunteer link label" },
             { key: "supportJoinGroupLabel", label: "Join a Group link label" },
             {
               key: "supportDonateLabel",

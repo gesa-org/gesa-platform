@@ -12,6 +12,7 @@ import TherapistArchiveButton from "@/components/admin/TherapistArchiveButton";
 import type { TherapistAdminRow } from "@/lib/queries";
 import type { CalendarEmbedProvider, TherapistProfileStatus } from "@/lib/database.types";
 import { validateEmbedUrl } from "@/lib/diary/embedAllowlist";
+import { getRetiredDirectorySpecialties } from "@/lib/therapistOptions";
 
 function isLikelyUrl(value: string): boolean {
   try {
@@ -81,6 +82,7 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
   // empty field. See TherapistCard.tsx's Phase 185 comment for the sibling
   // fix on the public side.
   const [specialties, setSpecialties] = useState((therapist.specialties ?? []).join(", "));
+  const retiredDirectorySpecialties = getRetiredDirectorySpecialties(therapist.specialties ?? []);
   const [languages, setLanguages] = useState((therapist.languages ?? []).join(", "));
   // Phase 186 — profile_status replaces the old standalone `isActive`
   // boolean state here; `is_active` itself is still a real column (kept in
@@ -523,6 +525,11 @@ export default function TherapistEditForm({ therapist }: { therapist: TherapistA
 
         <div>
           <label className="mb-1.5 block text-sm font-semibold">Specialties (comma-separated)</label>
+          {retiredDirectorySpecialties.length > 0 && (
+            <p role="alert" className="mb-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900">
+              Manual review required: {retiredDirectorySpecialties.join(", ")} {retiredDirectorySpecialties.length === 1 ? "is" : "are"} no longer directory filters. Reassign to Emotional Support or remove only after review.
+            </p>
+          )}
           <input
             value={specialties}
             onChange={(e) => setSpecialties(e.target.value)}

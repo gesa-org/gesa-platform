@@ -128,7 +128,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "You have reached the maximum of 6 free Charity Services sessions. Please discuss continued support and payment options directly with your therapist.",
+            "You have reached the maximum of 6 free Charity Services sessions. Please discuss continued support and payment options directly with your professional.",
         },
         { status: 403 }
       );

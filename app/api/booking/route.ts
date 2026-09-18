@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const name = (body?.name as string | undefined) ?? "";
   const email = body?.email as string | undefined;
   const matchedTherapistId = body?.matchedTherapistId as string | undefined;
-  const matchedTherapistName = (body?.matchedTherapistName as string | undefined) ?? "your matched therapist";
+  const matchedTherapistName = (body?.matchedTherapistName as string | undefined) ?? "your matched professional";
 
   if (!Object.keys(ENTRY_ROUTE_LABELS).includes(entryRoute)) {
     return NextResponse.json({ error: "invalid entryRoute" }, { status: 400 });
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
   const [toSender, toTeam, toTherapist] = await Promise.all([
     sendEmailSafely({
       to: email,
-      subject: "You're matched with a GESA therapist",
+      subject: "You're matched with a GESA professional",
       html: bookingConfirmationEmail(name, matchedTherapistName),
       replyTo: getContactInbox(),
     }),

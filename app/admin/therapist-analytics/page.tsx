@@ -51,7 +51,7 @@ export default async function TherapistAnalyticsPage({
   return (
     <div className="rounded-[var(--radius)] border border-border bg-card p-6">
       <div className="mb-5">
-        <h2 className="text-lg">Therapist Profile Analytics</h2>
+        <h2 className="text-lg">Professional Profile Analytics</h2>
         <p className="mt-1 text-[13px] text-muted-fg">
           Privacy-conscious aggregate profile-view counts — never who viewed a profile, only how many unique
           anonymous visitors did, at most once per therapist per browser session. The All-time column matches

@@ -2,6 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Tables, PublicTherapistRow, TherapistProfileStatus } from "@/lib/database.types";
 
+// Keep the browser-facing query explicit. `profile_views` is intentionally
+// absent: it is private analytics, retrievable only through the owner-only
+// API route below.
+const PUBLIC_THERAPIST_COLUMNS =
+  "id, full_name, slug, bio, credentials, gender, is_verified, languages, photo_url, session_lengths, short_summary, specialties, tracks, years_experience, diary_link, diary_link_status, country, price_note, created_at, updated_at, offers_online, offers_in_person, city, support_pathways, session_price_amount, session_price_currency, has_whatsapp, time_zone";
+
 // Server-side read helpers. All of these run under the anon key + RLS —
 // no service role needed since every table here has a public-read policy.
 
@@ -24,7 +30,7 @@ export async function getActiveTherapists(): Promise<PublicTherapistRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("therapists_public")
-    .select("*")
+    .select(PUBLIC_THERAPIST_COLUMNS)
     // Phase 176 — added `id` as a tie-breaker. `full_name` alone isn't a
     // stable sort key when two rows share a name (Postgres makes no order
     // guarantee among ties), which could otherwise let the same set of
@@ -55,7 +61,7 @@ export async function getTherapistsByPathway(pathway: string): Promise<PublicThe
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("therapists_public")
-    .select("*")
+    .select(PUBLIC_THERAPIST_COLUMNS)
     .eq("is_verified", true)
     .contains("support_pathways", [pathway])
     .order("full_name");
@@ -352,7 +358,7 @@ export async function getTherapistBySlug(slug: string): Promise<PublicTherapistR
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("therapists_public")
-    .select("*")
+    .select(PUBLIC_THERAPIST_COLUMNS)
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
@@ -580,7 +586,7 @@ export async function getAllChatThreads(): Promise<ChatThreadSummary[]> {
       id: t.id,
       createdAt: t.created_at,
       clientName: t.clients?.full_name ?? "Client",
-      therapistName: t.therapists?.full_name ?? "Therapist",
+      therapistName: t.therapists?.full_name ?? "Professional",
       lastMessage: last?.body ?? null,
       lastMessageAt: last?.created_at ?? null,
       messageCount: countByThread.get(t.id) ?? 0,
@@ -611,12 +617,12 @@ export async function getChatThreadForAdmin(
   const clientProfileId = thread.clients?.profile_id;
   const labeled = (messages ?? []).map((m) => ({
     ...m,
-    senderLabel: m.sender_id === clientProfileId ? "Client" : "Therapist",
+    senderLabel: m.sender_id === clientProfileId ? "Client" : "Professional",
   }));
 
   return {
     clientName: thread.clients?.full_name ?? "Client",
-    therapistName: thread.therapists?.full_name ?? "Therapist",
+    therapistName: thread.therapists?.full_name ?? "Professional",
     messages: labeled,
   };
 }

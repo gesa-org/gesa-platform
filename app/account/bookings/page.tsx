@@ -54,7 +54,7 @@ export default async function MyBookingsPage() {
             {upcoming.map((b) => (
               <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                 <div>
-                  <div className="font-medium">{b.therapist?.full_name ?? "Your therapist"}</div>
+                  <div className="font-medium">{b.therapist?.full_name ?? "Your professional"}</div>
                   <div className="text-[13px] text-muted-fg">
                     {b.session_date} at {b.session_time.slice(0, 5)} · {CHANNEL_LABEL[b.contact_channel] ?? b.contact_channel}
                   </div>
@@ -75,7 +75,7 @@ export default async function MyBookingsPage() {
             {past.map((b) => (
               <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                 <div>
-                  <div className="font-medium">{b.therapist?.full_name ?? "Your therapist"}</div>
+                  <div className="font-medium">{b.therapist?.full_name ?? "Your professional"}</div>
                   <div className="text-[13px] text-muted-fg">
                     {b.session_date} at {b.session_time.slice(0, 5)}
                   </div>

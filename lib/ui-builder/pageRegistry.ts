@@ -549,7 +549,7 @@ const THERAPISTS_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "therapists.directory.durationLabel", path: "directory.durationLabel", label: "Duration filter label", type: "formLabel", group: "Directory filters", maxLength: 40, contentScope: "page" },
   { contentId: "therapists.directory.genderLabel", path: "directory.genderLabel", label: "Gender filter label", type: "formLabel", group: "Directory filters", maxLength: 40, contentScope: "page" },
   { contentId: "therapists.directory.applyFiltersLabel", path: "directory.applyFiltersLabel", label: "Apply filters button label", type: "ctaLabel", group: "Directory filters", maxLength: 40, contentScope: "page" },
-  { contentId: "therapists.directory.joinAsTherapistLabel", path: "directory.joinAsTherapistLabel", label: "“Join as a therapist” label", type: "ctaLabel", group: "Directory filters", maxLength: 60, contentScope: "page" },
+  { contentId: "therapists.directory.joinAsTherapistLabel", path: "directory.joinAsTherapistLabel", label: "“Join as a professional” label", type: "ctaLabel", group: "Directory filters", maxLength: 60, contentScope: "page" },
   { contentId: "therapists.directory.noResultsMessage", path: "directory.noResultsMessage", label: "No-results message", type: "plainText", group: "Directory filters", maxLength: 200, contentScope: "page" },
 ];
 
@@ -835,7 +835,7 @@ const GLOBAL_EDITABLE_FIELDS: EditableFieldDef[] = [
   { contentId: "global.footer.exploreFaqLabel", path: "footer.exploreFaqLabel", label: "\"FAQ\" label", type: "plainText", group: "Footer — Explore column", maxLength: 40, contentScope: "global" },
   { contentId: "global.footer.exploreContactLabel", path: "footer.exploreContactLabel", label: "\"Contact\" label", type: "plainText", group: "Footer — Explore column", maxLength: 40, contentScope: "global" },
   { contentId: "global.footer.supportHeading", path: "footer.supportHeading", label: "\"Support\" column heading", type: "heading", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
-  { contentId: "global.footer.supportFindTherapistLabel", path: "footer.supportFindTherapistLabel", label: "\"Find a Therapist\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
+  { contentId: "global.footer.supportFindTherapistLabel", path: "footer.supportFindTherapistLabel", label: "\"Find a Volunteer\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
   { contentId: "global.footer.supportJoinGroupLabel", path: "footer.supportJoinGroupLabel", label: "\"Join a Group\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
   { contentId: "global.footer.supportVolunteerLabel", path: "footer.supportVolunteerLabel", label: "\"Volunteer\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },
   { contentId: "global.footer.supportEmergencyLabel", path: "footer.supportEmergencyLabel", label: "\"Emergency Contact\" label", type: "plainText", group: "Footer — Support column", maxLength: 40, contentScope: "global" },

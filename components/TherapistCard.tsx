@@ -8,6 +8,7 @@ import BookSessionButton from "@/components/therapists/BookSessionButton";
 export default function TherapistCard({
   t,
   pathKey = "directory",
+  viewCount,
 }: {
   t: PublicTherapistRow;
   // Phase 152 — passed through to BookSessionButton so a booking made from
@@ -17,6 +18,8 @@ export default function TherapistCard({
   // behavior) for every other caller of this card, e.g. the Our
   // Professionals page.
   pathKey?: string;
+  /** Present only when the directory has verified the signed-in owner. */
+  viewCount?: number;
 }) {
   const initials = t.full_name
     .split(" ")
@@ -57,24 +60,20 @@ export default function TherapistCard({
               can tell where a therapist is based (matches the source data's
               own "Country" field). Omitted entirely rather than shown blank
               when a record doesn't have one yet. */}
-          {/* Phase 207 — public profile-view counter, shown right after
-              country per the explicit reference design. Always rendered
-              (defaulting to 0) since profile_views is a non-null column —
-              unlike Phase 206's admin-only badge, every visitor sees this. */}
-          {t.country && (
+          {(t.country || typeof viewCount === "number") && (
             <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted-fg">
-              <div className="flex items-center gap-1">
-                <MapPin size={12} className="flex-none" aria-hidden="true" />
-                {t.country}
-              </div>
-              <div
-                className="flex items-center gap-1"
-                aria-label={`${(t.profile_views ?? 0).toLocaleString()} profile views`}
-                title={`${(t.profile_views ?? 0).toLocaleString()} profile views`}
-              >
-                <Eye size={12} className="flex-none" aria-hidden="true" />
-                <span>{(t.profile_views ?? 0).toLocaleString()}</span>
-              </div>
+              {t.country && (
+                <div className="flex items-center gap-1">
+                  <MapPin size={12} className="flex-none" aria-hidden="true" />
+                  {t.country}
+                </div>
+              )}
+              {typeof viewCount === "number" && (
+                <div className="flex items-center gap-1" aria-label={`${viewCount.toLocaleString()} profile views`}>
+                  <Eye size={12} className="flex-none" aria-hidden="true" />
+                  <span>{viewCount.toLocaleString()}</span>
+                </div>
+              )}
             </div>
           )}
           <p className="mb-3 line-clamp-2 text-[13.5px] text-muted-fg">{t.short_summary}</p>

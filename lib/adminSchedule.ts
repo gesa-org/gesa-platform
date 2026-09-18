@@ -24,7 +24,7 @@ export type CalendarEvent = {
 
 export const EVENT_LEGEND: { kind: CalendarEvent["kind"]; label: string; dotClass: string }[] = [
   { kind: "session", label: "Sessions", dotClass: "bg-amber" },
-  { kind: "match", label: "Find Your Therapist", dotClass: "bg-clay" },
+  { kind: "match", label: "Find a Volunteer", dotClass: "bg-clay" },
   { kind: "booking", label: "Booking requests", dotClass: "bg-accent" },
   { kind: "inquiry", label: "Inquiries", dotClass: "bg-primary/70" },
   { kind: "registration", label: "Group registrations", dotClass: "bg-primary-600" },
@@ -33,7 +33,7 @@ export const EVENT_LEGEND: { kind: CalendarEvent["kind"]; label: string; dotClas
 
 export const KIND_LABELS: Record<CalendarEvent["kind"], string> = {
   session: "Session",
-  match: "Find Your Therapist request",
+  match: "Find a Volunteer request",
   booking: "Booking request",
   inquiry: "Inquiry",
   registration: "Group registration",

@@ -53,7 +53,7 @@ export function supportRequestTherapistNotificationEmail(
   return shell(`
     <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">A new client selected you, ${therapistName}</h1>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>${clientName}</strong> found you through GESA's
-      AI Support match and selected you as their preferred therapist.</p>
+      AI Support match and selected you as their preferred professional.</p>
     ${treatmentType ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Preferred treatment type:</strong> ${treatmentType}</p>` : ""}
     ${sessionFormatLabel ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Preferred format:</strong> ${sessionFormatLabel}</p>` : ""}
     <p style="color:#33352d;line-height:1.6;margin-top:10px;">
@@ -64,7 +64,7 @@ export function supportRequestTherapistNotificationEmail(
 
 export function supportRequestTeamNotificationEmail(clientName: string, clientEmail: string, therapistName: string) {
   return shell(`
-    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">AI Support: therapist selected</h1>
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">AI Support: professional selected</h1>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>${clientName}</strong> (${clientEmail}) selected
       <strong>${therapistName}</strong> from their AI Support matches.</p>
   `);
@@ -251,7 +251,7 @@ export function volunteerApplicationNotificationEmail(app: {
   bio: string;
 }) {
   return shell(`
-    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New volunteer therapist application</h1>
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New volunteer professional application</h1>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Name:</strong> ${app.fullName}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Email:</strong> ${app.email}</p>
     ${app.phone ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Phone:</strong> ${app.phone}</p>` : ""}
@@ -312,7 +312,7 @@ export function bookingConfirmationEmail(name: string, therapistName: string) {
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're matched, ${name || "friend"}</h1>
     <p style="color:#33352d;line-height:1.6;">
-      We've matched you with <strong>${therapistName}</strong>, one of our verified volunteer therapists.
+      We've matched you with <strong>${therapistName}</strong>, one of our verified volunteer professionals.
       They (or our team) will reach out to you at this email address shortly to set up your first
       free session.
     </p>
@@ -437,10 +437,10 @@ export function sessionBookingConfirmationEmail(
 ) {
   const channelNote =
     contactChannel === "whatsapp"
-      ? "We've shared a WhatsApp link so you can message your therapist directly."
+      ? "We've shared a WhatsApp link so you can message your professional directly."
       : contactChannel === "zoom"
         ? "We'll email you the Zoom link before your session starts."
-        : "Your therapist will reach out to you at this email address to confirm any final details.";
+        : "Your professional will reach out to you at this email address to confirm any final details.";
   return shell(`
     <h1 style="font-size:22px;color:#33352d;margin:0 0 12px;">You're booked, ${name || "friend"}</h1>
     <p style="color:#33352d;line-height:1.6;">
@@ -467,7 +467,7 @@ export function sessionBookingTeamNotificationEmail(
   return shell(`
     <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">New confirmed session booking</h1>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>From:</strong> ${name} (${email})</p>
-    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Therapist:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Professional:</strong> ${therapistName}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>When:</strong> ${sessionDate} at ${sessionTime}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Channel:</strong> ${CHANNEL_LABEL[contactChannel] ?? contactChannel}</p>
     ${path ? `<p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Path:</strong> ${path}</p>` : ""}
@@ -523,7 +523,7 @@ export function diarySchedulingTeamNotificationEmail(
 ) {
   return shell(`
     <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">Diary-link scheduling opened</h1>
-    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Therapist:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Professional:</strong> ${therapistName}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;">
       <strong>Client:</strong> ${clientName ?? "(not provided)"}${clientEmail ? ` (${clientEmail})` : ""}
     </p>
@@ -596,7 +596,7 @@ export function diaryAppointmentTeamNotificationEmail(
 ) {
   return shell(`
     <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">Diary-link session confirmed (client-reported)</h1>
-    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Therapist:</strong> ${therapistName}</p>
+    <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Professional:</strong> ${therapistName}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Client:</strong> ${clientName} (${clientEmail})</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>When:</strong> ${date} at ${startTime}</p>
     <p style="color:#33352d;line-height:1.6;margin:4px 0;"><strong>Reference:</strong> ${referenceNumber}</p>

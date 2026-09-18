@@ -31,7 +31,7 @@ export const HE_DICTIONARY: Record<string, string> = {
   // --- Header ---
   Home: "בית",
   About: "אודות",
-  "Our Therapists": "המטפלים שלנו",
+  "Our Professionals": "המטפלים שלנו",
   "Support Groups": "קבוצות תמיכה",
   Donate: "תרומה",
   // Phase 115 — Header.tsx's actual live CTA label is the fully-uppercase
@@ -42,7 +42,7 @@ export const HE_DICTIONARY: Record<string, string> = {
   DONATE: "תרומה",
 
   // --- Footer ---
-  "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer therapists.":
+  "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer professionals.":
     "תמיכה נפשית מקצועית, חינמית ורגישה תרבותית, המסופקת על ידי רשת עולמית של מטפלים מתנדבים מאושרים.",
   Explore: "ניווט",
   Blog: "בלוג",
@@ -50,7 +50,7 @@ export const HE_DICTIONARY: Record<string, string> = {
   FAQ: "שאלות נפוצות",
   Contact: "צור קשר",
   Support: "תמיכה",
-  "Find a Therapist": "מצאו מטפל",
+  "Find a Volunteer": "מצאו מתנדב",
   "Join a Group": "הצטרפו לקבוצה",
   Volunteer: "התנדבות",
   "Emergency Contact": "מספר חירום",
@@ -66,16 +66,16 @@ export const HE_DICTIONARY: Record<string, string> = {
 
   // --- Home (components/home/Paths.tsx) ---
   "A global volunteer support alliance": "ברית עולמית של מתנדבים לתמיכה נפשית",
-  "Two clicks to a therapist who understands": "שני קליקים למטפל שמבין אותך",
-  "GESA (Global Emotional Support Alliance) connects you with a verified volunteer therapist for a free, confidential session — no forms, no accounts, no questions upfront. Choose the path below that fits you and confirm.":
+  "Two clicks to a professional who understands": "שני קליקים לאיש מקצוע שמבין אותך",
+  "GESA (Global Emotional Support Alliance) connects you with a verified volunteer professional for a free, confidential session — no forms, no accounts, no questions upfront. Choose the path below that fits you and confirm.":
     "GESA (הברית העולמית לתמיכה נפשית) מקשרת אתכם למטפל מתנדב מאושר לפגישה חינמית וחסויה — בלי טפסים, בלי חשבונות, בלי שאלות מקדימות. בחרו את המסלול המתאים לכם למטה ואשרו.",
   "Verified Professionals": "אנשי מקצוע מאושרים",
   "100% Free Sessions": "פגישות ללא עלות ב-100%",
   "Global Community": "קהילה עולמית",
-  "Free, confidential sessions · verified volunteer therapists · secure communication":
+  "Free, confidential sessions · verified volunteer professionals · secure communication":
     "פגישות חינמיות וחסויות · מטפלים מתנדבים מאושרים · תקשורת מאובטחת",
   "Because no one should face emotional pain alone": "כי אף אחד לא צריך להתמודד עם כאב נפשי לבד",
-  "Verified volunteer therapists, giving their time freely": "מטפלים מתנדבים מאושרים, שנותנים מזמנם בהתנדבות",
+  "Verified volunteer professionals, giving their time freely": "אנשי מקצוע מתנדבים מאושרים, שנותנים מזמנם בהתנדבות",
   "Up to six free sessions — cost is never why someone goes without care":
     "עד שש פגישות חינמיות — עלות כספית לא תהיה הסיבה שמישהו יישאר בלי טיפול",
   "A global community of care, across borders and languages": "קהילה עולמית של דאגה, מעבר לגבולות ולשפות",
@@ -102,17 +102,17 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Why GESA exists": "למה GESA קיימת",
   "Millions of people carry pain that has nowhere to go — after displacement, loss, or the quiet exhaustion of staying strong for others. GESA exists to meet that pain with warmth, dignity, and real professional care.":
     "מיליוני אנשים סוחבים כאב שאין לו לאן ללכת — אחרי עקירה, אובדן, או התשות השקטה של להיות חזקים בשביל אחרים. GESA קיימת כדי לפגוש את הכאב הזה בחמימות, בכבוד ובטיפול מקצועי אמיתי.",
-  "We bring skilled therapists to the people who need them most, across borders and languages, and we keep it free at the point of need so that ability to pay is never the reason someone goes without support.":
+  "We bring skilled professionals to the people who need them most, across borders and languages, and we keep it free at the point of need so that ability to pay is never the reason someone goes without support.":
     "אנחנו מביאים מטפלים מקצועיים לאנשים שזקוקים להם ביותר, מעבר לגבולות ולשפות, ושומרים על כך חינמי בעת הצורך כדי שהיכולת לשלם לא תהיה הסיבה שמישהו יישאר בלי תמיכה.",
   "How GESA works": "איך GESA עובדת",
-  "Verified volunteer therapists": "מטפלים מתנדבים מאושרים",
+  "Verified volunteer professionals": "אנשי מקצוע מתנדבים מאושרים",
   "A global community of credential-checked professionals who donate their time.":
     "קהילה עולמית של אנשי מקצוע מאומתי הכשרה, שמתנדבים מזמנם.",
   "Up to six free sessions": "עד שש פגישות חינמיות",
   "Every person receives six sessions at no cost, with continued support afterward at a reduced donation fee.":
     "כל אדם מקבל שש פגישות ללא עלות, עם המשך תמיכה לאחר מכן בתרומה מוזלת.",
   "Thoughtful matching": "התאמה מתחשבת",
-  "We pair each person with a therapist who fits their needs, language, and preferences.":
+  "We pair each person with a professional who fits their needs, language, and preferences.":
     "אנחנו מתאימים לכל אדם מטפל שמתאים לצרכיו, לשפתו ולהעדפותיו.",
   "Global reach, 20+ languages": "פריסה עולמית, מעל 20 שפות",
   "Support that crosses time zones and speaks your language, online and confidential.":
@@ -123,12 +123,12 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Co-Founder, GESA": "מייסדת שותפה, GESA",
   "Ilana helped establish GESA out of a conviction that no one should face emotional pain alone or be priced out of care. She guides the alliance's mission of warm, accessible support and its growing worldwide community of volunteer therapists.":
     "אילנה עזרה להקים את GESA מתוך אמונה שאף אחד לא צריך להתמודד עם כאב נפשי לבד או להיות מנוע מטיפול בשל עלות. היא מובילה את משימת הברית לתמיכה חמה ונגישה ואת קהילת המטפלים המתנדבים הגדלה שלה בעולם.",
-  "Karin co-founded GESA to connect skilled, compassionate therapists with people carrying the weight of war, displacement, and antisemitism. She leads the community and partnerships that keep six sessions free for everyone who reaches out.":
+  "Karin co-founded GESA to connect skilled, compassionate professionals with people carrying the weight of war, displacement, and antisemitism. She leads the community and partnerships that keep six sessions free for everyone who reaches out.":
     "קארין הקימה במשותף את GESA כדי לקשר מטפלים מקצועיים ואכפתיים עם אנשים שנושאים את כובד המלחמה, העקירה והאנטישמיות. היא מובילה את הקהילה והשותפויות ששומרות על שש פגישות חינמיות לכל מי שפונה.",
   "Join us as a caregiver": "הצטרפו אלינו כמתנדבים",
-  "Are you a licensed therapist with a few hours a month to give? Your time becomes someone's turning point. Join a global network making care free and human.":
+  "Are you a licensed professional with a few hours a month to give? Your time becomes someone's turning point. Join a global network making care free and human.":
     "האם אתם מטפלים מוסמכים עם כמה שעות בחודש לתת? הזמן שלכם יכול להיות נקודת המפנה של מישהו. הצטרפו לרשת עולמית שהופכת את הטיפול לחינמי ואנושי.",
-  "Become a volunteer therapist": "הפכו למטפלים מתנדבים",
+  "Become a volunteer professional": "הפכו לאנשי מקצוע מתנדבים",
   "GESA is a registered nonprofit connecting volunteer emotional-support specialists worldwide with Israelis facing war-related distress and Jewish communities abroad experiencing antisemitism.":
     "GESA היא עמותה רשומה המקשרת בין אנשי מקצוע מתנדבים לתמיכה נפשית בעולם לבין ישראלים החווים מצוקה בעקבות המלחמה וקהילות יהודיות בתפוצות החוות אנטישמיות.",
   "Donations are tax-deductible in Israel, the U.S., the U.K., and Spain.":
@@ -136,11 +136,11 @@ export const HE_DICTIONARY: Record<string, string> = {
 
   // --- Our Therapists page (lib/content.ts + TherapistsDirectory.tsx) ---
   "Our Specialists": "המומחים שלנו",
-  "Browse our network of verified volunteer therapists. Search and filter to find the right fit, then open a profile to read more and book.":
+  "Browse our network of verified volunteer professionals. Search and filter to find the right fit, then open a profile to read more and book.":
     "עיינו ברשת המטפלים המתנדבים המאושרים שלנו. חפשו וסננו כדי למצוא את ההתאמה הנכונה, ואז פתחו פרופיל לקריאה נוספת ולתיאום פגישה.",
   "Search by name": "חיפוש לפי שם",
-  "Find therapist…": "מצאו מטפל…",
-  "Definition of a therapist": "הגדרת מטפל",
+  "Find Volunteers…": "מצאו מתנדבים…",
+  "Definition of a volunteer": "הגדרת מתנדב",
   Any: "הכל",
   Language: "שפה",
   "Any language": "כל שפה",
@@ -150,9 +150,9 @@ export const HE_DICTIONARY: Record<string, string> = {
   Female: "נקבה",
   "Non-binary": "לא בינארי",
   "No preference": "אין העדפה",
-  "Join us as a therapist": "הצטרפו אלינו כמטפלים",
+  "Join us as a professional": "הצטרפו אלינו כאנשי מקצוע",
   "Apply filters": "החל מסננים",
-  "No therapists match your search right now. Try clearing a filter, or contact us and we'll help you find the right person.":
+  "No professionals match your search right now. Try clearing a filter, or contact us and we'll help you find the right person.":
     "אין כרגע מטפלים שמתאימים לחיפוש שלכם. ניתן לנקות מסנן, או לפנות אלינו ואנחנו נעזור לכם למצוא את האדם המתאים.",
 
   // --- Support Groups page (lib/content.ts + SupportGroupsInteractive.tsx) ---
@@ -171,7 +171,7 @@ export const HE_DICTIONARY: Record<string, string> = {
   "Questions about support, volunteering, or donating — send us a note and we'll get back to you.":
     "שאלות בנוגע לתמיכה, התנדבות או תרומה — שלחו לנו הודעה ונחזור אליכם.",
   "In the Press & Resources": "בתקשורת ומשאבים",
-  "Updates from GESA, and resources from our network of volunteer therapists.":
+  "Updates from GESA, and resources from our network of volunteer professionals.":
     "עדכונים מ-GESA, ומשאבים מרשת המטפלים המתנדבים שלנו.",
 
   // --- Book a Session modal (components/intake/IntakeBookingModal.tsx,
@@ -402,7 +402,7 @@ export const HE_DICTIONARY: Record<string, string> = {
   Message: "הודעה",
   "General inquiry": "פנייה כללית",
   Donation: "תרומה",
-  "Volunteer as a therapist": "התנדבות כמטפל/ת",
+  "Volunteer as a professional": "התנדבות כאיש/אשת מקצוע",
   "I need support": "אני זקוק/ה לתמיכה",
   "Send message": "שליחת הודעה",
   "Sending…": "שולח…",

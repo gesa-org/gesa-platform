@@ -111,7 +111,7 @@ export const PAGE_DIRECTORY: PageDirectoryEntry[] = [
   { id: "legal_terms-and-conditions", title: "Terms & Conditions", contentKeys: [], route: "/terms-and-conditions", group: "Legal Pages", tabLabel: "Legal Pages", note: "Managed via the Legal Pages table editor, not site_content.", pageKey: "terms-and-conditions" },
 
   // ---- Dynamic Content (data-driven from real records, not page copy) ----
-  { id: "dynamic_therapist_profile", title: "Therapist Profile (per therapist)", contentKeys: [], route: "/therapists/[slug]", group: "Dynamic Content", tabLabel: "Our Professionals", note: "Rendered from each therapist's own record (Our Professionals CRM module), not page-level CMS content — expected, not a gap." },
+  { id: "dynamic_therapist_profile", title: "Professional Profile (per professional)", contentKeys: [], route: "/therapists/[slug]", group: "Dynamic Content", tabLabel: "Our Professionals", note: "Rendered from each professional's own record (Our Professionals CRM module), not page-level CMS content — expected, not a gap." },
 
   // ---- Global Content (site-wide chrome, no single route of its own) ----
   { id: "site_header", title: "Header & Navigation", contentKeys: ["site_header"], route: null, group: "Global Content", tabLabel: "Header", pageKey: "global" },

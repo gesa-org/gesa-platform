@@ -151,7 +151,7 @@ export default function ServiceBookingsTable({ initialEvents }: { initialEvents:
             onChange={(e) => setTherapistFilter(e.target.value)}
             className="rounded-full border border-border bg-background px-3.5 py-2 text-[13px] font-medium focus:border-primary focus:outline-none"
           >
-            <option value="all">All therapists</option>
+            <option value="all">All professionals</option>
             {therapistOptions.map(([id, name]) => (
               <option key={id} value={id}>
                 {name}
@@ -196,7 +196,7 @@ export default function ServiceBookingsTable({ initialEvents }: { initialEvents:
                 <th className="px-5 py-3">Submitted</th>
                 <th className="px-5 py-3">Service</th>
                 <th className="px-5 py-3">Client</th>
-                <th className="px-5 py-3">Therapist</th>
+                <th className="px-5 py-3">Professional</th>
                 <th className="px-5 py-3">Appointment</th>
                 <th className="px-5 py-3">Booking status</th>
                 <th className="px-5 py-3">Payment</th>

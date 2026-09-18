@@ -22,7 +22,7 @@ const PARTNER_ICONS = [Globe2, BadgeCheck, ShieldCheck];
 export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   published: true,
   tagline:
-    "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer therapists.",
+    "Free, professional, culturally sensitive mental health support, delivered by a global network of verified volunteer professionals.",
   exploreHeading: "Explore",
   // Phase 117 — these three fields are kept in the type/fallback/DB row
   // (same "don't delete data just because a section stopped reading it"
@@ -44,7 +44,7 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   exploreFaqLabel: "FAQ",
   exploreContactLabel: "Contact",
   supportHeading: "Support",
-  supportFindTherapistLabel: "Find a Therapist",
+  supportFindTherapistLabel: "Find a Volunteer",
   supportJoinGroupLabel: "Join a Group",
   // Phase 117 — kept in the type/fallback/DB row (not deleted, same
   // precedent as the exploreAboutLabel-etc. note above) but no longer
@@ -72,7 +72,7 @@ export const FOOTER_CONTENT_FALLBACK: FooterContent = {
   socialFacebookHref: "#",
   trustedPartnersHeading: "Our Trusted Partners",
   partner1Label: "Global Mental Health Alliance",
-  partner2Label: "Validated Therapist Network",
+  partner2Label: "Validated Professional Network",
   partner3Label: "Crisis Support International",
   nonprofitStatusLine: "GESA is a registered 501(c)(3) non-profit in the United States.",
   helpGrowHeading: "Help us grow",
@@ -216,7 +216,7 @@ export default function Footer({
             <ul className="flex flex-col gap-2.5 text-[14.5px] text-[#b0bbcc]">
               <li>
                 <Link href="/find-your-therapist" className="hover:text-[#eef1f6] transition-colors">
-                  <EditableText contentId="global.footer.supportFindTherapistLabel" label="&quot;Find a Therapist&quot; label" value={content.supportFindTherapistLabel} as="span" />
+                  <EditableText contentId="global.footer.supportFindTherapistLabel" label="&quot;Find a Volunteer&quot; label" value={content.supportFindTherapistLabel} as="span" />
                 </Link>
               </li>
               <li>
