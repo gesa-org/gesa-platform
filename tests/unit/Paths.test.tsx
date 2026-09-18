@@ -85,7 +85,10 @@ describe("Paths (Home)", () => {
   it("keeps the approved CRISIS label when older CMS content says WAR", () => {
     render(<Paths content={{ ...HOME_CONTENT_FALLBACK, card1FrontLabel: "WAR" }} />);
 
-    expect(screen.getByText("CRISIS")).toBeInTheDocument();
+    const crisisLabel = screen.getByText("CRISIS");
+    expect(crisisLabel).toBeInTheDocument();
     expect(screen.queryByText("WAR")).not.toBeInTheDocument();
+    expect(crisisLabel.closest("div")).toHaveClass("w-[164px]", "justify-center");
+    expect(Array.from(document.querySelectorAll("[class]")).some((element) => element.getAttribute("class")?.includes("bg-[#f6f6f4]") ?? false)).toBe(false);
   });
 });

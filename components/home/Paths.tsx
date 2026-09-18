@@ -675,6 +675,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                     const frontStyle = PATH_FRONT_STYLES[i] ?? PATH_FRONT_STYLES[PATH_FRONT_STYLES.length - 1];
                     const cardKey = CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1];
                     const frontLabel = CARD_FRONT_LABEL_OVERRIDES[i] ?? p.frontLabel;
+                    const isCrisisCard = i === 0;
                     return (
                       /* Phase 210 — Roy sent a new reference image (a
                          recessed colored "shadow box" holding the GesaMark
@@ -688,7 +689,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                          comment in HOME_CONTENT_FALLBACK above). Same flex
                          column as before, now just frame then badge, one
                          gap-3 between them. */
-                      <div className={`absolute inset-0 flex flex-col items-center justify-center gap-3 [backface-visibility:hidden]${i === 0 ? " bg-[#f6f6f4]" : ""}`}>
+                      <div className={`absolute inset-0 flex flex-col items-center justify-center [backface-visibility:hidden]${isCrisisCard ? " gap-2" : " gap-3"}`}>
                         {/* Recessed wall niche — Phase 213. Roy sent "New
                             Design Frames.png" again and said Phase 212's flat
                             two-tone box still wasn't a real "3D" copy — it
@@ -768,7 +769,10 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                             label are separate from the back face's badge/
                             title (PATH_BADGE_ICONS / p.title) since they show
                             at different flip states. */}
-                        <div className="flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md" style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}>
+                        <div
+                          className={`flex flex-none items-center gap-1.5 rounded-full px-4 py-2 text-center shadow-md${isCrisisCard ? " w-[164px] justify-center" : ""}`}
+                          style={{ background: "linear-gradient(135deg, #ecd48f 0%, var(--clay) 45%, var(--amber) 100%)" }}
+                        >
                           <FrontIcon size={14} className="text-espresso" aria-hidden="true" />
                           <EditableText
                             contentId={`home.${cardKey}.label`}
