@@ -54,6 +54,7 @@ const NAV = [
   // deactivate). "Users" keeps handling direct-create for Client/Reviewer/
   // Finance only as of this phase — see RoleSelect.tsx's own comment.
   { href: "/admin/administrators", label: "Administrators" },
+  { href: "/admin/email-notifications", label: "Email & Notifications" },
   { href: "/admin/content", label: "Content Manager (Editing Details)" },
   // Phase 132 — the new visual design-token builder (colors, typography,
   // live preview, draft/publish). Deliberately a separate nav item from

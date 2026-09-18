@@ -1,4 +1,16 @@
 import "@testing-library/jest-dom";
+import { TextDecoder, TextEncoder } from "util";
+
+// Resend pulls in @react-email/render, which expects Node's encoding globals
+// even when Jest is running in jsdom. Node provides them, jsdom does not.
+// Defining them before any test modules are imported keeps server-only email
+// helpers testable without weakening the browser test environment.
+if (typeof global.TextEncoder === "undefined") {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === "undefined") {
+  global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+}
 
 // Phase 45 — jsdom (Jest's test DOM) has no real IntersectionObserver,
 // which framer-motion's `whileInView` (used by the new

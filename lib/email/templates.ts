@@ -30,6 +30,15 @@ function shell(bodyHtml: string) {
   </div>`;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Phase 142 — sent to a therapist when an AI Support client selects them
 // from their match results (before any scheduling happens — see
 // /api/support-request/select-therapist). Deliberately minimal: name,
@@ -108,6 +117,18 @@ export function therapistInvitationEmail(params: { firstName: string | null; acc
       sign in to your own therapist portal, review your public profile, and manage your availability.
     </p>
     ${invitationCta(acceptUrl, expiresAtLabel)}
+  `);
+}
+
+// Internal operational notification sent after the invitation/account
+// transaction commits. It intentionally has no token, password, or client
+// information, so it remains safe in an admin inbox preview.
+export function therapistInvitationAcceptedEmail(params: { fullName: string; email: string }) {
+  return shell(`
+    <h1 style="font-size:20px;color:#33352d;margin:0 0 12px;">Professional invitation accepted</h1>
+    <p style="color:#33352d;line-height:1.6;"><strong>${escapeHtml(params.fullName)}</strong> has accepted their GESA Professional invitation.</p>
+    <p style="color:#33352d;line-height:1.6;">Account email: ${escapeHtml(params.email)}</p>
+    <p style="color:#33352d;line-height:1.6;">You can review the account and Professional profile in the CRM.</p>
   `);
 }
 

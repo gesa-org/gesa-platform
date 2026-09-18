@@ -82,27 +82,53 @@ export function getReplyTo(visitorEmail?: string | null): string {
   return isValidEmailFormat(visitorEmail) ? visitorEmail.trim() : getContactInbox();
 }
 
-export async function sendEmailSafely(params: { to: string; subject: string; html: string; replyTo?: string }) {
+export type SafeEmailResult = {
+  skipped: boolean;
+  messageId?: string;
+  // Deliberately a stable application code, never a provider error body.
+  // API routes sometimes include this result in their own JSON responses.
+  error?: "provider_rejected" | "provider_unavailable";
+};
+
+export function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>(?:\s*)/gi, "\n")
+    .replace(/<\/p>|<\/h[1-6]>|<\/li>|<\/tr>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+export async function sendEmailSafely(params: { to: string; subject: string; html: string; text?: string; replyTo?: string }): Promise<SafeEmailResult> {
   const resend = getResendClient();
   if (!resend) {
     console.warn(`[email] RESEND_API_KEY not set — skipping email to ${params.to}: "${params.subject}"`);
     return { skipped: true };
   }
   try {
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: params.to,
       subject: params.subject,
       html: params.html,
+      text: params.text ?? htmlToPlainText(params.html),
       ...(params.replyTo ? { replyTo: params.replyTo } : {}),
     });
     if (error) {
       console.error("[email] Resend error", error);
-      return { skipped: false, error };
+      return { skipped: false, error: "provider_rejected" };
     }
-    return { skipped: false };
+    return { skipped: false, ...(data?.id ? { messageId: data.id } : {}) };
   } catch (err) {
     console.error("[email] send failed", err);
-    return { skipped: false, error: err };
+    return { skipped: false, error: "provider_unavailable" };
   }
 }

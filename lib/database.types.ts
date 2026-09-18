@@ -781,6 +781,31 @@ export type GesaAdminAuditLogRow = {
 export type InvitationStatus = "draft" | "sent" | "opened" | "accepted" | "expired" | "revoked" | "failed";
 export type InvitedRole = "therapist" | "admin" | "super_admin";
 
+// Transactional email delivery states. `sent` means the provider accepted
+// the request; webhook work can later advance it to delivered/bounced/etc.
+export type EmailDeliveryStatus = "pending" | "sent" | "delivered" | "failed" | "bounced" | "complained" | "suppressed" | "retrying";
+export type EmailRecipientRole = "client" | "therapist" | "admin" | "system";
+
+export type EmailDeliveryLogRow = {
+  id: string;
+  idempotency_key: string;
+  template_type: string;
+  recipient_role: EmailRecipientRole;
+  recipient_email: string;
+  related_record_type: string;
+  related_record_id: string;
+  provider_message_id: string | null;
+  status: EmailDeliveryStatus;
+  failure_reason: string | null;
+  attempt_count: number;
+  last_attempt_at: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+};
+
 export type InvitationRow = {
   id: string;
   email: string;
@@ -977,6 +1002,7 @@ export type Database = {
       crisis_resources: { Row: CrisisResourceRow; Insert: Partial<CrisisResourceRow> & Pick<CrisisResourceRow, "hotline" | "region">; Update: Partial<CrisisResourceRow>; Relationships: [] };
       faqs: { Row: FaqRow; Insert: Partial<FaqRow> & Pick<FaqRow, "question" | "answer">; Update: Partial<FaqRow>; Relationships: [] };
       gesa_admin_audit_log: { Row: GesaAdminAuditLogRow; Insert: Partial<GesaAdminAuditLogRow>; Update: Partial<GesaAdminAuditLogRow>; Relationships: [] };
+      email_delivery_log: { Row: EmailDeliveryLogRow; Insert: Partial<EmailDeliveryLogRow> & Pick<EmailDeliveryLogRow, "idempotency_key" | "template_type" | "recipient_role" | "recipient_email" | "related_record_type" | "related_record_id">; Update: Partial<EmailDeliveryLogRow>; Relationships: [] };
       invitations: { Row: InvitationRow; Insert: Partial<InvitationRow>; Update: Partial<InvitationRow>; Relationships: [] };
       group_registrations: { Row: GroupRegistrationRow; Insert: Partial<GroupRegistrationRow> & Pick<GroupRegistrationRow, "email" | "group_id" | "name">; Update: Partial<GroupRegistrationRow>; Relationships: [] };
       inquiries: { Row: InquiryRow; Insert: Partial<InquiryRow>; Update: Partial<InquiryRow>; Relationships: [] };

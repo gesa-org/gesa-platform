@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getContactInbox, getReplyTo, sendEmailSafely } from "@/lib/email/resend";
+import { getContactInbox, getReplyTo } from "@/lib/email/resend";
+import { sendTrackedEmail } from "@/lib/email/tracked";
 import {
   diaryAppointmentClientConfirmationEmail,
   diaryAppointmentTeamNotificationEmail,
@@ -128,8 +129,13 @@ export async function POST(request: Request) {
   const formattedTime = formatTime(event.selected_start_time);
 
   const [toClient, toTherapist, toTeam] = await Promise.all([
-    sendEmailSafely({
-      to: intake.client_email,
+    sendTrackedEmail({
+      idempotencyKey: `diary-booking-confirmed:${eventId}:client`,
+      templateType: "booking_confirmation",
+      recipientRole: "client",
+      recipientEmail: intake.client_email,
+      relatedRecordType: "diary_scheduling_event",
+      relatedRecordId: eventId,
       subject: "Your session has been scheduled",
       html: diaryAppointmentClientConfirmationEmail(
         intake.client_name,
@@ -142,8 +148,13 @@ export async function POST(request: Request) {
       replyTo: getContactInbox(),
     }),
     therapist?.contact_email
-      ? sendEmailSafely({
-          to: therapist.contact_email,
+      ? sendTrackedEmail({
+          idempotencyKey: `diary-booking-confirmed:${eventId}:therapist`,
+          templateType: "therapist_booking_notification",
+          recipientRole: "therapist",
+          recipientEmail: therapist.contact_email,
+          relatedRecordType: "diary_scheduling_event",
+          relatedRecordId: eventId,
           subject: "A client confirmed a session with you",
           html: diaryAppointmentTherapistNotificationEmail(
             therapistName,
@@ -155,8 +166,13 @@ export async function POST(request: Request) {
           replyTo: getReplyTo(intake.client_email),
         })
       : Promise.resolve({ skipped: true, reason: "no contact_email on file" }),
-    sendEmailSafely({
-      to: getContactInbox(),
+    sendTrackedEmail({
+      idempotencyKey: `diary-booking-confirmed:${eventId}:admin`,
+      templateType: "admin_operational_notification",
+      recipientRole: "admin",
+      recipientEmail: getContactInbox(),
+      relatedRecordType: "diary_scheduling_event",
+      relatedRecordId: eventId,
       subject: `Diary-link session confirmed: ${therapistName}`,
       html: diaryAppointmentTeamNotificationEmail(
         therapistName,

@@ -3,6 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { logAdminAction } from "@/lib/adminAuditLog";
 import { validateInvitationToken, isRateLimited } from "@/lib/invitations";
 import { evaluatePassword } from "@/lib/auth/passwordPolicy";
+import { getContactInbox } from "@/lib/email/resend";
+import { sendTrackedEmail } from "@/lib/email/tracked";
+import { therapistInvitationAcceptedEmail } from "@/lib/email/templates";
 
 // Phase 187 — the server-side half of /accept-invitation. Deliberately does
 // NOT sign the visitor in itself (the service-role client has no concept of
@@ -99,6 +102,19 @@ export async function POST(request: Request) {
     targetId: invitation.id,
     metadata: { email: invitation.email, invited_role: invitation.invited_role, user_id: userId },
   });
+
+  if (invitation.invited_role === "therapist") {
+    await sendTrackedEmail({
+      idempotencyKey: `therapist-invitation-accepted:${invitation.id}:admin`,
+      templateType: "therapist_invitation_accepted",
+      recipientRole: "admin",
+      recipientEmail: getContactInbox(),
+      relatedRecordType: "invitation",
+      relatedRecordId: invitation.id,
+      subject: "A GESA Professional invitation was accepted",
+      html: therapistInvitationAcceptedEmail({ fullName, email: invitation.email }),
+    });
+  }
 
   return NextResponse.json({ ok: true, email: invitation.email, invitedRole: invitation.invited_role });
 }

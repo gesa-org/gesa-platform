@@ -3,6 +3,7 @@ import {
   contactReceivedEmail,
   contactNotificationEmail,
   groupRegistrationEmail,
+  therapistInvitationAcceptedEmail,
 } from "@/lib/email/templates";
 
 describe("email templates", () => {
@@ -32,5 +33,12 @@ describe("email templates", () => {
     const html = groupRegistrationEmail("Sam", "Steady Ground", "Wednesdays, 20:00 GMT");
     expect(html).toContain("Steady Ground");
     expect(html).toContain("Wednesdays, 20:00 GMT");
+  });
+
+  it("keeps professional invitation acceptance notifications free of credentials", () => {
+    const html = therapistInvitationAcceptedEmail({ fullName: "Ari Example", email: "ari@example.com" });
+    expect(html).toContain("Professional invitation accepted");
+    expect(html).toContain("ari@example.com");
+    expect(html).not.toMatch(/token|password/i);
   });
 });

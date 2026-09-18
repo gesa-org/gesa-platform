@@ -2,7 +2,8 @@ import { createHash, randomBytes } from "crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAdminAction } from "@/lib/adminAuditLog";
-import { sendEmailSafely, isValidEmailFormat } from "@/lib/email/resend";
+import { isValidEmailFormat } from "@/lib/email/resend";
+import { sendTrackedEmail } from "@/lib/email/tracked";
 import { therapistInvitationEmail, administratorInvitationEmail } from "@/lib/email/templates";
 import type { Database, Tables, InvitedRole } from "@/lib/database.types";
 
@@ -198,7 +199,16 @@ export async function createAndSendInvitation(
       ? "You're invited to join GESA as a Professional"
       : "You're invited to join the GESA Admin Team";
 
-  const sendResult = await sendEmailSafely({ to: email, subject, html });
+  const sendResult = await sendTrackedEmail({
+    idempotencyKey: `invitation:${invitation.id}:recipient`,
+    templateType: input.invitedRole === "therapist" ? "therapist_invitation" : "admin_operational_notification",
+    recipientRole: input.invitedRole === "therapist" ? "therapist" : "admin",
+    recipientEmail: email,
+    relatedRecordType: "invitation",
+    relatedRecordId: invitation.id,
+    subject,
+    html,
+  });
   if (sendResult.error) {
     // The invitation row already exists — don't roll it back (an admin can
     // resend it, which retries the email without creating a duplicate row).
