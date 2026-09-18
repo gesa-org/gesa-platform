@@ -5,7 +5,7 @@ type Variant = "primary" | "outline" | "ghost" | "clay";
 type Size = "sm" | "md";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 whitespace-nowrap";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
 
 // Phase 36 — "clay" used to be a solid gold-tan fill with white text, which
 // reads as a gold button once --clay became a real gold token (see

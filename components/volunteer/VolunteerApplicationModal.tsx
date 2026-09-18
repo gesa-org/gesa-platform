@@ -662,7 +662,7 @@ export default function VolunteerApplicationModal({ onClose }: { onClose: () => 
               aria-required="true"
               value={meetingDuration}
               onChange={(e) => setMeetingDuration(e.target.value as MeetingDurationChoice)}
-              className={`${inputClass} max-w-[220px]`}
+              className={`${inputClass} w-full max-w-none sm:max-w-[220px]`}
             >
               <option value="" disabled>
                 Select…

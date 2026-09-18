@@ -111,7 +111,7 @@ export default function DonateForm({ content }: { content: DonatePageContent }) 
         </div>
 
         {showCustom && (
-          <div className="w-full max-w-[220px]">
+          <div className="w-full max-w-none sm:max-w-[220px]">
             <label htmlFor="donate-custom-amount" className="sr-only">
               Custom gift amount in euros
             </label>

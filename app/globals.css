@@ -19,6 +19,48 @@
   }
 }
 
+/* Keep media and long dynamic values inside their layout columns. This fixes
+   the source of horizontal scroll instead of concealing it at the page root. */
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+img,
+video,
+canvas {
+  height: auto;
+}
+
+/* Dense data stays readable on phones by scrolling within the table's
+   existing overflow container rather than shrinking every column. */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+}
+
+@media (max-width: 767px) {
+  .overflow-x-auto > table {
+    min-width: 42rem;
+  }
+
+  /* Avoid iOS zooming a focused text control. Checkboxes/radios deliberately
+     retain their native dimensions. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select {
+    min-height: 44px;
+  }
+}
+
 @layer base {
   :root {
     /* Phase 38 — same powder-blue base as Phase 37 (background, primary,
@@ -1084,10 +1126,10 @@ html.a11y-highlight-links a:focus-visible {
 }
 .a11y-panel-close {
   flex: none;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;

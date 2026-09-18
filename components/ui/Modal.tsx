@@ -143,7 +143,7 @@ export default function Modal({
             <button
               onClick={onClose}
               aria-label="Close"
-              className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-secondary hover:bg-muted transition-colors float-right"
+              className="mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-secondary hover:bg-muted transition-colors float-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               <X size={18} />
             </button>

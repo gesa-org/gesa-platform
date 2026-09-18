@@ -131,11 +131,11 @@ export default async function TherapistProfilePage({ params }: { params: { slug:
               diary-link-or-native flow, not a disconnected generic one —
               matching Roy's "directory cards and individual profile pages
               show consistent information" instruction. */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            <div className="w-[220px]">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="w-full sm:w-[220px]">
               <BookSessionButton therapist={therapist} />
             </div>
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[160px]">
               <MessageTherapistButton therapistId={therapist.id} />
             </div>
           </div>

@@ -113,7 +113,7 @@ export default function DonateModal({ content, onClose }: { content: DonatePageC
             </div>
 
             {showCustom && (
-              <div className="w-full max-w-[220px]">
+              <div className="w-full max-w-none sm:max-w-[220px]">
                 <label htmlFor="donate-modal-custom-amount" className="sr-only">
                   Custom gift amount in euros
                 </label>
@@ -187,7 +187,7 @@ export default function DonateModal({ content, onClose }: { content: DonatePageC
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+1 555 123 4567"
-                className="w-full max-w-[260px] rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none"
+                className="w-full max-w-none rounded-xl border border-border px-3.5 py-2.5 focus:border-primary focus:outline-none sm:max-w-[260px]"
               />
             </div>
             <div>

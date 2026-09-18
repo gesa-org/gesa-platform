@@ -110,7 +110,7 @@ export default function FindSupportModal({
       // on this outer layer still lets a tall step (e.g. Matches with
       // several cards) scroll the whole dialog into view rather than
       // clipping it.
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-16 sm:py-24"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:py-24"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -123,7 +123,7 @@ export default function FindSupportModal({
           so it needed the same class swap applied directly here. */}
       <div
         ref={panelRef}
-        className="relative w-full max-w-[720px] rounded-2xl bg-sand-grey p-6 shadow-2xl sm:p-8"
+        className="relative flex max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[720px] flex-col rounded-2xl bg-sand-grey p-5 shadow-2xl sm:max-h-[calc(100dvh-12rem)] sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Phase 199 (mobile/a11y pass) — this is now the modal's only
@@ -140,11 +140,11 @@ export default function FindSupportModal({
           type="button"
           onClick={onClose}
           aria-label="Close AI Matching Support"
-          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:right-4 sm:top-4"
         >
           <X size={18} />
         </button>
-        <div className="max-h-[80vh] overflow-y-auto pt-2">
+        <div className="min-h-0 flex-1 overflow-y-auto pt-2">
           {/* Phase 242 — see this component's `contextLabel` prop comment
               above. Sits above FindSupportFlow so it stays visible whether
               the choice screen or the wizard itself is currently showing. */}

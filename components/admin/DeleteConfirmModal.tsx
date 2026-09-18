@@ -27,29 +27,30 @@ export default function DeleteConfirmModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]"
       onClick={onCancel}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
       <div
-        className="w-full max-w-[420px] rounded-2xl bg-card p-6 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[420px] overflow-y-auto rounded-2xl bg-card p-5 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-[17px] font-semibold text-foreground">{title}</h3>
         <p className="mt-2 text-[13.5px] text-muted-fg">{description}</p>
         <p className="mt-2 text-[12.5px] font-medium text-destructive">This action cannot be undone.</p>
         {error && <p className="mt-3 text-[13px] text-destructive">{error}</p>}
-        <div className="mt-6 flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={pending} block className="sm:w-auto">
             Cancel
           </Button>
           <Button
             type="button"
             onClick={onConfirm}
             disabled={pending}
-            className="!bg-destructive !text-white hover:!bg-destructive/90"
+            block
+            className="!bg-destructive !text-white hover:!bg-destructive/90 sm:w-auto"
           >
             {pending ? <Loader2 size={15} className="animate-spin" /> : null}
             {pending ? "Deleting…" : "Delete"}

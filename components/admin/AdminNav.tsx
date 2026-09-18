@@ -25,7 +25,7 @@ export default function AdminNav({ items }: { items: AdminNavItem[] }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-medium transition-colors lg:whitespace-normal ${
+            className={`inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-medium transition-colors lg:whitespace-normal ${
               isActive
                 ? "bg-card text-primary shadow-soft"
                 : "text-primary/80 hover:bg-card/60 hover:text-primary"

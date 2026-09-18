@@ -24,7 +24,7 @@ export default function TherapistNav({ items }: { items: TherapistNavItem[] }) {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-medium transition-colors lg:whitespace-normal ${
+            className={`flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-medium transition-colors lg:whitespace-normal ${
               isActive ? "bg-accent-soft text-primary" : "text-foreground hover:bg-secondary"
             }`}
           >

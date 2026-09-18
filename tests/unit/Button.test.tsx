@@ -17,6 +17,11 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it("uses the shared touch-target and visible-focus classes", () => {
+    render(<Button>Continue</Button>);
+    expect(screen.getByRole("button", { name: "Continue" })).toHaveClass("min-h-11", "focus-visible:ring-2");
+  });
+
   it("applies block width class when block is set", () => {
     render(<Button block>Submit</Button>);
     expect(screen.getByRole("button")).toHaveClass("w-full");

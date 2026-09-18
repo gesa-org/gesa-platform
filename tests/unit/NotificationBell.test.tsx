@@ -57,6 +57,20 @@ jest.mock("@/lib/supabase/client", () => ({
 }));
 
 describe("NotificationBell", () => {
+  beforeEach(() => {
+    Object.defineProperty(global, "fetch", {
+      configurable: true,
+      value: jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ requests: [] }),
+      }),
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it("includes volunteer applications and group registrations in the admin feed", async () => {
     render(<NotificationBell />);
 

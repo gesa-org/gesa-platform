@@ -95,14 +95,14 @@ export default function BookingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]" onClick={onClose}>
       {/* Shared Sand Grey modal background, matching every other form
           modal site-wide (see components/ui/Modal.tsx's own Phase 220
           comment and app/globals.css's --sand-grey). This modal renders
           its own panel div instead of going through the shared Modal.tsx,
           so it needed the same class swap applied directly here. */}
       <div
-        className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-[var(--radius)] bg-sand-grey p-6 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[520px] overflow-y-auto rounded-[var(--radius)] bg-sand-grey p-5 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
@@ -110,7 +110,7 @@ export default function BookingModal({
             <span className="eyebrow">Book a session</span>
             <h2 className="text-[20px]">with {t.full_name}</h2>
           </div>
-          <button onClick={onClose} className="rounded-full p-1.5 text-muted-fg hover:bg-secondary" aria-label="Close">
+          <button onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-full text-muted-fg hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-label="Close">
             <X size={20} />
           </button>
         </div>

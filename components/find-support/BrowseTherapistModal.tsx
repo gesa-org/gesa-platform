@@ -325,7 +325,7 @@ export default function BrowseTherapistModal({
 
   return (
     <div
-      className={`fixed inset-0 ${MODAL_Z} flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-16 sm:py-24`}
+      className={`fixed inset-0 ${MODAL_Z} flex items-center justify-center overflow-y-auto bg-black/50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:py-24`}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -339,19 +339,19 @@ export default function BrowseTherapistModal({
           so they're deliberately left unchanged. */}
       <div
         ref={dialogRef}
-        className="relative w-full max-w-[880px] rounded-2xl bg-sand-grey p-6 shadow-2xl sm:p-8"
+        className="relative flex max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[880px] flex-col rounded-2xl bg-sand-grey p-5 shadow-2xl sm:max-h-[calc(100dvh-12rem)] sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 z-10 rounded-full p-1.5 text-muted-fg hover:bg-secondary"
+          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full text-muted-fg hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:right-4 sm:top-4"
         >
           <X size={18} />
         </button>
 
-        <div className="max-h-[80vh] overflow-y-auto pt-2">
+        <div className="min-h-0 flex-1 overflow-y-auto pt-2">
           {step === "search" && (
             <div className="mx-auto max-w-[680px]">
               <h2 className="mb-1.5 text-[22px]">{heading ?? "Find Volunteers"}</h2>

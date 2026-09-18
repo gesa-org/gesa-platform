@@ -54,14 +54,14 @@ export default function InquiryDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 px-4"
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`Inquiry from ${inquiry.name || inquiry.email || "client"}`}
     >
       <div
-        className="max-h-[85vh] w-full max-w-[560px] overflow-y-auto rounded-2xl bg-card p-6 shadow-2xl sm:p-8"
+        className="max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[560px] overflow-y-auto rounded-2xl bg-card p-5 shadow-2xl sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
@@ -77,7 +77,7 @@ export default function InquiryDetailModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1.5 text-muted-fg hover:bg-secondary"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-muted-fg hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             <X size={18} />
           </button>
@@ -87,7 +87,7 @@ export default function InquiryDetailModal({
           <div>
             <div className="text-[11.5px] font-semibold uppercase tracking-wide text-muted-fg">Email</div>
             {inquiry.email ? (
-              <a href={`mailto:${inquiry.email}`} className="text-primary underline">
+              <a href={`mailto:${inquiry.email}`} className="break-all text-primary underline">
                 {inquiry.email}
               </a>
             ) : (
@@ -122,7 +122,7 @@ export default function InquiryDetailModal({
 
         <div className="mt-4">
           <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-wide text-muted-fg">Message</div>
-          <p className="whitespace-pre-line rounded-xl border border-border bg-secondary/40 p-3.5 text-[13.5px]">
+          <p className="break-words whitespace-pre-line rounded-xl border border-border bg-secondary/40 p-3.5 text-[13.5px]">
             {inquiry.message || "—"}
           </p>
         </div>

@@ -37,4 +37,13 @@ describe("Header", () => {
     const donateLink = screen.getByRole("link", { name: /donate/i });
     expect(donateLink).toHaveAttribute("href", "/donate");
   });
+
+  it("keeps the mobile-menu trigger accessible and touch-sized", () => {
+    render(
+      <TranslationProvider>
+        <Header />
+      </TranslationProvider>
+    );
+    expect(screen.getByRole("button", { name: "Open menu" })).toHaveClass("h-11", "w-11");
+  });
 });

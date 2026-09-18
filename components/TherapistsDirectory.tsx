@@ -300,7 +300,7 @@ export default function TherapistsDirectory({
           type="button"
           onClick={() => setFiltersOpen(true)}
           aria-haspopup="dialog"
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-secondary"
+          className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-card px-4 py-3 text-[15px] font-semibold text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         >
           <Filter size={16} /> Filters
           {activeFilterCount > 0 && (
@@ -326,7 +326,7 @@ export default function TherapistsDirectory({
         onBlurCapture={endFilterInteraction}
         className={`${
           filtersOpen
-            ? "fixed inset-0 z-[120] flex flex-col bg-[#eef1f6]"
+            ? "fixed inset-0 z-[120] flex flex-col bg-[#eef1f6] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]"
             : "hidden"
         } lg:sticky lg:top-[90px] lg:z-auto lg:block lg:max-h-none lg:overflow-visible lg:rounded-[var(--radius)] lg:border lg:border-border lg:bg-card lg:p-6 lg:shadow-soft`}
       >

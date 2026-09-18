@@ -439,14 +439,14 @@ function NotificationDetailModal({ item, onClose }: { item: NotificationItem; on
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]" onClick={onClose}>
       <div
-        className="w-full max-w-[440px] rounded-[var(--radius)] bg-card p-6 shadow-2xl"
+        className="max-h-[calc(100dvh-2rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[440px] overflow-y-auto rounded-[var(--radius)] bg-card p-5 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
           <h2 className="text-[18px]">{item.title}</h2>
-          <button onClick={onClose} className="rounded-full p-1.5 text-muted-fg hover:bg-secondary" aria-label="Close">
+          <button onClick={onClose} className="flex h-11 w-11 items-center justify-center rounded-full text-muted-fg hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-label="Close">
             <X size={20} />
           </button>
         </div>
