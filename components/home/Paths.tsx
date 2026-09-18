@@ -643,8 +643,8 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                   gives this card the same "lifts toward you on hover" motion
                   Community's cards have, layered on top of the existing
                   flip and gold sweep, both left untouched. */}
-              <div className="gold-card-hover group h-[300px] [perspective:1400px] transition-transform duration-300 hover:-translate-y-1">
-                <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
+              <div tabIndex={0} className="gold-card-hover group h-[300px] [perspective:1400px] transition-transform duration-300 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-clay">
+                <div className="relative h-full w-full transition-transform duration-700 ease-out [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-focus:[transform:rotateY(180deg)] group-focus-within:[transform:rotateY(180deg)]">
                   {/* Front face — Phase 97 first restyled this as framed/
                       matted artwork with a gold badge dome overlapping the
                       frame's bottom edge, explicitly keeping the flip effect
@@ -853,7 +853,7 @@ export default function Paths({ content = HOME_CONTENT_FALLBACK }: { content?: H
                           // untouched — their visible CTA text is still an
                           // accurate accessible name on its own.
                           aria-label={i === 1 ? "Start AI matching for support related to terror." : undefined}
-                          className="relative z-10 mt-3.5 inline-flex w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-clay px-[18px] py-2 text-[12.5px] font-semibold text-espresso transition-colors hover:bg-amber hover:text-white"
+                          className="relative z-10 mt-3.5 inline-flex min-h-11 w-fit items-center justify-center gap-1.5 rounded-full border-2 border-clay bg-clay px-[18px] py-2 text-[12.5px] font-semibold text-espresso transition-colors hover:bg-amber hover:text-white"
                         >
                           <EditableText
                             contentId={`home.${CARD_CONTENT_KEYS[i] ?? CARD_CONTENT_KEYS[CARD_CONTENT_KEYS.length - 1]}.cta`}

@@ -357,7 +357,7 @@ export default function NotificationBell() {
           // itself away from the viewport edge on its own). `calc(100vw -
           // 2rem)` caps it to the screen width minus a small margin on both
           // sides on phones, then the fixed 340px kicks back in from `sm` up.
-          className="fixed inset-x-4 top-[68px] z-50 flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-[460px] sm:w-[340px]"
+          className="fixed inset-x-4 top-[calc(4.25rem+env(safe-area-inset-top))] z-50 flex max-h-[min(70vh,calc(100dvh-5rem-env(safe-area-inset-top)))] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:max-h-[460px] sm:w-[340px]"
         >
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-[13px] font-semibold text-muted-fg">

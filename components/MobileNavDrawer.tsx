@@ -9,14 +9,15 @@ import type { HeaderContent } from "@/lib/content";
 import { PRIMARY_NAVIGATION, resolveNavHref } from "@/lib/navigation";
 
 // Phase 199 (mobile responsiveness pass) — Header.tsx's <nav> has always
-// been `hidden md:flex`, with zero mobile fallback: below `md`, a phone
-// visitor got the logo, bell, language selector, and account button, but no
+// been a desktop-only horizontal row, with zero compact-layout fallback:
+// below `lg`, a phone or tablet visitor got the logo, bell, language
+// selector, and account button, but no
 // way to reach About/Find Support/Our Professionals/Community, and no
-// Donate CTA either (`hidden sm:inline-flex`). lib/navigation.ts's
+// Donate CTA either (`hidden lg:inline-flex`). lib/navigation.ts's
 // `showOnMobile` flag was already wired for exactly this component, just
 // never built. This is that component: a right-side off-canvas drawer,
-// opened from a hamburger button rendered only below `md` (Header.tsx's own
-// `<nav>`/Donate CTA stay exactly as they were for `md`+ widths — this is
+// opened from a hamburger button rendered only below `lg` (Header.tsx's own
+// `<nav>`/Donate CTA stay exactly as they were for `lg`+ widths — this is
 // additive, not a replacement of the desktop nav).
 //
 // Accessibility: traps Tab focus inside the panel while open, closes on
@@ -78,7 +79,7 @@ export default function MobileNavDrawer({ content }: { content: HeaderContent })
   const navItems = PRIMARY_NAVIGATION.filter((item) => item.showOnMobile && item.key !== "donate");
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         ref={buttonRef}
         type="button"
@@ -101,7 +102,7 @@ export default function MobileNavDrawer({ content }: { content: HeaderContent })
             role="dialog"
             aria-modal="true"
             aria-label="Site menu"
-            className="absolute inset-y-0 right-0 flex w-[86vw] max-w-[360px] flex-col overflow-y-auto bg-[#eef1f6] shadow-2xl focus:outline-none"
+            className="absolute inset-y-0 right-0 flex w-[86vw] max-w-[360px] flex-col overflow-y-auto bg-[#eef1f6] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] shadow-2xl focus:outline-none"
           >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <span className="text-[15px] font-semibold tracking-[0.2em] text-[#5c6470]">MENU</span>

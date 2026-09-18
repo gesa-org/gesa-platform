@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
 
@@ -19,6 +19,12 @@ import { designTokensToCssText } from "@/lib/ui-builder/tokensToCss";
 export const metadata: Metadata = {
   title: "GESA (Global Emotional Support Alliance)",
   description: "Global Emotional Support Alliance platform for professionals and clients.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 // Phase 35 — fetched here (a Server Component, on every request) rather
@@ -49,7 +55,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-background text-foreground flex flex-col min-h-screen">
+      <body className="antialiased bg-background text-foreground flex min-h-screen min-h-[100dvh] flex-col">
         {/* Phase 132 — server-rendered override of the design tokens the
             admin UI Builder controls (colors + typography). Rendered first,
             right after <body> opens, so it wins the cascade over

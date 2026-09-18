@@ -57,17 +57,17 @@ export const HEADER_CONTENT_FALLBACK: HeaderContent = {
 // does: content is fetched once in app/layout.tsx and passed down.
 export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?: HeaderContent }) {
   return (
-    <header className="sticky top-0 z-40 bg-[#eef1f6d1] backdrop-blur-md border-b border-transparent transition-all duration-200">
+    <header className="sticky top-0 z-40 border-b border-transparent bg-[#eef1f6d1] pt-[env(safe-area-inset-top)] backdrop-blur-md transition-all duration-200 md:pt-0">
       {/* Phase 199 (mobile pass) — px-4 below `sm` (was a flat px-6 at every
           width) buys back ~16px of edge room on 320-375px phones, where the
           logo/wordmark + hamburger + bell + language + auth cluster below
           all have to fit on one line; h-16 (was a flat h-[74px]) matches
           the ~44-48px comfortable touch-target band better on small
           screens without shrinking the desktop header. */}
-      <div className="max-w-[1160px] mx-auto px-4 sm:px-6 flex items-center h-16 sm:h-[74px] gap-1.5 sm:gap-5">
+      <div className="mx-auto flex min-h-16 min-w-0 max-w-[1160px] items-center gap-1.5 px-4 py-2 sm:h-[74px] sm:px-6 sm:py-0 sm:gap-5">
         <Link
           href="/"
-          className="flex items-center gap-2 sm:gap-2.5 font-sans text-[15px] sm:text-[19px] font-medium tracking-[0.18em] sm:tracking-[0.25em] text-[#5c6470]"
+          className="flex shrink-0 items-center gap-2 font-sans text-[15px] font-medium tracking-[0.18em] text-[#5c6470] sm:gap-2.5 sm:text-[19px] sm:tracking-[0.25em]"
         >
           <Logo size={30} />
           {/* The full wordmark reads as a wall of tracked-out letters at
@@ -92,7 +92,7 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
             renders differently (a filled CTA button via VolunteerPrimaryCta,
             not a plain Link) so it's pulled out of the map and rendered on
             its own right after, same visual treatment as before. */}
-        <nav className="hidden md:flex gap-2 ms-2">
+        <nav className="hidden lg:flex gap-2 ms-2">
           {/* Phase 140 — each nav label is now Page Content-editable via
               "global.header.<contentField>" (see pageRegistry.ts's
               GLOBAL_EDITABLE_FIELDS), same contentField this list already
@@ -112,7 +112,7 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
             </Link>
           ))}
         </nav>
-        <div className="ms-auto flex items-center gap-1 sm:gap-2">
+        <div className="ms-auto flex min-w-0 shrink-0 items-center gap-1 whitespace-nowrap sm:gap-2">
           {/* Phase 93 — VolunteerPrimaryCta (not a plain Link) so this opens
               the real volunteer application modal when donateHref is still
               the recognized default, same as the Home donate band's "Join
@@ -121,7 +121,7 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
               Manager still just gets a normal link. */}
           <VolunteerPrimaryCta
             href={content.donateHref}
-            className="hidden sm:inline-flex items-center gap-2 bg-[var(--donate-navy)] text-primary-fg hover:bg-[var(--donate-navy-600)] px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft"
+            className="hidden lg:inline-flex items-center gap-2 bg-[var(--donate-navy)] text-primary-fg hover:bg-[var(--donate-navy-600)] px-6 py-3 rounded-full text-[15px] font-semibold transition-all shadow-soft"
           >
             <Heart size={16} />{" "}
             <EditableText contentId="global.header.donateLabel" label="Donate button label" value={content.donateLabel} as="span" />
@@ -130,10 +130,10 @@ export default function Header({ content = HEADER_CONTENT_FALLBACK }: { content?
           <LanguageSelector />
           <AuthStatus />
           {/* Phase 199 (mobile pass) — the desktop <nav> above and the
-              Donate button just above are both hidden below `md`/`sm`
-              respectively with no other way to reach them on a phone.
-              MobileNavDrawer renders nothing at `md`+ (its own root is
-              `md:hidden`) and is the actual fix: a hamburger trigger that
+              Donate button just above are both hidden below `lg` with no
+              other way to reach them on a compact layout.
+              MobileNavDrawer renders nothing at `lg`+ (its own root is
+              `lg:hidden`) and is the actual fix: a hamburger trigger that
               opens an off-canvas panel with every primary nav link plus
               Donate. */}
           <MobileNavDrawer content={content} />

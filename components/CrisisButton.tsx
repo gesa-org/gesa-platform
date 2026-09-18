@@ -97,7 +97,7 @@ export default function CrisisButton({ content = CRISIS_BUTTON_CONTENT_FALLBACK 
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-[70] flex items-center gap-2 rounded-full border border-border bg-card px-[17px] py-3 font-semibold text-primary shadow-lg transition-colors hover:bg-secondary"
+        className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-[calc(1.25rem+env(safe-area-inset-right))] z-[70] flex min-h-11 max-w-[calc(100%-2.5rem-env(safe-area-inset-left)-env(safe-area-inset-right))] items-center gap-2 rounded-full border border-border bg-card px-[17px] py-3 font-semibold text-primary shadow-lg transition-colors hover:bg-secondary"
       >
         <LifeBuoy size={18} className="text-clay" />
         <EditableText contentId="global.crisisButton.triggerLabel" label="Launcher button label" value={content.triggerLabel} as="span" />

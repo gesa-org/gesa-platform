@@ -121,7 +121,7 @@ export default function Modal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(15,30,36,.5)] p-5"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(15,30,36,.5)] px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-[calc(1.25rem+env(safe-area-inset-top))]"
           onClick={onClose}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -133,7 +133,7 @@ export default function Modal({
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
-            className="w-full max-w-[520px] max-h-[88vh] overflow-auto rounded-[20px] bg-sand-grey p-7 shadow-lg outline-none"
+            className="max-h-[88vh] max-h-[calc(100dvh-2.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-[520px] overflow-auto rounded-[20px] bg-sand-grey p-5 shadow-lg outline-none sm:p-7"
             onClick={(e) => e.stopPropagation()}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

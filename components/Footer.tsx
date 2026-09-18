@@ -120,8 +120,8 @@ export default function Footer({
     // Phase 90 — id/tabIndex added for the accessibility widget's "Skip To
     // Content → Footer" control (components/accessibility/sections/
     // SkipToContentSection.tsx), which needs a stable, focusable landmark.
-    <footer id={SITE_FOOTER_ID} tabIndex={-1} className="bg-espresso text-[#c7d0de] py-20 sm:py-24 mt-10 focus:outline-none">
-      <div className="max-w-[1240px] mx-auto px-6 sm:px-8">
+    <footer id={SITE_FOOTER_ID} tabIndex={-1} className="mt-10 bg-espresso py-20 text-[#c7d0de] focus:outline-none sm:py-24">
+      <div className="mx-auto min-w-0 max-w-[1240px] px-4 sm:px-8">
         {/* Phase 70 — Roy asked for the footer's overall size/padding to
             feel more spacious, its text more legible, and for scroll-
             triggered reveal animations on the footer's text/sections.
@@ -317,8 +317,8 @@ export default function Footer({
             that's a deliberate change from Phase 56's "" default) so all
             four icons always render, matching the reference immediately —
             Roy swaps in real profile URLs via the Content Manager. */}
-        <Reveal type="fade-up" as="div" className="mt-10 flex flex-col gap-5 border-t border-[#eef1f6]/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
+        <Reveal type="fade-up" as="div" className="mt-10 flex flex-col gap-5 border-t border-[#eef1f6]/10 pt-7 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <span className="text-[13.5px] font-semibold text-[#eef1f6]">
               <EditableText contentId="global.footer.connectWithUsLabel" label="&quot;Connect with Us&quot; label" value={content.connectWithUsLabel} as="span" />
             </span>
@@ -334,7 +334,7 @@ export default function Footer({
               <Mail size={15} aria-hidden="true" />
               {GESA_PUBLIC_CONTACT_EMAIL}
             </a>
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <a
                 href={content.socialLinkedinHref}
                 target="_blank"

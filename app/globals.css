@@ -606,6 +606,8 @@ html[dir="rtl"] .float-right {
      specific pages) still load after this and correctly override the default
      width where a narrower column is wanted. */
   .wrap {
+    width: 100%;
+    min-width: 0;
     max-width: 1160px;
     margin-left: auto;
     margin-right: auto;
@@ -613,6 +615,8 @@ html[dir="rtl"] .float-right {
     padding-right: 24px;
   }
   .narrow {
+    width: 100%;
+    min-width: 0;
     max-width: 720px;
     margin-left: auto;
     margin-right: auto;
@@ -644,6 +648,11 @@ html[dir="rtl"] .float-right {
     max-width: 640px;
   }
   @media (max-width: 640px) {
+    .wrap,
+    .narrow {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
     .section {
       padding-top: 44px;
       padding-bottom: 44px;
@@ -703,6 +712,7 @@ html[dir="rtl"] .float-right {
   }
   html, body {
     margin: 0;
+    min-width: 0;
     padding: 0;
   }
   /* Phase 132 — font-size/line-height/font-weight below now read from the
@@ -719,6 +729,7 @@ html[dir="rtl"] .float-right {
     line-height: var(--ui-line-height, 1.6);
     font-size: var(--ui-base-font-size, 16px);
     font-weight: var(--ui-body-weight, 400);
+    min-width: 0;
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3, h4, .serif {
@@ -1036,7 +1047,7 @@ html.a11y-highlight-links a:focus-visible {
   bottom: 160px;
   width: 360px;
   max-width: calc(100vw - 28px);
-  max-height: min(640px, calc(100vh - 120px));
+  max-height: min(640px, calc(100dvh - 120px));
   overflow-y: auto;
   background: var(--card);
   color: var(--foreground);

@@ -23,7 +23,7 @@ import { createClient } from "@/lib/supabase/client";
 const SUBJECT_OPTIONS = ["Donate", "Volunteer as a professional", "Partnership", "General inquiry"];
 
 const fieldClass =
-  "w-full rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none";
+  "min-h-11 w-full rounded-xl border border-white/15 bg-white/[0.06] px-3.5 py-2.5 text-[13.5px] text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none";
 const labelClass = "mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-white/70";
 
 // Content Manager audit pass — heading/subtitle/submit-state copy now comes
@@ -65,7 +65,7 @@ export default function HelpUsGrowForm({
 
   return (
     <form
-      className={`${cardClass} grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:items-start`}
+      className={`${cardClass} grid min-w-0 grid-cols-1 gap-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:items-start`}
       onSubmit={async (e) => {
         e.preventDefault();
         if (!consent) {
@@ -110,12 +110,12 @@ export default function HelpUsGrowForm({
         }).catch(() => {});
       }}
     >
-      <div>
+      <div className="min-w-0">
         <h4 className="text-[22px] font-semibold text-white">{heading}</h4>
         <p className="mt-2.5 text-[13.5px] leading-relaxed text-white/70">{subtitle}</p>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className={labelClass} htmlFor="help-grow-name">
@@ -170,7 +170,7 @@ export default function HelpUsGrowForm({
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-full bg-white py-3 text-[14.5px] font-semibold text-slate-900 transition-colors hover:bg-white/90 disabled:opacity-60"
+          className="min-h-11 w-full rounded-full bg-white py-3 text-[14.5px] font-semibold text-slate-900 transition-colors hover:bg-white/90 disabled:opacity-60"
         >
           {pending ? sendingLabel : submitLabel}
         </button>
