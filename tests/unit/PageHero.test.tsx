@@ -38,4 +38,19 @@ describe("PageHero — gold watermark texture", () => {
     expect(screen.getByText("Support Groups")).toBeInTheDocument();
     expect(screen.getByText("Find your circle")).toBeInTheDocument();
   });
+
+  it("renders an optional page-specific decorative media layer behind the unchanged hero copy", () => {
+    render(
+      <PageHero
+        icon={ShieldCheck}
+        eyebrow="Our Specialists"
+        title="Verified professional volunteers"
+        gold
+        backgroundMedia={<div data-testid="hero-background-media" aria-hidden="true" />}
+      />
+    );
+
+    expect(screen.getByTestId("hero-background-media")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Verified professional volunteers" })).toBeInTheDocument();
+  });
 });

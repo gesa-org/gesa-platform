@@ -1144,6 +1144,27 @@ html.a11y-highlight-links a:focus-visible {
 .a11y-panel-close:hover {
   background: var(--secondary);
 }
+
+/* Our Professionals only: the supplied Earth Horizon footage is treated as
+   a low-contrast silhouette, keeping the readable slate hero treatment and
+   existing text hierarchy intact while its native rotation loops smoothly. */
+.earth-horizon-video {
+  filter: grayscale(1) sepia(0.2) contrast(1.24) brightness(0.72);
+  opacity: 0.72;
+  transform: scale(1.035);
+  will-change: transform;
+}
+@media (max-width: 767px) {
+  .earth-horizon-video {
+    object-position: center 64%;
+    opacity: 0.62;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .earth-horizon-video {
+    opacity: 0.46;
+  }
+}
 .a11y-panel-close:focus-visible,
 .a11y-launcher:focus-visible,
 .a11y-panel :is(button, select, a):focus-visible {

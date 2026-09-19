@@ -17,6 +17,8 @@ interface PageHeroProps {
   maxWidth?: string;
   className?: string;
   children?: ReactNode;
+  /** Optional decorative media layer for a single page-specific hero. */
+  backgroundMedia?: ReactNode;
   /** Phase 47 — opt-in gold banner background (see app/globals.css's
    * `.gold-banner`). Defaults to false so FAQ, Contact, and the legal
    * pages — which also render through this component — keep their
@@ -93,10 +95,12 @@ export default function PageHero({
   maxWidth,
   className = "",
   children,
+  backgroundMedia,
   gold = false,
 }: PageHeroProps) {
   return (
     <section className={`hero relative overflow-hidden ${gold ? "gold-banner" : ""} ${className}`}>
+      {backgroundMedia}
       <GoldHeroGlow gold={gold} />
       <StaggerGroup
         className={`relative z-10 text-center ${narrow ? "narrow" : "wrap"}`}

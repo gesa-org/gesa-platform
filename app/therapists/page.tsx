@@ -7,6 +7,7 @@ import { getPageContent, THERAPISTS_CONTENT_FALLBACK } from "@/lib/content";
 import { resolveEditorPreview } from "@/lib/ui-builder/pageContentResolver";
 import EditorPreviewBridge from "@/components/ui-builder/public/EditorPreviewBridge";
 import EditableText from "@/components/ui-builder/public/EditableText";
+import EarthHorizonHeroBackground from "@/components/therapists/EarthHorizonHeroBackground";
 
 export const revalidate = 60;
 
@@ -65,6 +66,7 @@ export default async function TherapistsPage({
       <PageHero
         gold
         icon={Users}
+        backgroundMedia={<EarthHorizonHeroBackground />}
         eyebrow={
           isDisasterSource ? (
             <span>Our Verified Professionals</span>
