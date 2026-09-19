@@ -1,10 +1,10 @@
 import { act, render } from "@testing-library/react";
 import EarthHorizonHeroBackground, {
   EARTH_HORIZON_ROTATION_PLAYBACK_RATE,
-  THERAPIST_COVERAGE_LIGHT_SEQUENCE,
   THERAPIST_LIGHT_FADE_MS,
   THERAPIST_LIGHT_HOLD_MS,
 } from "@/components/therapists/EarthHorizonHeroBackground";
+import { getTherapistCoverageLocations } from "@/lib/therapistCoverageLocations";
 
 let mockReducedMotion = false;
 
@@ -26,10 +26,11 @@ describe("EarthHorizonHeroBackground", () => {
   });
 
   it("uses a calm deterministic five-second coverage-light sequence", () => {
-    const { container } = render(<EarthHorizonHeroBackground />);
+    const countries = ["USA", "Mexico", "Brazil", "Portugal", "UK", "Israel", "Australia"];
+    const { container } = render(<EarthHorizonHeroBackground countries={countries} />);
     const lights = container.querySelectorAll(".earth-coverage-light");
 
-    expect(lights).toHaveLength(THERAPIST_COVERAGE_LIGHT_SEQUENCE.length);
+    expect(lights).toHaveLength(getTherapistCoverageLocations(countries).length);
     expect(lights[0]).toHaveClass("is-active");
 
     act(() => jest.advanceTimersByTime(THERAPIST_LIGHT_HOLD_MS));
@@ -40,11 +41,12 @@ describe("EarthHorizonHeroBackground", () => {
     expect(lights[0]).toHaveClass("is-hidden");
   });
 
-  it("keeps a static decorative visual without coverage beacons when reduced motion is requested", () => {
+  it("keeps a static Earth with a few non-animated country markers when reduced motion is requested", () => {
     mockReducedMotion = true;
-    const { container } = render(<EarthHorizonHeroBackground />);
+    const { container } = render(<EarthHorizonHeroBackground countries={["Israel", "Germany", "New Zealand"]} />);
 
-    expect(container.querySelectorAll(".earth-coverage-light")).toHaveLength(0);
+    expect(container.querySelectorAll(".earth-coverage-light.is-static")).toHaveLength(3);
+    expect(container.querySelectorAll(".earth-coverage-light.is-active")).toHaveLength(0);
     expect(container.querySelector("video")?.playbackRate).toBe(EARTH_HORIZON_ROTATION_PLAYBACK_RATE);
   });
 });
