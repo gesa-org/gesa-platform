@@ -67,7 +67,7 @@ export default async function TherapistsPage({
         gold
         icon={Users}
         className="therapists-earth-hero"
-        backgroundMedia={<EarthHorizonHeroBackground countries={therapists.map((therapist) => therapist.country)} />}
+        backgroundMedia={<EarthHorizonHeroBackground />}
         showDecorativeGlow={false}
         eyebrow={
           isDisasterSource ? (

@@ -1,12 +1,27 @@
-import { act, render } from "@testing-library/react";
-import EarthHorizonHeroBackground, {
-  EARTH_HORIZON_ROTATION_PLAYBACK_RATE,
-  THERAPIST_LIGHT_FADE_MS,
-  THERAPIST_LIGHT_HOLD_MS,
-} from "@/components/therapists/EarthHorizonHeroBackground";
-import { getTherapistCoverageLocations } from "@/lib/therapistCoverageLocations";
+import { render } from "@testing-library/react";
+import EarthHorizonHeroBackground from "@/components/therapists/EarthHorizonHeroBackground";
 
 let mockReducedMotion = false;
+
+jest.mock("d3-geo", () => ({
+  geoOrthographic: () => {
+    const projection = {
+      translate: jest.fn(),
+      scale: jest.fn(),
+      clipAngle: jest.fn(),
+      precision: jest.fn(),
+      rotate: jest.fn(),
+    };
+    Object.values(projection).forEach((method) => method.mockReturnValue(projection));
+    return projection;
+  },
+  geoPath: () => () => "M0,0",
+}));
+
+jest.mock("topojson-client", () => ({
+  feature: () => ({ type: "FeatureCollection", features: [] }),
+  mesh: () => ({ type: "MultiLineString", coordinates: [] }),
+}));
 
 jest.mock("@/components/motion/useSafeReducedMotion", () => ({
   useSafeReducedMotion: () => mockReducedMotion,
@@ -15,38 +30,27 @@ jest.mock("@/components/motion/useSafeReducedMotion", () => ({
 describe("EarthHorizonHeroBackground", () => {
   beforeEach(() => {
     mockReducedMotion = false;
-    jest.useFakeTimers();
-    jest.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
-    jest.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
+    jest.spyOn(window, "requestAnimationFrame").mockImplementation(() => 1);
+    jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-    jest.useRealTimers();
+  afterEach(() => jest.restoreAllMocks());
+
+  it("renders a decorative globe with country-border paths instead of video or location markers", () => {
+    const { container } = render(<EarthHorizonHeroBackground />);
+
+    expect(container.querySelector("svg.earth-horizon-globe")).toBeInTheDocument();
+    expect(container.querySelectorAll(".earth-horizon-borders")).toHaveLength(2);
+    expect(container.querySelector("video")).not.toBeInTheDocument();
+    expect(container.querySelector(".earth-coverage-light")).not.toBeInTheDocument();
+    expect(window.requestAnimationFrame).toHaveBeenCalled();
   });
 
-  it("uses a calm deterministic five-second coverage-light sequence", () => {
-    const countries = ["USA", "Mexico", "Brazil", "Portugal", "UK", "Israel", "Australia"];
-    const { container } = render(<EarthHorizonHeroBackground countries={countries} />);
-    const lights = container.querySelectorAll(".earth-coverage-light");
-
-    expect(lights).toHaveLength(getTherapistCoverageLocations(countries).length);
-    expect(lights[0]).toHaveClass("is-active");
-
-    act(() => jest.advanceTimersByTime(THERAPIST_LIGHT_HOLD_MS));
-    expect(lights[0]).toHaveClass("is-fading");
-    expect(lights[1]).toHaveClass("is-active");
-
-    act(() => jest.advanceTimersByTime(THERAPIST_LIGHT_FADE_MS));
-    expect(lights[0]).toHaveClass("is-hidden");
-  });
-
-  it("keeps a static Earth with a few non-animated country markers when reduced motion is requested", () => {
+  it("keeps the globe and its borders static when reduced motion is requested", () => {
     mockReducedMotion = true;
-    const { container } = render(<EarthHorizonHeroBackground countries={["Israel", "Germany", "New Zealand"]} />);
+    const { container } = render(<EarthHorizonHeroBackground />);
 
-    expect(container.querySelectorAll(".earth-coverage-light.is-static")).toHaveLength(3);
-    expect(container.querySelectorAll(".earth-coverage-light.is-active")).toHaveLength(0);
-    expect(container.querySelector("video")?.playbackRate).toBe(EARTH_HORIZON_ROTATION_PLAYBACK_RATE);
+    expect(container.querySelectorAll(".earth-horizon-borders")).toHaveLength(2);
+    expect(window.requestAnimationFrame).not.toHaveBeenCalled();
   });
 });

@@ -1145,11 +1145,16 @@ html.a11y-highlight-links a:focus-visible {
   background: var(--secondary);
 }
 
-/* Our Professionals only: the Earth Horizon film is retained, but sits in
-   a clean daylight-sky treatment instead of the former dark space layer. */
+/* Our Professionals: a clean, SVG-rendered Earth horizon with real, bundled
+   country boundaries. The larger band joins the directory intentionally. */
 .therapists-earth-hero.gold-banner,
 .therapists-earth-hero.gold-banner::before {
   background: #b8d8ea;
+}
+.therapists-earth-hero {
+  min-height: clamp(450px, 48vw, 580px);
+  padding-top: clamp(88px, 9vw, 132px);
+  padding-bottom: clamp(128px, 13vw, 190px);
 }
 .therapists-earth-hero.gold-banner::before {
   display: none;
@@ -1166,128 +1171,50 @@ html.a11y-highlight-links a:focus-visible {
   box-shadow: 0 6px 18px rgba(7, 31, 51, 0.2);
 }
 .earth-horizon-sky {
-  background: linear-gradient(180deg, #d9eff9 0%, #b8d8ea 48%, #85b6d0 100%);
+  background: linear-gradient(180deg, #d9eef8 0%, #a5cde4 48%, #507c9d 100%);
 }
-.earth-horizon-video {
-  position: relative;
+.earth-horizon-globe {
   z-index: 1;
-  filter: saturate(1.14) contrast(1.04) brightness(1.08);
-  opacity: 0.86;
-  transform: scale(1.035);
-  will-change: transform;
+  overflow: visible;
 }
-.earth-horizon-atmosphere {
-  z-index: 2;
-  background:
-    radial-gradient(ellipse at 50% 79%, rgba(199, 233, 249, 0.5) 0%, rgba(160, 210, 235, 0.16) 31%, transparent 54%),
-    linear-gradient(180deg, rgba(238, 249, 255, 0.22) 0%, transparent 42%, rgba(33, 92, 129, 0.08) 100%);
+.earth-horizon-ocean {
+  fill: url(#earth-ocean);
+}
+.earth-horizon-land {
+  fill: url(#earth-land);
+}
+.earth-horizon-borders {
+  fill: none;
+  stroke: rgba(255, 246, 213, 0.88);
+  stroke-width: 0.82;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.earth-horizon-borders--glow {
+  stroke: rgba(248, 218, 142, 0.58);
+  stroke-width: 2.6;
+  filter: url(#earth-border-glow);
+}
+.earth-horizon-rim {
+  fill: none;
+  stroke: rgba(219, 241, 250, 0.75);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
 }
 .earth-horizon-copy-shade {
   z-index: 4;
-  background: radial-gradient(ellipse at 50% 43%, rgba(6, 36, 60, 0.62) 0%, rgba(8, 42, 68, 0.44) 37%, rgba(8, 42, 68, 0.1) 68%, transparent 88%);
-}
-.earth-coverage-lights {
-  z-index: 3;
-  transform-origin: 50% 70%;
-  animation: earth-coverage-surface-drift 40s linear infinite;
-  will-change: transform;
-}
-.earth-coverage-lights.is-paused {
-  animation-play-state: paused;
-}
-.earth-coverage-light {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: opacity 900ms ease;
-}
-.earth-coverage-light.is-active {
-  opacity: 1;
-}
-.earth-coverage-light.is-static {
-  opacity: 0.56;
-}
-.earth-coverage-light.is-fading,
-.earth-coverage-light.is-hidden {
-  opacity: 0;
-}
-.earth-coverage-light__glow,
-.earth-coverage-light__core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  border-radius: 9999px;
-  transform: translate(-50%, -50%);
-}
-.earth-coverage-light__glow {
-  width: 20px;
-  height: 20px;
-  background: rgba(255, 225, 154, 0.42);
-  filter: blur(4px);
-}
-.earth-coverage-light__core {
-  width: 6px;
-  height: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.96);
-  background: #fff3c9;
-  box-shadow: 0 0 8px 3px rgba(250, 208, 108, 0.76);
-}
-.earth-coverage-light.is-active .earth-coverage-light__glow {
-  animation: earth-coverage-beacon 2.8s ease-in-out infinite;
-}
-.earth-coverage-light.is-active .earth-coverage-light__core {
-  animation: earth-coverage-twinkle 2.8s ease-in-out infinite;
-}
-@keyframes earth-coverage-beacon {
-  0%, 100% { transform: translate(-50%, -50%) scale(0.75); opacity: 0.35; }
-  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
-}
-@keyframes earth-coverage-twinkle {
-  0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.75; }
-  50% { transform: translate(-50%, -50%) scale(1.16); opacity: 1; }
-}
-@keyframes earth-coverage-surface-drift {
-  0%, 100% { transform: translate3d(-2.5%, 0, 0) scale(1.01); }
-  50% { transform: translate3d(2.5%, -0.8%, 0) scale(1.03); }
+  background:
+    linear-gradient(180deg, rgba(7, 35, 57, 0.58) 0%, rgba(7, 35, 57, 0.36) 44%, rgba(7, 35, 57, 0.05) 82%),
+    radial-gradient(ellipse at 50% 34%, rgba(7, 35, 57, 0.32) 0%, transparent 66%);
 }
 @media (max-width: 767px) {
-  .earth-horizon-video {
-    object-position: center 64%;
-    opacity: 0.78;
+  .therapists-earth-hero {
+    min-height: clamp(400px, 118vw, 470px);
+    padding-top: 76px;
+    padding-bottom: 106px;
   }
   .earth-horizon-copy-shade {
-    background: radial-gradient(ellipse at 50% 43%, rgba(6, 36, 60, 0.72) 0%, rgba(8, 42, 68, 0.52) 50%, rgba(8, 42, 68, 0.14) 76%, transparent 94%);
-  }
-  .earth-coverage-lights {
-    animation-duration: 46s;
-  }
-  .earth-coverage-light {
-    width: 16px;
-    height: 16px;
-  }
-  .earth-coverage-light__glow {
-    width: 15px;
-    height: 15px;
-    filter: blur(3px);
-  }
-  .earth-coverage-light__core {
-    width: 5px;
-    height: 5px;
-    box-shadow: 0 0 6px 2px rgba(250, 208, 108, 0.68);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .earth-horizon-video {
-    opacity: 0.72;
-  }
-  .earth-coverage-light__glow,
-  .earth-coverage-light__core {
-    animation: none !important;
-  }
-  .earth-coverage-lights {
-    animation: none !important;
+    background: linear-gradient(180deg, rgba(7, 35, 57, 0.68) 0%, rgba(7, 35, 57, 0.44) 48%, rgba(7, 35, 57, 0.08) 88%);
   }
 }
 .a11y-panel-close:focus-visible,
