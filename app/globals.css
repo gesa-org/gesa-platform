@@ -1145,24 +1145,124 @@ html.a11y-highlight-links a:focus-visible {
   background: var(--secondary);
 }
 
-/* Our Professionals only: the supplied Earth Horizon footage is treated as
-   a low-contrast silhouette, keeping the readable slate hero treatment and
-   existing text hierarchy intact while its native rotation loops smoothly. */
+/* Our Professionals only: the supplied Earth Horizon footage keeps its
+   natural ocean/land color against a restrained space treatment. */
+.earth-horizon-space {
+  background: radial-gradient(ellipse at 50% 76%, #172e4a 0%, #071224 38%, #020611 78%);
+}
+.earth-horizon-stars {
+  opacity: 0.52;
+  background-image:
+    radial-gradient(circle at 8% 18%, rgba(255,255,255,.9) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 17% 43%, rgba(234,219,172,.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 30% 12%, rgba(255,255,255,.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 68% 20%, rgba(255,255,255,.8) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 83% 37%, rgba(234,219,172,.75) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 92% 15%, rgba(255,255,255,.75) 0 1px, transparent 1.5px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 57%, transparent 82%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 57%, transparent 82%);
+}
 .earth-horizon-video {
-  filter: grayscale(1) sepia(0.2) contrast(1.24) brightness(0.72);
-  opacity: 0.72;
+  position: relative;
+  z-index: 1;
+  filter: saturate(1.22) contrast(1.08) brightness(0.88);
+  opacity: 0.92;
   transform: scale(1.035);
   will-change: transform;
+}
+.earth-horizon-atmosphere {
+  z-index: 2;
+  background:
+    radial-gradient(ellipse at 50% 73%, rgba(117, 183, 230, 0.32) 0%, rgba(117, 183, 230, 0.11) 24%, transparent 46%),
+    linear-gradient(180deg, rgba(2, 6, 17, 0.2) 0%, transparent 37%, rgba(2, 6, 17, 0.18) 100%);
+  mix-blend-mode: screen;
+}
+.earth-horizon-copy-shade {
+  z-index: 4;
+  background: radial-gradient(ellipse at 50% 48%, rgba(2, 7, 19, 0.74) 0%, rgba(2, 7, 19, 0.58) 33%, rgba(2, 7, 19, 0.16) 66%, transparent 84%);
+}
+.earth-coverage-lights {
+  z-index: 3;
+  transform-origin: 50% 70%;
+  animation: earth-coverage-surface-drift 40s linear infinite;
+  will-change: transform;
+}
+.earth-coverage-light {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 900ms ease;
+}
+.earth-coverage-light.is-active {
+  opacity: 1;
+}
+.earth-coverage-light.is-fading,
+.earth-coverage-light.is-hidden {
+  opacity: 0;
+}
+.earth-coverage-light__glow,
+.earth-coverage-light__core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%);
+}
+.earth-coverage-light__glow {
+  width: 20px;
+  height: 20px;
+  background: rgba(241, 207, 112, 0.42);
+  filter: blur(4px);
+}
+.earth-coverage-light__core {
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  background: #f6d36d;
+  box-shadow: 0 0 8px 3px rgba(248, 211, 111, 0.8);
+}
+.earth-coverage-light.is-active .earth-coverage-light__glow {
+  animation: earth-coverage-beacon 2.8s ease-in-out infinite;
+}
+.earth-coverage-light.is-active .earth-coverage-light__core {
+  animation: earth-coverage-twinkle 2.8s ease-in-out infinite;
+}
+@keyframes earth-coverage-beacon {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.75); opacity: 0.35; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.9; }
+}
+@keyframes earth-coverage-twinkle {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.75; }
+  50% { transform: translate(-50%, -50%) scale(1.16); opacity: 1; }
+}
+@keyframes earth-coverage-surface-drift {
+  0%, 100% { transform: translate3d(-2.5%, 0, 0) scale(1.01); }
+  50% { transform: translate3d(2.5%, -0.8%, 0) scale(1.03); }
 }
 @media (max-width: 767px) {
   .earth-horizon-video {
     object-position: center 64%;
-    opacity: 0.62;
+    opacity: 0.8;
+  }
+  .earth-horizon-copy-shade {
+    background: radial-gradient(ellipse at 50% 46%, rgba(2, 7, 19, 0.78) 0%, rgba(2, 7, 19, 0.64) 45%, rgba(2, 7, 19, 0.22) 74%, transparent 94%);
+  }
+  .earth-coverage-lights {
+    animation-duration: 46s;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .earth-horizon-video {
-    opacity: 0.46;
+    opacity: 0.76;
+  }
+  .earth-coverage-light__glow,
+  .earth-coverage-light__core {
+    animation: none !important;
+  }
+  .earth-coverage-lights {
+    animation: none !important;
   }
 }
 .a11y-panel-close:focus-visible,

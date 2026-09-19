@@ -33,6 +33,13 @@ describe("PageHero — gold watermark texture", () => {
     expect(container.querySelectorAll("svg.lucide-users").length).toBeGreaterThanOrEqual(1);
   });
 
+  it("can suppress shared decorative glow when page-specific background media supplies the hero treatment", () => {
+    const { container } = render(
+      <PageHero icon={ShieldCheck} eyebrow="Our Specialists" title="Verified professional volunteers" gold showDecorativeGlow={false} />
+    );
+    expect(container.querySelectorAll("svg.lucide-earth")).toHaveLength(0);
+  });
+
   it("still renders the real heading/eyebrow copy unchanged either way", () => {
     render(<PageHero icon={ShieldCheck} eyebrow="Support Groups" title="Find your circle" gold />);
     expect(screen.getByText("Support Groups")).toBeInTheDocument();

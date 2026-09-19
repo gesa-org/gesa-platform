@@ -67,6 +67,7 @@ export default async function TherapistsPage({
         gold
         icon={Users}
         backgroundMedia={<EarthHorizonHeroBackground />}
+        showDecorativeGlow={false}
         eyebrow={
           isDisasterSource ? (
             <span>Our Verified Professionals</span>

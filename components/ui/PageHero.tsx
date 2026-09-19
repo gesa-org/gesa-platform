@@ -19,6 +19,8 @@ interface PageHeroProps {
   children?: ReactNode;
   /** Optional decorative media layer for a single page-specific hero. */
   backgroundMedia?: ReactNode;
+  /** Turns off the shared glow/watermarks when page-specific media owns the background. */
+  showDecorativeGlow?: boolean;
   /** Phase 47 — opt-in gold banner background (see app/globals.css's
    * `.gold-banner`). Defaults to false so FAQ, Contact, and the legal
    * pages — which also render through this component — keep their
@@ -96,12 +98,13 @@ export default function PageHero({
   className = "",
   children,
   backgroundMedia,
+  showDecorativeGlow = true,
   gold = false,
 }: PageHeroProps) {
   return (
     <section className={`hero relative overflow-hidden ${gold ? "gold-banner" : ""} ${className}`}>
       {backgroundMedia}
-      <GoldHeroGlow gold={gold} />
+      {showDecorativeGlow && <GoldHeroGlow gold={gold} />}
       <StaggerGroup
         className={`relative z-10 text-center ${narrow ? "narrow" : "wrap"}`}
         style={maxWidth ? { maxWidth } : undefined}
