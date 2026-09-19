@@ -1,6 +1,5 @@
 import Paths, { HOME_CONTENT_FALLBACK } from "@/components/home/Paths";
 import Stats from "@/components/home/Stats";
-import GlobalVolunteerCoverage from "@/components/home/GlobalVolunteerCoverage";
 import DonateBand from "@/components/home/DonateBand";
 import { getPageContent } from "@/lib/content";
 import { getCurrentProfile } from "@/lib/auth/getCurrentProfile";
@@ -109,7 +108,6 @@ export default async function Home({
     <div className="reveal-page__main flex flex-col">
       <Paths content={resolvedContent} />
       <Stats />
-      <GlobalVolunteerCoverage />
       {/* Phase 164 — `variant="ivory"` opted this one render of the shared
           DonateBand into Roy's then-current Home-page palette (ivory
           background, dark navy text/pills).
