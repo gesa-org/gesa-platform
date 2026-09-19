@@ -1,27 +1,9 @@
 import { render } from "@testing-library/react";
-import EarthHorizonHeroBackground from "@/components/therapists/EarthHorizonHeroBackground";
+import EarthHorizonHeroBackground, {
+  CINEMATIC_EARTH_PLAYBACK_RATE,
+} from "@/components/therapists/EarthHorizonHeroBackground";
 
 let mockReducedMotion = false;
-
-jest.mock("d3-geo", () => ({
-  geoOrthographic: () => {
-    const projection = {
-      translate: jest.fn(),
-      scale: jest.fn(),
-      clipAngle: jest.fn(),
-      precision: jest.fn(),
-      rotate: jest.fn(),
-    };
-    Object.values(projection).forEach((method) => method.mockReturnValue(projection));
-    return projection;
-  },
-  geoPath: () => () => "M0,0",
-}));
-
-jest.mock("topojson-client", () => ({
-  feature: () => ({ type: "FeatureCollection", features: [] }),
-  mesh: () => ({ type: "MultiLineString", coordinates: [] }),
-}));
 
 jest.mock("@/components/motion/useSafeReducedMotion", () => ({
   useSafeReducedMotion: () => mockReducedMotion,
@@ -30,27 +12,27 @@ jest.mock("@/components/motion/useSafeReducedMotion", () => ({
 describe("EarthHorizonHeroBackground", () => {
   beforeEach(() => {
     mockReducedMotion = false;
-    jest.spyOn(window, "requestAnimationFrame").mockImplementation(() => 1);
-    jest.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
+    jest.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue();
+    jest.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
   });
 
   afterEach(() => jest.restoreAllMocks());
 
-  it("renders a decorative globe with country-border paths instead of video or location markers", () => {
+  it("renders the supplied cinematic Earth footage in a decorative horizon composition", () => {
     const { container } = render(<EarthHorizonHeroBackground />);
 
-    expect(container.querySelector("svg.earth-horizon-globe")).toBeInTheDocument();
-    expect(container.querySelectorAll(".earth-horizon-borders")).toHaveLength(2);
-    expect(container.querySelector("video")).not.toBeInTheDocument();
+    expect(container.querySelector(".earth-cinematic-planet video")).toBeInTheDocument();
+    expect(container.querySelector(".earth-cinematic-rim")).toBeInTheDocument();
+    expect(container.querySelector("svg")).not.toBeInTheDocument();
     expect(container.querySelector(".earth-coverage-light")).not.toBeInTheDocument();
-    expect(window.requestAnimationFrame).toHaveBeenCalled();
+    expect(container.querySelector("video")?.playbackRate).toBe(CINEMATIC_EARTH_PLAYBACK_RATE);
   });
 
-  it("keeps the globe and its borders static when reduced motion is requested", () => {
+  it("holds the first frame static when reduced motion is requested", () => {
     mockReducedMotion = true;
-    const { container } = render(<EarthHorizonHeroBackground />);
+    render(<EarthHorizonHeroBackground />);
 
-    expect(container.querySelectorAll(".earth-horizon-borders")).toHaveLength(2);
-    expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
   });
 });
